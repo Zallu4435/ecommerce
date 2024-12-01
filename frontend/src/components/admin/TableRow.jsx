@@ -1,0 +1,223 @@
+// import { Button } from './StyledComponents';
+// import { useButtonHandlers } from './ButtonHandlers';
+
+
+// const { handleBan, handleCreate, handleDelete, handleUpdate } = useButtonHandlers();
+  
+//   // Define table configurations based on the type
+//   export const config = {
+//     users: {
+//       headers: ['Username', 'Email', 'Role', 'Actions'],
+//       rowRenderer: (item) => (
+//         <tr key={item.id} className="dark:hover:bg-gray-800 border border-gray-600 hover:bg-slate-100">
+//           <td className="px-6 py-4 flex items-center gap-3                        ">
+//             <img
+//               src="https://via.placeholder.com/50"
+//               alt="Profile"
+//               className="w-12 h-12 rounded-full"
+//             />
+//             {item.name}
+//           </td>
+//           <td className="px-6 py-4 border border-gray-600">{item.email}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.role}</td>
+//           <td className="px-6 flex py-4 gap-6">
+//             <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'users')}>Update</Button>
+//             <Button borderColor="#d97706" textColor="#d97706" hoverColor="white">Ban</Button>
+//             <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white">Delete</Button>
+//           </td>
+//         </tr>
+//       ),
+//     },
+//     categories: {
+//       headers: ['Category Name', 'Product Count', 'Created At', 'Updated At', 'Actions'],
+//       rowRenderer: (item) => (
+//         <tr key={item.id} className="dark:hover:bg-gray-800 border border-gray-600 hover:bg-slate-100">
+//           <td className="px-6 py-4">{item.name}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.productCount}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.createdAt}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.updatedAt}</td>
+//           <td className="px-6 flex py-4 gap-6">
+//             <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white">Update</Button>
+//             <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white">Delete</Button>
+//           </td>
+//         </tr>
+//       ),
+//     },
+//     orders: {
+//       headers: ['Username', 'Product Name', 'Price', 'Quantity', 'Date', 'Status', 'Payment Method', 'Total Amount', 'Address', 'Action'],
+//       rowRenderer: (item) => (
+//         <tr key={item.id} className='dark:hover:bg-gray-800 border border-gray-600 hover:bg-slate-100'>
+//           <td className='px-6 py-4'>{item.name}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.productName}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.price}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.quantity}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.date}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.status}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.status}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.totalAmount}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.address}</td>
+//           <td className="px-6 flex py-4 gap-6">
+//             <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white">View</Button>
+//           </td>
+//         </tr>
+//       )
+//     },
+//     coupons: {
+//       headers: ['Coupon Code', 'Discount Value', 'Valid From', 'Valid Until', 'Usage Limit', 'Action'],
+//       rowRenderer: (item) => (
+//         <tr key={item.id} className='dark:hover:bg-gray-800 border border-gray-600 hover:bg-slate-100'>
+//           <td className="px-6 py-4 border border-gray-600">{item.couponCode}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.discountValue}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.validFrom}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.validUntil}</td>
+//           <td className="px-6 py-4 border border-gray-600">{item.usageLimit}</td>
+//           <td className="px-6 flex py-4 gap-6">
+//             <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white">Update</Button>
+//             <Button borderColor="#d97706" textColor="#d97706" hoverColor="white">Ban</Button>
+//             <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white">Delete</Button>          
+//           </td>
+//         </tr>
+//       )
+//     }
+//   };
+
+
+
+
+
+
+
+import { Button } from '../StyledComponents';
+import { useButtonHandlers } from './ButtonHandlers';
+
+// Define a new component for each row that calls the hook inside it
+const TableRow = ({ item, type }) => {
+  const { handleBan, handleCreate, handleDelete, handleUpdate, handleView } = useButtonHandlers();
+
+  return (
+    <tr key={item.id} className="dark:hover:bg-gray-800 border border-gray-600 hover:bg-slate-100">
+      {type === 'users' && (
+        <>
+          <td className="px-6 py-4 flex items-center gap-3">
+            <img src="https://via.placeholder.com/50" alt="Profile" className="w-12 h-12 rounded-full" />
+            {item.name}
+          </td>
+          <td className="px-6 py-4 border border-gray-600">{item.email}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.role}</td>
+          <td className="px-6 flex py-4 gap-6">
+            <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'users')}>
+              Update
+            </Button>
+            <Button borderColor="#d97706" textColor="#d97706" hoverColor="white" onClick={() => handleBan(item.id)}>
+              Ban
+            </Button>
+            <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white" onClick={() => handleDelete(item.id)}>
+              Delete
+            </Button>
+          </td>
+        </>
+      )}
+
+      {type === 'categories' && (
+        <>
+          <td className="px-6 py-4">{item.name}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.productCount}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.createdAt}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.updatedAt}</td>
+          <td className="px-6 flex py-4 gap-6">
+            <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'categories')}>
+              Update
+            </Button>
+            <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white" onClick={() => handleDelete(item.id)}>
+              Delete
+            </Button>
+          </td>
+        </>
+      )}
+
+      {type === 'orders' && (
+        <>
+          <td className="px-6 py-4">{item.name}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.productName}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.price}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.quantity}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.date}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.status}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.paymentMethod}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.totalAmount}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.address}</td>
+          <td className="px-6 flex py-4 gap-6">
+            <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white" onClick={() => handleView('orders')}>View</Button>
+          </td>
+        </>
+      )}
+
+      {type === 'coupons' && (
+        <>
+          <td className="px-6 py-4 border border-gray-600">{item.couponCode}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.discountValue}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.validFrom}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.validUntil}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.usageLimit}</td>
+          <td className="px-6 flex py-4 gap-6">
+            <Button borderColor="#1D4ED8" textColor="#1D4ED8" hoverColor="white" onClick={() => handleCreate('coupons')}>
+              Create
+            </Button>
+            <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'coupons')}>
+              Update
+            </Button>
+            <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white" onClick={() => handleDelete(item.id)}>
+              Delete
+            </Button>
+          </td>
+        </>
+      )}
+
+      {type === 'products' && (
+        <>
+          <td className="px-6 py-4 border border-gray-600">{item.productName}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.category}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.brand}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.originalPrice}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.offerPrice}</td>
+          <td className="px-6 flex py-4 gap-6">
+            <Button borderColor="#1D4ED8" textColor="#1D4ED8" hoverColor="white" onClick={() => handleCreate('products')}>
+              Create
+            </Button>
+            <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'products')}>
+              Update
+            </Button>
+            <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white" onClick={() => handleDelete(item.id)}>
+              Delete
+            </Button>
+          </td>        
+        </>
+      )}
+    </tr>
+  );
+};
+
+
+// Define table configurations based on the type
+export const config = {
+  users: {
+    headers: ['Username', 'Email', 'Role', 'Actions'],
+    rowRenderer: (item) => <TableRow item={item} type="users" />,
+  },
+  categories: {
+    headers: ['Category Name', 'Product Count', 'Created At', 'Updated At', 'Actions'],
+    rowRenderer: (item) => <TableRow item={item} type="categories" />,
+  },
+  orders: {
+    headers: ['Username', 'Product Name', 'Price', 'Quantity', 'Date', 'Status', 'Payment Method', 'Total Amount', 'Address', 'Actions'],
+    rowRenderer: (item) => <TableRow item={item} type="orders" />,
+  },
+  coupons: {
+    headers: ['Coupon Code', 'Discount Value', 'Valid From', 'Valid Until', 'Usage Limit', 'Actions'],
+    rowRenderer: (item) => <TableRow item={item} type="coupons" />,
+  },
+  products: {
+    headers: ['Product Name', 'Category', 'Brand', 'Original Price', 'Offer Price', 'Actions'],
+    rowRenderer: (item) => <TableRow item={item} type="products" />
+  },
+};
