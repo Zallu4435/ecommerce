@@ -1,8 +1,10 @@
 import { GrHome } from 'react-icons/gr';
 import { IoIosArrowForward } from 'react-icons/io';
-import SettingsTheme from '../SettingsTheme'
+import { SettingsTheme } from '../SettingsTheme'
+
 
 const AdminSidebar = () => {
+
   return (
     <div>
       {/* Sidebar */}
@@ -18,6 +20,9 @@ const AdminSidebar = () => {
             <span className="block text-sm font-bold">PRODUCT MANAGER</span>
             <p className="text-sm">Name</p>
           </div>
+
+          <SettingsTheme />
+
         </div>
 
         <hr className="my-4 border-gray-700" />
@@ -60,9 +65,9 @@ const AdminSidebar = () => {
           </div>
 
           {/* Settings container that is always visible when hovered */}
-          <div className="absolute hidden left-[210px] top-[50px] group-hover:block p-5 bg-gray-800 text-white dark:text-black dark:bg-orange-50 rounded-md cursor-pointer">
+          {/* <div className="absolute hidden left-[210px] top-[50px] group-hover:block p-5 bg-gray-800 text-white dark:text-black dark:bg-orange-50 rounded-md cursor-pointer">
             <SettingsTheme />
-          </div>
+          </div> */}
         </div>
 
         <div className=' flex-col 2xl:mt-52 md:mt-52 xl-mt--52 sm:mt-0'>
