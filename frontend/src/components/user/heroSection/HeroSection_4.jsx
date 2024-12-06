@@ -42,11 +42,11 @@ const HeroSection_4 = () => {
   const arr = ['Spring Collection', 'Hot Deal Products', 'T-Shirt Offer', 'Limited Offer Sale', 'Our Services'];
 
   return (
-    <div className="relative w-full bg-gray-900 py-10">
+    <div className="relative w-full dark:bg-gray-800 bg-gray-100 py-10 shadow-lg dark:shadow-md">
       <Slider {...settings}>
         {arr.map((slide, index) => (
           <div key={index} className="px-4 sm:px-6 md:px-8 lg:px-10 whitespace-nowrap"> {/* Ensure text does not wrap */}
-            <h1 className="flex items-center tracking-wide text-lg sm:text-xl md:text-2xl lg:text-4xl font-semibold gap-10 sm:gap-20 md:gap-30 lg:gap-44 text-white">
+            <h1 className="flex items-center tracking-wide text-lg sm:text-xl md:text-2xl lg:text-4xl font-semibold gap-10 sm:gap-20 md:gap-30 lg:gap-44 dark:text-white text-gray-800">
               {slide}
               <BsStars className="text-yellow-400 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12" />
             </h1>

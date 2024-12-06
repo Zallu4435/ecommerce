@@ -2,7 +2,7 @@ import React from 'react';
 
 const ProductImage = () => {
   return (
-    <div className="p-6 bg-white shadow-lg rounded-lg">
+    <div className="p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
       <div className="relative">
         <img
           src="https://via.placeholder.com/500x500"
@@ -23,7 +23,7 @@ const ProductImage = () => {
               alt={`Gallery ${index + 1}`}
               className="w-20 h-20 object-cover rounded-lg border hover:shadow-md cursor-pointer"
             />
-            <p className="text-gray-500 text-xs mt-1">Angle {index + 1}</p>
+            <p className="text-gray-500 dark:text-gray-300 text-xs mt-1">Angle {index + 1}</p>
           </div>
         ))}
       </div>

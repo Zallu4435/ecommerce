@@ -24,8 +24,8 @@ const FashionBrandSlider = () => {
     slidesToScroll: 1,
     speed: 500,
     cssEase: "linear",
-    prevArrow: <FaChevronLeft className="text-4xl text-gray-800 cursor-pointer" />,
-    nextArrow: <FaChevronRight className="text-4xl text-gray-800 cursor-pointer" />,
+    prevArrow: <FaChevronLeft className="text-4xl text-gray-800 dark:text-gray-200 cursor-pointer" />,
+    nextArrow: <FaChevronRight className="text-4xl text-gray-800 dark:text-gray-200 cursor-pointer" />,
     responsive: [
       {
         breakpoint: 1280,
@@ -66,23 +66,23 @@ const FashionBrandSlider = () => {
   ];
 
   return (
-    <div className="relative border-2 space-y-10 border-gray-400 mx-4 md:mx-10 lg:mx-16 xl:mx-24 rounded-lg shadow-lg overflow-hidden p-4">
+    <div className="relative border-2 space-y-10 border-gray-400 dark:border-gray-600 mx-4 md:mx-10 lg:mx-16 xl:mx-24 rounded-lg shadow-lg overflow-hidden p-4 dark:bg-gray-800 bg-white">
       {/* Brand Heading */}
-      <div className="text-2xl sm:text-3xl md:text-4xl text-gray-800 font-semibold absolute left-8 top-4">
+      <div className="text-2xl sm:text-3xl md:text-4xl text-gray-800 dark:text-gray-200 font-semibold absolute left-8 top-4">
         TOP BRANDS
       </div>
 
       {/* Custom Arrow Buttons */}
       <div className="absolute lg:top-0 lg:right-14 md:right-[30px] top-[-20px] right-[10px] z-10">
         <FaChevronRight
-          className="text-3xl sm:text-4xl lg:text-5xl text-gray-800 cursor-pointer p-2 md:p-3 border-2 border-gray-800 rounded-full hover:bg-gray-200 transition-all"
+          className="text-3xl sm:text-4xl lg:text-5xl text-gray-800 dark:text-gray-200 cursor-pointer p-2 md:p-3 border-2 border-gray-800 dark:border-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
           onClick={() => sliderRef.current.slickNext()} // Move to the next slide
         />
       </div>
 
       <div className="absolute lg:top-0 lg:right-28 top-[-20px] right-[50px] md:right-20 z-10">
         <FaChevronLeft
-          className="text-3xl sm:text-4xl lg:text-5xl text-gray-800 cursor-pointer p-2 md:p-3 border-2 border-gray-800 rounded-full hover:bg-gray-200 transition-all"
+          className="text-3xl sm:text-4xl lg:text-5xl text-gray-800 dark:text-gray-200 cursor-pointer p-2 md:p-3 border-2 border-gray-800 dark:border-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
           onClick={() => sliderRef.current.slickPrev()} // Move to the previous slide
         />
       </div>

@@ -42,11 +42,11 @@ export const ThemeSwitcherButton = () => {
     <button
       onClick={handleThemeToggle}
       className={`w-14 h-8 flex items-center justify-between p-1 rounded-full ${
-        theme === "dark" ? "bg-orange-50" : "bg-gray-900"
+        theme === "dark" ? "bg-gray-900" : "bg-orange-50"
       }`}
     >
       <div
-        className={`w-6 h-6 bg-orange-50 dark:bg-gray-900 rounded-full transition-all ${
+        className={`w-6 h-6 bg-gray-900 dark:bg-orange-50 rounded-full transition-all ${
           theme === "dark" ? "transform translate-x-6" : ""
         }`}
       ></div>

@@ -60,13 +60,13 @@ const RelatedProduct = () => {
   // Function to update the products per page based on the window width
   const updateProductsPerPage = () => {
     if (window.innerWidth >= 1240) {
-        setProductsPerPage(7)
+      setProductsPerPage(7);
     } else if (window.innerWidth >= 1024) {
       setProductsPerPage(5); // 5 products per page for large screens
     } else if (window.innerWidth >= 768) {
-      setProductsPerPage(4); // 4 products per page for medium screens
+      setProductsPerPage(3); // 3 products per page for medium screens
     } else {
-      setProductsPerPage(3); // 3 products per page for small screens
+      setProductsPerPage(2); // 2 products per page for small screens
     }
   };
 
@@ -95,65 +95,64 @@ const RelatedProduct = () => {
 
   return (
     <div className="relative mt-12 mx-5 lg:mx-12">
-                    {/* Navigation Buttons */}
-        <div className="flex justify-between mt-4 absolute top-[-20px] right-0 space-x-6 ">
-            <button
-                onClick={prevSlide}
-                className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
-                disabled={currentIndex === 0}
-            >
-                Previous
-            </button>
-            <button
-                onClick={nextSlide}
-                className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
-                disabled={currentIndex + productsPerPage >= relatedProducts.length}
-            >
-                Next
-            </button>
-        </div>
-            
-        <h2 className="text-3xl font-semibold mb-6">Related Products</h2>
-        <div className="relative">
-            {/* Product container */}
-            <div className="flex overflow-x-auto gap-8 pb-4">
-            {relatedProducts
-                .slice(currentIndex, currentIndex + productsPerPage)
-                .map((product, index) => (
-                <div
-                    key={index}
-                    className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition duration-300 ease-in-out"
-                >
-                    {/* Product Image */}
-                    <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-64 object-cover"
-                    />
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-4 absolute top-[-20px] right-0 space-x-6">
+        <button
+          onClick={prevSlide}
+          className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
+          disabled={currentIndex === 0}
+        >
+          Previous
+        </button>
+        <button
+          onClick={nextSlide}
+          className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
+          disabled={currentIndex + productsPerPage >= relatedProducts.length}
+        >
+          Next
+        </button>
+      </div>
 
-                    {/* Product Info */}
-                    <div className="p-4 flex flex-col justify-between">
-                    <h3 className="text-lg font-medium truncate">{product.name}</h3>
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Related Products</h2>
+      <div className="relative">
+        {/* Product container */}
+        <div className="flex overflow-x-auto gap-4 pb-4">
+          {relatedProducts
+            .slice(currentIndex, currentIndex + productsPerPage)
+            .map((product, index) => (
+              <div
+                key={index}
+                className="bg-white dark:bg-gray-800 shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.5)] rounded-lg overflow-hidden hover:shadow-lg transition duration-300 ease-in-out"
+              >
+                {/* Product Image */}
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-64 object-cover"
+                />
 
-                    {/* Rating */}
-                    <div className="flex items-center mt-2">
-                        <span className="text-yellow-500 mr-1">⭐</span>
-                        <span>{product.rating}</span>
-                    </div>
+                {/* Product Info */}
+                <div className="p-4 flex flex-col justify-between">
+                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 truncate">{product.name}</h3>
 
-                    {/* Price */}
-                    <p className="text-xl font-semibold text-gray-900 mt-2">${product.price}</p>
+                  {/* Rating */}
+                  <div className="flex items-center mt-2">
+                    <span className="text-yellow-500 mr-1">⭐</span>
+                    <span>{product.rating}</span>
+                  </div>
 
-                    {/* Add to Cart Button */}
-                    <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300">
-                        Add to Cart
-                    </button>
-                    </div>
+                  {/* Price */}
+                  <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-2">${product.price}</p>
+
+                  {/* Add to Cart Button */}
+                  <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300">
+                    Add to Cart
+                  </button>
                 </div>
-                ))}
-            </div>
-
+              </div>
+            ))}
         </div>
+      </div>
     </div>
   );
 };

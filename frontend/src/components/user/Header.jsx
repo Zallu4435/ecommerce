@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUser, FaShoppingCart } from 'react-icons/fa';
 import { IoIosSearch } from 'react-icons/io';
@@ -8,22 +8,6 @@ import { logo } from '../../assets/images';
 
 const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [scrolled]);
 
   const links = [
     { to: '/profile', Icon: FaUser, label: 'Profile' },
@@ -33,11 +17,7 @@ const Header = () => {
   ];
 
   return (
-    <header
-      className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white shadow-md py-2' : 'bg-white py-4'
-      }`}
-    >
+    <header className="dark:bg-gray-800 bg-gray-100 py-4 z-50 shadow-md">
       <div className="container mx-auto px-6 sm:px-8 md:px-12 flex items-center justify-between">
         {/* Logo */}
         <div className="flex-shrink-0">
@@ -56,9 +36,9 @@ const Header = () => {
             <input
               type="text"
               placeholder="Search For Products"
-              className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-300"
+              className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 transition-all duration-300 dark:bg-gray-700 dark:text-gray-200"
             />
-            <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+            <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
           </div>
         </div>
 
@@ -70,8 +50,8 @@ const Header = () => {
               to={link.to}
               className="flex flex-col items-center group p-2 sm:p-3"
             >
-              <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 group-hover:text-yellow-500 transition-colors duration-300" />
-              <span className="hidden sm:block text-xs text-gray-600 group-hover:text-yellow-500 transition-colors duration-300 mt-1">
+              <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300" />
+              <span className="hidden sm:block text-xs text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300 mt-1">
                 {link.label}
               </span>
             </Link>
@@ -80,7 +60,7 @@ const Header = () => {
 
         {/* Mobile Search Toggle */}
         <button
-          className="md:hidden p-2 text-gray-600 hover:text-yellow-500 transition-colors duration-300"
+          className="md:hidden p-2 text-gray-700 dark:text-gray-200 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-300"
           onClick={() => setShowSearch(!showSearch)}
         >
           <IoIosSearch className="w-6 h-6" />
@@ -89,14 +69,14 @@ const Header = () => {
 
       {/* Mobile Search Bar */}
       {showSearch && (
-        <div className="md:hidden px-6 py-4 bg-white">
+        <div className="md:hidden px-6 py-4 bg-gray-100 dark:bg-gray-800">
           <div className="relative">
             <input
               type="text"
               placeholder="Search For Products"
-              className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-300"
+              className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 transition-all duration-300 dark:bg-gray-700 dark:text-gray-200"
             />
-            <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+            <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
           </div>
         </div>
       )}

@@ -26,22 +26,22 @@ const HeroSection_6 = () => {
   ];
 
   return (
-    <div className="grid grid-cols-4 justify-center items-center gap-6 p-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 place-items-center dark:bg-gray-900">
       {sections.map((section, index) => (
         <div
           key={index}
-          className="flex flex-col sm:flex-row items-center text-center sm:text-left w-[450px] bg-white shadow-lg rounded-lg p-6 border border-gray-300 hover:shadow-2xl transition-all"
+          className="flex flex-col sm:flex-row items-center text-center sm:text-left w-full max-w-xs md:max-w-sm lg:max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 border border-gray-300 dark:border-gray-700 hover:shadow-2xl transition-all"
         >
           {/* Icon */}
-          <div className="text-primary p-4 bg-gray-100 rounded-full sm:mr-6 flex-shrink-0">
-            <div className="text-4xl sm:text-5xl">{section.icon}</div>
+          <div className="text-primary p-4 bg-gray-200 dark:bg-gray-700 rounded-full sm:mr-6 flex-shrink-0 flex items-center justify-center">
+            <div className="text-3xl sm:text-4xl md:text-5xl text-gray-800 dark:text-gray-200">{section.icon}</div>
           </div>
           {/* Text */}
-          <div>
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+          <div className="mt-4 sm:mt-0 flex flex-col items-center sm:items-start">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
               {section.title}
             </h2>
-            <p className="text-sm sm:text-base text-gray-600">{section.description}</p>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">{section.description}</p>
           </div>
         </div>
       ))}

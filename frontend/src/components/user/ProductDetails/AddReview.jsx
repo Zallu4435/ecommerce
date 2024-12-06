@@ -16,14 +16,14 @@ const AddReview = () => {
   };
 
   return (
-    <div className="mt-8 p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">Add Your Review</h2>
+    <div className="mt-8 p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
+      <h2 className="text-2xl font-semibold mb-4 dark:text-gray-100">Add Your Review</h2>
 
       {/* Rating Input */}
       <div className="mb-4">
-        <label className="text-gray-700">Rating: </label>
+        <label className="text-gray-700 dark:text-gray-300">Rating: </label>
         <select
-          className="ml-4 p-2 border rounded-lg"
+          className="ml-4 p-2 border rounded-lg dark:bg-gray-600 dark:text-gray-100"
           value={rating}
           onChange={handleRatingChange}
         >
@@ -37,11 +37,11 @@ const AddReview = () => {
 
       {/* Review Textarea */}
       <div className="mb-4">
-        <label className="text-gray-700">Your Review: </label>
+        <label className="text-gray-700 dark:text-gray-300">Your Review: </label>
         <textarea
           value={review}
           onChange={handleReviewChange}
-          className="w-full mt-2 px-4 py-2 border rounded-lg"
+          className="w-full mt-2 px-4 py-2 border rounded-lg dark:bg-gray-600 dark:text-gray-100"
           placeholder="Write your review here..."
         />
       </div>
@@ -49,7 +49,7 @@ const AddReview = () => {
       {/* Submit Review Button */}
       <button
         onClick={handleSubmitReview}
-        className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700"
+        className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 dark:hover:bg-blue-500"
       >
         Submit Review
       </button>

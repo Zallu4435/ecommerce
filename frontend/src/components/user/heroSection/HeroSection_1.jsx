@@ -68,7 +68,7 @@ const HeroSection_1 = () => {
         {slides.map((slide, index) => (
           <div
             key={index}
-            className="relative w-full h-[500px] md:h-[700px] lg:h-[800px] flex flex-col md:flex-row items-center justify-center bg-orange-50 dark:bg-gray-900 dark:text-white text-gray-700"
+            className="relative w-full h-[500px] md:h-[700px] lg:h-[800px] flex flex-col md:flex-row items-center justify-center bg-gradient-to-b from-gray-100 to-white dark:bg-gradient-to-b dark:from-gray-700 dark:to-gray-800 dark:text-white text-gray-700 shadow-lg"
           >
             <div className="w-full md:w-1/2 text-center md:text-left p-4 md:p-8 lg:p-16">
               <h1 className="text-xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold mb-2 md:mb-4">
@@ -91,7 +91,7 @@ const HeroSection_1 = () => {
               <img
                 src={slide.image}
                 alt="Fashion style"
-                className="object-contain h-64 md:h-96 lg:h-[650px]"
+                className="object-contain h-64 md:h-96 lg:h-[650px] shadow-[0_0_20px_10px_rgba(0.1)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.01)]"
               />
             </div>
           </div>
