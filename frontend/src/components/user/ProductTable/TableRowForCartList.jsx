@@ -27,7 +27,7 @@ const TableRowForCartlist = ({ item, onRemove }) => {
           />
           <div>
             <p className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">⭐ 4.5 (200 reviews)</p>
+            <p className="text-xs sm:text-sm text-gray-600 text-nowrap dark:text-gray-400">⭐ 4.5 (200)</p>
           </div>
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">${item.price.toFixed(2)}</td>
@@ -77,14 +77,14 @@ const TableRowForCartlist = ({ item, onRemove }) => {
           <span className="font-semibold text-gray-700 dark:text-gray-300">Quantity:</span>
           <div className="flex items-center">
             <button
-              className="px-3 py-1 bg-gray-200 dark:bg-gray-600 border rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
+              className="px-2 py-0 bg-gray-200 dark:bg-gray-600 border rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
               onClick={handleDecrease}
             >
               -
             </button>
-            <span className="px-4 py-1 text-gray-800 dark:text-gray-100">{quantity}</span>
+            <span className="px-2 py-0 text-gray-800 dark:text-gray-100">{quantity}</span>
             <button
-              className="px-3 py-1 bg-gray-200 dark:bg-gray-600 border rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
+              className="px-2 py-0 bg-gray-200 dark:bg-gray-600 border rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
               onClick={handleIncrease}
             >
               +

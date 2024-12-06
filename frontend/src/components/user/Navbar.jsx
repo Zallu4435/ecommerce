@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { IoIosArrowDown } from 'react-icons/io';
 import { SiPlatformdotsh } from 'react-icons/si';
-import { ThemeSwitcherButton } from '../SettingsTheme';
+import { ThemeSwitcherButton } from '../../context/SettingsTheme';
+import { useSelector } from 'react-redux';
 
-const Navbar = ({ scrolled }) => {
+const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const scrolled = useSelector((state) => state.scroll.scrolled);
 
   const handleDropdownToggle = () => {
     setShowDropdown(!showDropdown);
@@ -31,7 +33,7 @@ const Navbar = ({ scrolled }) => {
   }, []);
 
   return (
-    <nav className={`${scrolled ? 'fixed top-0 left-0 right-0' : 'relative'} bg-gray-800 dark:bg-gray-50 dark:text-gray-900 text-white p-4 pb-0 md:p-6 flex flex-col md:flex-row md:items-center z-40 transition-all duration-300`}>
+    <nav className={`${scrolled ? 'fixed top-0 left-0 right-0' : 'relative'} bg-gray-800 dark:bg-gray-50 dark:text-gray-900 text-white p-4 pb-0 md:p-6 flex flex-col md:flex-row md:items-center z-40 `}>
       <div className="flex items-center justify-between w-full md:hidden mb-4 md:mb-0">
         {/* Hamburger Menu */}
         <button
@@ -123,7 +125,7 @@ const Navbar = ({ scrolled }) => {
 
         {/* Navigation Links */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full lg:ml-16 md:w-auto md:ml-4 md:mb-0 space-y-4 mb-4 md:space-y-0 md:space-x-6 mt-4 md:mt-0">
-          <Link to="/home" className="hover:text-yellow-500 dark:hover:text-yellow-600">
+          <Link to="/" className="hover:text-yellow-500 dark:hover:text-yellow-600">
             Home
           </Link>
           <Link to="/shop" className="hover:text-yellow-500 dark:hover:text-yellow-600">

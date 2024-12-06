@@ -39,18 +39,11 @@ const Wishlist = () => {
   return (
     <>
 
-      <div>
-        <Header />
-        <Navbar />
-      </div>
-
       <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen p-10">
         <div className="max-w-7xl mx-auto">
           <ProductTable type="wishlist" data={products} onRemove={handleRemove} />
         </div>
       </div>
-
-      <Footer />
 
     </>
   );

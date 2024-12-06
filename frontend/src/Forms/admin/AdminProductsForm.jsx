@@ -1,4 +1,4 @@
-import { Input, InputContainer, TextArea, Label, CheckboxContainer, SizeOption } from '../../components/StyledComponents';
+import { Input, InputContainer, TextArea, Label, CheckboxContainer, SizeOption } from '../../components/user/StyledComponents/StyledComponents';
 
 // Form Component
 const AddProductForm = () => {

@@ -1,5 +1,5 @@
 
-import { Button } from '../StyledComponents';
+import { Button } from '../user/StyledComponents/StyledComponents';
 import { useButtonHandlers } from './ButtonHandlers';
 
 // Define a new component for each row that calls the hook inside it

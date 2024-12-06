@@ -3,10 +3,10 @@ import TableRow from './TableRow';
 
 const ProductTable = ({ type, data, onRemove }) => {
   return (
-    <div className="flex flex-col items-center justify-center m-10 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+    <div className="flex flex-col items-center justify-center m-4 md:m-10 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 md:p-6">
       {/* Heading */}
       {type === 'wishlist' && (
-        <h2 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center">
+        <h2 className="text-2xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 mb-4 md:mb-6 text-center">
           Your Wishlist
         </h2>
       )}
@@ -20,7 +20,7 @@ const ProductTable = ({ type, data, onRemove }) => {
                 Remove
               </th>
               <th className="px-6 py-4 text-left border-b bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-100">
-                Product Name
+                Product
               </th>
               <th className="px-6 py-4 text-center border-b bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-100">
                 Price
@@ -42,7 +42,7 @@ const ProductTable = ({ type, data, onRemove }) => {
       </div>
 
       {/* Collapsed Cards for Small Screens */}
-      <div className="grid gap-6 md:hidden w-full max-w-6xl mt-6">
+      <div className="grid gap-6 w-full max-w-6xl mt-4 md:hidden px-4">
         {data.map((item) => (
           <TableRow key={item.id} item={item} onRemove={onRemove} />
         ))}

@@ -1,6 +1,6 @@
 import { GrHome } from 'react-icons/gr';
 import { IoIosArrowForward } from 'react-icons/io';
-import { SettingsTheme } from '../SettingsTheme'
+import { SettingsTheme } from '../../context/SettingsTheme'
 
 
 const AdminSidebar = () => {

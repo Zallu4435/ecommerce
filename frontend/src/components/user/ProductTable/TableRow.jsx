@@ -1,11 +1,6 @@
-import React, { useState } from 'react';
 import { roundedImg_1 } from '../../../assets/images';
 
 const TableRow = ({ item, onRemove }) => {
-  const [quantity, setQuantity] = useState(item.quantity || 1);
-
-  const handleIncrease = () => setQuantity((prev) => prev + 1);
-  const handleDecrease = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
   return (
     <>
@@ -19,7 +14,7 @@ const TableRow = ({ item, onRemove }) => {
             ❌ Remove
           </button>
         </td>
-        <td className="px-6 py-4 border-b flex items-center gap-4">
+        <td className="px-6 py-4 md:px-0 border-b flex items-center gap-4">
           <img
             src={roundedImg_1}
             className="h-[60px] rounded-lg object-cover"
@@ -27,7 +22,7 @@ const TableRow = ({ item, onRemove }) => {
           />
           <div>
             <p className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">⭐ 4.5 (200 reviews)</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">⭐ 4.5 (200)</p>
           </div>
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">${item.price.toFixed(2)}</td>

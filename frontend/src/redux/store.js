@@ -1,10 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
-import themeReducer from './themeSlice'
+import rootReducer from './combineReducer';
+
 
 const store = configureStore({
-    reducer: {
-        theme: themeReducer,
-    }
+    reducer: rootReducer,
 })
 
 export default store;

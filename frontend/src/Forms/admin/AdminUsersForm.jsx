@@ -1,4 +1,4 @@
-import { InputContainer, Label, Input } from '../../components/StyledComponents';
+import { InputContainer, Label, Input } from '../../components/user/StyledComponents/StyledComponents';
 
 const AdminUsersForm = ({ initialValues }) => {
   return (

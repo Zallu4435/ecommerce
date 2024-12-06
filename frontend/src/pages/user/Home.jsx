@@ -11,29 +11,11 @@ import HeroSection_5 from '../../components/user/heroSection/HeroSection_5';
 import Footer from '../../components/user/Footer';
 
 const Home = () => {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 100;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [scrolled]);
 
   return (
     <div className="space-y-16 md:space-y-24 lg:space-y-32 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
-      <div>
-        <Header />
-        <Navbar scrolled={scrolled} />
-        <HeroSection_1 />
-      </div>
+
+      <HeroSection_1 />
 
       <HeroSection_3 />
 
@@ -53,7 +35,6 @@ const Home = () => {
 
       <HeroSection_5 />
 
-      <Footer />
     </div>
   );
 };

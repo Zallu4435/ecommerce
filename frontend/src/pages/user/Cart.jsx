@@ -53,11 +53,6 @@ const Cart = () => {
   return (
     <>
 
-      <div>
-        <Header />
-        <Navbar />
-      </div>
-
       <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
         <div className="grid grid-cols-1 lg:grid-cols-11 gap-6 p-6">
           {/* Product List */}
@@ -95,8 +90,6 @@ const Cart = () => {
           </div>
         </div>
       </div>
-
-      <Footer />
 
     </>
   );

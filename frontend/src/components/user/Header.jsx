@@ -10,7 +10,7 @@ const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
 
   const links = [
-    { to: '/profile', Icon: FaUser, label: 'Profile' },
+    { to: '/login', Icon: FaUser, label: 'Profile' },
     { to: '/wishlist', Icon: FaHeart, label: 'Wishlist' },
     { to: '/compare', Icon: MdOutlineCompare, label: 'Compare' },
     { to: '/cart', Icon: FaShoppingCart, label: 'Cart' },
