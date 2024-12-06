@@ -66,7 +66,7 @@ const App = () => {
       {/* <Wishlist /> */}
       {/* <AdminTable /> */}
       {/* <Compare /> */}
-      <Cart />
+      {/* <Cart /> */}
       {/* <Home /> */}
       {/* <ShoppingCard /> */}
       {/* <Sample /> */}
