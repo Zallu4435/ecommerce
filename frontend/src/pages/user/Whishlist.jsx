@@ -1,8 +1,5 @@
-import React from 'react';
 import ProductTable from '../../components/user/ProductTable/ProductTable';
-import Header from '../../components/user/Header';
-import Navbar from '../../components/user/Navbar';
-import Footer from '../../components/user/Footer';
+
 
 const Wishlist = () => {
   const products = [
@@ -39,7 +36,7 @@ const Wishlist = () => {
   return (
     <>
 
-      <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen p-10">
+      <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen md:p-10 p-5">
         <div className="max-w-7xl mx-auto">
           <ProductTable type="wishlist" data={products} onRemove={handleRemove} />
         </div>

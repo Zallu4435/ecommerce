@@ -32,6 +32,19 @@ const Navbar = () => {
     };
   }, []);
 
+  const categories = [
+    { path: '/mens', label: 'Mens' },
+    { path: '/womens', label: 'Womens' },
+    { path: '/childrens', label: 'Childrens' },
+  ];
+
+  const navLinks = [
+    { path: '/', label: 'Home' },
+    { path: '/shop', label: 'Shop' },
+    { path: '/about', label: 'About' },
+    { path: '/contact', label: 'Contact Us' },
+  ];
+
   return (
     <nav className={`${scrolled ? 'fixed top-0 left-0 right-0' : 'relative'} bg-gray-800 dark:bg-gray-50 dark:text-gray-900 text-white p-4 pb-0 md:p-6 flex flex-col md:flex-row md:items-center z-40 `}>
       <div className="flex items-center justify-between w-full md:hidden mb-4 md:mb-0">
@@ -63,24 +76,15 @@ const Navbar = () => {
             </button>
             {showDropdown && (
               <div className="absolute z-10 top-full left-0 mt-2 w-40 bg-gray-700 dark:bg-gray-800 text-white dark:text-gray-100 p-3 rounded-lg shadow-xl">
-                <Link
-                  to="/mens"
-                  className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
-                >
-                  Mens
-                </Link>
-                <Link
-                  to="/womens"
-                  className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
-                >
-                  Womens
-                </Link>
-                <Link
-                  to="/childrens"
-                  className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
-                >
-                  Childrens
-                </Link>
+                {categories.map((category) => (
+                  <Link
+                    key={category.path}
+                    to={category.path}
+                    className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
+                  >
+                    {category.label}
+                  </Link>
+                ))}
               </div>
             )}
           </div>
@@ -101,42 +105,30 @@ const Navbar = () => {
           </button>
           {showDropdown && (
             <div className="absolute z-10 top-full left-0 md:left-auto md:right-0 mt-2 w-52 bg-gray-700 dark:bg-gray-800 text-white dark:text-gray-100 p-3 rounded-lg shadow-xl">
-              <Link
-                to="/mens"
-                className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
-              >
-                Mens
-              </Link>
-              <Link
-                to="/womens"
-                className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
-              >
-                Womens
-              </Link>
-              <Link
-                to="/childrens"
-                className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
-              >
-                Childrens
-              </Link>
+              {categories.map((category) => (
+                <Link
+                  key={category.path}
+                  to={category.path}
+                  className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
+                >
+                  {category.label}
+                </Link>
+              ))}
             </div>
           )}
         </div>
 
         {/* Navigation Links */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full lg:ml-16 md:w-auto md:ml-4 md:mb-0 space-y-4 mb-4 md:space-y-0 md:space-x-6 mt-4 md:mt-0">
-          <Link to="/" className="hover:text-yellow-500 dark:hover:text-yellow-600">
-            Home
-          </Link>
-          <Link to="/shop" className="hover:text-yellow-500 dark:hover:text-yellow-600">
-            Shop
-          </Link>
-          <Link to="/about" className="hover:text-yellow-500 dark:hover:text-yellow-600">
-            About
-          </Link>
-          <Link to="/contact" className="hover:text-yellow-500 dark:hover:text-yellow-600">
-            Contact Us
-          </Link>
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className="hover:text-yellow-500 dark:hover:text-yellow-600"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
         {/* Theme Switcher */}

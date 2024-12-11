@@ -1,6 +1,6 @@
 
 import { useDispatch, useSelector } from "react-redux";
-import { toggleTheme } from "../redux/themeSlice"; // Assuming toggleTheme is properly defined
+import { toggleTheme } from "../redux/slice/themeSlice"; // Assuming toggleTheme is properly defined
 import { IoMoonSharp } from "react-icons/io5";
 import { BsSun } from "react-icons/bs";
 

@@ -3,7 +3,7 @@ import TableRowForCartlist from './TableRowForCartlist';
 
 const ProductTableForCartlist = ({ type, data, onRemove }) => {
   return (
-    <div className="flex flex-col items-center justify-center m-10 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+    <div className="flex flex-col items-center justify-center md:m-10 m-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
       {/* Heading */}
       {type === 'cart' && (
         <h2 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center">
@@ -32,7 +32,7 @@ const ProductTableForCartlist = ({ type, data, onRemove }) => {
       </div>
 
       {/* Collapsed Table for Small Screens */}
-      <div className="grid gap-6 md:hidden w-full max-w-6xl mt-6">
+      <div className="grid gap-6 w-full md:hidden mt-6">
         {data.map((item) => (
           <TableRowForCartlist key={item.id} item={item} onRemove={onRemove} />
         ))}

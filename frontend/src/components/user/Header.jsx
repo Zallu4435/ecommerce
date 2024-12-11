@@ -5,12 +5,15 @@ import { IoIosSearch } from 'react-icons/io';
 import { FaHeart } from 'react-icons/fa6';
 import { MdOutlineCompare } from 'react-icons/md';
 import { logo } from '../../assets/images';
+import { useSelector } from 'react-redux';
 
 const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
+  const isAuthenticated = useSelector(state => state.user.isAuthenticated)
 
   const links = [
-    { to: '/login', Icon: FaUser, label: 'Profile' },
+    { to: isAuthenticated ? '/profile' : '/login',
+       Icon: FaUser, label: 'Profile' },
     { to: '/wishlist', Icon: FaHeart, label: 'Wishlist' },
     { to: '/compare', Icon: MdOutlineCompare, label: 'Compare' },
     { to: '/cart', Icon: FaShoppingCart, label: 'Cart' },

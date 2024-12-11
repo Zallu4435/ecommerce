@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ProductImage = () => {
+const ProductImage = ({ image }) => {
   return (
     <div className="p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
       <div className="relative">
@@ -19,7 +19,7 @@ const ProductImage = () => {
         {['80', '80', '80'].map((size, index) => (
           <div key={index} className="text-center">
             <img
-              src={`https://via.placeholder.com/${size}`}
+              src={image || `https://via.placeholder.com/${size}`}
               alt={`Gallery ${index + 1}`}
               className="w-20 h-20 object-cover rounded-lg border hover:shadow-md cursor-pointer"
             />

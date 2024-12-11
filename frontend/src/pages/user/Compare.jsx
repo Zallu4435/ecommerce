@@ -78,7 +78,7 @@ const Compare = () => {
           <div
             key={product.id}
             className={`border p-4 rounded-lg shadow-lg hover:shadow-xl transition-all bg-white dark:bg-gray-800 ${
-              index === 2 ? 'lg:col-span-1 lg:mx-auto md:ml-[160px] md:w-[400px]' : ''
+              index === 2 ? 'lg:col-span-1 lg:mx-auto md:ml-[160px] md:w-[400px] lg:w-full' : ''
             }`}
           >           
             <img

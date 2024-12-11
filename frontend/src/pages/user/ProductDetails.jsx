@@ -63,7 +63,6 @@ const ProductDetails = () => {
 
       <RelatedProduct className="mt-8" />
 
-      <Footer />
     </div>
   );
 };

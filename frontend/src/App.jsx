@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import AdminOutlet from './outlets/adminOutlet'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import UserManagement from './pages/admin/UserManagement'
 import CategoryManagement from './pages/admin/CategoryManagement'
 import OrderManagement from './pages/admin/OrderMangement'
@@ -13,38 +13,54 @@ import ProductManagement from './pages/admin/ProductManagement'
 import AdminProductsForm from './Forms/admin/AdminProductsForm'
 import OrderDetails from './Forms/admin/OrderViewPage'
 import AdminUsersForm from './Forms/admin/AdminUsersForm'
-import UserLogin from './pages/user/forms/UserLogin'
-import UserRegister from './pages/user/forms/UserRegister'
-import ProductDetails from './pages/user/ProductDetails'
 import MainLayout from './layouts/MainLayout'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';  // Import the styles
+import { loadUser } from './redux/actions/user'
+import { clearErrors } from './redux/slice/userSlice'
+import NotFound from './pages/user/NotFound'
+import Address from '../src/pages/user/userProfile/Address'
 
 const App = () => {
 
   const theme = useSelector(state => state.theme.theme);
+  const dispatch = useDispatch();
+  const { error } = useSelector(state => state.user)
+
+  // console.log(error, isAuthenticated)
 
   useEffect(() => {
     document.body.classList.remove('light', 'dark');
     document.body.classList.add(theme);
   }, [theme]);
 
+  // useEffect(() => {
+  //   dispatch(loadUser());
+
+  //   if (error) {
+  //     console.error(error);
+  //     dispatch(clearErrors());
+  //   }
+  // }, [dispatch, error]);
   
 
   return (
     <>
 
     <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
-      <Routes>
-        <Route path="/*" element={<MainLayout />}>
-          <Route path="login" element={<UserLogin />} />
-          <Route path="signup" element={<UserRegister />} />
-          <Route path="product" element={<ProductDetails />} />
-          
-        </Route>
-      </Routes>
+       <Routes>
+          <Route path="/*" element={<MainLayout />} />
+        </Routes>        
     </GoogleOAuthProvider>
 
+          {/* <Address/>  */}
 
+
+    <ToastContainer
+      theme={theme === "dark" ? "light" : "dark"}  
+      position="bottom-center"
+    />
 
 
 

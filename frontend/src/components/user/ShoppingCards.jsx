@@ -1,17 +1,24 @@
-import React from "react";
 import { FaShoppingCart, FaStar, FaRegHeart, FaExchangeAlt, FaEye, FaTimes } from "react-icons/fa";
 import { roundedImg_1 } from "../../assets/images";
+import { useState } from "react";
 
-const ShoppingCard = ({ name = "Default Product", price = 40, originalPrice = 499, image }) => {
+
+const ShoppingCard = ({ name, price, originalPrice, image }) => {
   const formattedPrice = parseFloat(price);
   const formattedOriginalPrice = parseFloat(originalPrice);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const icons = [
-    { Icon: FaTimes, color: 'text-gray-500 dark:text-gray-300' }, // Cross icon
+    // { Icon: FaTimes, color: 'text-gray-500 dark:text-gray-300' }, // Cross icon
     { Icon: FaRegHeart, color: 'text-red-500 dark:text-red-400' },
     { Icon: FaExchangeAlt, color: 'text-blue-500 dark:text-blue-300' },
     { Icon: FaEye, color: 'text-green-500 dark:text-green-300' },
   ];
+
+  const handleDropdownToggle = () => {
+    setShowDropdown(!showDropdown);
+  }
+
 
   return (
     <div className="m-3 border rounded-lg text-lg shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] overflow-hidden w-full max-w-sm sm:w-[300px] md:w-[350px] lg:w-[420px] p-4 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
@@ -38,16 +45,22 @@ const ShoppingCard = ({ name = "Default Product", price = 40, originalPrice = 49
           {/* Right side box */}
           <div className="relative group">
             {/* Main button with + sign */}
-            <div className="bg-white dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-2xl sm:text-4xl rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center pb-1 sm:pb-2 justify-center cursor-pointer">+</div>
-
-            {/* Hidden div appearing on hover */}
-            <div className="absolute top-0 left-0 group-hover:block hidden space-y-2 sm:space-y-4 bg-white dark:bg-gray-600 p-1 sm:p-2 rounded-full shadow-lg">
-              {icons.map(({ Icon, color }, index) => (
-                <div key={index} className="bg-gray-200 dark:bg-gray-700 p-2 sm:p-3 rounded-full cursor-pointer">
-                  <Icon className={`${color} text-sm sm:text-xl`} />
-                </div>
-              ))}
+            <div 
+              onClick={handleDropdownToggle}
+              className={`bg-white dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-2xl sm:text-4xl ${showDropdown ? 'rounded-t-full sm:pt-4' : 'rounded-full sm:pt-1'} w-12 h-12 sm:w-[60px] sm:h-16 flex items-center pb-1 sm:pb-4  justify-center cursor-pointer`}
+            >
+              {showDropdown ? <FaTimes className={`text-xl sm:text-2xl md:text-4xl md:p-1 dark:bg-gray-600 bg-gray-200 p-1 rounded-full sm:p-2 shadow-lg`} /> : '+'}
             </div>
+
+            {showDropdown &&
+              <div className="absolute top-14 left-0 space-y-2 sm:space-y-4 bg-white dark:bg-gray-600 p-1 sm:p-2 rounded-b-full shadow-lg">
+                {icons.map(({ Icon, color }, index) => (
+                  <div key={index} className="bg-gray-200 dark:bg-gray-700 p-2 sm:p-3 rounded-full cursor-pointer">
+                    <Icon className={`${color} text-sm sm:text-xl`} />
+                  </div>
+                ))}
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -74,11 +87,11 @@ const ShoppingCard = ({ name = "Default Product", price = 40, originalPrice = 49
         <div className="inline-flex items-center space-x-2">
           {/* Striked original price */}
           <span className="text-gray-500 line-through text-sm sm:text-base">
-            ${formattedOriginalPrice.toFixed(2)}
+          &#8377;{formattedOriginalPrice.toFixed(2)}
           </span>
           {/* Offer price */}
           <span className="text-red-500 font-semibold text-sm sm:text-base">
-            ${formattedPrice.toFixed(2)}
+          &#8377;{formattedPrice.toFixed(2)}
           </span>
         </div>
 

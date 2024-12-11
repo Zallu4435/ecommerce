@@ -1,0 +1,31 @@
+import { Route, Routes } from 'react-router-dom';
+import UserProfile from '../pages/user/userProfile/UserProfile';
+import SideBar from '../components/user/SideBar';
+import Address from '../pages/user/userProfile/Address'
+import NotFound from '../pages/user/NotFound';
+import Password from '../pages/user/userProfile/Password'
+import Order from '../pages/user/userProfile/Order'
+
+
+const UserProfileLayout = () => {
+  return (
+    <div className="flex justify-start space-x-6 m-16 mx-32"> {/* Adding space between sidebar and content */}
+      {/* Sidebar with some margin to the right */}
+      <SideBar className="w-1/4" />
+
+      <div className="flex-1 p-2">
+        <Routes>
+          <Route index element={<UserProfile />} />
+          <Route path='address' element={<Address />} />
+          <Route path='password' element={<Password />} />
+          <Route path='order' element={<Order />} />
+
+
+          <Route path='*' element={<NotFound fromUserProfileLayout={true}/>} />
+        </Routes>
+      </div>
+    </div>
+  );
+};
+
+export default UserProfileLayout;

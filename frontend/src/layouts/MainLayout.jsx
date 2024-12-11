@@ -1,65 +1,61 @@
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
-import Header from '../components/user/Header';
-import Navbar from '../components/user/Navbar';
-import Home from '../pages/user/Home';
-import Cart from '../pages/user/Cart';
-import Compare from '../pages/user/Compare';
-import Wishlist from '../pages/user/Whishlist';
-import Footer from '../components/user/Footer';
-import { useDispatch, useSelector } from 'react-redux';
-import { useEffect } from 'react';
-import { setScrolled } from '../redux/scrollSlice';
-
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { setScrolled } from "../redux/slice/scrollSlice";
+import Header from "../components/user/Header";
+import Navbar from "../components/user/Navbar";
+import Footer from "../components/user/Footer";
+import routes from "../config/routes";
 
 const MainLayout = () => {
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
+  const dispatch = useDispatch();
+  const location = useLocation();
 
-    const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 100;
+      dispatch(setScrolled(isScrolled));
+    };
 
-    const dispatch = useDispatch();
+    window.addEventListener("scroll", handleScroll);
 
-    useEffect(() => {
-        const handleScroll = () => {
-            const isScrolled = window.scrollY > 100;
-            dispatch(setScrolled(isScrolled));
-        }
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [dispatch]);
 
-        window.addEventListener('scroll', handleScroll);
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll)
-        }
-
-    }, [dispatch])
+  const ProtectedRoute = ({ children }) => {
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
+  };
 
   return (
     <div>
       <Header />
       <Navbar />
-
+      <main>
         <Routes>
-        
-            <Route index element={<Home />} />
-            <Route 
-                path='cart'
-                element={ isAuthenticated ? <Cart /> : <Navigate to='/login' replace /> }
-            />
-            <Route 
-                path='compare'
-                element={ isAuthenticated ? <Compare /> : <Navigate to='/login' replace /> }
-            />
-            <Route
-                path='wishlist'
-                element={ isAuthenticated ? <Wishlist /> : <Navigate to='/login' replace /> }
-            />
-
-
+          {routes.map(({ path, component: Component, isProtected }, index) => {
+            if (isProtected) {
+              return (
+                <Route
+                  key={index}
+                  path={path}
+                  element={
+                    <ProtectedRoute>
+                      <Component />
+                    </ProtectedRoute>
+                  }
+                />
+              );
+            }
+            return <Route key={index} path={path} element={<Component />} />;
+          })}
         </Routes>
-            <Outlet />
-
-        <Footer />
-
+      </main>
+      {location.pathname !== "/login" && location.pathname !== "/signup" && <Footer />}
     </div>
-  )
-}
+  );
+};
 
-export default MainLayout
+export default MainLayout;

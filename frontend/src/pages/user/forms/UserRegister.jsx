@@ -1,18 +1,38 @@
-import React from 'react';
-import { Input, InputContainer, Label } from '../../../components/user/StyledComponents/StyledComponents';
-import { Link } from 'react-router-dom';
-import { signupSchema } from '../../../validation/schemas/SignupSchema';
-import useFormValidation from '../../../validation/hooks/useFormValidation';
-
+import React from "react";
+import { Input, InputContainer, Label } from "../../../components/user/StyledComponents/StyledComponents";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupSchema } from "../../../validation/schemas/SignupSchema";
+import axios from 'axios'; 
+import { server } from "../../../server";
 
 const UserRegister = () => {
 
-  const { errors, handleSubmit, isSubmitting } = useFormValidation(signupSchema);
-  
+  const navigate = useNavigate();
+  // React Hook Form with zod schema
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(signupSchema),
+  });
+
   const onsubmit = (data) => {
-    alert('Signup form submitted', data);
-  }
-  
+
+    axios.post(`${server}/user/create-user`, data)
+    .then((res) => {
+      alert(res.message)
+    }).catch ((err) => {
+      console.log(err);
+    })
+
+    console.log("Signup form submitted", data);
+
+    reset();
+  };
 
   return (
     <div className="dark:bg-gray-900 bg-gray-50 flex items-center justify-center min-h-screen">
@@ -27,21 +47,25 @@ const UserRegister = () => {
               <Label className="dark:text-gray-100 text-gray-800">Username</Label>
               <Input
                 type="text"
-                name='username'
+                {...register("username")}
                 placeholder="Enter username"
                 className="w-full p-3 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
               />
-              {errors.username && <p className="text-red-500">{ errors.username }</p>}
+              {errors.username && (
+                <p className="text-red-500">{errors.username.message}</p>
+              )}
             </InputContainer>
             <InputContainer className="flex-1">
               <Label className="dark:text-gray-100 text-gray-800">Phone</Label>
               <Input
                 type="tel"
-                name='phone'
+                {...register("phone")}
                 placeholder="Enter phone number"
                 className="w-full p-3 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
               />
-              {errors.phone && <p className="text-red-500">{ errors.phone }</p>}
+              {errors.phone && (
+                <p className="text-red-500">{errors.phone.message}</p>
+              )}
             </InputContainer>
           </div>
 
@@ -51,11 +75,13 @@ const UserRegister = () => {
               <Label className="dark:text-gray-100 text-gray-800">Email</Label>
               <Input
                 type="email"
-                name='email'
+                {...register("email")}
                 placeholder="Enter email"
                 className="w-full p-3 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
               />
-              {errors.email && <p className="text-red-500">{ errors.email }</p>}
+              {errors.email && (
+                <p className="text-red-500">{errors.email.message}</p>
+              )}
             </InputContainer>
           </div>
 
@@ -65,21 +91,27 @@ const UserRegister = () => {
               <Label className="dark:text-gray-100 text-gray-800">Password</Label>
               <Input
                 type="password"
-                name='password'
+                {...register("password")}
                 placeholder="Enter password"
                 className="w-full p-3 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
               />
-              {errors.password && <p className="text-red-500">{ errors.password }</p>}
+              {errors.password && (
+                <p className="text-red-500">{errors.password.message}</p>
+              )}
             </InputContainer>
             <InputContainer className="flex-1">
-              <Label className="dark:text-gray-100 text-gray-800">Confirm Password</Label>
+              <Label className="dark:text-gray-100 text-gray-800">
+                Confirm Password
+              </Label>
               <Input
                 type="password"
-                name='confirmPassword'
+                {...register("confirmPassword")}
                 placeholder="Confirm password"
                 className="w-full p-3 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
               />
-              {errors.confirmPassword && <p className="text-red-500">{ errors.confirmPassword }</p>}
+              {errors.confirmPassword && (
+                <p className="text-red-500">{errors.confirmPassword.message}</p>
+              )}
             </InputContainer>
           </div>
 
@@ -89,14 +121,17 @@ const UserRegister = () => {
             disabled={isSubmitting}
             className="w-full py-3 font-bold dark:bg-blue-600 bg-blue-500 text-white rounded-md dark:hover:bg-blue-700 hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
           >
-            { isSubmitting ? 'Submitting...' : 'Login' }
+            {isSubmitting ? "Submitting..." : "Register"}
           </button>
         </form>
 
         {/* Link to Login */}
         <p className="mt-4 text-center dark:text-gray-300 text-gray-600">
           Already have an account?{" "}
-          <Link to="/login" className="text-blue-500 dark:text-blue-400 hover:underline">
+          <Link
+            to="/login"
+            className="text-blue-500 dark:text-blue-400 hover:underline"
+          >
             Login here
           </Link>
         </p>

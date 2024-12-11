@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ProductTableForCartlist from '../../components/user/ProductTable/ProductTableForCartlist';
-import Header from '../../components/user/Header';
-import Navbar from '../../components/user/Navbar';
-import Footer from '../../components/user/Footer';
+import { useNavigate } from 'react-router-dom';
+
 
 const Cart = () => {
+
+  const navigate = useNavigate();
+
   const [cartItems, setCartItems] = useState([
     {
       id: 1,
@@ -84,7 +86,10 @@ const Cart = () => {
               <span>Total</span>
               <span>${calculateTotal(subtotal)}</span>
             </div>
-            <button className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all transform mt-5 hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600">
+            <button 
+              onClick={() => navigate('/checkout')}
+              className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all transform mt-5 hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600"
+            >
               Proceed to Checkout
             </button>
           </div>

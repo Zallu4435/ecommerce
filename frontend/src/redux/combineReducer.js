@@ -1,12 +1,11 @@
 import { combineReducers } from "redux";
-import themeReducer from './themeSlice'
-import authReducer from './authSlice'
-import scrollReducer from './scrollSlice';
-
+import themeReducer from './slice/themeSlice'
+import { userReducer } from './slice/userSlice'
+import scrollReducer from './slice/scrollSlice';
 
 const rootReducer = combineReducers({
     theme: themeReducer,
-    auth: authReducer,
+    user: userReducer,
     scroll: scrollReducer,
 })
 

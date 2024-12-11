@@ -26,11 +26,12 @@ import brandImg_5 from './brand-three-img5.png'
 import brandImg_6 from './brand-three-img6.png'
 import brandImg_7 from './brand-three-img7.png'
 import brandImg_8 from './brand-three-img8.png'
-
+import aboutUsImg from './aboutUs.jpg';
+import notFound from './404.jpg'
 
 
 export {
-    example,
+    aboutUsImg,
     logo,
     heroImg_1,
     heroImg_2,
@@ -58,4 +59,5 @@ export {
     brandImg_6,
     brandImg_7,
     brandImg_8,
+    notFound
 }

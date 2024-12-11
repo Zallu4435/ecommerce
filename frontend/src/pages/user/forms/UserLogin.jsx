@@ -1,19 +1,44 @@
 import { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { loginSchema } from '../../../validation/schemas/loginSchema';
-import useFormValidation from '../../../validation/hooks/useFormValidation';
-
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import axios from 'axios';
+import { server } from '../../../server';
+import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { loadUser } from '../../../redux/actions/user';
 
 const Login = () => {
   const [isOtpLogin, setIsOtpLogin] = useState(false);
-  const { errors, handleSubmit, isSubmitting } = useFormValidation(loginSchema);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const onsubmit = (data) => {
-    console.log('form submitted', data)
-    alert('Signup form submitted', data);
-  }
-  
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data, e) => {
+
+    e.preventDefault();
+
+    await axios.post(`${server}/user/login-user`, data, { withCredentials: true }).then((res) => {
+      toast.success("Login success!");
+      dispatch(loadUser());
+      navigate('/');
+    }).catch(err => {
+      toast.error(err.response.data.message);
+    })
+
+    reset();
+  };
+
+  const handleOtpSubmit = (data) => {
+    console.log('OTP Submitted:', data);
+    alert('OTP verified successfully');
+  };
+
   return (
     <div className="dark:bg-gray-900 bg-gray-50 flex items-center justify-center min-h-screen p-6">
       <div className="w-[90%] md:w-[60%] sm:w-full lg:w-[30%] dark:bg-gray-800 bg-white p-8 rounded-lg shadow-xl">
@@ -21,48 +46,51 @@ const Login = () => {
           Login
         </h2>
 
-        {/* Login Form or OTP Form Toggle */}
         {!isOtpLogin ? (
-          <form 
-            onSubmit={handleSubmit(onsubmit)}
-            className="space-y-6"
-          >
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email Input */}
             <div className="relative">
               <input
                 type="email"
+                {...register('email')}
                 className="w-full lg:p-4 p-3 md:p-4 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your Email"
-                name='email'
               />
-              {errors.email && <p className="text-red-500">{ errors.email }</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             {/* Password Input */}
             <div className="relative">
               <input
                 type="password"
+                {...register('password')}
                 className="w-full lg:p-4 p-3 md:p-4 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your Password"
-                name= 'password'
               />
-              {errors.password && <p className="text-red-500">{ errors.password }</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting}
               className="w-full p-3 font-semibold dark:bg-blue-600 bg-blue-500 text-white rounded-lg dark:hover:bg-blue-700 hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             >
-              { isSubmitting ? 'Submitting...' : 'Login' }
+              Login
             </button>
 
             {/* Google Login */}
             <div className="mt-4 justify-center">
               <GoogleLogin
                 onSuccess={(response) => console.log(response)}
-                onError={(error) => console.log(error)}
+                onError={() => console.log('Google Login Failed')}
                 useOneTap
               />
             </div>
@@ -78,14 +106,18 @@ const Login = () => {
             </div>
           </form>
         ) : (
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit(handleOtpSubmit)} className="space-y-6">
             {/* OTP Input */}
             <div className="relative">
               <input
                 type="text"
+                {...register('otp')}
                 className="w-full p-4 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter OTP"
               />
+              {errors.otp && (
+                <p className="text-red-500 text-sm mt-1">{errors.otp.message}</p>
+              )}
             </div>
 
             {/* Submit OTP */}
@@ -102,7 +134,10 @@ const Login = () => {
         <div className="text-center mt-6 dark:text-gray-300 text-gray-600">
           <p>
             Don't have an account?{' '}
-            <Link to="/signup" className="text-blue-500 dark:text-blue-400 hover:underline">
+            <Link
+              to="/signup"
+              className="text-blue-500 dark:text-blue-400 hover:underline"
+            >
               Sign Up
             </Link>
           </p>
