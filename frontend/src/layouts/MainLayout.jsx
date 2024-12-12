@@ -8,7 +8,7 @@ import Footer from "../components/user/Footer";
 import routes from "../config/routes";
 
 const MainLayout = () => {
-  const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
+  const isAuthenticated = useSelector((state) => state.root.user.isAuthenticated);
   const dispatch = useDispatch();
   const location = useLocation();
 

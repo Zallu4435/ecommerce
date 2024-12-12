@@ -1,9 +1,29 @@
 import { useNavigate, NavLink } from 'react-router-dom';
 import { FaUserCircle, FaBoxOpen, FaKey, FaMapMarkerAlt, FaSignOutAlt, FaWallet } from 'react-icons/fa';
+import { useLogoutUserMutation } from '../../redux/apiSliceFeatures/userApiSlice'
+import { useDispatch } from 'react-redux';
+import { logout } from '../../redux/slice/userSlice';
 
 const UserSidebar = () => {
 
   const navigate = useNavigate();
+  const [logoutUser] = useLogoutUserMutation();
+  const dispatch = useDispatch();
+
+
+  const handleLogout = async () => {
+    try {
+      // Call the logout API
+      await logoutUser().unwrap();
+      console.log('Logged out successfully');
+      dispatch(logout())
+      // Optionally, you can redirect the user after logging out
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // You can show an error message to the user
+    }
+  };
 
   const menuItems = [
     { to: '/profile', icon: FaUserCircle, label: 'Profile Overview' },
@@ -42,7 +62,7 @@ const UserSidebar = () => {
       {/* Logout Button */}
       <div className="mt-8">
         <button
-          onClick={() => navigate('/')}
+          onClick={handleLogout}
           className="w-full bg-red-500 dark:bg-red-600 text-white py-2 rounded-md flex items-center justify-center gap-2 hover:bg-red-600 dark:hover:bg-red-700 transition duration-300"
         >
           <FaSignOutAlt />

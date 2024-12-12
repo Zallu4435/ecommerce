@@ -4,16 +4,24 @@ import { Link, useNavigate } from 'react-router-dom';
 import { loginSchema } from '../../../validation/schemas/loginSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
-import { server } from '../../../server';
 import { toast } from 'react-toastify';
-import { useDispatch } from 'react-redux';
-import { loadUser } from '../../../redux/actions/user';
+import { useLoginUserMutation } from '../../../redux/apiSliceFeatures/userApiSlice'
+import { useDispatch, useSelector } from 'react-redux';
+import { setAccessToken } from '../../../redux/slice/userSlice';
 
 const Login = () => {
   const [isOtpLogin, setIsOtpLogin] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [loginUser] = useLoginUserMutation();
+  const { isAuthenticated } = useSelector((state) => state.root.user);
+
+
+  // Redirect if user is already authenticated
+  if (isAuthenticated) {
+    navigate('/'); // Redirect to home or protected route
+    return null; // Return nothing while navigating
+  }
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
@@ -23,13 +31,18 @@ const Login = () => {
 
     e.preventDefault();
 
-    await axios.post(`${server}/user/login-user`, data, { withCredentials: true }).then((res) => {
-      toast.success("Login success!");
-      dispatch(loadUser());
-      navigate('/');
-    }).catch(err => {
-      toast.error(err.response.data.message);
-    })
+    try {
+      const response = await loginUser(data).unwrap();
+      console.log(response, 'response from the backeng login')
+
+      dispatch(setAccessToken(response.accessToken));
+
+      toast.success("Login success");
+
+      navigate('/')
+    } catch (err) {
+      toast.error(err?.data?.message || "An error occurred");
+    }
 
     reset();
   };

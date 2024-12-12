@@ -6,7 +6,7 @@ import { BsSun } from "react-icons/bs";
 
 export const SettingsTheme = () => {
   const dispatch = useDispatch();
-  const theme = useSelector((state) => state.theme.theme); // Select the current theme from Redux state
+  const theme = useSelector((state) => state.root.theme.theme); // Select the current theme from Redux state
 
   const handleThemeToggle = () => {
     dispatch(toggleTheme());
@@ -32,7 +32,7 @@ export const SettingsTheme = () => {
 
 export const ThemeSwitcherButton = () => {
   const dispatch = useDispatch();
-  const theme = useSelector((state) => state.theme.theme); // Select the current theme from Redux state
+  const theme = useSelector((state) => state.root.theme.theme); // Select the current theme from Redux state
 
   const handleThemeToggle = () => {
     dispatch(toggleTheme());

@@ -16,33 +16,20 @@ import AdminUsersForm from './Forms/admin/AdminUsersForm'
 import MainLayout from './layouts/MainLayout'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';  // Import the styles
-import { loadUser } from './redux/actions/user'
-import { clearErrors } from './redux/slice/userSlice'
-import WalletPage from './pages/user/userProfile/Wallet'
+import 'react-toastify/dist/ReactToastify.css';  
+
 
 const App = () => {
 
-  const theme = useSelector(state => state.theme.theme);
-  const dispatch = useDispatch();
-  const { error } = useSelector(state => state.user)
+  const theme = useSelector(state => state.root.theme.theme);
 
-  // console.log(error, isAuthenticated)
+
 
   useEffect(() => {
     document.body.classList.remove('light', 'dark');
     document.body.classList.add(theme);
   }, [theme]);
 
-  // useEffect(() => {
-  //   dispatch(loadUser());
-
-  //   if (error) {
-  //     console.error(error);
-  //     dispatch(clearErrors());
-  //   }
-  // }, [dispatch, error]);
-  
 
   return (
     <>

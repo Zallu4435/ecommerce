@@ -25,8 +25,8 @@ if (process.env.NODE_ENV !== 'PRODUCTION') {
 };
 
 // Routes
-const user = require('./controller/user');
-app.use("/api/v2/user", user); 
+const routes = require('./routes/index');
+app.use("/api", routes); 
 
 app.use(ErrorHandler);
 // Error Handler (must be the last middleware)

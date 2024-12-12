@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 
 const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
-  const isAuthenticated = useSelector(state => state.user.isAuthenticated)
+  const isAuthenticated = useSelector(state => state.root.user.isAuthenticated)
 
   const links = [
     { to: isAuthenticated ? '/profile' : '/login',

@@ -21,7 +21,7 @@ const AddressModal = ({ isOpen, onClose, onSave, formData, handleChange }) => {
     { name: 'country', placeholder: 'Country' },
     { name: 'state', placeholder: 'State' },
     { name: 'city', placeholder: 'City' },
-    { name: 'zip', placeholder: 'Zip Code' },
+    { name: 'zipCode', placeholder: 'Zip Code' },
     { name: 'street', placeholder: 'Street Address' },
   ];
 

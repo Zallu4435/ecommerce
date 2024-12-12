@@ -22,14 +22,7 @@ const UserRegister = () => {
 
   const onsubmit = (data) => {
 
-    axios.post(`${server}/user/create-user`, data)
-    .then((res) => {
-      alert(res.message)
-    }).catch ((err) => {
-      console.log(err);
-    })
-
-    console.log("Signup form submitted", data);
+   
 
     reset();
   };

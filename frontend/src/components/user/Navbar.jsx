@@ -9,7 +9,7 @@ const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const scrolled = useSelector((state) => state.scroll.scrolled);
+  const scrolled = useSelector((state) => state.root.scroll.scrolled);
 
   const handleDropdownToggle = () => {
     setShowDropdown(!showDropdown);

@@ -3,7 +3,7 @@ const catchAsyncError = require('./catchAsyncError');
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
 
-exports.isAthenticated = catchAsyncError( async (req, res, next) => {
+exports.isAuthenticated = catchAsyncError( async (req, res, next) => {
     const { token } = req.cookies;
 
     if (!token) {

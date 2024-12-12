@@ -1,39 +1,24 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { loadUser } from '../actions/user';
 
 const initialState = {
-    isAuthenticated: false,
-    loading: false,
-    user: null, 
-    error: null,
+  accessToken: null,
+  isAuthenticated: false,
 };
 
 const userSlice = createSlice({
-    name: 'user',
-    initialState,
-    reducers: {
-        clearErrors: (state) => {
-            state.error = null
-        },
+  name: 'user',
+  initialState,
+  reducers: {
+    setAccessToken: (state, action) => {
+      state.accessToken = action.payload;
+      state.isAuthenticated = true;
     },
-    extraReducers: (builder) => {
-        builder
-        .addCase(loadUser.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        })
-        .addCase(loadUser.fulfilled, (state, action) => {
-            state.loading = false;
-            state.isAuthenticated = true;
-            state.user = action.payload;
-        })
-        .addCase(loadUser.rejected, (state, action) => {
-            state.loading = false;
-            state.isAuthenticated = false;
-            state.error = action.payload;
-        });
+    logout: (state) => {
+      state.accessToken = null;
+      state.isAuthenticated = false;
     },
+  },
 });
 
-export const { clearErrors } = userSlice.actions;
-export const userReducer = userSlice.reducer;
+export const { setAccessToken, logout } = userSlice.actions;
+export default userSlice.reducer;
