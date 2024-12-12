@@ -1,5 +1,5 @@
 import { useNavigate, NavLink } from 'react-router-dom';
-import { FaUserCircle, FaBoxOpen, FaKey, FaMapMarkerAlt, FaSignOutAlt } from 'react-icons/fa';
+import { FaUserCircle, FaBoxOpen, FaKey, FaMapMarkerAlt, FaSignOutAlt, FaWallet } from 'react-icons/fa';
 
 const UserSidebar = () => {
 
@@ -10,6 +10,7 @@ const UserSidebar = () => {
     { to: '/profile/order', icon: FaBoxOpen, label: 'My Orders' },
     { to: '/profile/password', icon: FaKey, label: 'Change Password' },
     { to: '/profile/address', icon: FaMapMarkerAlt, label: 'Add Address' },
+    { to: '/profile/wallet', icon: FaWallet, label: 'Wallet' }, // Corrected Wallet Icon
   ];
 
   return (

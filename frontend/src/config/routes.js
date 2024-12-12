@@ -12,7 +12,7 @@ import AboutUs from "../pages/user/AboutUs";
 import ShopPage from "../pages/user/Shop";
 import ActivationPage from "../pages/user/ActivationPage";
 import NotFound from "../pages/user/NotFound";
-import CheckoutPage from "../pages/user/Checkout";
+import CheckoutPage from "../pages/user/checkout/Checkout";
 import PaymentSuccess from "../pages/user/PaymentSuccess";
 
 const routes = [

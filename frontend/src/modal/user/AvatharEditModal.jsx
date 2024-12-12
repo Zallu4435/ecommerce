@@ -1,0 +1,67 @@
+import { useEffect } from 'react';
+
+const AvatarEditModal = ({ isOpen, currentAvatar, newAvatar, onAvatarChange, onClose, onSave }) => {
+
+  useEffect(() => {
+    if (isOpen) {
+        document.body.classList.add('modal-open');
+    } else {
+        document.body.classList.remove('modal-open');
+    }
+
+    return () => {
+        document.body.classList.remove('modal-open');
+    };
+  }, [isOpen])
+
+  if (!isOpen) return null; // Return nothing if the modal is not open
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-[90%] max-w-md shadow-lg">
+        <h2 className="text-xl font-semibold mb-4">Edit Avatar</h2>
+
+        {/* Avatar Preview */}
+        {newAvatar ? (
+          <img
+            src={newAvatar}
+            alt="New Avatar"
+            className="w-32 h-32 rounded-full mx-auto border-4 border-gray-200 mb-4"
+          />
+        ) : (
+          <img
+            src={currentAvatar}
+            alt="Current Avatar"
+            className="w-32 h-32 rounded-full mx-auto border-4 border-gray-200 mb-4"
+          />
+        )}
+
+        {/* File Input */}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={onAvatarChange}
+          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-yellow-500 file:text-white hover:file:bg-yellow-600"
+        />
+
+        {/* Action Buttons */}
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={onClose}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition duration-300"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onSave}
+            className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition duration-300"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default AvatarEditModal;

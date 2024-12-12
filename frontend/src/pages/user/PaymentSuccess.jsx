@@ -7,7 +7,7 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex justify-center items-center my-20 bg-gray-100">
+    <div className="flex justify-center items-center my-20">
       <div className="bg-white shadow-lg rounded-lg p-8 max-w-md text-center">
         {/* Success Icon */}
         <div className="text-green-500 text-6xl mb-4">

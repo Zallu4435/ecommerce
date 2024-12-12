@@ -5,6 +5,7 @@ import Address from '../pages/user/userProfile/Address'
 import NotFound from '../pages/user/NotFound';
 import Password from '../pages/user/userProfile/Password'
 import Order from '../pages/user/userProfile/Order'
+import Wallet from '../pages/user/userProfile/Wallet';
 
 
 const UserProfileLayout = () => {
@@ -19,6 +20,7 @@ const UserProfileLayout = () => {
           <Route path='address' element={<Address />} />
           <Route path='password' element={<Password />} />
           <Route path='order' element={<Order />} />
+          <Route path='wallet' element={<Wallet />} />
 
 
           <Route path='*' element={<NotFound fromUserProfileLayout={true}/>} />

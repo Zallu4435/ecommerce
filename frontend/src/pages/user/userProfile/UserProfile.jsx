@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import EditProfileModal from '../../../modal/user/EditProfileModal';
+import Avatar from './Avatar';
 
 // Dummy data for the user (Replace with actual API calls)
 const getUserInfo = () => {
@@ -43,17 +44,7 @@ function UserProfile() {
   return (
     <div className="flex-1 dark:bg-gray-800 shadow-md rounded-lg p-6 ml-6">
       {/* Header Section */}
-      <div className="flex items-center space-x-6 mb-6">
-        <img
-          src={user.avatar}
-          alt="User Avatar"
-          className="w-20 h-20 rounded-full border-4 border-gray-200"
-        />
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">{user.username}</h2>
-          <p className="text-gray-500 dark:text-gray-300">{user.email}</p>
-        </div>
-      </div>
+        <Avatar />
 
       {/* Profile Details */}
       <div className="space-y-4">

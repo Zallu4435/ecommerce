@@ -19,8 +19,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';  // Import the styles
 import { loadUser } from './redux/actions/user'
 import { clearErrors } from './redux/slice/userSlice'
-import NotFound from './pages/user/NotFound'
-import Address from '../src/pages/user/userProfile/Address'
+import WalletPage from './pages/user/userProfile/Wallet'
 
 const App = () => {
 
@@ -53,8 +52,6 @@ const App = () => {
           <Route path="/*" element={<MainLayout />} />
         </Routes>        
     </GoogleOAuthProvider>
-
-          {/* <Address/>  */}
 
 
     <ToastContainer
