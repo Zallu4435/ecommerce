@@ -1,22 +1,14 @@
 import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import AdminOutlet from './outlets/adminOutlet'
-import AdminLogin from './pages/admin/AdminLogin'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import { useDispatch, useSelector } from 'react-redux'
-import UserManagement from './pages/admin/UserManagement'
-import CategoryManagement from './pages/admin/CategoryManagement'
-import OrderManagement from './pages/admin/OrderMangement'
-import CouponManagement from './pages/admin/CoupenManagement'
-import AdminCoupensForm from './Forms/admin/AdminCoupensForm'
-import ProductManagement from './pages/admin/ProductManagement'
-import AdminProductsForm from './Forms/admin/AdminProductsForm'
-import OrderDetails from './Forms/admin/OrderViewPage'
-import AdminUsersForm from './Forms/admin/AdminUsersForm'
+// import AdminOutlet from './outlets/adminOutlet'
+import { useSelector } from 'react-redux'
 import MainLayout from './layouts/MainLayout'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';  
+import AdminLayout from './layouts/AdminLayout'
+import AdminLogin from './pages/admin/AdminLogin'
+import NotFound from './pages/user/NotFound'
 
 
 const App = () => {
@@ -34,11 +26,16 @@ const App = () => {
   return (
     <>
 
-    <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
-       <Routes>
-          <Route path="/*" element={<MainLayout />} />
-        </Routes>        
-    </GoogleOAuthProvider>
+      <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
+          <Routes>
+              <Route path="/*" element={<MainLayout />} /> 
+              <Route path="/admin/*" element={<AdminLayout />} /> 
+              <Route path='/admin/login' element={<AdminLogin /> } /> 
+              {/* <Route path='*' element={<NotFound />} /> */}
+            </Routes>
+      </GoogleOAuthProvider>
+
+
 
 
     <ToastContainer
@@ -48,8 +45,8 @@ const App = () => {
 
 
 
-      <Routes>
-        <Route path='/admin' element={<AdminOutlet />}>
+      {/* <Routes> */}
+        {/* <Route path='/admin' element={<AdminOutlet />}>
           <Route path='userManagement' element={<UserManagement />}/>
           <Route path='dashboard' element={<AdminDashboard />}/>
           <Route path='categoryManagement' element={<CategoryManagement />}/>
@@ -63,12 +60,8 @@ const App = () => {
           <Route path='orderManagement/view/orders'element={<OrderDetails />} />
           <Route path='userManagement/update/users/:id'element={<AdminUsersForm />} />
         </Route>
-
-
-
         <Route path='/admin/login' element={<AdminLogin />} />
-
-      </Routes>
+      </Routes> */}
     </>
   )
 }

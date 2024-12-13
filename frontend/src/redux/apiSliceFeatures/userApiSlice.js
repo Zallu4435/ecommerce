@@ -1,5 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { server } from '../../server';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../../middleware/authMiddleware';
 
 export const userApiSlice = createApi({

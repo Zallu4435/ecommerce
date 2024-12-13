@@ -15,7 +15,20 @@ import NotFound from "../pages/user/NotFound";
 import CheckoutPage from "../pages/user/checkout/Checkout";
 import PaymentSuccess from "../pages/user/PaymentSuccess";
 
-const routes = [
+// admin routes
+import UserManagement from '../pages/admin/UserManagement'
+import CategoryManagement from '../pages/admin/CategoryManagement'
+import OrderManagement from '../pages/admin/OrderMangement'
+import CouponManagement from '../pages/admin/CoupenManagement'
+import AdminCoupensForm from '../Forms/admin/AdminCoupensForm'
+import ProductManagement from '../pages/admin/ProductManagement'
+import AdminProductsForm from '../Forms/admin/AdminProductsForm'
+import OrderDetails from '../Forms/admin/OrderViewPage'
+import AdminUsersForm from '../Forms/admin/AdminUsersForm'
+import AdminDashboard from '../pages/admin/AdminDashboard'
+
+
+export const routes = [
   { path: "/", component: Home, isProtected: false },
   { path: "/login", component: UserLogin, isProtected: false },
   { path: "/signup", component: UserRegister, isProtected: false },
@@ -33,4 +46,21 @@ const routes = [
   { path: "*", component: NotFound, isProtected: false },
 ];
 
-export default routes;
+
+export const adminRoutes = [
+  { path: "/userManagement", component: UserManagement },
+  { path: "/dashboard", component: AdminDashboard },
+  { path: "/categoryManagement", component: CategoryManagement },
+  { path: "/orderManagement", component: OrderManagement },
+  { path: "/couponManagement", component: CouponManagement },
+  { path: "/productManagement", component: ProductManagement },
+  { path: "/couponManagement/update/coupons/:id", component: AdminCoupensForm },
+  { path: "/couponManagement/create/coupons", component: AdminCoupensForm },
+  { path: "/productManagement/create/products", component: AdminProductsForm },
+  { path: "/productManagement/update/products/:id", component: AdminProductsForm },
+  { path: "/orderManagement/view/orders", component: OrderDetails },
+  { path: "/userManagement/update/users/:id", component: AdminUsersForm },
+  { path: "*", component: NotFound },
+
+];
+

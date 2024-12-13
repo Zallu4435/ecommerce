@@ -5,7 +5,7 @@ import { setScrolled } from "../redux/slice/scrollSlice";
 import Header from "../components/user/Header";
 import Navbar from "../components/user/Navbar";
 import Footer from "../components/user/Footer";
-import routes from "../config/routes";
+import { routes } from "../config/routes";
 
 const MainLayout = () => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
