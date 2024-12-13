@@ -14,7 +14,7 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loginUser] = useLoginUserMutation();
-  const { isAuthenticated } = useSelector((state) => state.root.user);
+  const { isAuthenticated } = useSelector((state) => state.user.isAuthenticated);
 
 
   // Redirect if user is already authenticated

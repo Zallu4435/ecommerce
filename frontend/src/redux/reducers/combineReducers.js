@@ -1,13 +1,12 @@
 import { combineReducers } from "redux";
 import themeReducer from '../slice/themeSlice'
-import userReducer  from '../slice/userSlice'
+// import userReducer  from '../slice/userSlice'
 import scrollReducer from '../slice/scrollSlice';
 
-const rootReducer = combineReducers({
+const defaultReducer = combineReducers({
     theme: themeReducer,
-    user: userReducer,
     scroll: scrollReducer,
 })
 
 
-export default rootReducer
+export default defaultReducer
