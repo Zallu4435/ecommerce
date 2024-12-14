@@ -2,56 +2,71 @@ const mongoose = require('mongoose');
 
 const ProductsSchema = new mongoose.Schema(
   {
-    name: { 
-          type: String 
-      },
-    CreatedBy: { 
-        type: String 
+    productName: { 
+      type: String,
+      required: true,  // Make sure to add validation if needed
     },
-    UpdatedBy: { 
-        type: String 
+    createdBy: { 
+      type: String,
+      required: false,  // Optional field
     },
-    Description: { 
-        type: String 
+    updatedBy: { 
+      type: String,
+      required: false,  // Optional field
+    },
+    description: { 
+      type: String,
+      required: false,  // Optional field
     },
     category: {
-        type: String
+      type: String,
+      required: true,  // Assuming it's a required field
     },
-    Brand: { 
-        type: String 
+    brand: { 
+      type: String,
+      required: false,  // Optional field
     },
-    Warrenty: { 
-        type: String 
+    warranty: { 
+      type: String,
+      required: false,  // Optional field
     },
-    ReturnPolicy: { 
-        type: String 
+    returnPolicy: { 
+      type: String,
+      required: false,  // Optional field
     },
-    OriginalPrice: { 
-        type: Number 
+    originalPrice: { 
+      type: Number,
+      required: true,  // Assuming it's a required field
     },
-    Status: { 
-        type: String 
+    status: { 
+      type: String,
+      required: true,  // Assuming it's a required field
     },
-    ColorOption: [
-        { 
-            type: String 
-        }
+    colorOption: [
+      { 
+        type: String,
+        required: false,  // Optional field
+      }
     ],
-    Images: [
-        { 
-            type: String 
-        }
+    images: [
+      { 
+        type: String,
+        required: false,  // Optional field
+      }
     ],
-    SizeOption: [
-        { 
-            type: String 
-        }
+    sizeOption: [
+      { 
+        type: String,
+        required: false,  // Optional field
+      }
     ],
-    Stock: { 
-        type: Number 
+    stock: { 
+      type: Number,
+      required: true,  // Assuming it's a required field
     },
-    OfferPercentage: { 
-        type: mongoose.Schema.Types.Decimal128 
+    offerPercentage: { 
+      type: mongoose.Schema.Types.Decimal128,
+      required: false,  // Optional field
     },
   },
   {

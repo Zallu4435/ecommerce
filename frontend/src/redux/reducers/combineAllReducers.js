@@ -1,13 +1,26 @@
 import { combineReducers } from '@reduxjs/toolkit';
 import userReducer from '../slice/userSlice';
-import { rootApiReducer } from './combineApiReducers'; 
 import defaultReducer from './combineReducers';
+import { userApiSlice } from '../apiSliceFeatures/userApiSlice';
+import { addressPasswordApi } from '../apiSliceFeatures/address-passwordApiSlice'
+import { crudApiSlice } from '../apiSliceFeatures/crudApiSlice';
 
 // Combine all reducers
 const rootReducer = combineReducers({
   user: userReducer,
-  api: rootApiReducer,
+  userApi: userApiSlice.reducer, 
+  crudApi: crudApiSlice.reducer,
+  addressPasswordApi: addressPasswordApi,
   root: defaultReducer
 });
 
-export default rootReducer;
+
+// middleware
+export const apiMiddleware = [
+  userApiSlice.middleware,
+  addressPasswordApi.middleware,
+  crudApiSlice.middleware
+  ];
+
+
+  export default rootReducer;

@@ -9,10 +9,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    nickname: {
+      type: String,
+    },
     email: {
       type: String,
       required: true,
-      unique: true,  // To ensure the email is unique
+      unique: true,
     },
     password: {
       type: String,
@@ -34,6 +37,11 @@ const userSchema = new mongoose.Schema(
     },
     resetPasswordToken: String, // Token for password reset
     resetPasswordExpire: Date,  // Expiration time for the token
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user', 
+    },
   },
   {
     timestamps: true

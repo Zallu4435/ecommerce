@@ -1,7 +1,17 @@
 
 import { config } from "./TableRow";  
+import { useGetProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
 
-const AdminTable = ({ type, data, search, setSearch }) => {
+const AdminTable = ({ type, search, setSearch }) => {
+
+  const apiSliceQueries = {
+    products: useGetProductsQuery,
+  };
+
+  // Ensure query is properly invoked as a hook
+  const query = apiSliceQueries[type];
+  const { data = [], isLoading, isError } = query ? query() : { data: [] };
+  console.log(data?.products, "data")
 
   // Get the current configuration based on the type
   const { headers, rowRenderer } = config[type];
@@ -16,7 +26,7 @@ const AdminTable = ({ type, data, search, setSearch }) => {
   
 
   // Filter data based on the search query
-  const filteredData = data.filter((item) =>
+  const filteredData = data?.products?.filter((item) =>
     Object.values(item).some(
       (value) =>
         value &&
@@ -48,7 +58,19 @@ const AdminTable = ({ type, data, search, setSearch }) => {
           </tr>
         </thead>
         <tbody>
-          {filteredData.length === 0 ? (
+          {isLoading ? (
+            <tr>
+              <td colSpan={headers.length} className="text-center py-4">
+                Loading...
+              </td>
+            </tr>
+          ) : isError ? (
+            <tr>
+              <td colSpan={headers.length} className="text-center py-4">
+                Error loading state
+              </td>
+            </tr>
+          ) : filteredData.length === 0 ? (
             <tr>
               <td colSpan={headers.length} className="text-center py-4">
                 { `No ${types[type]} Found` || 'No results found' }

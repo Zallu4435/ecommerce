@@ -1,20 +1,30 @@
 import { useEffect, useState } from 'react';
+import { useUpdateUserInfoMutation } from '../../redux/apiSliceFeatures/userApiSlice';
 
-function EditProfileModal({ isOpen, onClose, userInfo, onSave }) {
-  const [formData, setFormData] = useState(userInfo);
+
+function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
+  const [updateUserInfo] = useUpdateUserInfoMutation();
+  const [formData, setFormData] = useState({
+    username: "",
+    nickname: "",
+    email: "",
+    phone: "",
+    gender: "",
+    ...userInfo,
+  });
 
   useEffect(() => {
     if (isOpen) {
-        document.body.classList.add('modal-open');
+      document.body.classList.add("modal-open");
     } else {
-        document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
     }
 
     return () => {
-        document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
     };
-  }, [isOpen])
-  
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
@@ -22,19 +32,25 @@ function EditProfileModal({ isOpen, onClose, userInfo, onSave }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
-    onClose();
+
+    try {
+      await updateUserInfo(formData).unwrap();
+      onClose();
+    } catch (error) {
+      console.error('Failed to update user info', error);
+    }
+  };
+  const getInputType = (key) => {
+    if (key.toLowerCase().includes("email")) return "email";
+    if (key.toLowerCase().includes("password")) return "password";
+    if (key.toLowerCase().includes("phone")) return "tel";
+    if (key.toLowerCase().includes("date")) return "date";
+    return "text";
   };
 
-  const getInputType = (key) => {
-    if (key.toLowerCase().includes('email')) return 'email';
-    if (key.toLowerCase().includes('password')) return 'password';
-    if (key.toLowerCase().includes('phone')) return 'tel';
-    if (key.toLowerCase().includes('date')) return 'date';
-    return 'text';
-  };
+  const allowedFields = ["username", "nickname", "phone", "gender"];
 
   return (
     <div className="fixed inset-0 z-50 bg-black backdrop-blur-sm bg-opacity-50 flex justify-center items-center p-4">
@@ -42,10 +58,12 @@ function EditProfileModal({ isOpen, onClose, userInfo, onSave }) {
         <h2 className="text-3xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Edit Profile</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Email Field */}
-          {Object.entries(formData).filter(([key]) => key.toLowerCase() !== 'email' && key.toLowerCase() !== 'address' && key.toLowerCase() !== 'avatar').map(([key, value]) => (
-            <div key={key} className="flex flex-col">
-              <label htmlFor={key} className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {key.charAt(0).toUpperCase() + key.slice(1)}
+          {Object.entries(formData)
+            .filter(([key]) => allowedFields.includes(key.toLowerCase())) 
+            .map(([key, value]) => ( 
+              <div key={key} className="flex flex-col">
+                <label htmlFor={key} className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {key.charAt(0).toUpperCase() + key.slice(1)}
               </label>
               <input
                 type={getInputType(key)}

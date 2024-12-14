@@ -1,45 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import EditProfileModal from '../../../modal/user/EditProfileModal';
 import Avatar from './Avatar';
+import { useGetUserQuery } from '../../../redux/apiSliceFeatures/userApiSlice';
 
-// Dummy data for the user (Replace with actual API calls)
-const getUserInfo = () => {
-
-  return {
-    username: 'JohnDoe123',
-    nickname: 'John',
-    email: 'johndoe@example.com',
-    avatar: 'https://www.w3schools.com/w3images/avatar2.png',
-    phone: '123-456-7890',
-    gender: 'Male',
-    address: '123 Main St, City, Country',
-  };
-};
 
 function UserProfile() {
-  const [user, setUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data , isLoading, isError, error } = useGetUserQuery({});
 
-  // Simulate fetching user data
-  useEffect(() => {
-    const userData = getUserInfo(); // Replace with an actual API call to get user data
-    setUser(userData);
-  }, []);
+  if (isLoading) return <div>Loading</div>
 
-  // Display loading state while fetching user data
-  if (!user) {
-    return <div>Loading...</div>;
-  }
+  if(isError) return <div>Error: {error?.message || 'Failed to fetch data'}</div>
 
-  // Define the user profile fields to map through
   const userInfo = [
-    { label: 'Username', value: user.username },
-    { label: 'Nickname', value: user.nickname },
-    { label: 'Email', value: user.email },
-    { label: 'Phone Number', value: user.phone },
-    { label: 'Gender', value: user.gender },
-    { label: 'Shipping Address', value: user.address },
+    { label: 'Username', value: data.user?.username || 'N/A' },
+    { label: 'Nickname', value: data.user?.nickname || 'N/A' },
+    { label: 'Email', value: data.user?.email || 'N/A' },
+    { label: 'Phone Number', value: data.user?.phone || 'N/A' },
+    { label: 'Gender', value: data.user?.gender || 'N/A' },
+    { label: 'Shipping Address', value: data.user?.address || 'N/A' },
   ];
+  
 
   return (
     <div className="flex-1 dark:bg-gray-800 shadow-md rounded-lg p-6 ml-6">
@@ -72,8 +53,7 @@ function UserProfile() {
         <EditProfileModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          userInfo={user}
-          // onSave={handleSave}
+          userInfo={data.user}
         />
     </div>
   );

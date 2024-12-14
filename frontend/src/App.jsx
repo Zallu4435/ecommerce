@@ -8,7 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';  
 import AdminLayout from './layouts/AdminLayout'
 import AdminLogin from './pages/admin/AdminLogin'
-import NotFound from './pages/user/NotFound'
+import ProductManagement from './pages/admin/ProductManagement'
 
 
 const App = () => {
@@ -31,10 +31,10 @@ const App = () => {
               <Route path="/*" element={<MainLayout />} /> 
               <Route path="/admin/*" element={<AdminLayout />} /> 
               <Route path='/admin/login' element={<AdminLogin /> } /> 
-              {/* <Route path='*' element={<NotFound />} /> */}
             </Routes>
       </GoogleOAuthProvider>
 
+{/* <ProductManagement /> */}
 
 
 
@@ -43,25 +43,6 @@ const App = () => {
       position="bottom-center"
     />
 
-
-
-      {/* <Routes> */}
-        {/* <Route path='/admin' element={<AdminOutlet />}>
-          <Route path='userManagement' element={<UserManagement />}/>
-          <Route path='dashboard' element={<AdminDashboard />}/>
-          <Route path='categoryManagement' element={<CategoryManagement />}/>
-          <Route path='orderManagement' element={<OrderManagement />}/>
-          <Route path='couponManagement' element={<CouponManagement />}/>
-          <Route path='productManagement' element={<ProductManagement />}/>
-          <Route path='couponManagement/update/coupons/:id' element={<AdminCoupensForm />} />
-          <Route path='couponManagement/create/coupons' element={<AdminCoupensForm />} />
-          <Route path='productManagement/create/products' element={<AdminProductsForm />} />
-          <Route path='productManagement/update/products/:id' element={<AdminProductsForm />} />
-          <Route path='orderManagement/view/orders'element={<OrderDetails />} />
-          <Route path='userManagement/update/users/:id'element={<AdminUsersForm />} />
-        </Route>
-        <Route path='/admin/login' element={<AdminLogin />} />
-      </Routes> */}
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { apiMiddleware } from '../reducers/combineApiReducers';
+import { apiMiddleware } from '../reducers/combineAllReducers'
 import { rootPersistReducer } from './persistor';
 import persistStore from 'redux-persist/es/persistStore';
 

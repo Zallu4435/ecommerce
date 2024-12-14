@@ -28,8 +28,8 @@ const Login = () => {
   });
 
   const onSubmit = async (data, e) => {
-
     e.preventDefault();
+    
 
     try {
       const response = await loginUser(data).unwrap();
@@ -38,7 +38,6 @@ const Login = () => {
       dispatch(setAccessToken(response.accessToken));
 
       toast.success("Login success");
-
       navigate('/')
     } catch (err) {
       toast.error(err?.data?.message || "An error occurred");

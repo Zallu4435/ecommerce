@@ -43,7 +43,7 @@ const ProductManagement = () => {
       <div className='dark:bg-gray-900 bg-orange-50 px-14 my-12'>
         <h1 className="text-3xl font-bold ml-[-30px] my-6 text-gray-400">Category Management</h1>
         
-        <AdminTable type="products" data={products} search={search} setSearch={setSearch} />
+        <AdminTable type="products" search={search} setSearch={setSearch} />
 
       </div>
 

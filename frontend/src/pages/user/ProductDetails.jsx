@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ProductImage from '../../components/user/ProductDetails/ProductImage';
 import ProductInfo from '../../components/user/ProductDetails/ProductInfo';
 import RatingsAndReviews from '../../components/user/ProductDetails/RatingsAndReviews';
@@ -7,9 +7,6 @@ import AddToWishlist from '../../components/user/ProductDetails/AddToWhishlist';
 import AddReview from '../../components/user/ProductDetails/AddReview';
 import CompareButton from '../../components/user/ProductDetails/CompareButton';
 import RelatedProduct from '../../components/user/ProductDetails/RelatedProducts';
-import Header from '../../components/user/Header';
-import Navbar from '../../components/user/Navbar';
-import Footer from '../../components/user/Footer';
 
 const ProductDetails = () => {
   const [scrolled, setScrolled] = useState(false);

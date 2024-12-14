@@ -2,13 +2,14 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../../middleware/authMiddleware';
 
 export const userApiSlice = createApi({
-  reducerPath: 'userApi',
-  // baseQuery: fetchBaseQuery({ baseUrl: `${server}/users` }),
+  reducerPath: "userApi",
   baseQuery: baseQueryWithReauth,
+  tagTypes: ['User', 'Avatar'],
   endpoints: (builder) => ({
     // Fetch user details
-    getUsers: builder.query({
+    getUser: builder.query({
       query: () => '/getUser',
+      providesTags: ['User', 'Avatar'],
     }),
 
     // Register user
@@ -18,6 +19,7 @@ export const userApiSlice = createApi({
         method: 'POST',
         body: userData,
       }),
+      invalidatesTags: ['User'],
     }),
 
     // Login user
@@ -27,6 +29,7 @@ export const userApiSlice = createApi({
         method: 'POST',
         body: credentials,
       }),
+      invalidatesTags: ['User', 'Avatar'],
     }),
 
     // Activate user
@@ -36,6 +39,7 @@ export const userApiSlice = createApi({
         method: 'POST',
         body: activationData,
       }),
+      invalidatesTags: ['User'],
     }),
 
     // Logout user
@@ -44,6 +48,7 @@ export const userApiSlice = createApi({
         url: '/logout',
         method: 'GET',
       }),
+      invalidatesTags: ['User', 'Avatar'],
     }),
 
     // Update user information
@@ -53,22 +58,75 @@ export const userApiSlice = createApi({
         method: 'PUT',
         body: updateData,
       }),
+      invalidatesTags: ['User'],
+      
+      // Optimistic update for immediate UI feedback
+      async onQueryStarted(updateData, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          userApiSlice.util.updateQueryData('getUser', undefined, (draft) => {
+            // Directly update the draft with new user data
+            if (draft.user) {
+              Object.assign(draft.user, updateData);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
 
     // Update user avatar
     updateAvatar: builder.mutation({
-      query: (avatarData) => ({
+      query: (formData) => ({
         url: '/update-avatar',
         method: 'PUT',
-        body: avatarData,
+        body: formData,
       }),
+      invalidatesTags: ['Avatar', 'User'],
+      
+      // Optimistic update for immediate UI feedback
+      async onQueryStarted(formData, { dispatch, queryFulfilled }) {
+        // Create a local URL for immediate preview
+        const avatarFile = formData.get('avatar');
+        const avatarPreviewUrl = URL.createObjectURL(avatarFile);
+        
+        const patchResult = dispatch(
+          userApiSlice.util.updateQueryData('getUser', undefined, (draft) => {
+            // Update avatar URL in the draft
+            if (draft.user) {
+              draft.user.avatar = avatarPreviewUrl;
+            }
+          })
+        );
+
+        try {
+          const { data } = await queryFulfilled;
+          // Update with the server-returned avatar URL
+          dispatch(
+            userApiSlice.util.updateQueryData('getUser', undefined, (draft) => {
+              if (draft.user) {
+                draft.user.avatar = data.avatarUrl;
+                // Revoke the temporary preview URL
+                URL.revokeObjectURL(avatarPreviewUrl);
+              }
+            })
+          );
+        } catch {
+          // If the upload fails, revert the optimistic update
+          patchResult.undo();
+          URL.revokeObjectURL(avatarPreviewUrl);
+        }
+      },
     }),
   }),
 });
 
 // Export hooks for each API call
 export const {
-  useGetUsersQuery,
+  useGetUserQuery,
   useRegisterUserMutation,
   useLoginUserMutation,
   useActivateUserMutation,

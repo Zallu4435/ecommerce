@@ -62,10 +62,8 @@ exports.activateUser = async (req, res, next) => {
 // Login user
 exports.loginUser = async (req, res, next) => {
 
-  console.log("reached inside the login in backend")
   const { email, password } = req.body;
 
-  console.log(email, password, "hahahah")
 
   if (!email || !password) {
     return next(new ErrorHandler("Please provide all fields!", 400));
@@ -86,7 +84,7 @@ exports.loginUser = async (req, res, next) => {
 
 // Get user
 exports.getUser = async (req, res, next) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).select('username nickname phone email gender address');
   if (!user) {
     return next(new ErrorHandler("User doesn't exist!", 400));
   }
@@ -114,23 +112,21 @@ exports.logoutUser = async (req, res, next) => {
 
 // Update user info
 exports.updateUserInfo = async (req, res, next) => {
-  const { email, password, phoneNumber, name } = req.body;
+  const { email, nickname, phone, username, gender } = req.body;
 
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
     return next(new ErrorHandler("User not found", 400));
   }
 
-  const isPasswordValid = await user.comparePassword(password);
-  if (!isPasswordValid) {
-    return next(new ErrorHandler("Please provide the correct information", 400));
-  }
+  if (username) user.username = username;
+  if (phone) user.phone = phone;
+  if (nickname) user.nickname = nickname;
+  if (gender) user.gender = gender;
 
-  user.name = name || user.name;
-  user.phoneNumber = phoneNumber || user.phoneNumber;
   await user.save();
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     user,
   });

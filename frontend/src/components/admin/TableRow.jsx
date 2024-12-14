@@ -93,10 +93,10 @@ const TableRow = ({ item, type }) => {
           <td className="px-6 py-4 border border-gray-600">{item.category}</td>
           <td className="px-6 py-4 border border-gray-600">{item.brand}</td>
           <td className="px-6 py-4 border border-gray-600">{item.originalPrice}</td>
-          <td className="px-6 py-4 border border-gray-600">{item.offerPrice}</td>
+          <td className="px-6 py-4 border border-gray-600">{item.offerPercentage ? item.offerPercentage.toString() : '0'}</td>
           <td className="px-6 flex py-4 gap-6">
-            <Button borderColor="#1D4ED8" textColor="#1D4ED8" hoverColor="white" onClick={() => handleCreate('products')}>
-              Create
+            <Button borderColor="#1D4ED8" textColor="#1D4ED8" hoverColor="white" onClick={() => handleView('products', item.id)}>
+              View
             </Button>
             <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'products')}>
               Update

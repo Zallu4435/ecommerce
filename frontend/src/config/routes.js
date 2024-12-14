@@ -26,6 +26,7 @@ import AdminProductsForm from '../Forms/admin/AdminProductsForm'
 import OrderDetails from '../Forms/admin/OrderViewPage'
 import AdminUsersForm from '../Forms/admin/AdminUsersForm'
 import AdminDashboard from '../pages/admin/AdminDashboard'
+import ViewProductDetails from "../pages/admin/views/ViewProductDetails";
 
 
 export const routes = [
@@ -60,6 +61,7 @@ export const adminRoutes = [
   { path: "/productManagement/update/products/:id", component: AdminProductsForm },
   { path: "/orderManagement/view/orders", component: OrderDetails },
   { path: "/userManagement/update/users/:id", component: AdminUsersForm },
+  { path: "/productManagement/view/products/:id", component: ViewProductDetails },
   { path: "*", component: NotFound },
 
 ];

@@ -4,12 +4,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "../../../validation/schemas/SignupSchema";
-import axios from 'axios'; 
-import { server } from "../../../server";
+import { toast } from "react-toastify";
+import { useRegisterUserMutation } from "../../../redux/apiSliceFeatures/userApiSlice";
+
 
 const UserRegister = () => {
 
   const navigate = useNavigate();
+  const [registerUser] = useRegisterUserMutation();
   // React Hook Form with zod schema
   const {
     register,
@@ -20,9 +22,19 @@ const UserRegister = () => {
     resolver: zodResolver(signupSchema),
   });
 
-  const onsubmit = (data) => {
+  const onsubmit = async (data, e) => {
+      e.preventDefault();
 
-   
+      try {
+        const response = await registerUser(data).unwrap();
+        console.log(response, "response from the backend signup");
+
+        toast.success('Login success');
+
+        navigate('/')
+      } catch (err) {
+        toast.error(err?.data?.message);
+      }
 
     reset();
   };

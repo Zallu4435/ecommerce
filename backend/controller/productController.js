@@ -1,16 +1,32 @@
+const Product = require('../model/Products');
+const ErrorHandler = require('../utils/ErrorHandler');
+
+
 // Get all products (User and Admin)
 exports.getAllProducts = async (req, res, next) => {
-    try {
-      const products = await Product.find();
-      res.status(200).json({
-        success: true,
-        products,
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-  
+  try {
+    console.log("Reached the product backend");
+    const products = await Product.find(); // Get all products from the database
+    console.log(products, "products");
+
+    // Send back the products array with desired fields
+    res.status(200).json({
+      success: true,
+      products: products.map(product => ({
+        id: product._id,
+        productName: product.productName,
+        category: product.category,
+        brand: product.brand,
+        originalPrice: product.originalPrice,
+        offerPrice: product.offerPrice,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+    
   // Get single product details (User and Admin)
   exports.getProductDetails = async (req, res, next) => {
     try {
