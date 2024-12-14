@@ -28,12 +28,7 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     avatar: {
-      public_id: {
-        type: String,
-      },
-      url: {
-        type: String,
-      },
+      type: String
     },
     resetPasswordToken: String, // Token for password reset
     resetPasswordExpire: Date,  // Expiration time for the token

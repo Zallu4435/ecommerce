@@ -84,7 +84,7 @@ exports.loginUser = async (req, res, next) => {
 
 // Get user
 exports.getUser = async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('username nickname phone email gender address');
+  const user = await User.findById(req.user.id).select('username nickname phone email gender address avatar');
   if (!user) {
     return next(new ErrorHandler("User doesn't exist!", 400));
   }
@@ -134,33 +134,27 @@ exports.updateUserInfo = async (req, res, next) => {
 
 // Update avatar
 exports.updateAvatar = async (req, res, next) => {
-  let user = await User.findById(req.user.id);
-  if (!user) {
-    return next(new ErrorHandler("User not found", 404));
-  }
+  try {
+    let user = await User.findById(req.user.id);
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
 
-  const { avatar } = req.body;
-  if (avatar) {
-    const imageId = user.avatar.public_id;
-    await cloudinary.v2.uploader.destroy(imageId);
+    const { avatar } = req.body;
+    if (avatar) {
+      user.avatar = avatar; // Assign the new avatar URL to the user object
+      await user.save(); // Save the updated user object to the database
+    }
 
-    const myCloud = await cloudinary.v2.uploader.upload(avatar, {
-      folder: "avatars",
-      width: 150,
+    res.status(200).json({
+      success: true,
+      user,
     });
-
-    user.avatar = {
-      public_id: myCloud.public_id,
-      url: myCloud.secure_url,
-    };
-    await user.save();
+  } catch (error) {
+    return next(error);
   }
-
-  res.status(200).json({
-    success: true,
-    user,
-  });
 };
+
 
 
 

@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../../middleware/authMiddleware';
+import { uploadImageToCloudinary } from '../../server'; // Import the upload function
 
 export const userApiSlice = createApi({
   reducerPath: "userApi",
@@ -59,7 +60,7 @@ export const userApiSlice = createApi({
         body: updateData,
       }),
       invalidatesTags: ['User'],
-      
+
       // Optimistic update for immediate UI feedback
       async onQueryStarted(updateData, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
@@ -80,13 +81,27 @@ export const userApiSlice = createApi({
 
     // Update user avatar
     updateAvatar: builder.mutation({
-      query: (formData) => ({
-        url: '/update-avatar',
-        method: 'PUT',
-        body: formData,
-      }),
+      queryFn: async (formData, _queryApi, _extraOptions, baseQuery) => {
+        try {
+          const avatarFile = formData.get('avatar');
+          if (avatarFile) {
+            // Upload the avatar to Cloudinary
+            const avatarUrl = await uploadImageToCloudinary(avatarFile);
+
+            // Return the updated avatar URL
+            return await baseQuery({
+              url: '/update-avatar',
+              method: 'PUT',
+              body: { avatar: avatarUrl },
+            });
+          }
+          return { error: { status: 'CUSTOM_ERROR', data: 'No avatar file provided' } };
+        } catch (error) {
+          return { error: { status: 'CUSTOM_ERROR', data: error.message } };
+        }
+      },
       invalidatesTags: ['Avatar', 'User'],
-      
+
       // Optimistic update for immediate UI feedback
       async onQueryStarted(formData, { dispatch, queryFulfilled }) {
         // Create a local URL for immediate preview

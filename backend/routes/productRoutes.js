@@ -21,12 +21,12 @@ router.post(
 ); // Create product
 
 router.put(
-  '/update-product/:id', 
+  '/update/:id', 
   catchAsyncErrors(updateProduct)
 ); // Update product
 
 router.delete( 
-  '/delete-product/:id', 
+  '/delete/:id', 
   catchAsyncErrors(deleteProduct)
 ); // Delete product
 

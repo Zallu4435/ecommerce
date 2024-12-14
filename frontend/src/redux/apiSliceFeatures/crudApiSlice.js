@@ -20,7 +20,7 @@ export const crudApiSlice = createApi({
     updateEntity: builder.mutation({
       query: ({ entity, id, data }) => ({
         url: `/${entity}/update/${id}`,
-        method: 'PATCH',
+        method: 'PUT',
         body: data,
       }),
       invalidatesTags: (result, error, { entity, id }) => [

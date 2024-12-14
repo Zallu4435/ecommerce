@@ -1,16 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EditProfileModal from '../../../modal/user/EditProfileModal';
 import Avatar from './Avatar';
 import { useGetUserQuery } from '../../../redux/apiSliceFeatures/userApiSlice';
-
+import LoadingSpinner from '../../../components/LoadingSpinner';
 
 function UserProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data , isLoading, isError, error } = useGetUserQuery({});
+  const { data, isLoading, isError, error, refetch } = useGetUserQuery({});
 
-  if (isLoading) return <div>Loading</div>
+  const [userAvatar, setUserAvatar] = useState('');
+  const [userUsername, setUserUsername] = useState('');
 
-  if(isError) return <div>Error: {error?.message || 'Failed to fetch data'}</div>
+  useEffect(() => {
+    if (data?.user) {
+      setUserAvatar(data.user.avatar);
+      setUserUsername(data.user.username);
+    }
+  }, [data]);
+
+  if (isLoading) return <LoadingSpinner />;
+
+  if (isError) return <div>Error: {error?.message || 'Failed to fetch data'}</div>;
 
   const userInfo = [
     { label: 'Username', value: data.user?.username || 'N/A' },
@@ -20,13 +30,16 @@ function UserProfile() {
     { label: 'Gender', value: data.user?.gender || 'N/A' },
     { label: 'Shipping Address', value: data.user?.address || 'N/A' },
   ];
-  
 
   return (
     <div className="flex-1 dark:bg-gray-800 shadow-md rounded-lg p-6 ml-6">
       {/* Header Section */}
-        <Avatar />
-
+      <Avatar
+        avatar={userAvatar}
+        username={userUsername}
+        onAvatarUpdate={refetch}
+      />
+      
       {/* Profile Details */}
       <div className="space-y-4">
         {userInfo.map((item, index) => (
@@ -47,14 +60,12 @@ function UserProfile() {
         </button>
       </div>
 
-
-
-        {/* Edit Profile Modal */}
-        <EditProfileModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          userInfo={data.user}
-        />
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        userInfo={data.user}
+      />
     </div>
   );
 }

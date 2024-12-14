@@ -1,18 +1,28 @@
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const AvatarEditModal = ({ isOpen, currentAvatar, newAvatar, onAvatarChange, onClose, onSave }) => {
+const AvatarEditModal = ({ isOpen, currentAvatar, onAvatarChange, onClose, onSave }) => {
+  const [newAvatarPreview, setNewAvatarPreview] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
-        document.body.classList.add('modal-open');
+      document.body.classList.add('modal-open');
     } else {
-        document.body.classList.remove('modal-open');
+      document.body.classList.remove('modal-open');
     }
 
     return () => {
-        document.body.classList.remove('modal-open');
+      document.body.classList.remove('modal-open');
     };
-  }, [isOpen])
+  }, [isOpen]);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setNewAvatarPreview(previewUrl);
+      onAvatarChange(e); // Call the parent handler to update the avatar state
+    }
+  };
 
   if (!isOpen) return null; // Return nothing if the modal is not open
 
@@ -22,9 +32,9 @@ const AvatarEditModal = ({ isOpen, currentAvatar, newAvatar, onAvatarChange, onC
         <h2 className="text-xl font-semibold mb-4">Edit Avatar</h2>
 
         {/* Avatar Preview */}
-        {newAvatar ? (
+        {newAvatarPreview ? (
           <img
-            src={newAvatar}
+            src={newAvatarPreview}
             alt="New Avatar"
             className="w-32 h-32 rounded-full mx-auto border-4 border-gray-200 mb-4"
           />
@@ -40,7 +50,7 @@ const AvatarEditModal = ({ isOpen, currentAvatar, newAvatar, onAvatarChange, onC
         <input
           type="file"
           accept="image/*"
-          onChange={onAvatarChange}
+          onChange={handleAvatarChange}
           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-yellow-500 file:text-white hover:file:bg-yellow-600"
         />
 
@@ -53,7 +63,10 @@ const AvatarEditModal = ({ isOpen, currentAvatar, newAvatar, onAvatarChange, onC
             Cancel
           </button>
           <button
-            onClick={onSave}
+            onClick={async () => {
+              await onSave();
+              onClose();
+            }}
             className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition duration-300"
           >
             Save
@@ -62,6 +75,6 @@ const AvatarEditModal = ({ isOpen, currentAvatar, newAvatar, onAvatarChange, onC
       </div>
     </div>
   );
-}
+};
 
 export default AvatarEditModal;

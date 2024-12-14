@@ -1,54 +1,48 @@
-import { useState } from 'react'
-import AdminTable from '../../components/admin/AdminTable'
-import AdminSidebar from '../../components/admin/AdminSidebar';
+import { useState } from "react";
+import AdminTable from "../../components/admin/AdminTable";
+import AdminSidebar from "../../components/admin/AdminSidebar";
+import { useGetProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
+import { useButtonHandlers } from "../../components/admin/ButtonHandlers";
 
 const ProductManagement = () => {
+  const [search, setSearch] = useState("");
+  const { handleCreate } = useButtonHandlers();
 
-    const [search, setSearch] = useState('');
-
-    const products = [
-        {
-          id: 1,  
-          productName: "Wireless Headphones",
-          category: "Electronics",
-          brand: "Sony",
-          originalPrice: "$150",
-          offerPrice: "$120",
-        },
-        {
-          id: 2,  
-          productName: "Smartphone Case",
-          category: "Accessories",
-          brand: "Spigen",
-          originalPrice: "$25",
-          offerPrice: "$18",
-        },
-        {
-          id: 3,  
-          productName: "Laptop",
-          category: "Electronics",
-          brand: "Dell",
-          originalPrice: "$800",
-          offerPrice: "$700",
-        }
-      ];
-      
+  // Fetch product data using the API call
+  const { data = [], isLoading, isError } = useGetProductsQuery();
 
   return (
-    <div className='flex dark:bg-black dark:text-white space-x-16'>
-      
+    <div className="flex dark:bg-black dark:text-white space-x-12">
       <AdminSidebar />
 
+      <div className="dark:bg-gray-900 bg-orange-50 h-[715px] px-14 my-12">
+        <div className="flex justify-between mt-5 items-center">
+          <h1 className="text-3xl font-bold text-gray-400">
+            Product Management
+          </h1>
+          <button 
+            className="border border-blue-600 border-4 hover:bg-white text-blue-500 font-bold h-[45px] py-1 px-4 rounded-md transition duration-200"
+            onClick={() => handleCreate('products')}
+          >
+            Create New Product 
+          </button>
+        </div>
 
-      <div className='dark:bg-gray-900 bg-orange-50 px-14 my-12'>
-        <h1 className="text-3xl font-bold ml-[-30px] my-6 text-gray-400">Category Management</h1>
-        
-        <AdminTable type="products" search={search} setSearch={setSearch} />
 
+        {/* Pass the fetched data and search state to AdminTable */}
+        <div className="max-h-[620px] overflow-y-auto scrollbar-hidden">
+          <AdminTable
+            type="products"
+            data={data}
+            isLoading={isLoading}
+            isError={isError}
+            search={search}
+            setSearch={setSearch}
+          />
+        </div>
       </div>
-
     </div>
-  )
-}
+  );
+};
 
-export default ProductManagement
+export default ProductManagement;

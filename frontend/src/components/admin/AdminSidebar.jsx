@@ -70,7 +70,7 @@ const AdminSidebar = () => {
           </div> */}
         </div>
 
-        <div className=' flex-col 2xl:mt-52 md:mt-52 xl-mt--52 sm:mt-0'>
+        <div className=' flex-col 2xl:mt-0 md:mt-52 xl-mt--52 sm:mt-0'>
             {/* About Section */}
             <div className="flex items-center mb-4">
                 <span className="text-xl text-gray-300">ℹ</span>

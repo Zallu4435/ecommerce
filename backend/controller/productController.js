@@ -5,9 +5,7 @@ const ErrorHandler = require('../utils/ErrorHandler');
 // Get all products (User and Admin)
 exports.getAllProducts = async (req, res, next) => {
   try {
-    console.log("Reached the product backend");
     const products = await Product.find(); // Get all products from the database
-    console.log(products, "products");
 
     // Send back the products array with desired fields
     res.status(200).json({
@@ -62,6 +60,7 @@ exports.getAllProducts = async (req, res, next) => {
   // Update product (Admin only)
   exports.updateProduct = async (req, res, next) => {
     try {
+      console.log("reached fotr update")
       let product = await Product.findById(req.params.id);
   
       if (!product) {
@@ -85,6 +84,7 @@ exports.getAllProducts = async (req, res, next) => {
   
   // Delete product (Admin only)
   exports.deleteProduct = async (req, res, next) => {
+    console.log("deleting route");
     try {
       const product = await Product.findById(req.params.id);
   
@@ -92,7 +92,7 @@ exports.getAllProducts = async (req, res, next) => {
         return next(new ErrorHandler("Product not found", 404));
       }
   
-      await product.remove();
+      await product.deleteOne(); // Use deleteOne() instead of remove()
   
       res.status(200).json({
         success: true,

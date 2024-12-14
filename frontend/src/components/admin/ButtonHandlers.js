@@ -15,10 +15,9 @@ export const useButtonHandlers = () => {
   const [deleteEntity] = useDeleteEntityMutation();
   const [banEntity] = useBanEntityMutation();
 
-  const handleUpdate = async (id, type, data) => {
+  const handleUpdate = async (id, type) => {
     try {
-      await updateEntity({ entity: type, id, data }).unwrap();
-      alert(`${type} with id ${id} updated successfully.`);
+      navigate(`update/products/${id}`)
     } catch (error) {
       console.error('Update failed:', error);
       alert('Failed to update. Please try again.');
@@ -28,7 +27,6 @@ export const useButtonHandlers = () => {
   const handleDelete = async (id, type) => {
     try {
       await deleteEntity({ entity: type, id }).unwrap();
-      alert(`${type} with id ${id} deleted successfully.`);
     } catch (error) {
       console.error('Delete failed:', error);
       alert('Failed to delete. Please try again.');
@@ -37,8 +35,7 @@ export const useButtonHandlers = () => {
 
   const handleCreate = async (type, data) => {
     try {
-      await addEntity({ entity: type, data }).unwrap();
-      alert(`${type} created successfully.`);
+      navigate(`create/products`)
     } catch (error) {
       console.error('Create failed:', error);
       alert('Failed to create. Please try again.');
@@ -55,7 +52,7 @@ export const useButtonHandlers = () => {
     }
   };
 
-  const handleView = async (type, id) => {
+  const handleView = async (id, type) => {
     try {
       navigate(`view/${type}/${id}`); // Navigate to the entity details page using type and id
     } catch (error) {

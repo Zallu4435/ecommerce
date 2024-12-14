@@ -17,3 +17,15 @@
 .modal-open {
   overflow: hidden;
 }
+
+/* Hide the scrollbar but keep the scroll functionality */
+/* Hide the scrollbar but keep the scroll functionality */
+/* Hide the scrollbar but keep the scroll functionality */
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hidden {
+  -ms-overflow-style: none;  /* For Internet Explorer */
+  scrollbar-width: none;     /* For Firefox */
+}
+

@@ -22,7 +22,8 @@ import OrderManagement from '../pages/admin/OrderMangement'
 import CouponManagement from '../pages/admin/CoupenManagement'
 import AdminCoupensForm from '../Forms/admin/AdminCoupensForm'
 import ProductManagement from '../pages/admin/ProductManagement'
-import AdminProductsForm from '../Forms/admin/AdminProductsForm'
+import AdminProductCreateForm from '../Forms/admin/AdminProductCreateForm'
+import AdminProductUpdateForm from '../Forms/admin/AdminProductUpdateForm'
 import OrderDetails from '../Forms/admin/OrderViewPage'
 import AdminUsersForm from '../Forms/admin/AdminUsersForm'
 import AdminDashboard from '../pages/admin/AdminDashboard'
@@ -57,8 +58,8 @@ export const adminRoutes = [
   { path: "/productManagement", component: ProductManagement },
   { path: "/couponManagement/update/coupons/:id", component: AdminCoupensForm },
   { path: "/couponManagement/create/coupons", component: AdminCoupensForm },
-  { path: "/productManagement/create/products", component: AdminProductsForm },
-  { path: "/productManagement/update/products/:id", component: AdminProductsForm },
+  { path: "/productManagement/create/products", component: AdminProductCreateForm },
+  { path: "/productManagement/update/products/:id", component: AdminProductUpdateForm },
   { path: "/orderManagement/view/orders", component: OrderDetails },
   { path: "/userManagement/update/users/:id", component: AdminUsersForm },
   { path: "/productManagement/view/products/:id", component: ViewProductDetails },

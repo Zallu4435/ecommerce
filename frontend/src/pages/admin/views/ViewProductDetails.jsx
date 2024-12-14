@@ -35,6 +35,7 @@ const ViewProductDetails = () => {
     { label: 'Brand', value: product.brand },
     { label: 'Warranty', value: product.warranty },
     { label: 'Return Policy', value: product.returnPolicy },
+    { label: 'Description', value: product.description },
     { label: 'Price', value: (
         <>
           <span className="line-through text-red-500">${product.originalPrice}</span>{' '}
