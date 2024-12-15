@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Camera, X, Upload } from 'lucide-react';
 import { validateImageVariants } from '../../validation/admin/ProductFormValidation'; // Import the validation function
 
-const ProductImageVarientAddModal = ({ 
+const ProductImageVariantAddModal = ({ 
   isOpen, 
   onClose, 
   onImageUpload, 
@@ -24,6 +24,9 @@ const ProductImageVarientAddModal = ({
         updatedPreviews[index] = reader.result;
         setPreviews(updatedPreviews);
       };
+      reader.onerror = () => {
+        alert("Failed to read the file. Please try again.");
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -42,7 +45,7 @@ const ProductImageVarientAddModal = ({
 
       // Proceed with image upload if validation passes
       onImageUpload(validImages);
-      onClose();
+      handleClose();
     } catch (error) {
       alert("Error: " + error.message); // Show error messages if validation fails
     }
@@ -59,6 +62,13 @@ const ProductImageVarientAddModal = ({
     setPreviews(updatedPreviews);
   };
 
+  const handleClose = () => {
+    // Reset state on modal close
+    setImageFiles(new Array(3).fill(null));
+    setPreviews(new Array(3).fill(null));
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   // Check if at least one image is selected
@@ -68,7 +78,7 @@ const ProductImageVarientAddModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="w-11/12 max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 relative">
         <button 
-          onClick={onClose} 
+          onClick={handleClose} 
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:hover:text-white"
         >
           <X size={24} />
@@ -103,7 +113,11 @@ const ProductImageVarientAddModal = ({
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleImageChange(index, e)}
+                    aria-label={`Upload image ${index + 1}`}
+                    onChange={(e) => {
+                      handleImageChange(index, e);
+                      e.target.value = ""; // Reset input value
+                    }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <Camera size={40} className="text-gray-400 mb-2" />
@@ -131,4 +145,8 @@ const ProductImageVarientAddModal = ({
   );
 };
 
-export default ProductImageVarientAddModal;
+ProductImageVariantAddModal.defaultProps = {
+  initialImages: [null, null, null],
+};
+
+export default ProductImageVariantAddModal;

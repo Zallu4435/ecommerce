@@ -1,6 +1,5 @@
 import { useState } from "react";
 import AdminTable from "../../components/admin/AdminTable";
-import AdminSidebar from "../../components/admin/AdminSidebar";
 import { useGetProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
 import { useButtonHandlers } from "../../components/admin/ButtonHandlers";
 
@@ -12,10 +11,8 @@ const ProductManagement = () => {
   const { data = [], isLoading, isError } = useGetProductsQuery();
 
   return (
-    <div className="flex dark:bg-black dark:text-white space-x-12">
-      <AdminSidebar />
 
-      <div className="dark:bg-gray-900 bg-orange-50 h-[715px] px-14 my-12">
+      <div className="dark:bg-gray-900 dark:bg-black mx-10 py-2 dark:text-white bg-orange-50 h-[715px] px-14 my-12">
         <div className="flex justify-between mt-5 items-center">
           <h1 className="text-3xl font-bold text-gray-400">
             Product Management
@@ -41,7 +38,6 @@ const ProductManagement = () => {
           />
         </div>
       </div>
-    </div>
   );
 };
 

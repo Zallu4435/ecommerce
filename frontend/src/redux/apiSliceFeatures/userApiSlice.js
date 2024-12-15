@@ -13,6 +13,12 @@ export const userApiSlice = createApi({
       providesTags: ['User', 'Avatar'],
     }),
 
+    // Fetch ALL user details
+    getUsers: builder.query({
+      query: () => '/getUsers',
+      providesTags: ['User', 'Avatar']
+    }),
+
     // Register user
     registerUser: builder.mutation({
       query: (userData) => ({
@@ -148,4 +154,5 @@ export const {
   useLogoutUserMutation,
   useUpdateUserInfoMutation,
   useUpdateAvatarMutation,
+  useGetUsersQuery
 } = userApiSlice;

@@ -1,26 +1,27 @@
 
 import { useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
-import AdminSidebar from '../../components/admin/AdminSidebar';
+import { useGetCategoriesQuery } from '../../redux/apiSliceFeatures/categoryApiSlice';
 
 const CategoryManagement = () => {
-    const [search, setSearch] = useState('');
+  const [search, setSearch] = useState('');
 
-    const categories = [
-      { id: 1, name: 'John Doe', productCount: "212", createdAt: "04-Jan-2024", updatedAt: "04-Jan-2024"},
-      { id: 3, name: 'Samuel Green', productCount: "212", createdAt: "04-Jan-2024", updatedAt: "04-Jan-2024" },
-      { id: 2, name: 'Jane Smith', productCount: "212", createdAt: "04-Jan-2024", updatedAt: "04-Jan-2025"},
-      // Add more sample categories here
-    ];
+  const { data = [], isLoading, isError } = useGetCategoriesQuery();
 
   return (
-    <div className='flex dark:bg-black dark:text-white space-x-16'>
-      <AdminSidebar />
+    <div className='flex h-screen dark:bg-black  dark:text-white space-x-16'>
 
-      <div className='dark:bg-gray-900 bg-orange-50 px-14 my-12'>
+      <div className='dark:bg-gray-900 bg-orange-50 ml-10 px-14 my-12'>
         <h1 className="text-3xl font-bold ml-[-30px] my-6 text-gray-400">Category Management</h1>
         
-        <AdminTable type="categories" data={categories} search={search} setSearch={setSearch} />
+          <AdminTable
+            type="categories" 
+            data={data} 
+            search={search} 
+            setSearch={setSearch}
+            isLoading={isLoading}
+            isError={isError} 
+          />
 
       </div>
 

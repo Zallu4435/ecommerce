@@ -16,8 +16,9 @@ export const useButtonHandlers = () => {
   const [banEntity] = useBanEntityMutation();
 
   const handleUpdate = async (id, type) => {
+    console.log("hererererererere")
     try {
-      navigate(`update/products/${id}`)
+      navigate(`update/${type}/${id}`)
     } catch (error) {
       console.error('Update failed:', error);
       alert('Failed to update. Please try again.');
@@ -35,7 +36,7 @@ export const useButtonHandlers = () => {
 
   const handleCreate = async (type, data) => {
     try {
-      navigate(`create/products`)
+      navigate(`create/${type}`)
     } catch (error) {
       console.error('Create failed:', error);
       alert('Failed to create. Please try again.');

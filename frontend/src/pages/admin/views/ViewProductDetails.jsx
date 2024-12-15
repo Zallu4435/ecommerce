@@ -1,14 +1,25 @@
-import { useParams, useNavigate } from 'react-router-dom'; 
-import { useGetProductByIdQuery } from '../../../redux/apiSliceFeatures/productApiSlice'; 
+import { useParams, useNavigate } from 'react-router-dom';
+import { useGetProductByIdQuery } from '../../../redux/apiSliceFeatures/productApiSlice';
+import React, { useState, useEffect } from 'react';
+import Zoom from 'react-medium-image-zoom'
+import 'react-medium-image-zoom/dist/styles.css'
 
 const ViewProductDetails = () => {
-  const { id } = useParams(); // Get the product ID from the URL
-  const navigate = useNavigate(); // Hook for navigation
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  // Destructure API response
   const { data, error, isLoading } = useGetProductByIdQuery(id);
 
-  // Handle loading state
+  const [mainImage, setMainImage] = useState('');
+  const [variantImages, setVariantImages] = useState([]);
+
+  useEffect(() => {
+    if (data?.product?.images?.length > 0) {
+      setMainImage(data.product.images[0]);
+      setVariantImages(data.product.images.slice(1, 4));
+    }
+  }, [data]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -17,7 +28,6 @@ const ViewProductDetails = () => {
     );
   }
 
-  // Handle error state
   if (error) {
     return (
       <div className="flex justify-center items-center min-h-screen text-red-500">
@@ -26,10 +36,8 @@ const ViewProductDetails = () => {
     );
   }
 
-  // Get the product data from the response
   const product = data?.product;
 
-  // Define an array of product details to map over
   const productDetails = [
     { label: 'Category', value: product.category },
     { label: 'Brand', value: product.brand },
@@ -37,12 +45,12 @@ const ViewProductDetails = () => {
     { label: 'Return Policy', value: product.returnPolicy },
     { label: 'Description', value: product.description },
     { label: 'Price', value: (
-        <>
-          <span className="line-through text-red-500">${product.originalPrice}</span>{' '}
-          <span className="text-green-500">
-            ${ (product.originalPrice * (1 - product.offerPercentage / 100)).toFixed(2) }
-          </span>
-        </>
+      <>
+        <span className="line-through text-red-500">${product.originalPrice}</span>{' '}
+        <span className="text-green-500">
+          ${ (product.originalPrice * (1 - product.offerPercentage / 100)).toFixed(2) }
+        </span>
+      </>
     )},
     { label: 'Stock', value: `${product.stock} items available` },
     { label: 'Available Sizes', value: product.sizeOption.join(', ') },
@@ -52,7 +60,6 @@ const ViewProductDetails = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
       <div className="container mx-auto bg-white shadow-md rounded-lg p-8 dark:bg-gray-900 dark:text-white">
-        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="mb-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition duration-300"
@@ -60,23 +67,40 @@ const ViewProductDetails = () => {
           Back
         </button>
         
-        {/* Product Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Product Image */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <div className="w-full lg:w-3/4 mx-auto">
-            <img
-              src={ 'https://via.placeholder.com/400' || product.images[0]} // Use the first image in the images array or a placeholder
-              alt={product.productName}
-              className="w-full h-auto mx-auto sm:h-[450px] sm:w-[500px] object-cover rounded-lg shadow-lg"
-            />
+            <div className="mb-4">
+              <Zoom>
+                <img
+                  src={mainImage || 'https://via.placeholder.com/400'}
+                  alt={product.productName}
+                  className="w-full h-[400px] object-cover rounded-lg shadow-lg"
+                />
+              </Zoom>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mt-4">
+              {product.variantImages.map((image, index) => (
+                <div 
+                  key={index} 
+                  className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
+                    mainImage === image ? 'border-indigo-500' : 'border-transparent'
+                  }`}
+                  onClick={() => setMainImage(image)}
+                >
+                  <img
+                    src={image}
+                    alt={`Variant ${index + 1}`}
+                    className="w-full h-24 object-cover"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Product Info */}
           <div>
             <h2 className="text-4xl font-bold mb-4 text-indigo-600 dark:text-indigo-400">{product.productName}</h2>
             <p className="text-gray-800 dark:text-gray-200 mb-6">{product.description}</p>
 
-            {/* Map over the productDetails array to display each item dynamically */}
             <ul className="space-y-4">
               {productDetails.map((detail, index) => (
                 <li key={index} className="text-gray-600 dark:text-gray-300 font-medium flex justify-between">
@@ -92,3 +116,4 @@ const ViewProductDetails = () => {
 };
 
 export default ViewProductDetails;
+

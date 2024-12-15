@@ -323,3 +323,29 @@ exports.updatePassword = async (req, res, next) => {
     message: "Password updated successfully",
   });
 };
+
+
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select('username email role createdAt');
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      users: users.map(user => ({
+        name: user.username,
+        email: user.email,
+        role: user.role,
+        joinDate: user.createdAt
+      }))
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

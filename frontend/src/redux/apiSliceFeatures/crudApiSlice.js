@@ -9,7 +9,7 @@ export const crudApiSlice = createApi({
     // Generic Add
     addEntity: builder.mutation({
       query: ({ entity, data }) => ({
-        url: `/${entity}/create-product`,
+        url: `/${entity}/create`,
         method: 'POST',
         body: data,
       }),

@@ -11,18 +11,31 @@ const AdminTable = ({ type, data, isLoading, isError, search, setSearch }) => {
     orders: 'Orders', 
     products: 'Products', 
   };
-
-  // Filter data based on the search query
-  const filteredData = data?.products?.filter((item) => 
-    Object.values(item).some((value) => 
-      value && value.toString().toLowerCase().includes(search.toLowerCase())
-    )
-  );
-
+  const filteredData = data[type]?.filter((item) => {
+    return headers.some((header) => {
+      const value = item[header];      
+      // If search is empty, return all items
+      if (!search) return true;   
+      // Handle different types of values
+      if (value === null || value === undefined) return false;     
+      // Special handling for MongoDB Decimal type
+      if (value && typeof value === 'object' && value.$numberDecimal) {
+        return value.$numberDecimal.toString().toLowerCase().includes(search.toLowerCase());
+      }     
+      // Handle other object types (like dates)
+      if (typeof value === 'object') {
+        return JSON.stringify(value).toLowerCase().includes(search.toLowerCase());
+      }
+      // String and primitive type conversion
+      return value.toString().toLowerCase().includes(search.toLowerCase());
+    });
+  });
+  
+  console.log(filteredData, "filteredData")
   return (
     <div>
       {/* Search Bar */}
-      <div className="mb-4 sticky top-0 z-10 dark:bg-gray-900 py-4">
+      <div className="mb-4 sticky overflow-hidden top-0 z-10 dark:bg-gray-900 py-4">
         <input 
           type="text" 
           placeholder={`Search for ${types[type]}`} 

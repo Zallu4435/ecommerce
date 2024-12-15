@@ -11,17 +11,17 @@ const imageValidationSchema = z.instanceof(File)
 
 // Product validation schema
 export const productValidationSchema = z.object({
-  productName: z.string().min(3, { message: "Product name must be at least 3 characters" }).optional(),
-  imageUrl: z.string().url({ message: "Invalid image URL" }).optional(),
+  productName: z.string().min(3, { message: "Product name must be at least 3 characters" }),
+  imageUrl: z.string().url({ message: "Invalid image URL" }),
   category: z.string().min(1, { message: "Please select a category" }),
-  description: z.string().min(10, { message: "Description must be at least 10 characters" }).optional(),
-  brandName: z.string().min(2, { message: "Brand name must be at least 2 characters" }).optional(),
-  originalPrice: z.number().positive({ message: "Original price must be positive" }).optional(),
-  offerPrice: z.number().positive({ message: "Offer price must be positive" }).optional(),
-  stockQuantity: z.number().int().min(0, { message: "Stock quantity must be non-negative" }).optional(),
-  warrantyTime: z.number().int().min(0, { message: "Warranty time must be non-negative" }).optional(),
-  returnPolicy: z.string().min(5, { message: "Return policy must be at least 5 characters" }).optional(),
-  sizes: z.array(z.string()).min(1, { message: "At least 1 size is required" }).optional(),
+  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  brandName: z.string().min(2, { message: "Brand name must be at least 2 characters" }),
+  originalPrice: z.number().positive({ message: "Original price must be positive" }),
+  offerPrice: z.number().positive({ message: "Offer price must be positive" }),
+  stockQuantity: z.number().int().min(0, { message: "Stock quantity must be non-negative" }),
+  warrantyTime: z.number().int().min(0, { message: "Warranty time must be non-negative" }),
+  returnPolicy: z.string().min(5, { message: "Return policy must be at least 5 characters" }),
+  sizes: z.array(z.string()).min(1, { message: "At least 1 size is required" }),
   variants: z.array(imageValidationSchema).optional().refine((images) => images.length > 0, {
     message: "At least one variant image is required"
   })

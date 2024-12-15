@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Upload } from 'lucide-react';
@@ -84,7 +84,6 @@ const AdminProductUpdateForm = () => {
   
       // Upload variant images to Cloudinary
       if (imageFiles && imageFiles.length > 0) {
-        console.log("Uploading variant images...");
         const variantImageUrls = await Promise.all(
           imageFiles.map(async (file) => {
             if (file) {
@@ -97,7 +96,6 @@ const AdminProductUpdateForm = () => {
   
         // Update the variants field with the Cloudinary URLs
         data.variants = variantImageUrls.filter((url) => url !== null);
-        console.log("Variant images uploaded:", data.variants);
       }
   
       // Send the final data to the backend

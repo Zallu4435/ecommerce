@@ -7,7 +7,8 @@ const {
   activateUser, getUser,
   updateUserInfo, updateAvatar,
   addAddress, editAddress, removeAddress,
-  forgotPassword, updatePassword, resetPassword
+  forgotPassword, updatePassword, resetPassword,
+  getAllUsers
 } = require('../controller/userController');
 
 // User Routes
@@ -30,6 +31,8 @@ router.delete('/address', isAuthenticated, catchAsyncErrors(removeAddress));
 router.post('/forgot-password', catchAsyncErrors(forgotPassword));
 router.put('/reset-password/:token', catchAsyncErrors(resetPassword));
 router.put('/update-password', isAuthenticated, catchAsyncErrors(updatePassword));
+
+router.get('/getUsers', catchAsyncErrors(getAllUsers));
 
 
 module.exports = router;

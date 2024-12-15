@@ -9,19 +9,19 @@ const CouponsSchema = new mongoose.Schema(
     CoupenCode: {
         type: String,         
     },
-    Discount: {
+    discount: {
         type: mongoose.Schema.Types.Decimal128, 
         required: true,      
     },
-    MinPurchase: {
+    minPurchase: {
         type: mongoose.Schema.Types.Decimal128, 
         default: 0,         
     },
-    Expiry: {
+    expiry: {
         type: Date,           
         required: true,      
     },
-    MaxDiscount: {
+    maxDiscount: {
         type: mongoose.Schema.Types.Decimal128,
         default: 0,           
     },

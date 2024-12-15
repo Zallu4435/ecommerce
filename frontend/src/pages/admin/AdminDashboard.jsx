@@ -1,21 +1,14 @@
-// import { GrHome } from "react-icons/gr";
-// import { IoIosArrowForward } from "react-icons/io";
-// import SettingsTheme from "../../components/SettingsTheme";
-
-import AdminSidebar from "../../components/admin/AdminSidebar";
+import React from 'react';
 
 const AdminDashboard = () => (
-  <div className="flex flex-col dark:bg-black lg:flex-row h-screen text-gray-500 overflow-auto">
-
-    <AdminSidebar />
-
+  <div className="flex flex-col lg:flex-row dark:bg-black w-[1300px] h-screen text-gray-500 overflow-hidden">
     {/* Main Content */}
     <div className="flex-1 p-6 sm:p-10">
       {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {[ 
           { title: "Total Users", value: "1,234" },
-          { title: "Total Products", value: "$12,345" },
+          { title: "Total Products", value: "12,345" },
           { title: "Total Orders", value: "23" },
           { title: "Weekly Sales", value: "56" },
         ].map(({ title, value }) => (

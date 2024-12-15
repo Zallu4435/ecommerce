@@ -1,6 +1,7 @@
 import React from "react";
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
 import { adminRoutes } from "../config/routes";
+import AdminSidebar from "../components/admin/AdminSidebar";
 
 // Protected Route component to check authentication
 const ProtectedRoute = ({ children }) => {
@@ -11,7 +12,8 @@ const ProtectedRoute = ({ children }) => {
 
 const AdminLayout = () => {
   return (
-    <div>
+    <div className="flex overflow-hidden dark:bg-black">
+      <AdminSidebar />
       <main>
         <Routes>
           {/* Wrapper for all Admin routes */}

@@ -29,14 +29,13 @@ const TableRow = ({ item, type }) => {
       <tr key={item.id} className="dark:hover:bg-gray-800 border border-gray-600 hover:bg-slate-100">
         {type === 'users' && (
           <>
-            <td className="px-6 py-4 flex items-center gap-3">
+            <td className="px-6 py-4 w-[200px] overflow-hidden flex items-center gap-3">
               <img src="https://via.placeholder.com/50" alt="Profile" className="w-12 h-12 rounded-full" />
-              {item.name}
+              <strong className=''>{item.name}</strong>
             </td>
             <td className="px-6 py-4 border border-gray-600">{item.email}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.phone}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.address}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.status}</td>          
+            <td className="px-6 py-4 border border-gray-600">{item.role}</td>
+            <td className="px-6 py-4 border border-gray-600">{new Date(item.joinDate).toLocaleDateString()}</td>          
             <td className="px-6 flex py-4 gap-6">
               <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'users')}>
                 Update
@@ -44,8 +43,8 @@ const TableRow = ({ item, type }) => {
               <Button borderColor="#d97706" textColor="#d97706" hoverColor="white" onClick={() => handleBan(item.id)}>
                 Ban
               </Button>
-              <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white" onClick={() => openModal(item)}>
-                Delete
+              <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white" onClick={() => handleView('users')}>
+                View
               </Button>
             </td>
           </>
@@ -56,7 +55,6 @@ const TableRow = ({ item, type }) => {
             <td className="px-6 py-4">{item.name}</td>
             <td className="px-6 py-4 border border-gray-600">{item.productCount}</td>
             <td className="px-6 py-4 border border-gray-600">{item.createdAt}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.updatedAt}</td>
             <td className="px-6 flex py-4 gap-6">
               <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'categories')}>
                 Update
@@ -71,16 +69,17 @@ const TableRow = ({ item, type }) => {
         {type === 'orders' && (
           <>
             <td className="px-6 py-4">{item.name}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.productName}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.price}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.quantity}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.date}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.status}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.paymentMethod}</td>
+            <td className="px-6 py-4 border border-gray-600">{item.orders}</td>
             <td className="px-6 py-4 border border-gray-600">{item.totalAmount}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.address}</td>
+            <td className="px-6 py-4 border border-gray-600">{item.lastOrder}</td>
+            <td className="px-6 py-4 border border-gray-600">{item.status}</td>
             <td className="px-6 flex py-4 gap-6">
-              <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white" onClick={() => handleView('orders')}>View</Button>
+              <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white" onClick={() => handleView('orders')}>
+                View
+              </Button>
+              <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'categories')}>
+                Update
+              </Button>
             </td>
           </>
         )}
@@ -88,14 +87,20 @@ const TableRow = ({ item, type }) => {
         {type === 'coupons' && (
           <>
             <td className="px-6 py-4 border border-gray-600">{item.couponCode}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.discountValue}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.validFrom}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.validUntil}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.usageLimit}</td>
+            <td className="px-6 py-4 border border-gray-600">
+              {item.discount?.$numberDecimal || item.discount || "N/A"}
+            </td>
+            <td className="px-6 py-4 border border-gray-600">
+              {item.expiry ? new Date(item.expiry).toLocaleDateString() : "N/A"}
+            </td>
+            <td className="px-6 py-4 border border-gray-600">
+              {item.maxDiscount.$numberDecimal || item.maxDiscount || "N/A"}
+            </td>
+            <td className="px-6 py-4 border border-gray-600">
+              {item.minPurchase?.$numberDecimal || item.minPurchase || "N/A"}
+            </td>
+
             <td className="px-6 flex py-4 gap-6">
-              <Button borderColor="#1D4ED8" textColor="#1D4ED8" hoverColor="white" onClick={() => handleCreate('coupons')}>
-                Create
-              </Button>
               <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'coupons')}>
                 Update
               </Button>
@@ -141,19 +146,19 @@ const TableRow = ({ item, type }) => {
 // Define table configurations based on the type
 export const config = {
   users: {
-    headers: ['Username', 'Email', 'Phone', 'Address', 'Status', 'Actions'],
+    headers: ['Username', 'Email', 'Role', 'Join Date', 'Actions'],
     rowRenderer: (item) => <TableRow item={item} type="users" />,
   },
   categories: {
-    headers: ['Category Name', 'Product Count', 'Created At', 'Updated At', 'Actions'],
+    headers: ['Category Name', 'Product Count', 'Created At', 'Actions'],
     rowRenderer: (item) => <TableRow item={item} type="categories" />,
   },
   orders: {
-    headers: ['Username', 'Product Name', 'Price', 'Quantity', 'Date', 'Status', 'Payment Method', 'Total Amount', 'Address', 'Actions'],
+    headers: ['Username', 'Total Orders', 'Total Amount', 'Last Order Date', 'Status', 'Actions'],
     rowRenderer: (item) => <TableRow item={item} type="orders" />,
   },
   coupons: {
-    headers: ['Coupon Code', 'Discount Value', 'Valid From', 'Valid Until', 'Usage Limit', 'Actions'],
+    headers: ['Coupon Code', 'Discount Value', 'Expiry Date', 'Max Discount', 'Min Purchase', 'Actions'],
     rowRenderer: (item) => <TableRow item={item} type="coupons" />,
   },
   products: {

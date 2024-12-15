@@ -16,7 +16,7 @@ router.get('/getProduct/:id', catchAsyncErrors(getProductDetails)); // Get produ
 
 // Admin only (with authentication check)
 router.post(
-  '/create-product', 
+  '/create', 
   catchAsyncErrors(createProduct)
 ); // Create product
 
