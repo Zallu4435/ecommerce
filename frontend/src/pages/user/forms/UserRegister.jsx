@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input, InputContainer, Label } from "../../../components/user/StyledComponents/StyledComponents";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -6,12 +6,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "../../../validation/schemas/SignupSchema";
 import { toast } from "react-toastify";
 import { useRegisterUserMutation } from "../../../redux/apiSliceFeatures/userApiSlice";
+import SignupSuccessModal from "../../../modal/user/SignUpModal";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../../../redux/slice/userSlice";
 
 
 const UserRegister = () => {
 
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [registerUser] = useRegisterUserMutation();
+  const dispatch = useDispatch();
   // React Hook Form with zod schema
   const {
     register,
@@ -28,15 +32,19 @@ const UserRegister = () => {
       try {
         const response = await registerUser(data).unwrap();
         console.log(response, "response from the backend signup");
-
         toast.success('Login success');
+        setIsModalOpen(true);
 
-        navigate('/')
       } catch (err) {
         toast.error(err?.data?.message);
       }
 
-    reset();
+      reset();
+
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false); 
   };
 
   return (
@@ -141,6 +149,8 @@ const UserRegister = () => {
           </Link>
         </p>
       </div>
+
+      <SignupSuccessModal isOpen={isModalOpen} onClose={closeModal} />
     </div>
   );
 };

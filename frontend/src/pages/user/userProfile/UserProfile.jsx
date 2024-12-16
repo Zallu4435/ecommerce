@@ -3,11 +3,13 @@ import EditProfileModal from '../../../modal/user/EditProfileModal';
 import Avatar from './Avatar';
 import { useGetUserQuery } from '../../../redux/apiSliceFeatures/userApiSlice';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+import { defaultProfile } from '../../../assets/images';
 
 function UserProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data, isLoading, isError, error, refetch } = useGetUserQuery({});
+  const { data, isLoading, isError, error, refetch } = useGetUserQuery();
 
+  console.log(data, "data")
   const [userAvatar, setUserAvatar] = useState('');
   const [userUsername, setUserUsername] = useState('');
 
@@ -35,7 +37,7 @@ function UserProfile() {
     <div className="flex-1 dark:bg-gray-800 shadow-md rounded-lg p-6 ml-6">
       {/* Header Section */}
       <Avatar
-        avatar={userAvatar}
+        avatar={userAvatar || defaultProfile}
         username={userUsername}
         onAvatarUpdate={refetch}
       />

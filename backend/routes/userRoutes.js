@@ -1,22 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { isAuthenticated } = require('../middleware/auth');
+const { isAuthenticated, verifyRefreshToken } = require('../middleware/auth');
 const catchAsyncErrors = require('../middleware/catchAsyncError');
 const { 
   signupUser, loginUser, logoutUser,
-  activateUser, getUser,
+  activateAccount, getUser,
   updateUserInfo, updateAvatar,
   addAddress, editAddress, removeAddress,
   forgotPassword, updatePassword, resetPassword,
-  getAllUsers
+  getAllUsers,
+  googleLogin,
+  refreshToken
 } = require('../controller/userController');
 
 // User Routes
 router.post('/signup-user', catchAsyncErrors(signupUser));
-router.post('/activation', catchAsyncErrors(activateUser));
+router.post('/activation/:activation_token', catchAsyncErrors(activateAccount));
 router.post('/login-user', catchAsyncErrors(loginUser));
 router.get('/getUser', isAuthenticated, catchAsyncErrors(getUser));
-router.get('/logout', catchAsyncErrors(logoutUser));
+router.post('/logout', catchAsyncErrors(logoutUser));
 router.put('/update-user-info', isAuthenticated, catchAsyncErrors(updateUserInfo));
 router.put('/update-avatar', isAuthenticated, catchAsyncErrors(updateAvatar));
 
@@ -24,7 +26,7 @@ router.put('/update-avatar', isAuthenticated, catchAsyncErrors(updateAvatar));
 // Address Routes
 router.post('/address', isAuthenticated, catchAsyncErrors(addAddress));
 router.put('/address', isAuthenticated, catchAsyncErrors(editAddress));
-router.delete('/address', isAuthenticated, catchAsyncErrors(removeAddress));
+router.delete('/address', isAuthenticated, catchAsyncErrors(removeAddress)); 
 
 
 // Password Routes
@@ -33,6 +35,7 @@ router.put('/reset-password/:token', catchAsyncErrors(resetPassword));
 router.put('/update-password', isAuthenticated, catchAsyncErrors(updatePassword));
 
 router.get('/getUsers', catchAsyncErrors(getAllUsers));
-
+router.post('/google-login', catchAsyncErrors(googleLogin));
+router.get('/refresh-token', verifyRefreshToken, catchAsyncErrors(refreshToken))
 
 module.exports = router;

@@ -15,11 +15,9 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
     },
     password: {
       type: String,
-      required: true,
     },
     phone: {
       type: String,
@@ -40,6 +38,11 @@ const userSchema = new mongoose.Schema(
     isBlocked: {
       type: String,
       default: false,
+    },
+    googleId: {
+      type: String,
+      unique: true, 
+      sparse: true,
     },
   },
   {

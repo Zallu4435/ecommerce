@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import AdminLayout from './layouts/AdminLayout'
 import AdminLogin from './pages/admin/AdminLogin'
 import ProductManagement from './pages/admin/ProductManagement'
+import PersistLogin from './PersistLogin'
 
 
 const App = () => {
@@ -26,10 +27,12 @@ const App = () => {
   return (
     <>
 
-      <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
+      <GoogleOAuthProvider clientId="978525226345-rsvsmqcr536r622rv7ri03g81otjc9d7.apps.googleusercontent.com">
           <Routes>
+              <Route element={<PersistLogin />} >
               <Route path="/*" element={<MainLayout />} /> 
               <Route path="/admin/*" element={<AdminLayout />} /> 
+              </Route>
               <Route path='/admin/login' element={<AdminLogin /> } /> 
             </Routes>
       </GoogleOAuthProvider>

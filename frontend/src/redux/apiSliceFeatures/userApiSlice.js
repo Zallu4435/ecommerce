@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../../middleware/authMiddleware';
 import { uploadImageToCloudinary } from '../../server'; // Import the upload function
+import { clearCredentials } from '../slice/userSlice';
 
 export const userApiSlice = createApi({
   reducerPath: "userApi",
@@ -11,6 +12,16 @@ export const userApiSlice = createApi({
     getUser: builder.query({
       query: () => '/getUser',
       providesTags: ['User', 'Avatar'],
+      
+    }),
+
+    googleLogin: builder.mutation({
+      query: (userData) => ({
+        url: '/google-login',
+        method: 'POST',
+        body: userData,
+      }),
+      invalidatesTags: ['User'],
     }),
 
     // Fetch ALL user details
@@ -31,18 +42,24 @@ export const userApiSlice = createApi({
 
     // Login user
     loginUser: builder.mutation({
-      query: (credentials) => ({
+      query: credentials => ({
         url: '/login-user',
         method: 'POST',
-        body: credentials,
+        body: { ...credentials }
+      })
+    }),
+
+    refreshUser: builder.mutation({
+      query: () => ({
+        url: '/refresh-token',
+        method: 'GET',
       }),
-      invalidatesTags: ['User', 'Avatar'],
     }),
 
     // Activate user
     activateUser: builder.mutation({
       query: (activationData) => ({
-        url: '/activation',
+        url: '/activation/:token',
         method: 'POST',
         body: activationData,
       }),
@@ -53,9 +70,17 @@ export const userApiSlice = createApi({
     logoutUser: builder.mutation({
       query: () => ({
         url: '/logout',
-        method: 'GET',
+        method: 'POST',
+        credentials: 'include', // Ensure cookies are included in the request
       }),
-      invalidatesTags: ['User', 'Avatar'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(clearCredentials());
+        } catch (err) {
+          console.error(err);
+        }
+      },
     }),
 
     // Update user information
@@ -154,5 +179,7 @@ export const {
   useLogoutUserMutation,
   useUpdateUserInfoMutation,
   useUpdateAvatarMutation,
-  useGetUsersQuery
+  useGetUsersQuery,
+  useGoogleLoginMutation,
+  useRefreshUserMutation
 } = userApiSlice;

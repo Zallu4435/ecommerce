@@ -29,6 +29,7 @@ import brandImg_8 from './brand-three-img8.png'
 import aboutUsImg from './aboutUs.jpg';
 import notFound from './404.jpg'
 import wallet from './wallet.jpg'
+import defaultProfile from './profile.jpg'
 
 
 export {
@@ -61,5 +62,6 @@ export {
     brandImg_7,
     brandImg_8,
     notFound,
-    wallet
+    wallet,
+    defaultProfile
 }

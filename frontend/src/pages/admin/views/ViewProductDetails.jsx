@@ -1,8 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetProductByIdQuery } from '../../../redux/apiSliceFeatures/productApiSlice';
 import React, { useState, useEffect } from 'react';
-import Zoom from 'react-medium-image-zoom'
-import 'react-medium-image-zoom/dist/styles.css'
+import Magnifier from 'react-magnifier';
 
 const ViewProductDetails = () => {
   const { id } = useParams();
@@ -58,8 +57,8 @@ const ViewProductDetails = () => {
   ];
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-800 p-4">
-      <div className="container mx-auto bg-white shadow-md rounded-lg p-8 dark:bg-gray-900 dark:text-white">
+    <div className="flex justify-center  mx-12 items-center min-h-screen dark:bg-black p-4">
+      <div className="container mx-auto w-[1200px] bg-white shadow-md rounded-lg p-8 dark:bg-gray-900 dark:text-white">
         <button
           onClick={() => navigate(-1)}
           className="mb-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition duration-300"
@@ -70,13 +69,16 @@ const ViewProductDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <div className="w-full lg:w-3/4 mx-auto">
             <div className="mb-4">
-              <Zoom>
-                <img
+              <Magnifier
                   src={mainImage || 'https://via.placeholder.com/400'}
                   alt={product.productName}
-                  className="w-full h-[400px] object-cover rounded-lg shadow-lg"
+                  className="w-full h-[350px] object-cover rounded-lg shadow-lg"
+                  mgShape="circle" // Circle magnifier
+                  mgShowOverflow={false}
+                  mgWidth={150}
+                  mgHeight={150}
+                  zoomFactor={1.5} // Adjust the zoom factor
                 />
-              </Zoom>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-4">
               {product.variantImages.map((image, index) => (

@@ -4,10 +4,12 @@ const ErrorHandler = require('../utils/ErrorHandler');
 const jwt = require('jsonwebtoken');
 const sendMail = require('../utils/sendMail');
 const sendToken = require('../utils/jwtToken');
+const { OAuth2Client } = require("google-auth-library");
+
 
 // Create activation token
 const createActivationToken = (user) => {
-  return jwt.sign(user, process.env.JWT_SECRET_KEY, {
+  return jwt.sign(user, process.env.JWT_ACTIVATION_SECRET, {
     expiresIn: "5m",
   });
 };
@@ -15,55 +17,90 @@ const createActivationToken = (user) => {
 // Signup user
 exports.signupUser = async (req, res, next) => {
   const { username, email, password, phone } = req.body;
-
-  const userEmail = await User.findOne({ email });
-  if (userEmail) {
-    return next(new ErrorHandler("User already exists.", 400));
-  }
-
-  const user = { username, email, password, phone };
-  const activationToken = createActivationToken(user);
-  const activationUrl = `http://localhost:5173/activation/${activationToken}`;
+  console.log(username, email, password, phone);
 
   try {
+    // Check if user already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) { 
+      return next(new ErrorHandler("User already exists.", 400));
+    }
+
+    // Save user as inactive
+    const newUser = new User({ username, email, password, phone, isActive: false });
+    console.log(newUser, "newUser");
+    await newUser.save();
+
+    // Generate activation token
+    const activationToken = createActivationToken({ id: newUser._id });
+    console.log(activationToken, "activation ataok")
+    const activationUrl = `http://localhost:5173/activation/${activationToken}`;
+
+    console.log("Sending activation email...");
     await sendMail({
-      email: user.email,
+      email: newUser.email,
       subject: "Activate your account",
-      message: `Hello ${user.username}, Please click on the link to activate your account: ${activationUrl}`,
-    });
+      message: `Hello ${newUser.username}, Please click on the link to activate your account: ${activationUrl}`,
+    }); 
+
     res.status(201).json({
-      success: true,
-      message: `Please check your email: ${user.email} to activate your account.`,
+      success: true, 
+      message: `Please check your email: ${newUser.email} to activate your account.`,
     });
   } catch (err) {
+    console.error("Error sending email:", err.message);
+
+    // Rollback: delete the user if email sending fails
+    if (newUser) {
+      await User.deleteOne({ _id: newUser._id });
+    }
+
     return next(new ErrorHandler(err.message, 500));
   }
 };
 
-// Activate user
-exports.activateUser = async (req, res, next) => {
-  const { activation_token } = req.body;
+exports.activateAccount = async (req, res, next) => {
+  try {
+    console.log("hihih")
+    console.log(req.params, "paerams")
+    console.log(req.query, "query")
+    console.log(req.body, "body")
 
-  const newUser = jwt.verify(activation_token, process.env.JWT_SECRET_KEY);
-  if (!newUser) {
-    return next(new ErrorHandler("Invalid user", 400));
+    const  {token} = req.body; 
+    console.log(token, "token from params");
+
+    // Verify activation token
+    const decoded = jwt.verify(token, process.env.JWT_ACTIVATION_SECRET);
+
+    // Find the user and activate their account
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return next(new ErrorHandler("Invalid activation token or user not found", 400));
+    }
+
+    if (user.isActive) {
+      return next(new ErrorHandler("Account is already activated", 400));
+    }
+
+    user.isActive = true;
+    await user.save();
+
+    // Generate and send access/refresh tokens
+    sendToken(user, 200, res);
+  } catch (err) {
+    console.error(err.message);
+    return next(new ErrorHandler("Activation link expired or invalid", 400));
   }
-
-  const { username, email, password, phone } = newUser;
-  let user = await User.findOne({ email });
-  if (user) {
-    return next(new ErrorHandler("User already exists", 400));
-  }
-
-  user = await User.create({ username, email, password, phone });
-  sendToken(user, 201, res);
 };
+
+
+
 
 // Login user
 exports.loginUser = async (req, res, next) => {
 
   const { email, password } = req.body;
-
+  console.log("reached here")
 
   if (!email || !password) {
     return next(new ErrorHandler("Please provide all fields!", 400));
@@ -79,16 +116,20 @@ exports.loginUser = async (req, res, next) => {
     return next(new ErrorHandler("Please provide the correct information", 400));
   }
 
+  console.log("token sended", user)
   sendToken(user, 201, res);
-};
+}; 
 
 // Get user
 exports.getUser = async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('username nickname phone email gender address avatar');
+  console.log("reached here");
+  console.log("user requsted user ",req.user._id)
+  // console.log(req, 'hahaha')
+  const user = await User.findById(req.user).select('username nickname phone email gender address avatar');
   if (!user) {
     return next(new ErrorHandler("User doesn't exist!", 400));
   }
-
+  console.log(user, "user")
   res.status(200).json({
     success: true,
     user,
@@ -97,7 +138,7 @@ exports.getUser = async (req, res, next) => {
 
 // Logout user
 exports.logoutUser = async (req, res, next) => {
-  res.cookie("token", null, {
+  res.cookie("refreshToken", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
     sameSite: "none",
@@ -347,5 +388,91 @@ exports.getAllUsers = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+exports.googleLogin = async (req, res, next) => {
+  const token = req.body.credential;
+  if (!token) {
+    return next(new ErrorHandler("Google token is required", 400));
+  }
+
+  // Verify Google token
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  const { sub, email, name, picture } = payload; 
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    // If user doesn't exist, create a new one
+    console.log("not user is in")
+    user = await User.create({
+      googleId: sub,
+      email,
+      username: name,
+      avatar: picture,
+    });
+  }
+
+  sendToken(user, 200, res)
+
+};
+
+ 
+
+exports.refreshToken = async (req, res, next) => {
+  try {
+    console.log("reachded inside the refresh token ")
+      // Find user by ID from verified refresh token
+      const user = await User.findById(req.user);
+      
+      if (!user) {
+          return res.status(404).json({ 
+              message: 'User not found',
+              requireLogin: true 
+          });
+      }
+
+      // Generate new access token
+      const newAccessToken = jwt.sign(
+          { id: user._id }, 
+          process.env.JWT_SECRET_KEY, 
+          { expiresIn: '1h' }
+      );
+
+      // Optional: Rotate refresh token if needed
+      const newRefreshToken = jwt.sign(
+          { id: user._id }, 
+          process.env.JWT_REFRESH_SECRET_KEY, 
+          { expiresIn: '7d' }
+      );
+
+      // Set new refresh token in cookie
+      res.cookie('refreshToken', newRefreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
+      // Return new access token
+      res.status(200).json({ 
+          accessToken: newAccessToken,
+          user: {
+              id: user._id,
+              email: user.email
+              // Add other non-sensitive user info
+          }
+      });
+  } catch (error) {
+      next(new ErrorHandler('Token refresh failed', 500));
   }
 };

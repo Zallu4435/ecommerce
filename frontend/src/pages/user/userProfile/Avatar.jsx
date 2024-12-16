@@ -47,8 +47,8 @@ const Avatar = ({ avatar, username, onAvatarUpdate }) => {
         <div className="relative mb-6 flex justify-center">
           {/* User Avatar */}
           <img
-            src={user.avatar}
-            alt="User Avatar"
+              src={user.avatar.replace('s96-c', 's200-c')}
+              alt="User Avatar"           
             className="w-24 h-24 rounded-full border-4 border-gray-200"
           />
 

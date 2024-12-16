@@ -1,23 +1,23 @@
 import { useNavigate, NavLink } from 'react-router-dom';
 import { FaUserCircle, FaBoxOpen, FaKey, FaMapMarkerAlt, FaSignOutAlt, FaWallet } from 'react-icons/fa';
 import { useLogoutUserMutation } from '../../redux/apiSliceFeatures/userApiSlice'
-import { useDispatch } from 'react-redux';
-import { logout } from '../../redux/slice/userSlice';
 
 const UserSidebar = () => {
 
   const navigate = useNavigate();
   const [logoutUser] = useLogoutUserMutation();
-  const dispatch = useDispatch();
 
 
   const handleLogout = async () => {
     try {
       // Call the logout API
-      await logoutUser().unwrap();
-      console.log('Logged out successfully');
-      dispatch(logout())
+      const response = await logoutUser().unwrap();
+      console.log( response, 'Logged out successfully');
       // Optionally, you can redirect the user after logging out
+      if (window.google) {
+        window.google.accounts.id.disableAutoSelect();
+      }
+    
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);

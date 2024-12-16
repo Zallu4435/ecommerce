@@ -12,6 +12,8 @@ const MainLayout = () => {
   const dispatch = useDispatch();
   const location = useLocation();
 
+  console.log(isAuthenticated,"isAuthenticated" )
+
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 100;

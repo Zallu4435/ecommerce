@@ -1,54 +1,60 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginSchema } from '../../../validation/schemas/loginSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { useLoginUserMutation } from '../../../redux/apiSliceFeatures/userApiSlice'
+import { useLoginUserMutation, useGoogleLoginMutation } from '../../../redux/apiSliceFeatures/userApiSlice'
 import { useDispatch, useSelector } from 'react-redux';
-import { setAccessToken } from '../../../redux/slice/userSlice';
+import { setCredentials } from '../../../redux/slice/userSlice';
 
 const Login = () => {
   const [isOtpLogin, setIsOtpLogin] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loginUser] = useLoginUserMutation();
-  const { isAuthenticated } = useSelector((state) => state.user.isAuthenticated);
+  const [googleLogin] = useGoogleLoginMutation();
+  const  isAuthenticated  = useSelector((state) => state.user.isAuthenticated);
 
 
-  // Redirect if user is already authenticated
-  if (isAuthenticated) {
-    navigate('/'); // Redirect to home or protected route
-    return null; // Return nothing while navigating
-  }
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data, e) => {
-    e.preventDefault();
+ // In your login component
+const onSubmit = async (data, e) => {
+  e.preventDefault();
+  
+  try {
+    const response = await loginUser(data).unwrap();
+    console.log(response.accessToken , "from user login page ");
+    console.log(isAuthenticated, "isAuthenticated")
+  
+    dispatch(setCredentials(response.user, response.accessToken))
     
+    // Store tokens and user info
+    navigate('/');
+  } catch (err) {
+    toast.error(err?.data?.message || "Login failed");
+  }
+};
 
+
+// In your protected routes or app layout
+
+
+  const handleGoogleLogin = async (credentialResponse) => {
     try {
-      const response = await loginUser(data).unwrap();
-      console.log(response, 'response from the backeng login')
+      const response = await googleLogin(credentialResponse).unwrap();
+      console.log(response, "response")
+      dispatch(setCredentials(response.user, response.accessToken))
 
-      dispatch(setAccessToken(response.accessToken));
-
-      toast.success("Login success");
       navigate('/')
-    } catch (err) {
-      toast.error(err?.data?.message || "An error occurred");
+    } catch (error) {
+      console.error("Google Login Failed:", error);
     }
-
-    reset();
-  };
-
-  const handleOtpSubmit = (data) => {
-    console.log('OTP Submitted:', data);
-    alert('OTP verified successfully');
   };
 
   return (
@@ -99,13 +105,12 @@ const Login = () => {
             </button>
 
             {/* Google Login */}
-            <div className="mt-4 justify-center">
-              <GoogleLogin
-                onSuccess={(response) => console.log(response)}
-                onError={() => console.log('Google Login Failed')}
-                useOneTap
-              />
-            </div>
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => console.log('Google Login Failed')}
+              useOneTap
+              className="google-button"
+            />
 
             {/* OTP Login Toggle */}
             <div className="text-center mt-4">

@@ -29,3 +29,6 @@
   scrollbar-width: none;     /* For Firefox */
 }
 
+.google-button {
+  width: 100% !important;
+}

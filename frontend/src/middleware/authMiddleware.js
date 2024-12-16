@@ -1,30 +1,77 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { server } from '../server';
-import { logout, setAccessToken } from '../redux/slice/userSlice';
+import { clearCredentials, setCredentials } from '../redux/slice/userSlice';
 
-// Base query with authentication and reauthentication logic
+// export const baseQueryWithReauth = async (args, api, extraOptions) => {
+//   const baseQuery = fetchBaseQuery({
+//     baseUrl: `${server}/users`,
+//     credentials: 'include',
+//     prepareHeaders: (headers, { getState }) => {
+//       const accessToken = getState().user.accessToken;
+//       if (accessToken) {
+//         headers.set('Authorization', `Bearer ${accessToken}`);
+//       }
+//       return headers;
+//     },
+//   });
+ 
+//   let result = await baseQuery(args, api, extraOptions);
+
+//   // Handle 401 Unauthorized (token expiration)
+//   if (result.error?.status === 401) {
+//     console.log("Token expired, attempting to refresh");
+    
+//     const refreshResult = await baseQuery({
+//       url: '/refresh-token',
+//       method: 'POST'
+//     }, api, extraOptions);
+
+//     if (refreshResult.data) {
+//       // Update access token in Redux store
+//       api.dispatch(setAccessToken(refreshResult.data.accessToken));
+      
+//       // Retry original request with new token
+//       result = await baseQuery(args, api, extraOptions);
+//     } else {
+//       // Logout if refresh fails
+//       api.dispatch(logout());
+//     }
+//   }
+
+//   return result;
+// };
+
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: `${server}/users`,
+  credentials: 'include',
+  prepareHeaders: (headers, { getState }) => {
+    const token = getState().user.token;
+    if (token) {
+      headers.set('authorization', `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+
 export const baseQueryWithReauth = async (args, api, extraOptions) => {
-  const baseQuery = fetchBaseQuery({
-    baseUrl: `${server}/users`,
-    credentials: 'include', // Ensures cookies are sent with each request
-  });
-
   let result = await baseQuery(args, api, extraOptions);
 
-  if (result.error?.status === 401) { // 401 means the token is expired
-    // Try refreshing the token
+  if (result?.error?.status === 401) {
+    console.log('Sending refresh token');
+    // send refresh token to get new access token 
     const refreshResult = await baseQuery('/refresh-token', api, extraOptions);
-    
-    if (refreshResult.data) {
-      // If refresh is successful, retry the original request with the new token
-      const { accessToken } = refreshResult.data;
-      api.dispatch(setAccessToken(accessToken)); // Store the new token in Redux or context
-      
-      // Retry the original request with the new token
+    console.log(refreshResult, "refreshresult");
+    if (refreshResult?.data) {
+      const user = api.getState().auth.user;
+      // store the new token 
+      api.dispatch(setCredentials({ ...refreshResult.data, user }));
+      console.log(user, "user")
+      // retry the original query with new access token
       result = await baseQuery(args, api, extraOptions);
     } else {
-      // If refresh fails, redirect to login page
-      api.dispatch(logout()); // Dispatch logout action or redirect to login
+      api.dispatch(clearCredentials());
     }
   }
 
