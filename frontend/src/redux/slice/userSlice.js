@@ -27,10 +27,13 @@ const userSlice = createSlice({
     setEmailOtpToken: (state, action) => {
       state.otpToken = action.payload;
     },
+    setResetPassword: (state, action) => {
+      state.resetToken = action.payload;
+    },
   },
 });
 
-export const { setCredentials, clearCredentials, setGmailCredentials, setEmailOtpToken } = userSlice.actions;
+export const { setCredentials, clearCredentials, setGmailCredentials, setEmailOtpToken, setResetPassword } = userSlice.actions;
 export default userSlice.reducer;
 
 export const selectCurrentUser = (state) => state.user.user;

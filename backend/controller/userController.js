@@ -100,25 +100,25 @@ exports.activateAccount = async (req, res, next) => {
 exports.loginUser = async (req, res, next) => {
 
   const { email, password } = req.body;
-  console.log("reached here")
-
+  
   if (!email || !password) {
     return next(new ErrorHandler("Please provide all fields!", 400));
   }
-
+  
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
     return next(new ErrorHandler("User doesn't exist!", 400));
   }
-
+  
   const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
+    console.log(isPasswordValid, "reached here")
     return next(new ErrorHandler("Please provide the correct information", 400));
   }
-
+  
   console.log("token sended", user)
   sendToken(user, 201, res);
-}; 
+};  
 
 // Get user
 exports.getUser = async (req, res, next) => {
@@ -312,33 +312,69 @@ exports.forgotPassword = async (req, res, next) => {
 };
 
 // Reset Password
-exports.resetPassword = async (req, res, next) => {
-  const resetToken = req.params.token;
-  
-  const resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
+exports.verifyResetPassword = async (req, res, next) => {
+  const { token, otp } = req.body;
 
-  const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },
-  });
+  try {
+    const decoded = jwt.verify(token, process.env.OTP_SECRET);
+    const user = await User.findOne({ email: decoded.email });
 
-  if (!user) {
-    return next(new ErrorHandler("Invalid or expired reset token", 400));
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+ 
+    const isMatch = user.verifyOTP(otp);
+    console.log('OTP verification result:', isMatch);
+
+    // Generate a reset token (valid for a longer period)
+    const resetToken = jwt.sign({ email: user.email }, process.env.OTP_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({
+      message: "OTP verified successfully!",
+      resetToken,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: "Invalid or expired token" });
   }
 
-  const { password } = req.body;
-
-  user.password = password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined;
-
-  await user.save();
-
-  sendToken(user, 200, res);
 };
+
+
+exports.resetPassword = async (req, res, next) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).send("Token and OTP are required");
+  };
+
+  try {
+    const decoded = jwt.verify(token, process.env.OTP_SECRET);
+    console.log('Decoded token:', decoded);
+
+    const user = await User.findOne({ email: decoded.email });
+
+    if (!user) {
+      console.log('User not found for email:', decoded.email);
+      return res.status(404).send("User not found");
+    }
+
+
+    const isMatch = jwt.verify(token, process.env.OTP_SECRET);
+    console.log('OTP verification result:', isMatch);
+    user.password = newPassword;
+    user.save();
+    if (isMatch) {
+      res.status(200).json("Password reset successfully");
+    } else {
+      res.status(400).send("Invalid or expired OTP");
+    }
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    next(new ErrorHandler("OTP verification failed", 500));
+  }
+
+}
 
 // Update Password (Authenticated)
 exports.updatePassword = async (req, res, next) => {

@@ -8,14 +8,14 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';  
 import AdminLayout from './layouts/AdminLayout'
 import AdminLogin from './pages/admin/AdminLogin'
-import ProductManagement from './pages/admin/ProductManagement'
 import PersistLogin from './PersistLogin'
+import ResetPassword from './pages/user/forms/UserResetPassword'
 
 
 const App = () => {
 
   const theme = useSelector(state => state.root.theme.theme);
-
+  const resetToken = useSelector(state => state.user.resetToken)
 
 
   useEffect(() => {
@@ -33,7 +33,11 @@ const App = () => {
               <Route path="/*" element={<MainLayout />} /> 
               <Route path="/admin/*" element={<AdminLayout />} /> 
               </Route>
-              <Route path='/admin/login' element={<AdminLogin /> } /> 
+              {
+                resetToken &&
+                <Route path='/reset-password' element={<ResetPassword />} />
+              }
+              <Route path='/admin/login' element={<AdminLogin /> } />
             </Routes>
       </GoogleOAuthProvider>
 

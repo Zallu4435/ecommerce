@@ -1,24 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useOtpVerifyMutation } from '../../redux/apiSliceFeatures/userApiSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { setCredentials } from '../../redux/slice/userSlice';
-import { toast } from 'react-toastify';
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  useOtpVerifyMutation,
+  useVerifyResetPasswordMutation,
+} from "../../redux/apiSliceFeatures/userApiSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { setCredentials, setEmailOtpToken, setResetPassword } from "../../redux/slice/userSlice";
+import { toast } from "react-toastify";
 
-const OTPLoginModal = ({ isOpen, onClose, emailForOtp }) => {
+const OTPLoginModal = ({ isOpen, change }) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [resendCountdown, setResendCountdown] = useState(30);
   const [errorMessage, setErrorMessage] = useState("");
   const inputRefs = useRef([]);
   const [otpVerify] = useOtpVerifyMutation();
+  const [verifyResetPassword] = useVerifyResetPasswordMutation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const token = useSelector(state => state.user.otpToken);
+  const token = useSelector((state) => state.user.otpToken);
 
   useEffect(() => {
     if (resendCountdown > 0) {
       const resendTimer = setInterval(() => {
-        setResendCountdown(prevCount => {
+        setResendCountdown((prevCount) => {
           if (prevCount <= 1) {
             clearInterval(resendTimer);
             return 0;
@@ -48,35 +52,47 @@ const OTPLoginModal = ({ isOpen, onClose, emailForOtp }) => {
     }
   };
 
-  const handleClose = () => {
-    onClose();
-    navigate('/login');
-  };
-
   const handleOtpVerify = async () => {
-    // Convert OTP array to string
-    const otpString = otp.join('');
-  
+    const otpString = otp.join("");
+
     try {
-      console.log("Verifying OTP:", { 
-        token: token, 
-        otp: otpString 
+      console.log("Verifying OTP:", {
+        token: token,
+        otp: otpString,
       });
-  
-      const response = await otpVerify({ 
-        token: token, 
-        otp: otpString 
-      }).unwrap();
-  
-      console.log("OTP Verify Response:", response);
-  
-      dispatch(setCredentials({
-        user: response.user,
-        token: response.accessToken
-      }));
-  
-      toast.success("Login successful!");
-      navigate('/');
+
+      console.log(change, "change")
+
+      if (change === "otp") {
+        const response = await otpVerify({
+          token: token,
+          otp: otpString,
+        }).unwrap();
+
+        console.log("OTP Verify Response:", response);
+
+        dispatch(
+          setCredentials({
+            user: response.user,
+            token: response.accessToken,
+          })
+        );
+
+        toast.success("Login successful!");
+        navigate("/");
+        dispatch(setEmailOtpToken(null));
+      } else if (change === "forget-password") {
+        const response = await verifyResetPassword({
+          token: token,
+          otp: otpString,
+        }).unwrap();
+
+        console.log("Reset OTP Verify Response:", response);
+
+        toast.success("OTP verified successfully!");
+        dispatch(setResetPassword(response.resetToken));
+        navigate("/reset-password", { state: { token: response.resetToken } });
+      }
     } catch (error) {
       console.error("OTP Verification Error:", error);
       setErrorMessage(error?.data?.message || "Invalid OTP");
@@ -85,7 +101,8 @@ const OTPLoginModal = ({ isOpen, onClose, emailForOtp }) => {
   };
 
   const handleResendOTP = () => {
-    alert('OTP has been resent!');
+    // Implement the resend OTP logic here
+    toast.info("OTP has been resent!");
     setResendCountdown(30);
   };
 
@@ -94,8 +111,18 @@ const OTPLoginModal = ({ isOpen, onClose, emailForOtp }) => {
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
       <div className="relative bg-gradient-to-r from-red-400 via-purple-500 to-pink-500 p-10 rounded-2xl max-w-lg w-full shadow-2xl text-center">
-        <p className='font-bold text-white cursor-pointer' onClick={handleClose}>Back to email</p>
-        <h2 className="text-3xl font-extrabold text-white mb-6">Enter OTP</h2>
+        <p
+          className="font-bold text-white cursor-pointer"
+          onClick={() => {
+            navigate(-1);
+            dispatch(setEmailOtpToken(null));
+          }}
+        >
+          Back to email
+        </p>
+        <h2 className="text-3xl font-extrabold text-white mb-6">
+          {change === "otp" ? "Enter Login OTP" : "Enter Password Reset OTP"}
+        </h2>
         <div className="flex justify-center mb-8 space-x-4">
           {otp.map((digit, index) => (
             <input
@@ -110,7 +137,9 @@ const OTPLoginModal = ({ isOpen, onClose, emailForOtp }) => {
             />
           ))}
         </div>
-        {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
+        {errorMessage && (
+          <div className="text-red-500 mb-4">{errorMessage}</div>
+        )}
         <button
           onClick={handleOtpVerify}
           className="bg-purple-500 text-white py-3 px-6 rounded-lg hover:bg-purple-600 transition duration-300 shadow-lg mb-4"
@@ -121,9 +150,13 @@ const OTPLoginModal = ({ isOpen, onClose, emailForOtp }) => {
           <button
             onClick={handleResendOTP}
             disabled={resendCountdown > 0}
-            className={`mt-4 ${resendCountdown > 0 ? 'bg-gray-500' : 'bg-yellow-500'} text-white py-2 px-4 rounded-lg transition duration-300`}
+            className={`mt-4 ${
+              resendCountdown > 0 ? "bg-gray-500" : "bg-yellow-500"
+            } text-white py-2 px-4 rounded-lg transition duration-300`}
           >
-            {resendCountdown > 0 ? `Resend OTP in ${resendCountdown}s` : 'Resend OTP'}
+            {resendCountdown > 0
+              ? `Resend OTP in ${resendCountdown}s`
+              : "Resend OTP"}
           </button>
         </div>
       </div>

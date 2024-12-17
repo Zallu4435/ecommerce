@@ -72,7 +72,14 @@ export const userApiSlice = createApi({
         method: "POST",
         body: credentials, // Send email or required login details
       }),
+      transformResponse: (response) => {
+        return {
+          message: response.message,
+          token: response.token,
+        };
+      },
     }),
+    
     
     otpVerify: builder.mutation({
       query: ({ token, otp }) => ({
@@ -82,6 +89,21 @@ export const userApiSlice = createApi({
       }),
     }),
     
+    verifyResetPassword: builder.mutation({
+      query: ({ token, otp }) => ({
+        url: "/verify-reset-password",
+        method: "POST",
+        body: { token, otp }, // Send token and OTP for verification
+      }),
+    }),
+
+    resetPassword: builder.mutation({
+      query: (password) => ({
+        url: "/reset-password",
+        method: "POST",
+        body: password,
+      }),
+    }),
 
     // Logout user
     logoutUser: builder.mutation({
@@ -200,5 +222,7 @@ export const {
   useGoogleLoginMutation,
   useRefreshUserMutation,
   useOtpLoginMutation,
-  useOtpVerifyMutation
+  useOtpVerifyMutation,
+  useVerifyResetPasswordMutation,
+  useResetPasswordMutation,
 } = userApiSlice;

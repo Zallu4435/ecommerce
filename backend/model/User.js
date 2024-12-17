@@ -58,13 +58,14 @@ const userSchema = new mongoose.Schema(
 );
 
 // Hash Password before saving to the database
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    next();
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password") || !this.password) {
+    return next();
   }
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = bcrypt.hashSync(this.password, 10);
   next();
 });
+
 
 // JWT Token generation
 userSchema.methods.getJwtToken = function () {
@@ -75,7 +76,10 @@ userSchema.methods.getJwtToken = function () {
 
 // Compare Passwords
 userSchema.methods.comparePassword = async function (enteredPassword) {
+  console.log(this.password, 'entered passwoord')
+
   return await bcrypt.compare(enteredPassword, this.password);
+  
 };
 
 // Method to generate a reset password token

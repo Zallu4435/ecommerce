@@ -7,7 +7,8 @@ const {
   activateAccount, getUser,
   updateUserInfo, updateAvatar,
   addAddress, editAddress, removeAddress,
-  forgotPassword, updatePassword, resetPassword,
+  updatePassword, 
+  resetPassword, verifyResetPassword,
   getAllUsers,
   googleLogin,
   otpLogin, verifyEmailOtp,
@@ -31,8 +32,9 @@ router.delete('/address', isAuthenticated, catchAsyncErrors(removeAddress));
 
 
 // Password Routes
-router.post('/forgot-password', catchAsyncErrors(forgotPassword));
-router.put('/reset-password/:token', catchAsyncErrors(resetPassword));
+router.post('/reset-password', catchAsyncErrors(resetPassword));
+router.post('/verify-reset-password', catchAsyncErrors(verifyResetPassword))
+// router.put('/reset-password/:token', catchAsyncErrors(resetPassword));
 router.put('/update-password', isAuthenticated, catchAsyncErrors(updatePassword));
 
 router.get('/getUsers', catchAsyncErrors(getAllUsers));
