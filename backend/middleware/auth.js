@@ -3,18 +3,7 @@ const catchAsyncError = require('./catchAsyncError');
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
 
-// exports.isAuthenticated = catchAsyncError( async (req, res, next) => {
-//     const { token } = req.cookies;
 
-//     if (!token) {
-//         return next(new ErrorHandler("Please login to continue", 401));
-//     };
-
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-//     req.user = await User.findById(decoded.id);
-
-//     next();
-// })
 exports.isAuthenticated = (req, res, next) => {
     console.log("Reached isAuthenticated middleware");
 
@@ -29,14 +18,12 @@ exports.isAuthenticated = (req, res, next) => {
     }
 
     try {
-        // Verify accessToken first
         const decoded = jwt.verify(accessToken, process.env.JWT_SECRET_KEY);
-        req.user = decoded.id || decoded.user; // Flexible user ID extraction
+        req.user = decoded.id || decoded.user;
         return next();
     } catch (error) {
         console.log("Access token verification error:", error.message);
 
-        // If access token is invalid, check for refreshToken
         if (!refreshToken) {
             return res.status(401).send('Access Denied. No refresh token provided.');
         }
@@ -51,10 +38,8 @@ exports.isAuthenticated = (req, res, next) => {
                 { expiresIn: '1h' }
             );
 
-            // Set new access token in response headers
             res.set('Authorization', `Bearer ${newAccessToken}`);
             
-            // Set user in request
             req.user = decodedRefresh.id || decodedRefresh.user;
             
             return next();
@@ -73,7 +58,7 @@ exports.verifyRefreshToken = (req, res, next) => {
     if (!refreshToken) {
         return res.status(403).json({ 
             message: 'No refresh token found',
-            // requireLogin: true 
+            requireLogin: true 
         }); 
     } 
   
@@ -86,7 +71,7 @@ exports.verifyRefreshToken = (req, res, next) => {
         console.log("errror")
         return res.status(403).json({ 
             message: 'Invalid refresh token', 
-            // requireLogin: true 
+            requireLogin: true 
         });
     }
-};
+};  

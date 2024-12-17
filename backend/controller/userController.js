@@ -2,7 +2,7 @@ const User = require('../model/User');
 const Address = require('../model/Address');
 const ErrorHandler = require('../utils/ErrorHandler');
 const jwt = require('jsonwebtoken');
-const sendMail = require('../utils/sendMail');
+const { sendMail, sendOTPEmail } = require('../utils/sendMail');
 const sendToken = require('../utils/jwtToken');
 const { OAuth2Client } = require("google-auth-library");
 
@@ -441,38 +441,98 @@ exports.refreshToken = async (req, res, next) => {
           });
       }
 
-      // Generate new access token
-      const newAccessToken = jwt.sign(
-          { id: user._id }, 
-          process.env.JWT_SECRET_KEY, 
-          { expiresIn: '1h' }
-      );
+      sendToken(user, 200, res);
 
-      // Optional: Rotate refresh token if needed
-      const newRefreshToken = jwt.sign(
-          { id: user._id }, 
-          process.env.JWT_REFRESH_SECRET_KEY, 
-          { expiresIn: '7d' }
-      );
-
-      // Set new refresh token in cookie
-      res.cookie('refreshToken', newRefreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-      });
-
-      // Return new access token
-      res.status(200).json({ 
-          accessToken: newAccessToken,
-          user: {
-              id: user._id,
-              email: user.email
-              // Add other non-sensitive user info
-          }
-      });
   } catch (error) {
       next(new ErrorHandler('Token refresh failed', 500));
+  }
+};
+
+
+// Generate a JWT for OTP
+const createActivationOtp = (email) => {
+  const arr =  jwt.sign({ email }, process.env.OTP_SECRET, {
+    expiresIn: process.env.OTP_EXPIRATION || "10m",
+  });
+  console.log(arr, "arr")
+  return arr;
+};
+
+
+exports.otpLogin = async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).send("Email is required");
+  }
+  console.log("OTP login request for email:", email);
+
+  try {
+    let user = await User.findOne({ email });
+    if (!user) {
+      console.log('User not found, creating new user');
+      user = new User({ email });
+    }
+
+    const otp = user.generateOTP();
+    await user.save();
+    console.log('User saved with new OTP');
+
+    // For debugging purposes only, remove in production
+    await sendOTPEmail({
+      email: user.email,
+      subject: "Activate your account",
+      message: `Your otp is ${otp}`
+    })
+    console.log('Generated OTP:', otp);
+
+    const token = jwt.sign({ email }, process.env.OTP_SECRET, {
+      expiresIn: process.env.OTP_EXPIRATION || "10m",
+    });
+
+    res.status(200).json({ message: "OTP sent successfully", token });
+  } catch (error) {
+    console.error("Error during OTP login:", error);
+    next(new ErrorHandler("OTP Login failed", 500));
+  }
+};
+
+
+
+exports.verifyEmailOtp = async (req, res, next) => {
+  const { token, otp } = req.body;
+
+  if (!token || !otp) {
+    return res.status(400).send("Token and OTP are required");
+  }
+
+  console.log('Verifying email OTP. Token:', token, 'OTP:', otp);
+
+  try {
+    const decoded = jwt.verify(token, process.env.OTP_SECRET);
+    console.log('Decoded token:', decoded);
+
+    const user = await User.findOne({ email: decoded.email });
+
+    if (!user) {
+      console.log('User not found for email:', decoded.email);
+      return res.status(404).send("User not found");
+    }
+
+    console.log('Found user:', user.email);
+    console.log('Stored OTP hash:', user.otp);
+    console.log('OTP expiration:', user.otpExpires);
+
+    const isMatch = user.verifyOTP(otp);
+    console.log('OTP verification result:', isMatch);
+
+    if (isMatch) {
+      sendToken(user, 200, res)
+    } else {
+      res.status(400).send("Invalid or expired OTP");
+    }
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    next(new ErrorHandler("OTP verification failed", 500));
   }
 };

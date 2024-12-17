@@ -66,6 +66,23 @@ export const userApiSlice = createApi({
       invalidatesTags: ['User'],
     }),
 
+    otpLogin: builder.mutation({
+      query: (credentials) => ({
+        url: "/otp-login",
+        method: "POST",
+        body: credentials, // Send email or required login details
+      }),
+    }),
+    
+    otpVerify: builder.mutation({
+      query: ({ token, otp }) => ({
+        url: "/verify-otp",
+        method: "POST",
+        body: { token, otp }, // Send token and OTP for verification
+      }),
+    }),
+    
+
     // Logout user
     logoutUser: builder.mutation({
       query: () => ({
@@ -181,5 +198,7 @@ export const {
   useUpdateAvatarMutation,
   useGetUsersQuery,
   useGoogleLoginMutation,
-  useRefreshUserMutation
+  useRefreshUserMutation,
+  useOtpLoginMutation,
+  useOtpVerifyMutation
 } = userApiSlice;

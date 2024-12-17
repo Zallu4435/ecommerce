@@ -6,6 +6,7 @@ const userSlice = createSlice({
     user: null,
     token: null,
     isAuthenticated: false,
+    otpToken: null
   },
   reducers: {
     setCredentials: (state, action) => {
@@ -18,14 +19,18 @@ const userSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.otpToken = null
     },
     setGmailCredentials: (state) => {
       state.isAuthenticated = true
-    }
+    },
+    setEmailOtpToken: (state, action) => {
+      state.otpToken = action.payload;
+    },
   },
 });
 
-export const { setCredentials, clearCredentials, setGmailCredentials } = userSlice.actions;
+export const { setCredentials, clearCredentials, setGmailCredentials, setEmailOtpToken } = userSlice.actions;
 export default userSlice.reducer;
 
 export const selectCurrentUser = (state) => state.user.user;

@@ -7,7 +7,6 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
     },
     nickname: {
       type: String,
@@ -44,6 +43,14 @@ const userSchema = new mongoose.Schema(
       unique: true, 
       sparse: true,
     },
+    otp: {
+      type: String,
+      default: null
+    },
+    otpExpires: {
+      type: Date,
+      default: null
+    }
   },
   {
     timestamps: true
@@ -87,5 +94,43 @@ userSchema.methods.getResetPasswordToken = function () {
 
   return resetToken;
 };
+
+
+
+function hashOTP(otp) {
+  return crypto.createHash("sha256").update(otp.toString()).digest("hex");
+}
+
+userSchema.methods.generateOTP = function () {
+  const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digits
+  console.log('Generated OTP:', otp);
+
+  this.otp = hashOTP(otp);
+  this.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  console.log('Stored hashed OTP:', this.otp);
+  console.log('OTP expiration:', this.otpExpires);
+
+  return otp;
+};
+
+userSchema.methods.verifyOTP = function (enteredOTP) {
+  console.log('Verifying OTP:', enteredOTP);
+  console.log('Current time:', new Date());
+  console.log('OTP expiration:', this.otpExpires);
+
+  const hashedEnteredOTP = hashOTP(enteredOTP);
+  console.log('Hashed entered OTP:', hashedEnteredOTP);
+  console.log('Stored hashed OTP:', this.otp);
+
+  const isNotExpired = this.otpExpires > new Date();
+  const isMatching = hashedEnteredOTP === this.otp;
+
+  console.log('OTP not expired:', isNotExpired);
+  console.log('OTP matches:', isMatching);
+
+  return isMatching && isNotExpired;
+};
+
 
 module.exports = mongoose.model("User", userSchema);

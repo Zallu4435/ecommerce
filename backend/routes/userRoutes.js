@@ -10,6 +10,7 @@ const {
   forgotPassword, updatePassword, resetPassword,
   getAllUsers,
   googleLogin,
+  otpLogin, verifyEmailOtp,
   refreshToken
 } = require('../controller/userController');
 
@@ -36,6 +37,10 @@ router.put('/update-password', isAuthenticated, catchAsyncErrors(updatePassword)
 
 router.get('/getUsers', catchAsyncErrors(getAllUsers));
 router.post('/google-login', catchAsyncErrors(googleLogin));
+
+router.post('/otp-login', catchAsyncErrors(otpLogin));
+router.post('/verify-otp', catchAsyncErrors(verifyEmailOtp));
+
 router.get('/refresh-token', verifyRefreshToken, catchAsyncErrors(refreshToken))
 
 module.exports = router;

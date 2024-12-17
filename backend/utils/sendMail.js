@@ -1,17 +1,18 @@
 const nodemailer = require('nodemailer');
 
-const sendMail = async (options) => {
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    service: process.env.SMTP_SERVICE,
+    auth: {
+        user: process.env.SMTP_MAIL,
+        pass: process.env.SMTP_PASSWORD,
+    },
+});
+
+exports.sendMail = async (options) => {
     try {
         console.log("mail reached")
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            service: process.env.SMTP_SERVICE,
-            auth: {
-                user: process.env.SMTP_MAIL, // Fixed typo
-                pass: process.env.SMTP_PASSWORD,
-            },
-        });
 
         const mailOption = {
             from: process.env.SMTP_MAIL,
@@ -22,11 +23,30 @@ const sendMail = async (options) => {
 
         // Send email
         await transporter.sendMail(mailOption);
-        console.log("Email sent successfully"); // Optional for debugging
+        console.log("Email sent successfully");
     } catch (err) {
         console.error("Error sending email:", err.message);
-        throw new Error("Email sending failed"); // Throw error to calling function
+        throw new Error("Email sending failed");
     }
 };
 
-module.exports = sendMail;
+exports.sendOTPEmail = async (options) => {
+    console.log("otp reached");
+
+    try {
+        const mailOption = {
+            from: process.env.SMTP_MAIL,
+            to: options.email,
+            subject: options.subject,
+            text: options.message,
+        };
+
+        // Changed from sendOTPEmail to sendMail
+        await transporter.sendMail(mailOption);
+        console.log("Otp sent successfully");
+
+    } catch (err) {
+        console.error("Error sending email:", err.message);
+        throw new Error("Otp sending failed");
+    }
+}
