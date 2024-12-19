@@ -39,14 +39,11 @@ const TableRow = ({ item, type }) => {
             <td className="px-6 py-4 border border-gray-600">{item.role}</td>
             <td className="px-6 py-4 border border-gray-600">{new Date(item.joinDate).toLocaleDateString()}</td>          
             <td className="px-6 flex py-4 gap-6">
-              <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'users')}>
-                Update
-              </Button>
               <Button borderColor="#d97706" textColor="#d97706" hoverColor="white" onClick={() => handleBan('admin', item.id)}>
               {console.log(item.isBlocked ? 'ban': "unban")}
                 {item.isBlocked ? 'Ban' : 'Unban'}
               </Button>
-              <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white" onClick={() => handleView('users')}>
+              <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white" onClick={() => handleView(item.id, 'users')}>
                 View
               </Button>
             </td>

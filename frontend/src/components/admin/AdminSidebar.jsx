@@ -17,7 +17,7 @@ const AdminSidebar = () => {
   return (
     <div>
       {/* Sidebar */}
-      <div className="w-full h-screen lg:w-[400px] dark:bg-gray-900 bg-orange-50 p-4">
+      <div className="w-full h-full lg:w-[400px] dark:bg-gray-900 bg-orange-50 p-4">
         {/* Profile Section */}
         <div className="flex items-center mb-6">
           <img

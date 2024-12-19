@@ -5,22 +5,23 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useUpdateEntityMutation } from '../../redux/apiSliceFeatures/crudApiSlice'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { useGetCategoryByIdQuery } from '../../redux/apiSliceFeatures/categoryApiSlice'
+import { useGetCategoriesQuery, useGetCategoryByIdQuery } from '../../redux/apiSliceFeatures/categoryApiSlice'
 
 // Define validation schema using zod
 const schema = z.object({
   categoryName: z.string().min(1, 'Category name is required'),
   productCount: z
-    .number()
+    .string()
     .min(1, 'Product count is required')
-})
+    .transform((value) => Number(value)), // Transform the string to a number
+});
 
 const AdminCategoryUpdateForm = () => {
 
   const { id } = useParams(); // Get id from URL
   const navigate = useNavigate(); 
   const [updateEntity] = useUpdateEntityMutation();
-
+const { refetch } = useGetCategoriesQuery();
   const { data, error, isLoading } = useGetCategoryByIdQuery(id);
 
   console.log(id, "id")
@@ -42,6 +43,7 @@ const AdminCategoryUpdateForm = () => {
     e.preventDefault();
 
      await updateEntity({ entity: "category", data, id }).unwrap();
+     refetch()
           toast.success("Product saved successfully");
     
           navigate(-1);
@@ -56,8 +58,8 @@ const AdminCategoryUpdateForm = () => {
   }
 
   return (
-    <div className='dark:bg-gray-900 bg-orange-50 text-gray-700 dark:text-white'>
-      <h1 className="text-3xl font-bold ml-[-60px] mb-6 text-gray-400 my-14 px-24">Update Category</h1>
+    <div className='dark:bg-gray-900 bg-orange-50 text-gray-700 ml-[400px] py-[50px] px-10] mt-[200px]  dark:text-white'>
+      <h1 className="text-3xl font-bold ml-[-60px] mb-6 text-gray-400 px-24">Update Category</h1>
         
       <form onSubmit={handleSubmit(onSubmit)} method="POST">
         <div className="mb-6 mx-10">

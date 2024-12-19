@@ -4,19 +4,22 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { useAddEntityMutation } from '../../redux/apiSliceFeatures/crudApiSlice'
+import { useGetCategoriesQuery } from '../../redux/apiSliceFeatures/categoryApiSlice'
 
 // Define validation schema using zod
 const schema = z.object({
   categoryName: z.string().min(1, 'Category name is required'),
   productCount: z
-    .number()
+    .string()
     .min(1, 'Product count is required')
-})
+    .transform((value) => Number(value)), // Transform the string to a number
+});
 
 const AdminCategoryCreateForm = () => {
 
   const navigate = useNavigate(); 
   const [addEntity] = useAddEntityMutation();
+  const { refetch: refetchCategory } = useGetCategoriesQuery();
 
   // Initialize react-hook-form with zod resolver for validation
   const { register, handleSubmit, formState: { errors } } = useForm({
@@ -27,13 +30,15 @@ const AdminCategoryCreateForm = () => {
     e.preventDefault();
 
     await addEntity({ entity: "category", data }).unwrap();
+    refetchCategory();
+    
     console.log("Final data sent to backend:", data);
     navigate(-1)
   }
 
   return (
-    <div className='dark:bg-gray-900 bg-orange-50 text-gray-700 dark:text-white'>
-      <h1 className="text-3xl font-bold ml-[-60px] mb-6 text-gray-400 my-14 px-24">Create New Category</h1>
+    <div className='dark:bg-gray-900 bg-orange-50 ml-[400px] px-10 py-[50px] mt-[200px] text-gray-700 dark:text-white'>
+      <h1 className="text-3xl font-bold ml-[-60px] mb-6 text-gray-400  px-24">Create New Category</h1>
         
       <form onSubmit={handleSubmit(onSubmit)} method="POST">
         <div className="mb-6 mx-10">

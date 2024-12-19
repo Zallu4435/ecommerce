@@ -8,10 +8,10 @@ export const categoryApiSlice = crudApiSlice.injectEndpoints({
       providesTags: (result) =>
         Array.isArray(result)
           ? [
-              ...result.map(({ id }) => ({ type: 'Entity', id })), // Tags for individual categories
-              { type: 'Entity', id: 'categories-LIST' }, // Tag for the entire list
+              ...result.map(({ id }) => ({ type: 'category', id })), // Tags for individual categories
+              { type: 'category', id: 'categories-LIST' }, // Tag for the entire list
             ]
-          : [{ type: 'Entity', id: 'categories-LIST' }],
+          : [{ type: 'category', id: 'categories-LIST' }],
     }),
 
     // Fetch category details by ID

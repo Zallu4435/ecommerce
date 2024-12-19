@@ -3,6 +3,8 @@ const ErrorHandler = require('../utils/ErrorHandler');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendAdminToken } = require('../utils/jwtToken');
+const Address = require('../model/Address');
+const Orders = require('../model/Orders')
 
 
 
@@ -91,3 +93,36 @@ exports.adminRefreshToken = async (req, res, next) => {
   }
 };
 
+
+
+exports.getUserDetails = async (req, res) => {
+
+  console.log("reached fo user details ")
+  const { id } = req.params;
+
+  try {
+
+    console.log(id, 'userId')
+    // Fetch user details
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Fetch user addresses from Address collection
+    const addresses = await Address.find({ id: id });
+
+    // Fetch user orders from Order collection
+    const orders = await Orders.find({ id: id });
+
+    // Send the response with user details, addresses, and orders
+    res.status(200).json({
+      user,
+      addresses,
+      orders,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};

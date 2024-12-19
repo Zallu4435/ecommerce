@@ -1,6 +1,6 @@
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetProductByIdQuery } from '../../../redux/apiSliceFeatures/productApiSlice';
-import React, { useState, useEffect } from 'react';
 import Magnifier from 'react-magnifier';
 
 const ViewProductDetails = () => {
@@ -9,12 +9,13 @@ const ViewProductDetails = () => {
 
   const { data, error, isLoading } = useGetProductByIdQuery(id);
 
-  const [mainImage, setMainImage] = useState('');
+  const [mainImageIndex, setMainImageIndex] = useState(0);
 
-  const product = data?.product;
   useEffect(() => {
-    data?.product?.image ? setMainImage(data?.product?.image) : setMainImage("https://via.placeholder.com/400")
-  }, [data])
+    if (data?.product?.image) {
+      setMainImageIndex(0);
+    }
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -32,7 +33,17 @@ const ViewProductDetails = () => {
     );
   }
 
+  const product = data?.product;
 
+  if (!product) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-500">
+        Error: Product not found
+      </div>
+    );
+  }
+
+  const allImages = [product.image, ...product.variantImages];
 
   const productDetails = [
     { label: 'Category', value: product.category },
@@ -53,7 +64,7 @@ const ViewProductDetails = () => {
   ];
 
   return (
-    <div className="flex justify-center  mx-12 items-center min-h-screen dark:bg-black p-4">
+    <div className="flex justify-center mx-12 items-center min-h-screen dark:bg-black p-4">
       <div className="container mx-auto w-[1200px] bg-white shadow-md rounded-lg p-8 dark:bg-gray-900 dark:text-white">
         <button
           onClick={() => navigate(-1)}
@@ -66,32 +77,35 @@ const ViewProductDetails = () => {
           <div className="w-full lg:w-3/4 mx-auto">
             <div className="mb-4">
               <Magnifier
-                  src={mainImage || 'https://via.placeholder.com/400'}
-                  alt={product.productName}
-                  className="w-full h-[350px] object-cover rounded-lg shadow-lg"
-                  mgShape="circle" // Circle magnifier
-                  mgShowOverflow={false}
-                  mgWidth={150}
-                  mgHeight={150}
-                  zoomFactor={1.5} // Adjust the zoom factor
-                />
+                src={allImages[mainImageIndex] || 'https://via.placeholder.com/400'}
+                alt={product.productName}
+                className="w-full h-[350px] object-cover rounded-lg shadow-lg"
+                mgShape="circle"
+                mgShowOverflow={false}
+                mgWidth={150}
+                mgHeight={150}
+                zoomFactor={1.5}
+              />
             </div>
             <div className="grid grid-cols-3 gap-4 mt-4">
-              {product.variantImages.map((image, index) => (
-                <div 
-                  key={index} 
-                  className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
-                    mainImage === image ? 'border-indigo-500' : 'border-transparent'
-                  }`}
-                  onClick={() => setMainImage(image)}
-                >
-                  <img
-                    src={image}
-                    alt={`Variant ${index + 1}`}
-                    className="w-full h-24 object-cover"
-                  />
-                </div>
-              ))}
+              {[...Array(3)].map((_, index) => {
+                const imageIndex = (mainImageIndex + index + 1) % allImages.length;
+                return (
+                  <div 
+                    key={index} 
+                    className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
+                      imageIndex === mainImageIndex ? 'border-indigo-500' : 'border-transparent'
+                    }`}
+                    onClick={() => setMainImageIndex(imageIndex)}
+                  >
+                    <img
+                      src={allImages[imageIndex]}
+                      alt={`Variant ${imageIndex + 1}`}
+                      className="w-full h-24 object-cover"
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
 

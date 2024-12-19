@@ -14,6 +14,11 @@ export const adminApiSlice = createApi({
       }),
     }),
 
+    userDetails: builder.query({
+      query: (id) => `/get-user-details/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Entity', id }],
+    }),
+
     refreshAdmin: builder.mutation({
       query: () => ({
         url: '/admin-refresh-token',
@@ -33,4 +38,4 @@ export const adminApiSlice = createApi({
   }),
 });
 
-export const { useBlockUserMutation, useLoginAdminMutation, useRefreshAdminMutation } = adminApiSlice; // Correct export for loginAdmin
+export const { useBlockUserMutation, useLoginAdminMutation, useRefreshAdminMutation, useUserDetailsQuery } = adminApiSlice; // Correct export for loginAdmin

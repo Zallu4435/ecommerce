@@ -5,6 +5,8 @@ import {
   useDeleteEntityMutation,
   useBanEntityMutation,
 } from '../../redux/apiSliceFeatures/crudApiSlice'; // Adjust the path as needed
+import { useGetUsersQuery } from '../../redux/apiSliceFeatures/userApiSlice';
+import { useGetCategoriesQuery } from '../../redux/apiSliceFeatures/categoryApiSlice';
 
 export const useButtonHandlers = () => {
   const navigate = useNavigate();
@@ -14,6 +16,9 @@ export const useButtonHandlers = () => {
   const [updateEntity] = useUpdateEntityMutation();
   const [deleteEntity] = useDeleteEntityMutation();
   const [banEntity] = useBanEntityMutation();
+  const { refetch } = useGetUsersQuery();
+  const { refetch: refetchCategory } = useGetCategoriesQuery();
+
 
   const handleUpdate = async (id, type) => {
     console.log("hererererererere")
@@ -29,6 +34,10 @@ export const useButtonHandlers = () => {
     try {
       console.log(type, id, "from caegory")
       await deleteEntity({ entity: type, id }).unwrap();
+      if (type === 'category') {
+        refetchCategory();
+      }
+      
     } catch (error) {
       console.error('Delete failed:', error);
       alert('Failed to delete. Please try again.');
@@ -48,6 +57,7 @@ export const useButtonHandlers = () => {
     try {
       console.log(type, "id from buttonhandler")
       await banEntity({ entity: type, id }).unwrap();
+      refetch();
       // alert(`${type} with id ${id} banned successfully.`);
     } catch (error) {
       console.error('Ban failed:', error);

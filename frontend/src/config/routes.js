@@ -29,6 +29,7 @@ import OrderDetails from '../Forms/admin/OrderViewPage'
 import AdminUsersForm from '../Forms/admin/AdminUsersForm'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import ViewProductDetails from "../pages/admin/views/ViewProductDetails";
+import ViewUserDetails from "../pages/admin/views/ViewUserDetails";
 import AdminCategoryUpdateForm from '../Forms/admin/AdminCategoryUpdateForm'
 import AdminCategoryCreateForm from '../Forms/admin/AdminCategoryCreateForm'
 
@@ -68,6 +69,7 @@ export const adminRoutes = [
   { path: "/orderManagement/view/orders", component: OrderDetails },
   { path: "/userManagement/update/users/:id", component: AdminUsersForm },
   { path: "/productManagement/view/products/:id", component: ViewProductDetails },
+  { path: "/userManagement/view/users/:id", component: ViewUserDetails },
   { path: "/categoryManagement/create/category", component: AdminCategoryCreateForm },
   { path: "/categoryManagement/update/category/:id", component: AdminCategoryUpdateForm },
   { path: "*", component: NotFound },
