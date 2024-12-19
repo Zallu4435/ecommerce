@@ -20,7 +20,7 @@ export const crudApiSlice = createApi({
     updateEntity: builder.mutation({
       query: ({ entity, id, data }) => ({
         url: `/${entity}/update/${id}`,
-        method: 'PUT',
+        method: 'POST',
         body: data,
       }),
       invalidatesTags: (result, error, { entity, id }) => [
@@ -45,13 +45,14 @@ export const crudApiSlice = createApi({
     banEntity: builder.mutation({
       query: ({ entity, id }) => ({
         url: `/${entity}/ban/${id}`,
-        method: 'POST',
+        method: 'POST',  // or 'POST' based on your backend
       }),
       invalidatesTags: (result, error, { entity, id }) => [
         { type: 'Entity', id },
         { type: 'Entity', id: `${entity}-LIST` },
       ],
     }),
+    
   }),
 });
 

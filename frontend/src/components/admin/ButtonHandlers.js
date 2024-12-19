@@ -27,6 +27,7 @@ export const useButtonHandlers = () => {
 
   const handleDelete = async (id, type) => {
     try {
+      console.log(type, id, "from caegory")
       await deleteEntity({ entity: type, id }).unwrap();
     } catch (error) {
       console.error('Delete failed:', error);
@@ -43,10 +44,11 @@ export const useButtonHandlers = () => {
     }
   };
 
-  const handleBan = async (id, type) => {
+  const handleBan = async (type, id) => {
     try {
+      console.log(type, "id from buttonhandler")
       await banEntity({ entity: type, id }).unwrap();
-      alert(`${type} with id ${id} banned successfully.`);
+      // alert(`${type} with id ${id} banned successfully.`);
     } catch (error) {
       console.error('Ban failed:', error);
       alert('Failed to ban. Please try again.');

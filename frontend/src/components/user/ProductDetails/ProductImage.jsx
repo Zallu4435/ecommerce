@@ -1,13 +1,19 @@
 import React from 'react';
+import Magnifier from 'react-magnifier';
 
 const ProductImage = ({ image }) => {
   return (
     <div className="p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
       <div className="relative">
-        <img
+        <Magnifier
           src="https://via.placeholder.com/500x500"
           alt="Main Product"
-          className="w-full h-96 object-cover rounded-lg transform hover:scale-110 transition duration-300"
+          className="w-full h-96 object-cover rounded-lg  duration-300"
+          mgShape="circle" // Circle magnifier
+          mgShowOverflow={false}
+          mgWidth={150}
+          mgHeight={150}
+          zoomFactor={1.5}
         />
         <span className="absolute bottom-2 right-2 bg-blue-500 text-white px-4 py-1 rounded-full text-sm">
           New Arrival

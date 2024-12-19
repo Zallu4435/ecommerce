@@ -16,5 +16,10 @@ export default {
       },
     },
   },
+  safelist: [
+    'text-white', 'text-black', 'text-red-500', 'text-green-500', 'text-yellow-500', 'text-blue-500',
+    'text-red-600', 'text-green-600', 'text-blue-600', // Add variations if needed
+  ],
+  
   plugins: [],
 }

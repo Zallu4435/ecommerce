@@ -1,45 +1,7 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { server } from '../server';
 import { clearCredentials, setCredentials } from '../redux/slice/userSlice';
-
-// export const baseQueryWithReauth = async (args, api, extraOptions) => {
-//   const baseQuery = fetchBaseQuery({
-//     baseUrl: `${server}/users`,
-//     credentials: 'include',
-//     prepareHeaders: (headers, { getState }) => {
-//       const accessToken = getState().user.accessToken;
-//       if (accessToken) {
-//         headers.set('Authorization', `Bearer ${accessToken}`);
-//       }
-//       return headers;
-//     },
-//   });
- 
-//   let result = await baseQuery(args, api, extraOptions);
-
-//   // Handle 401 Unauthorized (token expiration)
-//   if (result.error?.status === 401) {
-//     console.log("Token expired, attempting to refresh");
-    
-//     const refreshResult = await baseQuery({
-//       url: '/refresh-token',
-//       method: 'POST'
-//     }, api, extraOptions);
-
-//     if (refreshResult.data) {
-//       // Update access token in Redux store
-//       api.dispatch(setAccessToken(refreshResult.data.accessToken));
-      
-//       // Retry original request with new token
-//       result = await baseQuery(args, api, extraOptions);
-//     } else {
-//       // Logout if refresh fails
-//       api.dispatch(logout());
-//     }
-//   }
-
-//   return result;
-// };
+import { clearAdminCredentials, setAdminCredentials } from '../redux/slice/adminSlice';
 
 
 const baseQuery = fetchBaseQuery({
@@ -72,6 +34,51 @@ export const baseQueryWithReauth = async (args, api, extraOptions) => {
       result = await baseQuery(args, api, extraOptions);
     } else {
       api.dispatch(clearCredentials());
+    }
+  }
+
+  return result;
+};
+
+
+
+// ADMIN SIDE 
+
+const adminBaseQuery = fetchBaseQuery({
+  baseUrl: `${server}/admin`,
+  credentials: 'include',
+  prepareHeaders: (headers, { getState }) => {
+    // console.log(getState().admin.adminToken)
+    const adminToken = getState().admin.adminToken;
+// console.log(adminToken, "admin")
+    if (adminToken) {
+      headers.set('authorization', `Bearer ${adminToken}`);
+    }
+    return headers;
+  },
+});
+
+export const adminBaseQueryWithReauth = async (args, api, extraOptions) => {
+  let result = await adminBaseQuery(args, api, extraOptions);
+
+  if (result?.error?.status === 401) {
+    console.log('Sending refresh token for admin');
+
+    // Send refresh token request
+    const refreshResult = await adminBaseQuery('/admin-refresh-token', api, extraOptions);
+    console.log(refreshResult, 'refreshResult');
+
+    if (refreshResult?.data) {
+      const { admin, adminAccessToken } = refreshResult.data;
+
+      // Store the new token
+      api.dispatch(setAdminCredentials({ admin, adminAccessToken }));
+
+      // Retry the original query
+      result = await adminBaseQuery(args, api, extraOptions);
+    } else {
+      // Clear credentials if refresh fails
+      api.dispatch(clearAdminCredentials());
     }
   }
 

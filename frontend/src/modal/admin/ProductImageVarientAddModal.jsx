@@ -40,14 +40,12 @@ const ProductImageVariantAddModal = ({
         return;
       }
 
-      // Validate the selected images before uploading
       validateImageVariants(validImages);
 
-      // Proceed with image upload if validation passes
       onImageUpload(validImages);
       handleClose();
     } catch (error) {
-      alert("Error: " + error.message); // Show error messages if validation fails
+      alert("Error: " + error.message); 
     }
   };
 

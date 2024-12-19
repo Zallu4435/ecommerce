@@ -1,26 +1,30 @@
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Upload } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { productValidationSchema, validateImageVariants } from '../../validation/admin/ProductFormValidation';
-import ProductImageVarientAddModal from '../../modal/admin/ProductImageVarientAddModal';
-import { 
-  Input, 
-  InputContainer, 
-  TextArea, 
-  Label, 
-  CheckboxContainer, 
-  SizeOption 
-} from '../../components/user/StyledComponents/StyledComponents';
-import { toast } from 'react-toastify';
-import { useAddEntityMutation } from '../../redux/apiSliceFeatures/crudApiSlice';
-import { uploadImageToCloudinary } from '../../server';
+import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  productValidationSchema,
+  validateImageVariants,
+} from "../../validation/admin/ProductFormValidation";
+import ProductImageVarientAddModal from "../../modal/admin/ProductImageVarientAddModal";
+import {
+  Input,
+  InputContainer,
+  TextArea,
+  Label,
+  CheckboxContainer,
+  SizeOption,
+} from "../../components/user/StyledComponents/StyledComponents";
+import { toast } from "react-toastify";
+import { useAddEntityMutation } from "../../redux/apiSliceFeatures/crudApiSlice";
+import { uploadImageToCloudinary } from "../../server";
+import ImageInput from "../../components/ImageInput";
 
 const AdminProductUpdateForm = () => {
   const navigate = useNavigate();
-  const [images, setImages] = useState([null, null, null]); 
-  const [imageFiles, setImageFiles] = useState([null, null, null]); 
+  const [images, setImages] = useState([null, null, null]);
+  const [imageFiles, setImageFiles] = useState([null, null, null]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [addEntity] = useAddEntityMutation();
   
@@ -30,58 +34,49 @@ const AdminProductUpdateForm = () => {
     handleSubmit,
     setValue,
     formState: { errors },
-    watch
+    watch,
   } = useForm({
     resolver: zodResolver(productValidationSchema),
     defaultValues: {
-      sizes: [],
-      variants: []
-    }
+      sizeOption: [],
+      variantImages: [],
+      colorOption: [],
+    },
   });
-  
 
   const handleImageUpload = (uploadedFiles) => {
     try {
-      // Validate uploaded files
       validateImageVariants(uploadedFiles);
-  
-      // Store original File objects for uploading
       setImageFiles(uploadedFiles);
-  
-      // Update images for display
       setImages(uploadedFiles.map((file) => file?.name || null));
-  
-      // Update the variants in form state (this ensures the form recognizes the selected images)
-      setValue('variants', uploadedFiles); // Even if one image is selected, this will update correctly
+      setValue("variantImages", uploadedFiles);
       setIsModalOpen(false);
     } catch (error) {
       alert(error.message);
     }
   };
-  
-
 
   const onSubmit = async (data, e) => {
     e.preventDefault();
-  
+
     console.log("Form data submitted:", data);
-  
+
     try {
       // Convert the input file into a File object
-      const fileInput = document.querySelector('input[name="imageUrl"]');
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        data.imageUrl = file; // Update the data object with the main image file
-      }
-  
+      // const fileInput = document.querySelector('input[name="imageUrl"]');
+      // if (fileInput.files.length > 0) {
+      //   const file = fileInput.files[0];
+      //   data.imageUrl = file; // Update the data object with the main image file
+      // }
+
       // Upload the main image to Cloudinary
-      if (data.imageUrl) {
+      if (data.image) {
         console.log("Uploading main image...");
-        const mainImageUrl = await uploadImageToCloudinary(data.imageUrl);
-        data.imageUrl = mainImageUrl; // Replace the file with the Cloudinary URL
+        const mainImageUrl = await uploadImageToCloudinary(data.image);
+        data.image = mainImageUrl; // Replace the file with the Cloudinary URL
         console.log("Main image uploaded:", mainImageUrl);
       }
-  
+
       // Upload variant images to Cloudinary
       if (imageFiles && imageFiles.length > 0) {
         const variantImageUrls = await Promise.all(
@@ -93,11 +88,11 @@ const AdminProductUpdateForm = () => {
             return null; // If there's no file, return null
           })
         );
-  
+
         // Update the variants field with the Cloudinary URLs
-        data.variants = variantImageUrls.filter((url) => url !== null);
+        data.variantImages = variantImageUrls.filter((url) => url !== null);
       }
-  
+
       // Send the final data to the backend
       await addEntity({ entity: "products", data }).unwrap();
       console.log("Final data sent to backend:", data);
@@ -108,23 +103,36 @@ const AdminProductUpdateForm = () => {
     }
   };
 
-  
-
   const toggleSizeSelection = (size) => {
-    const currentSizes = watch('sizes') || [];
+    const currentSizes = watch("sizeOption") || [];
     const newSizes = currentSizes.includes(size)
-      ? currentSizes.filter(s => s !== size)
+      ? currentSizes.filter((s) => s !== size)
       : [...currentSizes, size];
-    
-    setValue('sizes', newSizes);
+
+    setValue("sizeOption", newSizes);
   };
+
+  const toggleColorSelection = (color) => {
+    const currentColors = watch("colorOption") || [];
+    const newColor = currentColors.includes(color)
+      ? currentColors.filter((s) => s !== color)
+      : [...currentColors, color];
+
+    setValue("colorOption", newColor);
+  };
+
+  console.log(errors, "error");
+
+  console.log(watch("colorOption"));
+  console.log(watch("sizeOption"));
 
   return (
     <div className="dark:bg-black min-h-screen flex items-center justify-center p-4">
+      <pre>{JSON.stringify(errors.message)}</pre>
       <div className="w-full max-w-[1300px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
         {/* Back Button */}
         <div className="flex items-center mb-6">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
           >
@@ -146,10 +154,10 @@ const AdminProductUpdateForm = () => {
                 name="productName"
                 control={control}
                 render={({ field }) => (
-                  <Input 
-                    {...field} 
-                    type="text" 
-                    placeholder="Enter product name" 
+                  <Input
+                    {...field}
+                    type="text"
+                    placeholder="Enter product name"
                   />
                 )}
               />
@@ -163,19 +171,18 @@ const AdminProductUpdateForm = () => {
             <InputContainer>
               <Label className="dark:text-white">Image URL</Label>
               <Controller
-                name="imageUrl"
+                name="image"
                 control={control}
                 render={({ field }) => (
-                  <Input 
-                    {...field} 
-                    type="file" 
-                    placeholder="Enter image URL" 
+                  <ImageInput
+                    initialValue={field.value}
+                    onChange={field.onChange}
                   />
                 )}
               />
-              {errors.imageUrl && (
+              {errors.image && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.imageUrl.message}
+                  {errors.image.message}
                 </p>
               )}
             </InputContainer>
@@ -186,15 +193,11 @@ const AdminProductUpdateForm = () => {
                 name="category"
                 control={control}
                 render={({ field }) => (
-                  <select 
-                    {...field} 
-                    className="w-full p-3 border rounded-md"
-                  >
+                  <select {...field} className="w-full p-3 border rounded-md">
                     <option value="">Select category</option>
-                    <option value="Electronics">Electronics</option>
-                    <option value="Clothing">Clothing</option>
-                    <option value="Books">Books</option>
-                    <option value="Home Appliances">Home Appliances</option>
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                    <option value="Child">Child</option>
                   </select>
                 )}
               />
@@ -214,10 +217,10 @@ const AdminProductUpdateForm = () => {
                 name="description"
                 control={control}
                 render={({ field }) => (
-                  <TextArea 
-                    {...field} 
-                    placeholder="Enter product description" 
-                    rows="4" 
+                  <TextArea
+                    {...field}
+                    placeholder="Enter product description"
+                    rows="4"
                   />
                 )}
               />
@@ -231,21 +234,21 @@ const AdminProductUpdateForm = () => {
             <div className="md:flex-[3]">
               <Label className="dark:text-white">Available Sizes</Label>
               <CheckboxContainer>
-                {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((size) => (
+                {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
                   <SizeOption key={size}>
                     <Label className="dark:text-white">{size}</Label>
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       id={`size-${size}`}
-                      checked={watch('sizes')?.includes(size)}
+                      checked={watch("sizeOption")?.includes(size)}
                       onChange={() => toggleSizeSelection(size)}
                     />
                   </SizeOption>
                 ))}
               </CheckboxContainer>
-              {errors.sizes && (
+              {errors.sizeOption && (
                 <p className="text-red-500 text-sm mt-3 ml-[-30px]">
-                  {errors.sizes.message}
+                  {errors.sizeOption.message}
                 </p>
               )}
             </div>
@@ -256,19 +259,19 @@ const AdminProductUpdateForm = () => {
             <InputContainer>
               <Label className="dark:text-white">Brand Name *</Label>
               <Controller
-                name="brandName"
+                name="brand"
                 control={control}
                 render={({ field }) => (
-                  <Input 
-                    {...field} 
-                    type="text" 
-                    placeholder="Enter Brand Name" 
+                  <Input
+                    {...field}
+                    type="text"
+                    placeholder="Enter Brand Name"
                   />
                 )}
               />
-              {errors.brandName && (
+              {errors.brand && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.brandName.message}
+                  {errors.brand.message}
                 </p>
               )}
             </InputContainer>
@@ -279,11 +282,11 @@ const AdminProductUpdateForm = () => {
                 name="originalPrice"
                 control={control}
                 render={({ field: { onChange, ...field } }) => (
-                  <Input 
-                    {...field} 
-                    type="number" 
+                  <Input
+                    {...field}
+                    type="number"
                     placeholder="Enter original Price"
-                    onChange={(e) => onChange(Number(e.target.value))} 
+                    onChange={(e) => onChange(Number(e.target.value))}
                   />
                 )}
               />
@@ -300,11 +303,11 @@ const AdminProductUpdateForm = () => {
                 name="offerPrice"
                 control={control}
                 render={({ field: { onChange, ...field } }) => (
-                  <Input 
-                    {...field} 
-                    type="number" 
+                  <Input
+                    {...field}
+                    type="number"
                     placeholder="Enter Offer Price"
-                    onChange={(e) => onChange(Number(e.target.value))} 
+                    onChange={(e) => onChange(Number(e.target.value))}
                   />
                 )}
               />
@@ -324,11 +327,11 @@ const AdminProductUpdateForm = () => {
                 name="stockQuantity"
                 control={control}
                 render={({ field: { onChange, ...field } }) => (
-                  <Input 
-                    {...field} 
-                    type="number" 
+                  <Input
+                    {...field}
+                    type="number"
                     placeholder="Enter Stock Quantity"
-                    onChange={(e) => onChange(Number(e.target.value))} 
+                    onChange={(e) => onChange(Number(e.target.value))}
                   />
                 )}
               />
@@ -340,36 +343,15 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
 
             <InputContainer>
-              <Label className="dark:text-white">Warranty Time</Label>
-              <Controller
-                name="warrantyTime"
-                control={control}
-                render={({ field: { onChange, ...field } }) => (
-                  <Input 
-                    {...field} 
-                    type="number" 
-                    placeholder="Enter Warranty Time"
-                    onChange={(e) => onChange(Number(e.target.value))} 
-                  />
-                )}
-              />
-              {errors.warrantyTime && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.warrantyTime.message}
-                </p>
-              )}
-            </InputContainer>
-
-            <InputContainer>
               <Label className="dark:text-white">Return Policy *</Label>
               <Controller
                 name="returnPolicy"
                 control={control}
                 render={({ field }) => (
-                  <Input 
-                    {...field} 
-                    type="text" 
-                    placeholder="Enter Return Policy" 
+                  <Input
+                    {...field}
+                    type="text"
+                    placeholder="Enter Return Policy"
                   />
                 )}
               />
@@ -379,12 +361,39 @@ const AdminProductUpdateForm = () => {
                 </p>
               )}
             </InputContainer>
+            <div className="md:flex-[3] ml-10">
+              <Label className="dark:text-white">Available Sizes</Label>
+              <CheckboxContainer>
+                {["white", "black", "red", "green", "yellow", "blue"].map(
+                  (color) => (
+                    <colorOption
+                      key={color}
+                      className="flex gap-2 items-center"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`color-${color}`}
+                        checked={watch("colorOption")?.includes(color)}
+                        onChange={() => toggleColorSelection(color)}
+                        className="h-5 w-5"
+                      />
+                      <Label className="dark:text-white">{color}</Label>
+                    </colorOption>
+                  )
+                )}
+              </CheckboxContainer>
+              {errors.colorOption && (
+                <p className="text-red-500 text-sm mt-3 ml-[-30px]">
+                  {errors.colorOption.message}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Image Variant Upload */}
           <div className="mb-4 flex flex-col md:flex-row justify-center items-center gap-6">
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="dark:bg-red-600 bg-pink-500 text-white px-6 py-3 rounded-md hover:bg-pink-600 flex items-center"
               onClick={() => setIsModalOpen(true)}
             >
@@ -392,20 +401,20 @@ const AdminProductUpdateForm = () => {
               Add Image Variants
             </button>
 
-            {/* Display Selected Images */}
             <div className="flex justify-center gap-4">
-              {imageFiles.map((file, index) => (
-                file && (
-                  <div key={index} className="flex flex-col items-center">
-                    <img 
-                      src={file} 
-                      alt={`Image ${index + 1}`} 
-                      className="w-20 h-20 object-cover rounded-full shadow-md"
-                    />
-                    <p className="text-sm text-gray-500">{images[index]}</p>
-                  </div>
-                )
-              ))}
+              {imageFiles.map(
+                (file, index) =>
+                  file && (
+                    <div key={index} className="flex flex-col items-center">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Image ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-full shadow-md"
+                      />
+                      <p className="text-sm text-gray-500">{file.name}</p>
+                    </div>
+                  )
+              )}
             </div>
           </div>
 

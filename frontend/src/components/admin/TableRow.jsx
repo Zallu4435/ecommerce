@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 // Define a new component for each row that calls the hook inside it
 const TableRow = ({ item, type }) => {
-  const { handleBan, handleCreate, handleDelete, handleUpdate, handleView } = useButtonHandlers();
+  const { handleBan, handleDelete, handleUpdate, handleView } = useButtonHandlers();
   const [showModal, setShowModal] = useState(false); // Modal visibility state
   const [itemToDelete, setItemToDelete] = useState(null); // Item to be deleted
 
@@ -20,9 +20,11 @@ const TableRow = ({ item, type }) => {
   };
 
   const handleConfirmDelete = () => {
-    handleDelete(itemToDelete.id, type); // Trigger delete action
+    handleDelete(itemToDelete.id? itemToDelete.id : itemToDelete._id, type === "categories" ? "category" : type); // Trigger delete action
     closeModal(); // Close the modal after deletion
   };
+
+  
 
   return (
     <>
@@ -40,8 +42,9 @@ const TableRow = ({ item, type }) => {
               <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'users')}>
                 Update
               </Button>
-              <Button borderColor="#d97706" textColor="#d97706" hoverColor="white" onClick={() => handleBan(item.id)}>
-                Ban
+              <Button borderColor="#d97706" textColor="#d97706" hoverColor="white" onClick={() => handleBan('admin', item.id)}>
+              {console.log(item.isBlocked ? 'ban': "unban")}
+                {item.isBlocked ? 'Ban' : 'Unban'}
               </Button>
               <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white" onClick={() => handleView('users')}>
                 View
@@ -52,11 +55,12 @@ const TableRow = ({ item, type }) => {
 
         {type === 'categories' && (
           <>
-            <td className="px-6 py-4">{item.name}</td>
+          {console.log(item, "categories")}
+            <td className="px-6 py-4">{item.categoryName}</td>
             <td className="px-6 py-4 border border-gray-600">{item.productCount}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.createdAt}</td>
+            <td className="px-6 py-4 border border-gray-600">{new Date(item.createdAt).toLocaleDateString()}</td>
             <td className="px-6 flex py-4 gap-6">
-              <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item.id, 'categories')}>
+              <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item._id, 'category')}>
                 Update
               </Button>
               <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white" onClick={() => openModal(item)}>
@@ -113,11 +117,12 @@ const TableRow = ({ item, type }) => {
 
         {type === 'products' && (
           <>
+          {console.log(item, 'item from the table ')}
             <td className="px-6 py-4 border border-gray-600">{item.productName}</td>
             <td className="px-6 py-4 border border-gray-600">{item.category}</td>
             <td className="px-6 py-4 border border-gray-600">{item.brand}</td>
             <td className="px-6 py-4 border border-gray-600">{item.originalPrice}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.offerPercentage ? item.offerPercentage.toString() : '0'}</td>
+            <td className="px-6 py-4 border border-gray-600">{item.offerPrice ? item.offerPrice.toString() : '0'}</td>
             <td className="px-6 flex py-4 gap-6">
               <Button borderColor="#d97706" textColor="#d97706" hoverColor="white" onClick={() => handleView(item.id, 'products')}>
                 View
@@ -137,7 +142,7 @@ const TableRow = ({ item, type }) => {
         show={showModal}
         onClose={closeModal}
         onConfirm={handleConfirmDelete}
-        itemName={itemToDelete?.productName} // Show the name of the item being deleted
+        itemName={itemToDelete?.productName || itemToDelete?.categoryName} // Show the name of the item being deleted
       />
     </>
   );

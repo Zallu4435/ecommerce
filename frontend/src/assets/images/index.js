@@ -1,5 +1,5 @@
 import example from "./adminBg.jpg"
-import logo from './logo.png'
+import logoLight from './logo.png'
 import heroImg_1 from'./heroImg1.png'
 import heroImg_2 from './heroImg2.png'
 import heroImg_3 from './heroImg3.png'
@@ -30,11 +30,12 @@ import aboutUsImg from './aboutUs.jpg';
 import notFound from './404.jpg'
 import wallet from './wallet.jpg'
 import defaultProfile from './profile.jpg'
+import logoDark from './darkLogo.png'
 
 
 export {
     aboutUsImg,
-    logo,
+    logoLight,
     heroImg_1,
     heroImg_2,
     heroImg_3,
@@ -63,5 +64,6 @@ export {
     brandImg_8,
     notFound,
     wallet,
-    defaultProfile
+    defaultProfile,
+    logoDark
 }

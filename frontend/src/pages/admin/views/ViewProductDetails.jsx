@@ -10,14 +10,11 @@ const ViewProductDetails = () => {
   const { data, error, isLoading } = useGetProductByIdQuery(id);
 
   const [mainImage, setMainImage] = useState('');
-  const [variantImages, setVariantImages] = useState([]);
 
+  const product = data?.product;
   useEffect(() => {
-    if (data?.product?.images?.length > 0) {
-      setMainImage(data.product.images[0]);
-      setVariantImages(data.product.images.slice(1, 4));
-    }
-  }, [data]);
+    data?.product?.image ? setMainImage(data?.product?.image) : setMainImage("https://via.placeholder.com/400")
+  }, [data])
 
   if (isLoading) {
     return (
@@ -35,19 +32,18 @@ const ViewProductDetails = () => {
     );
   }
 
-  const product = data?.product;
+
 
   const productDetails = [
     { label: 'Category', value: product.category },
     { label: 'Brand', value: product.brand },
-    { label: 'Warranty', value: product.warranty },
     { label: 'Return Policy', value: product.returnPolicy },
     { label: 'Description', value: product.description },
     { label: 'Price', value: (
       <>
         <span className="line-through text-red-500">${product.originalPrice}</span>{' '}
         <span className="text-green-500">
-          ${ (product.originalPrice * (1 - product.offerPercentage / 100)).toFixed(2) }
+          ${ (product.originalPrice * (1 - product.offerPrice / 100)).toFixed(2) }
         </span>
       </>
     )},

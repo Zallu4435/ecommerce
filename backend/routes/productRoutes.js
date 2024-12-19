@@ -20,7 +20,7 @@ router.post(
   catchAsyncErrors(createProduct)
 ); // Create product
 
-router.put(
+router.post(
   '/update/:id', 
   catchAsyncErrors(updateProduct)
 ); // Update product

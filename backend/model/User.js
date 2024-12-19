@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
       default: 'user', 
     },
     isBlocked: {
-      type: String,
+      type: Boolean,
       default: false,
     },
     googleId: {
@@ -69,10 +69,18 @@ userSchema.pre("save", function (next) {
 
 // JWT Token generation
 userSchema.methods.getJwtToken = function () {
+  console.log("get jwt token ")
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_EXPIRES,
   });
 };
+
+
+// JWT Token generation for Admin
+userSchema.methods.generateAdminToken = function () {
+  return jwt.sign({ id: this._id, isAdmin: true }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+};
+
 
 // Compare Passwords
 userSchema.methods.comparePassword = async function (enteredPassword) {

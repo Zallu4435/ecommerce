@@ -1,12 +1,12 @@
 import LoadingSpinner from "../LoadingSpinner"; 
 import { config } from "./TableRow"; 
 
-const AdminTable = ({ type, data, isLoading, isError, search, setSearch }) => { 
+const AdminTable = ({ type, data, isLoading, isError, search, setSearch, refetch }) => { 
   // Get the current configuration based on the type 
   const { headers, rowRenderer } = config[type]; 
   const types = { 
     users: 'Users', 
-    categories: 'Categories', 
+    category: 'Category', 
     coupons: 'Coupons', 
     orders: 'Orders', 
     products: 'Products', 

@@ -13,7 +13,7 @@ const {
 router.get('/getCategories', catchAsyncErrors(getAllCategories)); // Get all categories
 router.get('/getCategory/:id', catchAsyncErrors(getCategoryDetails)); // Get category details
 router.post('/create', catchAsyncErrors(createCategory)); // Create category
-router.put('/update/:id', catchAsyncErrors(updateCategory)); // Update category
+router.post('/update/:id', catchAsyncErrors(updateCategory)); // Update category
 router.delete('/delete/:id', catchAsyncErrors(deleteCategory)); // Delete category
 
 module.exports = router;

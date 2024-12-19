@@ -67,6 +67,7 @@ const Login = () => {
   const handleOtpLogin = async (data) => {
     try {
       // Send OTP for login
+      localStorage.setItem('email-for-forgot',data.email)
       const response = await otpLogin({ email: data.email }).unwrap();
       console.log(response, "response");
 

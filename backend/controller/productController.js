@@ -7,6 +7,7 @@ exports.getAllProducts = async (req, res, next) => {
   try {
     const products = await Product.find(); // Get all products from the database
 
+    console.log(products, "products")
     // Send back the products array with desired fields
     res.status(200).json({
       success: true,
@@ -46,6 +47,7 @@ exports.getAllProducts = async (req, res, next) => {
   // Create new product (Admin only)
   exports.createProduct = async (req, res, next) => {
     try {
+      // console.log(req.body, "body from the products ")
       const product = await Product.create(req.body);
   
       res.status(201).json({
@@ -60,7 +62,8 @@ exports.getAllProducts = async (req, res, next) => {
   // Update product (Admin only)
   exports.updateProduct = async (req, res, next) => {
     try {
-      console.log("reached fotr update")
+      console.log("reached fotr update");
+      console.log(req.body)
       let product = await Product.findById(req.params.id);
   
       if (!product) {

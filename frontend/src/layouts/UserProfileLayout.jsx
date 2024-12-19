@@ -23,7 +23,7 @@ const UserProfileLayout = () => {
           <Route path='wallet' element={<Wallet />} />
 
 
-          <Route path='*' element={<NotFound fromUserProfileLayout={true}/>} />
+          <Route path='*' element={<NotFound notFound={1}/>} />
         </Routes>
       </div>
     </div>

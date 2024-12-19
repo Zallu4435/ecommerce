@@ -3,7 +3,7 @@ const Address = require('../model/Address');
 const ErrorHandler = require('../utils/ErrorHandler');
 const jwt = require('jsonwebtoken');
 const { sendMail, sendOTPEmail } = require('../utils/sendMail');
-const sendToken = require('../utils/jwtToken');
+const {sendToken} = require('../utils/jwtToken');
 const { OAuth2Client } = require("google-auth-library");
 
 
@@ -109,7 +109,7 @@ exports.loginUser = async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("User doesn't exist!", 400));
   }
-  
+  console.log("hi i'm from the user login")
   const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
     console.log(isPasswordValid, "reached here")
@@ -405,7 +405,7 @@ exports.updatePassword = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('username email role createdAt');
+    const users = await User.find().select('id username email role createdAt isBlocked');
 
     if (users.length === 0) {
       return res.status(404).json({ message: 'No users found' });
@@ -414,10 +414,12 @@ exports.getAllUsers = async (req, res) => {
     res.status(200).json({
       success: true,
       users: users.map(user => ({
+        id: user.id,
         name: user.username,
         email: user.email,
         role: user.role,
-        joinDate: user.createdAt
+        joinDate: user.createdAt,
+        isBlocked: user.isBlocked
       }))
     });
 

@@ -75,3 +75,34 @@ exports.verifyRefreshToken = (req, res, next) => {
         });
     }
 };  
+
+
+
+
+exports.verifyAdminRefreshToken = (req, res, next) => {
+    // console.log("Verifying Admin Refresh Token");
+    const adminRefreshToken = req.cookies.adminRefreshToken; // Assume adminRefreshToken is stored in cookies
+    // console.log(adminRefreshToken, "Admin Refresh Token");
+
+    if (!adminRefreshToken) {
+        return res.status(403).json({ 
+            message: 'No admin refresh token found', 
+            requireLogin: true 
+        });
+    }
+
+    try {
+        // Verify the adminRefreshToken with a separate secret key
+        const decoded = jwt.verify(adminRefreshToken, process.env.JWT_REFRESH_SECRET_KEY);
+
+        // Attach the admin's data (e.g., admin ID or other payload) to the request object
+        req.admin = decoded.id || decoded.admin;
+        next();
+    } catch (error) {
+        // console.log("Error verifying admin refresh token");
+        return res.status(403).json({ 
+            message: 'Invalid admin refresh token', 
+            requireLogin: true 
+        });
+    }
+};

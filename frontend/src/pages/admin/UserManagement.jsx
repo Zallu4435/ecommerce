@@ -8,7 +8,7 @@ const UserManagement = () => {
   const { data = [], isLoading, isError } = useGetUsersQuery();
 
   return (
-    <div className="flex dark:bg-black">
+    <div className="flex dark:bg-black h-screen">
 
       <div className="p-6 w-full mx-20 px-14 my-12 dark:bg-gray-900 dark:text-white bg-orange-50">
         <h1 className="text-3xl font-bold mb-6 text-gray-400">User Management</h1>

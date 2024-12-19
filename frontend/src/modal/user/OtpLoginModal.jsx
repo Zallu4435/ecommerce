@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  useOtpLoginMutation,
   useOtpVerifyMutation,
   useVerifyResetPasswordMutation,
 } from "../../redux/apiSliceFeatures/userApiSlice";
@@ -15,6 +16,8 @@ const OTPLoginModal = ({ isOpen, change }) => {
   const inputRefs = useRef([]);
   const [otpVerify] = useOtpVerifyMutation();
   const [verifyResetPassword] = useVerifyResetPasswordMutation();
+  const [otpLogin] =  useOtpLoginMutation();
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const token = useSelector((state) => state.user.otpToken);
@@ -100,8 +103,13 @@ const OTPLoginModal = ({ isOpen, change }) => {
     }
   };
 
-  const handleResendOTP = () => {
-    // Implement the resend OTP logic here
+  const handleResendOTP = async() => {
+
+    // otp-login
+    
+
+    await otpLogin({ email: localStorage.getItem('email-for-forgot') }).unwrap();
+    
     toast.info("OTP has been resent!");
     setResendCountdown(30);
   };

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUser, FaShoppingCart } from 'react-icons/fa';
 import { IoIosSearch } from 'react-icons/io';
 import { FaHeart } from 'react-icons/fa6';
 import { MdOutlineCompare } from 'react-icons/md';
-import { logo } from '../../assets/images';
+import { logoLight } from '../../assets/images/index';
+import { logoDark } from '../../assets/images/index'
 import { useSelector } from 'react-redux';
 
 const Header = () => {
@@ -19,18 +20,26 @@ const Header = () => {
     { to: '/cart', Icon: FaShoppingCart, label: 'Cart' },
   ];
 
+
   return (
     <header className="dark:bg-gray-800 bg-gray-100 py-4 z-50 shadow-md">
       <div className="container mx-auto px-6 sm:px-8 md:px-12 flex items-center justify-between">
         {/* Logo */}
         <div className="flex-shrink-0">
-          <Link to="/" className="block">
-            <img
-              src={logo}
-              alt="Logo"
-              className="h-10 sm:h-12 md:h-14 lg:h-16 object-contain transition-all duration-300"
-            />
-          </Link>
+        <Link to="/" className="block">
+          {/* Light Mode Logo */}
+          <img
+            src={logoLight}
+            alt="Light Mode Logo"
+            className="h-[60px] my-[-20px] sm:h-12 md:h-14 lg:h-[100px] object-contain dark:hidden"
+          />
+          {/* Dark Mode Logo */}
+          <img
+            src={logoDark}
+            alt="Dark Mode Logo"
+            className="h-[60px] my-[-20px] sm:h-12 md:h-14 lg:h-[100px] object-contain hidden dark:block"
+          />
+        </Link>
         </div>
 
         {/* Search Bar */}
