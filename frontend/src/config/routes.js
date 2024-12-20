@@ -32,6 +32,7 @@ import ViewProductDetails from "../pages/admin/views/ViewProductDetails";
 import ViewUserDetails from "../pages/admin/views/ViewUserDetails";
 import AdminCategoryUpdateForm from '../Forms/admin/AdminCategoryUpdateForm'
 import AdminCategoryCreateForm from '../Forms/admin/AdminCategoryCreateForm'
+import ProductImageVarientAddModal from '../modal/admin/ProductImageVarientAddModal.jsx'
 
 
 
@@ -72,6 +73,7 @@ export const adminRoutes = [
   { path: "/userManagement/view/users/:id", component: ViewUserDetails },
   { path: "/categoryManagement/create/category", component: AdminCategoryCreateForm },
   { path: "/categoryManagement/update/category/:id", component: AdminCategoryUpdateForm },
+  { path: "/productManagement/create/products/image-varient", component: ProductImageVarientAddModal },
   { path: "*", component: NotFound },
 
 ];

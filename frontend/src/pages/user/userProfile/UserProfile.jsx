@@ -33,6 +33,8 @@ function UserProfile() {
     { label: 'Shipping Address', value: data.user?.address || 'N/A' },
   ];
 
+  console.log(data?.user._id, "data data data ")
+
   return (
     <div className="flex-1 dark:bg-gray-800 shadow-md rounded-lg p-6 ml-6">
       {/* Header Section */}
@@ -40,6 +42,7 @@ function UserProfile() {
         avatar={userAvatar || defaultProfile}
         username={userUsername}
         onAvatarUpdate={refetch}
+        id={data?.user._id}
       />
       
       {/* Profile Details */}

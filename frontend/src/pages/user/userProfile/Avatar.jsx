@@ -3,7 +3,7 @@ import { FaPencilAlt } from 'react-icons/fa';
 import { useUpdateAvatarMutation } from '../../../redux/apiSliceFeatures/userApiSlice'; // Import the mutation
 import LoadingSpinner from '../../../components/LoadingSpinner'; // Import the loading spinner component
 
-const Avatar = ({ avatar, username, onAvatarUpdate }) => {
+const Avatar = ({ avatar, username, id, onAvatarUpdate }) => {
   const [user, setUser] = useState({ avatar, username });
   const [isLoading, setIsLoading] = useState(false); // State for loading spinner
   const [updateAvatar] = useUpdateAvatarMutation(); // Hook for the RTK Query mutation
@@ -17,14 +17,17 @@ const Avatar = ({ avatar, username, onAvatarUpdate }) => {
     const file = e.target.files[0];
     if (file) {
       try {
-        setIsLoading(true); // Show loading spinner
-
+        setIsLoading(true); 
         // Prepare form data for the avatar upload
         const formData = new FormData();
         formData.append('avatar', file);
+        console.log(id, "hahahahhahahahha ")
+        formData.append('id', id); // Include the ID in the request
 
         // Save the avatar URL to the backend
         const { data } = await updateAvatar(formData).unwrap();
+
+        console.log(user, "user user")
 
         // Update the user's avatar with the URL from the backend response
         setUser({ ...user, avatar: data.avatarUrl });

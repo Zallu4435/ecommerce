@@ -36,32 +36,39 @@ exports.getCategoryDetails = async (req, res, next) => {
 // Create a new category
 exports.createCategory = async (req, res) => {
   try {
-    console.log(req.body, "body")
-      const { categoryName, productCount } = req.body;
+    console.log(req.body, "body");
+    const { categoryName, categoryDescription } = req.body;
 
-      // Check if category name and product count are provided
-      if (!categoryName || productCount === undefined) {
-          return res.status(400).json({ message: 'Category name and product count are required' });
-      }
+    // Check if category name and product count are provided
+    if (!categoryName || categoryDescription === undefined) {
+      return res.status(400).json({ message: 'Category name and product count are required' });
+    }
 
-      console.log("reached")
+    // Check if the category already exists (case-insensitive)
+    const existingCategory = await Category.findOne({ 
+      categoryName: { $regex: `^${categoryName}$`, $options: 'i' } 
+    });
 
+    if (existingCategory) {
+      return res.status(400).json({ message: 'Category already exists' });
+    }
 
-      // Create a new category with categoryName and productCount
-      const newCategory = new Category({
-          categoryName,
-          productCount
-      });
+    // Create a new category with categoryName and categoryDescription
+    const newCategory = new Category({
+      categoryName,
+      categoryDescription,
+    });
 
-      // Save the new category to the database
-      await newCategory.save();
+    // Save the new category to the database
+    await newCategory.save();
 
-      // Respond with the created category
-      res.status(201).json({ message: 'Category created successfully', category: newCategory });
+    // Respond with the created category
+    res.status(201).json({ message: 'Category created successfully', category: newCategory });
   } catch (error) {
-      res.status(500).json({ message: 'Error creating category', error });
+    res.status(500).json({ message: 'Error creating category', error });
   }
 };
+
 
 // Update a category
 exports.updateCategory = async (req, res, next) => {

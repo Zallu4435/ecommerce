@@ -45,6 +45,21 @@ exports.loginAdmin = async (req, res, next) => {
   }
 };
 
+exports.logoutAdmin = async (req, res, next) => {
+  res.cookie("adminRefreshToken", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: "Logout successful",
+  });
+};
+
+
 
 
 exports.banUser = async (req, res, next) => {

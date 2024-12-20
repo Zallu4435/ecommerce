@@ -85,7 +85,7 @@ const ViewProductDetails = () => {
                 mgWidth={150}
                 mgHeight={150}
                 zoomFactor={1.5}
-              />
+              />  
             </div>
             <div className="grid grid-cols-3 gap-4 mt-4">
               {[...Array(3)].map((_, index) => {

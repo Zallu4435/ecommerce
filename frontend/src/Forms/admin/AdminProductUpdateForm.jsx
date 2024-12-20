@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Upload } from 'lucide-react';
 import { useNavigate, useParams } from "react-router-dom";
 import {
   productValidationSchema,
   validateImageVariants,
 } from "../../validation/admin/ProductFormValidation";
-import ProductImageVarientAddModal from "../../modal/admin/ProductImageVarientAddModal";
+import ProductImageVariantAddModal from "../../modal/admin/ProductImageVarientAddModal";
 import {
   Input,
   InputContainer,
@@ -24,15 +24,12 @@ import ImageInput from "../../components/ImageInput";
 
 const AdminProductUpdateForm = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // Get id from URL
-  // const [images, setImages] = useState([null, null, null]);
+  const { id } = useParams();
   const [imageFiles, setImageFiles] = useState([null, null, null]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [updateEntity] = useUpdateEntityMutation();
 
-  const { data, error, isLoading } = useGetProductByIdQuery(id); // Fetch product data based on the 'id' from the URL
-
-  console.log(data, "id");
+  const { data, error, isLoading } = useGetProductByIdQuery(id);
 
   const {
     control,
@@ -48,94 +45,78 @@ const AdminProductUpdateForm = () => {
       colorOption: [],
     },
   });
+
   useEffect(() => {
-    // Populate the form with the fetched data once it's available
-    if (data) {
-      setValue("productName", data?.product?.productName);
-      setValue("image", data?.product?.image);
-      setValue("category", data?.product?.category);
-      setValue("description", data?.product?.description);
-      setValue("sizeOption", data?.product?.sizeOption);
-      setValue("brand", data?.product?.brand);
-      setValue("originalPrice", data?.product?.originalPrice);
-      setValue("offerPrice", data?.product?.offerPrice);
-      setValue("stockQuantity", data?.product?.stockQuantity);
-      setValue("returnPolicy", data?.product?.returnPolicy);
-      setValue("colorOption", data?.product?.colorOption);
-      setValue("variantImages", data?.product?.variantImages);
-      if (data?.product?.variantImages.length > 0) {
-        setImageFiles(data?.product?.variantImages);
+    if (data?.product) {
+      const { product } = data;
+      Object.keys(product).forEach((key) => {
+        setValue(key, product[key]);
+      });
+
+      if (product.variantImages && product.variantImages.length > 0) {
+        setImageFiles(product.variantImages.map(url => ({ url, isExisting: true })));
       }
     }
-    console.log(data?.product?.image, data?.product.variantImages, "images");
   }, [data, setValue]);
-  console.log(data, "data");
 
   const handleImageUpload = (uploadedFiles) => {
     try {
       // Validate uploaded files
       validateImageVariants(uploadedFiles);
-
-      // Store original File objects for uploading
-      setImageFiles(uploadedFiles);
-
-      // Update images for display
-      // setImages(uploadedFiles.map((file) => file?.name || null));
-
-      // Update the variants in form state (this ensures the form recognizes the selected images)
-      setValue("variantImages", uploadedFiles); // Even if one image is selected, this will update correctly
+  
+      // Ensure uploadedFiles is an array with File objects or strings (URLs)
+      if (!Array.isArray(uploadedFiles)) {
+        throw new Error("Uploaded files must be an array.");
+      }
+  
+      const newImageFiles = uploadedFiles.map(file => {
+        if (file) {
+          if (typeof file === 'string') {
+            return { url: file, isExisting: true };
+          } else if (file instanceof File) {
+            return { file, isExisting: false };
+          } else {
+            throw new Error("Invalid file type.");
+          }
+        }
+        return null;
+      });
+  
+      // Set the new image files and update form value
+      setImageFiles(newImageFiles);
+      setValue("variantImages", newImageFiles);
+  
+      // Close modal
       setIsModalOpen(false);
     } catch (error) {
-      alert(error.message);
+      alert(error.message, "hahahahahahahahahahahah");  // Display the error message
     }
   };
-
-  const onSubmit = async (data, e) => {
+  
+  const onSubmit = async (formData, e) => {
     e.preventDefault();
 
-    console.log("Form data submitted:", data);
-    console.log(error, "error")
-
     try {
-      // Convert the input file into a File object
-      // const fileInput = document.querySelector('input[name="imageUrl"]');
-      // if (fileInput && fileInput.files.length > 0) {
-      //   const file = fileInput.files[0];
-      //   data.imageUrl = file; // Update the data object with the main image file
-      // }
-
-      // Upload the main image to Cloudinary
-      if (data.imageUrl) {
-        console.log("Uploading main image...");
-        const mainImageUrl = await uploadImageToCloudinary(data.imageUrl);
-        data.imageUrl = mainImageUrl; // Replace the file with the Cloudinary URL
-        console.log("Main image uploaded:", mainImageUrl);
+      if (formData.image instanceof File) {
+        const mainImageUrl = await uploadImageToCloudinary(formData.image);
+        formData.image = mainImageUrl;
       }
 
-      // Upload variant images to Cloudinary
-      if (imageFiles && imageFiles.length > 0) {
-        console.log("Uploading variant images...");
+      if (imageFiles.length > 0) {
         const variantImageUrls = await Promise.all(
-          imageFiles.map(async (file) => {
-            if (file) {
-              const uploadedUrl = await uploadImageToCloudinary(file);
-              return uploadedUrl;
+          imageFiles.map(async (fileObj) => {
+            if (fileObj && !fileObj.isExisting) {
+              return await uploadImageToCloudinary(fileObj.file);
             }
-            return null; // If there's no file, return null
+            return fileObj?.url || null;
           })
         );
-
-        // Update the variants field with the Cloudinary URLs
-        data.variantImages = variantImageUrls.filter((url) => url !== null);
-        console.log("Variant images uploaded:", data.variantImages);
+        formData.variantImages = variantImageUrls.filter(url => url !== null);
       }
 
-      console.log(data, "data for updating ");
-      // If you're updating the product, call the update API, otherwise, create a new product
-      await updateEntity({ entity: "products", data, id }).unwrap();
-      toast.success("Product saved successfully");
-
-      navigate(-1); // Redirect to the previous page
+      await updateEntity({ entity: "products", data: formData, id }).unwrap();
+      toast.success("Product updated successfully");
+      navigate(-1);
     } catch (err) {
       console.error("Error during form submission:", err);
       toast.error(err?.data?.message || "An error occurred");
@@ -147,7 +128,6 @@ const AdminProductUpdateForm = () => {
     const newSizes = currentSizes.includes(size)
       ? currentSizes.filter((s) => s !== size)
       : [...currentSizes, size];
-
     setValue("sizeOption", newSizes);
   };
 
@@ -156,25 +136,15 @@ const AdminProductUpdateForm = () => {
     const newColor = currentColors.includes(color)
       ? currentColors.filter((s) => s !== color)
       : [...currentColors, color];
-
     setValue("colorOption", newColor);
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
-
-  // <pre>{JSON.parse(JSON.stringify((errors.message)))}</pre>;
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div className="dark:bg-black min-h-screen flex items-center ml-14 justify-center p-4">
-      <pre>{JSON.stringify(errors.message)}</pre>
+    <div className="dark:bg-black ml-12 min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-[1300px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
-        {/* Back Button */}
         <div className="flex items-center mb-6">
           <button
             onClick={() => navigate(-1)}
@@ -186,11 +156,10 @@ const AdminProductUpdateForm = () => {
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
-          Add Product
+          Update Product
         </h1>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Product Name and Image URL */}
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             <InputContainer>
               <Label className="dark:text-white">Product Name *</Label>
@@ -253,7 +222,6 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
           </div>
 
-          {/* Description and Sizes */}
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <InputContainer className="md:flex-[7]">
               <Label className="dark:text-white">Description *</Label>
@@ -298,7 +266,6 @@ const AdminProductUpdateForm = () => {
             </div>
           </div>
 
-          {/* Pricing and Stock Details */}
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             <InputContainer>
               <Label className="dark:text-white">Brand Name *</Label>
@@ -363,7 +330,6 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
           </div>
 
-          {/* Additional Details */}
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             <InputContainer>
               <Label className="dark:text-white">Stock Quantity *</Label>
@@ -406,11 +372,11 @@ const AdminProductUpdateForm = () => {
               )}
             </InputContainer>
             <div className="md:flex-[3] ml-10">
-              <Label className="dark:text-white">Available Sizes</Label>
+              <Label className="dark:text-white">Available Colors</Label>
               <CheckboxContainer>
                 {["white", "black", "red", "green", "yellow", "blue"].map(
                   (color) => (
-                    <colorOption
+                    <div
                       key={color}
                       className="flex gap-2 items-center"
                     >
@@ -422,7 +388,7 @@ const AdminProductUpdateForm = () => {
                         className="h-5 w-5"
                       />
                       <Label className="dark:text-white">{color}</Label>
-                    </colorOption>
+                    </div>
                   )
                 )}
               </CheckboxContainer>
@@ -434,7 +400,6 @@ const AdminProductUpdateForm = () => {
             </div>
           </div>
 
-          {/* Image Variant Upload */}
           <div className="mb-4 flex flex-col md:flex-row justify-center items-center gap-6">
             <button
               type="button"
@@ -447,30 +412,26 @@ const AdminProductUpdateForm = () => {
 
             <div className="flex justify-center gap-4">
               {imageFiles.map(
-                (file, index) =>
-                  file && (
+                (fileObj, index) =>
+                  fileObj && (
                     <div key={index} className="flex flex-col items-center">
                       <img
-                        src={
-                          typeof file === "string"
-                            ? file
-                            : URL.createObjectURL(file)
-                        }
+                        src={fileObj.isExisting ? fileObj.url : (fileObj.file instanceof File ? URL.createObjectURL(fileObj.file) : '')}
                         alt={`Image ${index + 1}`}
                         className="w-20 h-20 object-cover rounded-full shadow-md"
                       />
-                      <p className="text-sm text-gray-500">{file.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {fileObj.isExisting ? 'Existing Image' : (fileObj.file instanceof File ? fileObj.file.name : 'Invalid File')}
+                      </p>
                     </div>
                   )
               )}
             </div>
           </div>
 
-          {/* Submit Button */}
           <div>
             <button
               type="submit"
-              disabled={imageFiles.length === 0}
               className="w-full dark:bg-blue-600 bg-orange-500 text-white px-6 py-3 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 flex items-center justify-center"
             >
               <Upload className="mr-2" />
@@ -479,11 +440,11 @@ const AdminProductUpdateForm = () => {
           </div>
         </form>
 
-        {/* Image Upload Modal */}
-        <ProductImageVarientAddModal
+        <ProductImageVariantAddModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onImageUpload={handleImageUpload}
+          initialImages={imageFiles}
         />
       </div>
     </div>
@@ -491,3 +452,4 @@ const AdminProductUpdateForm = () => {
 };
 
 export default AdminProductUpdateForm;
+

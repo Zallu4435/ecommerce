@@ -10,7 +10,6 @@ const imageValidationSchema = z.instanceof(File)
   });
 
 // Product validation schema
-// Updated Product Validation Schema
 export const productValidationSchema = z.object({
   productName: z.string().min(3, { message: "Product name must be at least 3 characters" }),
   image: z.string().url({ message: "Invalid image URL" }),
@@ -30,18 +29,24 @@ export const productValidationSchema = z.object({
   })
 });
 
-
 // Validation for image variants
 export const validateImageVariants = (files) => {
   try {
     console.log("Files to validate: ", files); // Log to check the files
 
-    // Ensure we only validate non-null files
+    // Ensure we only validate non-null files and that they are File objects
     const nonNullFiles = files.filter(file => file !== null && file !== undefined);
+    console.log(nonNullFiles, "Files before validation");
 
-    // Validate each file directly
-    const validatedFiles = nonNullFiles.map(file => imageValidationSchema.parse(file));
-    console.log(validatedFiles, "validate Files")
+    // Ensure that all files are of type File
+    const validatedFiles = nonNullFiles.map(file => {
+      if (!(file instanceof File)) {
+        throw new Error("All files must be instances of File");
+      }
+      return imageValidationSchema.parse(file);
+    });
+
+    console.log(validatedFiles, "Validated Files");
     return validatedFiles;
   } catch (error) {
     if (error instanceof z.ZodError) {

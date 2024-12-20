@@ -43,7 +43,6 @@ const AdminProductUpdateForm = () => {
       colorOption: [],
     },
   });
-
   const handleImageUpload = (uploadedFiles) => {
     try {
       validateImageVariants(uploadedFiles);
@@ -55,7 +54,8 @@ const AdminProductUpdateForm = () => {
       alert(error.message);
     }
   };
-
+  
+  
   const onSubmit = async (data, e) => {
     e.preventDefault();
 
@@ -127,7 +127,7 @@ const AdminProductUpdateForm = () => {
   console.log(watch("sizeOption"));
 
   return (
-    <div className="dark:bg-black min-h-screen flex items-center justify-center p-4">
+    <div className="dark:bg-black min-h-screen flex ml-12 items-center justify-center p-4">
       <pre>{JSON.stringify(errors.message)}</pre>
       <div className="w-full max-w-[1300px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
         {/* Back Button */}

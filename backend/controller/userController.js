@@ -1,5 +1,4 @@
 const User = require('../model/User');
-const Address = require('../model/Address');
 const ErrorHandler = require('../utils/ErrorHandler');
 const jwt = require('jsonwebtoken');
 const { sendMail, sendOTPEmail } = require('../utils/sendMail');
@@ -100,6 +99,8 @@ exports.activateAccount = async (req, res, next) => {
 exports.loginUser = async (req, res, next) => {
 
   const { email, password } = req.body;
+
+  console.log(password, "password")
   
   if (!email || !password) {
     return next(new ErrorHandler("Please provide all fields!", 400));
@@ -108,6 +109,10 @@ exports.loginUser = async (req, res, next) => {
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
     return next(new ErrorHandler("User doesn't exist!", 400));
+  }
+
+  if (user.isBlocked) {
+    return next(new ErrorHandler("User banned! Can't login"))
   }
   console.log("hi i'm from the user login")
   const isPasswordValid = await user.comparePassword(password);
@@ -122,8 +127,8 @@ exports.loginUser = async (req, res, next) => {
 
 // Get user
 exports.getUser = async (req, res, next) => {
-  console.log("reached here");
-  console.log("user requsted user ",req.user._id)
+  // console.log("reached here");
+  // console.log("user requsted user ",req.user._id)
   // console.log(req, 'hahaha')
   const user = await User.findById(req.user).select('username nickname phone email gender address avatar');
   if (!user) {
@@ -147,23 +152,36 @@ exports.logoutUser = async (req, res, next) => {
 
   res.status(201).json({
     success: true,
-    message: "Logout successful",
+  message: "Logout successful",
   });
 };
 
 // Update user info
 exports.updateUserInfo = async (req, res, next) => {
-  const { email, nickname, phone, username, gender } = req.body;
+  const { email, nickname, phone, username, gender, oldEmail } = req.body;
 
-  const user = await User.findOne({ email }).select("+password");
+  // console.log(oldEmail, "old")
+  // Find the user using the oldEmail
+  const user = await User.findOne({ email: oldEmail }).select("+password");
+
   if (!user) {
     return next(new ErrorHandler("User not found", 400));
   }
 
+  // Check if the email is being changed and if it is already in use by another user
+  if (email && email !== user.email) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return next(new ErrorHandler("Email is already in use by another user", 400));
+    }
+  }
+
+  // Proceed with updating user information
   if (username) user.username = username;
   if (phone) user.phone = phone;
   if (nickname) user.nickname = nickname;
   if (gender) user.gender = gender;
+  if (email) user.email = email;  // Update the email if provided
 
   await user.save();
 
@@ -173,18 +191,20 @@ exports.updateUserInfo = async (req, res, next) => {
   });
 };
 
+
 // Update avatar
 exports.updateAvatar = async (req, res, next) => {
   try {
-    let user = await User.findById(req.user.id);
+    let user = await User.findById(req.user);
+    
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
     }
 
     const { avatar } = req.body;
     if (avatar) {
-      user.avatar = avatar; // Assign the new avatar URL to the user object
-      await user.save(); // Save the updated user object to the database
+      user.avatar = avatar; 
+      await user.save();
     }
 
     res.status(200).json({
@@ -195,78 +215,6 @@ exports.updateAvatar = async (req, res, next) => {
     return next(error);
   }
 };
-
-
-
-
-
-
-// Address Section ========================>>>>>>>>>
-
-// Add Address
-exports.addAddress = async (req, res, next) => {
-  const userId = req.user.id;
-  const { country, state, city, zipCode, street } = req.body;
-
-  const address = await Address.create({
-    user: userId,
-    country,
-    state,
-    city,
-    zipCode,
-    street,
-  });
-
-  res.status(201).json({
-    success: true,
-    message: "Address added successfully",
-    address,
-  });
-};
-
-// Edit Address
-exports.editAddress = async (req, res, next) => {
-  const userId = req.user.id;
-  const { _id, country, state, city, zipCode, street } = req.body;
-
-  const address = await Address.findOne({ _id, user: userId });
-  if (!address) {
-    return next(new ErrorHandler("Address not found", 404));
-  }
-
-  address.country = country || address.country;
-  address.state = state || address.state;
-  address.city = city || address.city;
-  address.zipCode = zipCode || address.zipCode;
-  address.street = street || address.street;
-
-  await address.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Address updated successfully",
-    address,
-  });
-};
-
-// Remove Address
-exports.removeAddress = async (req, res, next) => {
-  const userId = req.user.id;
-  const { _id } = req.body;
-
-  const address = await Address.findOne({ _id, user: userId });
-  if (!address) {
-    return next(new ErrorHandler("Address not found", 404));
-  }
-
-  await address.remove();
-
-  res.status(200).json({
-    success: true,
-    message: "Address removed successfully",
-  });
-};
-
 
 
 
@@ -363,7 +311,7 @@ exports.resetPassword = async (req, res, next) => {
     const isMatch = jwt.verify(token, process.env.OTP_SECRET);
     console.log('OTP verification result:', isMatch);
     user.password = newPassword;
-    user.save();
+    await user.save();
     if (isMatch) {
       res.status(200).json("Password reset successfully");
     } else {
@@ -405,7 +353,7 @@ exports.updatePassword = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('id username email role createdAt isBlocked');
+    const users = await User.find().select('id username avatar email role createdAt isBlocked');
 
     if (users.length === 0) {
       return res.status(404).json({ message: 'No users found' });
@@ -419,7 +367,8 @@ exports.getAllUsers = async (req, res) => {
         email: user.email,
         role: user.role,
         joinDate: user.createdAt,
-        isBlocked: user.isBlocked
+        isBlocked: user.isBlocked,
+        avatar: user.avatar
       }))
     });
 
@@ -468,7 +417,7 @@ exports.googleLogin = async (req, res, next) => {
 
 exports.refreshToken = async (req, res, next) => {
   try {
-    console.log("reachded inside the refresh token ")
+    // console.log("reachded inside the refresh token ")
       // Find user by ID from verified refresh token
       const user = await User.findById(req.user);
       

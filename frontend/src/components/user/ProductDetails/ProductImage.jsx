@@ -1,14 +1,15 @@
 import React from 'react';
 import Magnifier from 'react-magnifier';
+import { roundedImg_1 } from '../../../assets/images';
 
 const ProductImage = ({ image }) => {
   return (
     <div className="p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
       <div className="relative">
         <Magnifier
-          src="https://via.placeholder.com/500x500"
+          src= { roundedImg_1 || "https://via.placeholder.com/500x500" }
           alt="Main Product"
-          className="w-full h-96 object-cover rounded-lg  duration-300"
+          className="px-[150px] py-[30px] h-[350px] object-cover rounded-lg  duration-300"
           mgShape="circle" // Circle magnifier
           mgShowOverflow={false}
           mgWidth={150}

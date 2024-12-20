@@ -7,12 +7,12 @@ const ProductManagement = () => {
   const [search, setSearch] = useState("");
   const { handleCreate } = useButtonHandlers();
 
-  // Fetch product data using the API call
+  // Fetch product data using the API call                                                                     
   const { data = [], isLoading, isError } = useGetProductsQuery();
 
   return (
 
-      <div className="dark:bg-gray-900 dark:bg-black mx-10 py-2 dark:text-white bg-orange-50 h-[715px] px-14 my-12">
+      <div className="dark:bg-gray-900 dark:bg-black ml-20 py-2 dark:text-white bg-orange-50 h-[715px] px-14 my-12">
         <div className="flex justify-between mt-5 items-center">
           <h1 className="text-3xl font-bold text-gray-400">
             Product Management

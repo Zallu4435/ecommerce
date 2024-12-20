@@ -32,7 +32,7 @@ const UserRegister = () => {
       try {
         const response = await registerUser(data).unwrap();
         console.log(response, "response from the backend signup");
-        toast.success('Login success');
+        toast.info('Check your Gmail for the link to access your account!');
         setIsModalOpen(true);
 
       } catch (err) {

@@ -2,6 +2,8 @@ import { GrHome } from 'react-icons/gr';
 import { IoIosArrowForward } from 'react-icons/io';
 import { Link } from 'react-router-dom';
 import { SettingsTheme } from '../../context/SettingsTheme';
+import { useSelector } from 'react-redux';
+import { useLogoutAdminMutation } from '../../redux/apiSliceFeatures/AdminApiSlice';
 
 const AdminSidebar = () => {
 
@@ -13,6 +15,20 @@ const AdminSidebar = () => {
     { name: 'Category Management', icon: <GrHome />, path: '/admin/categoryManagement' },
     { name: 'Coupons Management', icon: <GrHome />, path: '/admin/couponManagement' },
   ];
+  const admin = useSelector(state => state.admin.admin);
+  const [logoutAdmin] = useLogoutAdminMutation();
+
+  const handleLogout = async () => {
+    try {
+      const response = await logoutAdmin().unwrap();
+      console.log( response, 'Logged out successfully');
+    
+      window.location.href = '/admin/login';
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
 
   return (
     <div>
@@ -27,7 +43,7 @@ const AdminSidebar = () => {
           />
           <div className="ml-4 dark:text-white text-bl">
             <span className="block text-sm font-bold">PRODUCT MANAGER</span>
-            <p className="text-sm">Name</p>
+            <p className="text-sm">{admin?.username.toUpperCase() || 'Zallu'}</p>
           </div>
 
           <SettingsTheme />
@@ -75,7 +91,12 @@ const AdminSidebar = () => {
             {/* Logout Section */}
             <div className="flex items-center mb-4">
                 <span className="text-xl text-gray-300">🚪</span>
-                <span className="ml-4 text-lg font-semibold text-red-300">Logout Account</span>
+                <span 
+                  onClick={handleLogout}
+                  className="ml-4 text-lg font-semibold text-red-300 cursor-pointer"
+                >
+                  Logout Account
+                </span>
             </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { Button } from '../user/StyledComponents/StyledComponents';
 import { useButtonHandlers } from './ButtonHandlers';
 import DeleteConfirmationModal from '../../modal/admin/ConfirmDeleteModal';
 import { useState } from 'react';
+import { defaultProfile } from '../../assets/images';
 
 // Define a new component for each row that calls the hook inside it
 const TableRow = ({ item, type }) => {
@@ -32,7 +33,7 @@ const TableRow = ({ item, type }) => {
         {type === 'users' && (
           <>
             <td className="px-6 py-4 w-[200px] overflow-hidden flex items-center gap-3">
-              <img src="https://via.placeholder.com/50" alt="Profile" className="w-12 h-12 rounded-full" />
+              <img src={item.avatar || defaultProfile} alt="Profile" className="w-12 h-12 rounded-full" />
               <strong className=''>{item.name}</strong>
             </td>
             <td className="px-6 py-4 border border-gray-600">{item.email}</td>
@@ -40,7 +41,7 @@ const TableRow = ({ item, type }) => {
             <td className="px-6 py-4 border border-gray-600">{new Date(item.joinDate).toLocaleDateString()}</td>          
             <td className="px-6 flex py-4 gap-6">
               <Button borderColor="#d97706" textColor="#d97706" hoverColor="white" onClick={() => handleBan('admin', item.id)}>
-              {console.log(item.isBlocked ? 'ban': "unban")}
+              {console.log(item.isBlocked ? 'Unban': "Ban")}
                 {item.isBlocked ? 'Ban' : 'Unban'}
               </Button>
               <Button borderColor="#D4A017" textColor="#D4A017" hoverColor="white" onClick={() => handleView(item.id, 'users')}>
@@ -54,10 +55,10 @@ const TableRow = ({ item, type }) => {
           <>
           {console.log(item, "categories")}
             <td className="px-6 py-4">{item.categoryName}</td>
-            <td className="px-6 py-4 border border-gray-600">{item.productCount}</td>
+            <td className="px-6 py-4 border w-[460px] h-[50px] overflow-hidden border-gray-600">{item.categoryDescription}</td>
             <td className="px-6 py-4 border border-gray-600">{new Date(item.createdAt).toLocaleDateString()}</td>
-            <td className="px-6 flex py-4 gap-6">
-              <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item._id, 'category')}>
+            <td className="px-6 py-[40px] flex gap-6">
+            <Button borderColor="#16a34a" textColor="#16a34a" hoverColor="white" onClick={() => handleUpdate(item._id, 'category')}>
                 Update
               </Button>
               <Button borderColor="#B34D4D" textColor="#B34D4D" hoverColor="white" onClick={() => openModal(item)}>
@@ -139,7 +140,7 @@ const TableRow = ({ item, type }) => {
         show={showModal}
         onClose={closeModal}
         onConfirm={handleConfirmDelete}
-        itemName={itemToDelete?.productName || itemToDelete?.categoryName} // Show the name of the item being deleted
+        itemName={itemToDelete?.productName || itemToDelete?.categoryName} 
       />
     </>
   );
@@ -152,7 +153,7 @@ export const config = {
     rowRenderer: (item) => <TableRow item={item} type="users" />,
   },
   categories: {
-    headers: ['Category Name', 'Product Count', 'Created At', 'Actions'],
+    headers: ['Category Name', 'Category Description', 'Created At', 'Actions'],
     rowRenderer: (item) => <TableRow item={item} type="categories" />,
   },
   orders: {

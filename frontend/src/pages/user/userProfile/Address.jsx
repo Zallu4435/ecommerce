@@ -1,8 +1,37 @@
-import { useState } from 'react';
+// AddressPage.js
+import React, { useEffect, useState } from 'react';
+import { useGetAddressesQuery, useAddAddressMutation, useEditAddressMutation, useRemoveAddressMutation, } from '../../../redux/apiSliceFeatures/addressPasswordApiSlice';
 import AddressModal from '../../../modal/user/AddressModal';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../../redux/slice/userSlice';
 
 const AddressPage = () => {
-  const [addresses, setAddresses] = useState([]);
+  const { data:addresses , isLoading, isFetching, isSuccess, isError } = useGetAddressesQuery();
+  const [addAddress] = useAddAddressMutation();
+  const [editAddress] = useEditAddressMutation();
+  const [removeAddress] = useRemoveAddressMutation();
+
+  // console.log(data[0], "address of user ");
+  // const currentUser = useSelector(state => state.user);
+
+
+  // console.log(currentUser, "userId from user slice ")
+
+useEffect(() => {
+  console.log(addresses,'addresses')
+  if (isSuccess) {
+    // console.log(addresses, "address of user");
+  }
+}, [isSuccess, addresses]);
+
+
+console.log('isLoading:', isLoading);
+console.log('isFetching:', isFetching);
+console.log('isSuccess:', isSuccess);
+console.log('isError:', isError);
+// console.log('addresses:', addresses.length);
+
+
   const [formData, setFormData] = useState({
     country: '',
     state: '',
@@ -19,38 +48,54 @@ const AddressPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAddAddress = () => {
+  const handleAddAddress = async () => {
     if (addresses.length >= 7) {
-      alert("You can only add up to 7 addresses.");
+      alert('You can only add up to 7 addresses.');
       return;
     }
-    setAddresses([...addresses, formData]);
-    setFormData({ country: '', state: '', city: '', zip: '', street: '', editing: false }); // Clear form
+    try {
+      await addAddress(formData).unwrap(); // Add address to backend
+      setIsModalOpen(false); // Close modal
+    } catch (error) {
+      console.error('Failed to add address:', error);
+    }
   };
 
-  const handleEditAddress = (index) => {
+  const handleEditAddress = (index, address) => {
     setEditingIndex(index);
-    setFormData({ ...addresses[index], editing: true });
+    setFormData({ ...address, editing: true });
     setIsModalOpen(true);
   };
 
-  const handleSaveEdit = () => {
-    const updatedAddresses = [...addresses];
-    updatedAddresses[editingIndex] = formData;
-    setAddresses(updatedAddresses);
-    setEditingIndex(null);
-    setFormData({ country: '', state: '', city: '', zip: '', street: '', editing: false }); // Clear form
+  const handleSaveEdit = async () => {
+    try {
+      const updatedAddress = { ...formData };
+      await editAddress({ id: addresses[editingIndex].id, updatedAddress }).unwrap(); // Save changes to backend
+      setIsModalOpen(false); // Close modal
+      setEditingIndex(null);
+      setFormData({ country: '', state: '', city: '', zip: '', street: '', editing: false }); // Clear form
+    } catch (error) {
+      console.error('Failed to update address:', error);
+    }
   };
 
-  const handleRemoveAddress = (index) => {
-    const updatedAddresses = addresses.filter((_, i) => i !== index);
-    setAddresses(updatedAddresses);
+  console.log( "address of of of ")
+
+  const handleRemoveAddress = async (id) => {
+    console.log(id, "id from the id ")
+    try {
+      await removeAddress(id).unwrap(); // Delete address from backend
+    } catch (error) {
+      console.error('Failed to delete address:', error);
+    }
   };
 
   const handleOpenModal = () => {
     setFormData({ country: '', state: '', city: '', zip: '', street: '', editing: false });
     setIsModalOpen(true);
   };
+
+  if (isLoading) return <p>Loading...</p>;
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-900 shadow-lg rounded-lg">
@@ -67,23 +112,24 @@ const AddressPage = () => {
             <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Saved Addresses</h3>
             <ul className="space-y-4">
               {addresses.map((address, index) => (
-                <li key={index} className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-md">
+                <li key={address.id} className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-md">
                   <div>
                     <p className="text-gray-900 dark:text-gray-100">
-                      {Object.values(address).join(', ')}
+                      {`${address.country}, ${address.state}, ${address.city}, ${address.zip}, ${address.street}`}
                     </p>
                   </div>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleEditAddress(index)}
+                      onClick={() => handleEditAddress(index, address)}
                       className="text-indigo-500 hover:text-indigo-700 transition duration-300"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleRemoveAddress(index)}
+                      onClick={() => handleRemoveAddress(address._id)}
                       className="text-red-500 hover:text-red-700 transition duration-300"
-                    >
+                      >
+                      {console.log(address._id, "address")}
                       Remove
                     </button>
                   </div>
@@ -108,3 +154,4 @@ const AddressPage = () => {
 };
 
 export default AddressPage;
+AddressPage.js

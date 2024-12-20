@@ -10,14 +10,14 @@ export const userApiSlice = createApi({
   endpoints: (builder) => ({
     // Fetch user details
     getUser: builder.query({
-      query: () => '/getUser',
-      providesTags: ['User', 'Avatar'],
+      query: () => 'users/getUser',
+      // providesTags: ['User', 'Avatar'],
       
     }),
 
     googleLogin: builder.mutation({
       query: (userData) => ({
-        url: '/google-login',
+        url: 'users/google-login',
         method: 'POST',
         body: userData,
       }),
@@ -26,14 +26,14 @@ export const userApiSlice = createApi({
 
     // Fetch ALL user details
     getUsers: builder.query({
-      query: () => '/getUsers',
+      query: () => 'users/getUsers',
       providesTags: ['User', 'Avatar']
     }),
 
     // Register user
     registerUser: builder.mutation({
       query: (userData) => ({
-        url: '/signup-user',
+        url: 'users/signup-user',
         method: 'POST',
         body: userData,
       }),
@@ -43,7 +43,7 @@ export const userApiSlice = createApi({
     // Login user
     loginUser: builder.mutation({
       query: credentials => ({
-        url: '/login-user',
+        url: 'users/login-user',
         method: 'POST',
         body: { ...credentials }
       })
@@ -51,7 +51,7 @@ export const userApiSlice = createApi({
 
     refreshUser: builder.mutation({
       query: () => ({
-        url: '/refresh-token',
+        url: 'users/refresh-token',
         method: 'GET',
       }),
     }),
@@ -59,7 +59,7 @@ export const userApiSlice = createApi({
     // Activate user
     activateUser: builder.mutation({
       query: (activationData) => ({
-        url: '/activation/:token',
+        url: 'users/activation/:token',
         method: 'POST',
         body: activationData,
       }),
@@ -68,7 +68,7 @@ export const userApiSlice = createApi({
 
     otpLogin: builder.mutation({
       query: (credentials) => ({
-        url: "/otp-login",
+        url: "users/otp-login",
         method: "POST",
         body: credentials, // Send email or required login details
       }),
@@ -83,7 +83,7 @@ export const userApiSlice = createApi({
     
     otpVerify: builder.mutation({
       query: ({ token, otp }) => ({
-        url: "/verify-otp",
+        url: "users/verify-otp",
         method: "POST",
         body: { token, otp }, // Send token and OTP for verification
       }),
@@ -91,7 +91,7 @@ export const userApiSlice = createApi({
     
     verifyResetPassword: builder.mutation({
       query: ({ token, otp }) => ({
-        url: "/verify-reset-password",
+        url: "users/verify-reset-password",
         method: "POST",
         body: { token, otp }, // Send token and OTP for verification
       }),
@@ -99,7 +99,7 @@ export const userApiSlice = createApi({
 
     resetPassword: builder.mutation({
       query: (password) => ({
-        url: "/reset-password",
+        url: "users/reset-password",
         method: "POST",
         body: password,
       }),
@@ -108,7 +108,7 @@ export const userApiSlice = createApi({
     // Logout user
     logoutUser: builder.mutation({
       query: () => ({
-        url: '/logout',
+        url: 'users/logout',
         method: 'POST',
         credentials: 'include', // Ensure cookies are included in the request
       }),
@@ -124,30 +124,32 @@ export const userApiSlice = createApi({
 
     // Update user information
     updateUserInfo: builder.mutation({
-      query: (updateData) => ({
-        url: '/update-user-info',
+      query: ({ updateData, oldEmail }) => ({
+        url: 'users/update-user-info',
         method: 'PUT',
-        body: updateData,
+        body: { ...updateData, oldEmail }, // Pass both updateData and oldEmail to the body
       }),
       invalidatesTags: ['User'],
-
+    
       // Optimistic update for immediate UI feedback
       async onQueryStarted(updateData, { dispatch, queryFulfilled }) {
+        const { oldEmail } = updateData;  // Destructure to get oldEmail from updateData
         const patchResult = dispatch(
           userApiSlice.util.updateQueryData('getUser', undefined, (draft) => {
             // Directly update the draft with new user data
             if (draft.user) {
-              Object.assign(draft.user, updateData);
+              Object.assign(draft.user, updateData);  // Apply updateData to the draft
             }
           })
         );
         try {
           await queryFulfilled;
         } catch {
-          patchResult.undo();
+          patchResult.undo(); // Undo optimistic update if query fails
         }
       },
     }),
+    
 
     // Update user avatar
     updateAvatar: builder.mutation({
@@ -160,7 +162,7 @@ export const userApiSlice = createApi({
 
             // Return the updated avatar URL
             return await baseQuery({
-              url: '/update-avatar',
+              url: 'users/update-avatar',
               method: 'PUT',
               body: { avatar: avatarUrl },
             });

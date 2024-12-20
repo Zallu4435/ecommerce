@@ -12,6 +12,8 @@ function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
     gender: "",
     ...userInfo,
   });
+  const oldEmail = userInfo.email
+  console.log(oldEmail, "kokokokkkok")
 
   useEffect(() => {
     if (isOpen) {
@@ -36,7 +38,7 @@ function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
     e.preventDefault();
 
     try {
-      await updateUserInfo(formData).unwrap();
+      await updateUserInfo({ updateData: formData, oldEmail }).unwrap();
       onClose();
     } catch (error) {
       console.error('Failed to update user info', error);

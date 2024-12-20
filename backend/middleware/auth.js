@@ -1,17 +1,14 @@
-const ErrorHandler = require('../utils/ErrorHandler');
-const catchAsyncError = require('./catchAsyncError');
 const jwt = require('jsonwebtoken');
-const User = require('../model/User');
 
 
 exports.isAuthenticated = (req, res, next) => {
-    console.log("Reached isAuthenticated middleware");
+    // console.log("Reached isAuthenticated middleware");
 
     const accessToken = req.headers['authorization']?.split(' ')[1];
     const refreshToken = req.cookies['refreshToken'];
   
-    console.log("Access Token:", accessToken);
-    console.log("Refresh Token:", refreshToken);
+    // console.log("Access Token:", accessToken);
+    // console.log("Refresh Token:", refreshToken);
 
     if (!accessToken && !refreshToken) {
         return res.status(401).send('Access Denied. No token provided.');
@@ -22,7 +19,7 @@ exports.isAuthenticated = (req, res, next) => {
         req.user = decoded.id || decoded.user;
         return next();
     } catch (error) {
-        console.log("Access token verification error:", error.message);
+        // console.log("Access token verification error:", error.message);
 
         if (!refreshToken) {
             return res.status(401).send('Access Denied. No refresh token provided.');
@@ -44,16 +41,16 @@ exports.isAuthenticated = (req, res, next) => {
             
             return next();
         } catch (error) {
-            console.log("Refresh token verification error:", error.message);
+            // console.log("Refresh token verification error:", error.message);
             return res.status(401).send('Invalid Token.');
         }
     }
 };
 
 exports.verifyRefreshToken = (req, res, next) => {
-    console.log("Verifying Refresh Token");
+    // console.log("Verifying Refresh Token");
     const refreshToken = req.cookies.refreshToken;
-    console.log(refreshToken, "hahaha")
+    // console.log(refreshToken, "hahaha")
 
     if (!refreshToken) {
         return res.status(403).json({ 
@@ -68,7 +65,7 @@ exports.verifyRefreshToken = (req, res, next) => {
         next();
 
     } catch (error) {
-        console.log("errror")
+        // console.log("errror")
         return res.status(403).json({ 
             message: 'Invalid refresh token', 
             requireLogin: true 

@@ -10,12 +10,15 @@ import AdminLayout from './layouts/AdminLayout'
 import AdminLogin from './pages/admin/AdminLogin'
 import PersistLogin from './PersistLogin'
 import ResetPassword from './pages/user/forms/UserResetPassword'
+import { useGetAddressesQuery } from './redux/apiSliceFeatures/addressPasswordApiSlice'
 
 
 const App = () => {
 
   const theme = useSelector(state => state.root.theme.theme);
   const resetToken = useSelector(state => state.user.resetToken)
+
+
 
 
   useEffect(() => {

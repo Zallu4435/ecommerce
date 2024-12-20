@@ -4,7 +4,7 @@ const addressSchema = new mongoose.Schema({
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: 'true'
+            required: true,
         },
 
         country: {
@@ -23,7 +23,7 @@ const addressSchema = new mongoose.Schema({
             type: Number,
             required: true
         },
-        streetAddress: {
+        street: {
             type: String,
             required: true
         },

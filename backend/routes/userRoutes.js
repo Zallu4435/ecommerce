@@ -6,7 +6,6 @@ const {
   signupUser, loginUser, logoutUser,
   activateAccount, getUser,
   updateUserInfo, updateAvatar,
-  addAddress, editAddress, removeAddress,
   updatePassword, 
   resetPassword, verifyResetPassword,
   getAllUsers,
@@ -23,12 +22,6 @@ router.get('/getUser', isAuthenticated, catchAsyncErrors(getUser));
 router.post('/logout', catchAsyncErrors(logoutUser));
 router.put('/update-user-info', isAuthenticated, catchAsyncErrors(updateUserInfo));
 router.put('/update-avatar', isAuthenticated, catchAsyncErrors(updateAvatar));
-
-
-// Address Routes
-router.post('/address', isAuthenticated, catchAsyncErrors(addAddress));
-router.put('/address', isAuthenticated, catchAsyncErrors(editAddress));
-router.delete('/address', isAuthenticated, catchAsyncErrors(removeAddress)); 
 
 
 // Password Routes

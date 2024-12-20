@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { adminBaseQueryWithReauth } from '../../middleware/authMiddleware';
+import { clearAdminCredentials } from '../slice/adminSlice';
 
 export const adminApiSlice = createApi({
   reducerPath: 'adminApi', // Corrected name
@@ -26,7 +27,21 @@ export const adminApiSlice = createApi({
       }),
     }),
 
-
+  logoutAdmin: builder.mutation({
+      query: () => ({
+        url: '/logout',
+        method: 'POST',
+        credentials: 'include', // Ensure cookies are included in the request
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(clearAdminCredentials());
+        } catch (err) {
+          console.error(err);
+        }
+      },
+    }),
     // Admin login mutation
     loginAdmin: builder.mutation({
       query: (credentials) => ({
@@ -38,4 +53,4 @@ export const adminApiSlice = createApi({
   }),
 });
 
-export const { useBlockUserMutation, useLoginAdminMutation, useRefreshAdminMutation, useUserDetailsQuery } = adminApiSlice; // Correct export for loginAdmin
+export const { useBlockUserMutation, useLoginAdminMutation, useRefreshAdminMutation, useUserDetailsQuery, useLogoutAdminMutation } = adminApiSlice; // Correct export for loginAdmin

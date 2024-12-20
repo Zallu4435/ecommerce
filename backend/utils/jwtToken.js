@@ -2,7 +2,7 @@
 const jwt = require('jsonwebtoken');
 
 exports.sendToken = (user, statusCode, res) => {
-  console.log("closure from")
+  // console.log("closure from")
     const accessToken = user.getJwtToken();
   
     // Generate refresh token
@@ -10,7 +10,7 @@ exports.sendToken = (user, statusCode, res) => {
       expiresIn: process.env.JWT_REFRESH_EXPIRE, // e.g., '90d'
     });
 
-    console.log("i'm from the send token ")
+    // console.log("i'm from the send token ")
     // Options for cookies
     const options = {
       expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days

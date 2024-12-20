@@ -6,9 +6,8 @@ const CategoriesSchema = new mongoose.Schema(
         type: String,
         required: true
     },
-    productCount: {
-        type: Number,
-        default: 0
+      categoryDescription: {
+        type: String,
     }
     },
     {

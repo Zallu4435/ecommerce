@@ -4,8 +4,9 @@ import defaultReducer from './combineReducers';
 import { userApiSlice } from '../apiSliceFeatures/userApiSlice';
 import { adminApiSlice } from '../apiSliceFeatures/AdminApiSlice'
 import adminReducer from '../slice/adminSlice'
-import { addressPasswordApi } from '../apiSliceFeatures/address-passwordApiSlice'
+import { addressPasswordApi } from '../apiSliceFeatures/addressPasswordApiSlice'
 import { crudApiSlice } from '../apiSliceFeatures/crudApiSlice';
+
 
 // Combine all reducers
 const rootReducer = combineReducers({
@@ -14,7 +15,7 @@ const rootReducer = combineReducers({
   userApi: userApiSlice.reducer, 
   adminApi: adminApiSlice.reducer,
   crudApi: crudApiSlice.reducer,
-  addressPasswordApi: addressPasswordApi,
+  addressPasswordApi: addressPasswordApi.reducer,
   root: defaultReducer
 });
 

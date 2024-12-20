@@ -10,7 +10,7 @@ const CategoryManagement = () => {
   const { data = [], isLoading, isError,refetch } = useGetCategoriesQuery();
   
   return (
-    <div className='flex h-screen dark:bg-black ml-[200px] dark:text-white space-x-16'>
+    <div className='flex h-screen dark:bg-black ml-[45px] dark:text-white space-x-16'>
 
       <div className='dark:bg-gray-900 bg-orange-50 ml-10 px-14 my-12'>
       <div className="flex justify-between mt-5 items-center">

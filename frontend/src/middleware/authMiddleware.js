@@ -5,7 +5,7 @@ import { clearAdminCredentials, setAdminCredentials } from '../redux/slice/admin
 
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${server}/users`,
+  baseUrl: `${server}`,
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = getState().user.token;
@@ -17,19 +17,17 @@ const baseQuery = fetchBaseQuery({
 });
 
 
+
 export const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
   if (result?.error?.status === 401) {
-    console.log('Sending refresh token');
     // send refresh token to get new access token 
     const refreshResult = await baseQuery('/refresh-token', api, extraOptions);
-    console.log(refreshResult, "refreshresult");
     if (refreshResult?.data) {
       const user = api.getState().auth.user;
       // store the new token 
       api.dispatch(setCredentials({ ...refreshResult.data, user }));
-      console.log(user, "user")
       // retry the original query with new access token
       result = await baseQuery(args, api, extraOptions);
     } else {

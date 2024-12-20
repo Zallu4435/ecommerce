@@ -6,14 +6,14 @@ import { useUpdateEntityMutation } from '../../redux/apiSliceFeatures/crudApiSli
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useGetCategoriesQuery, useGetCategoryByIdQuery } from '../../redux/apiSliceFeatures/categoryApiSlice'
+import { ArrowLeft } from 'lucide-react'
 
 // Define validation schema using zod
 const schema = z.object({
   categoryName: z.string().min(1, 'Category name is required'),
-  productCount: z
+  categoryDescription: z
     .string()
-    .min(1, 'Product count is required')
-    .transform((value) => Number(value)), // Transform the string to a number
+    .min(10, 'Category description is required')
 });
 
 const AdminCategoryUpdateForm = () => {
@@ -35,7 +35,7 @@ const { refetch } = useGetCategoriesQuery();
       // Populate the form with the fetched data once it's available
       if (data) {
         setValue("categoryName", data?.category?.categoryName);
-        setValue("productCount", data?.category?.productCount);
+        setValue("categoryDescription", data?.category?.categoryDescription);
       }
     }, [data, setValue]);
 
@@ -58,7 +58,16 @@ const { refetch } = useGetCategoriesQuery();
   }
 
   return (
-    <div className='dark:bg-gray-900 bg-orange-50 text-gray-700 ml-[400px] py-[50px] px-10] mt-[200px]  dark:text-white'>
+    <div className='dark:bg-gray-900 bg-orange-50 text-gray-700 ml-[300px] py-[50px] px-14 mt-[90px]  dark:text-white'>
+              <div className="flex ml-[-10px] mt-[-20px] items-center mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+          >
+            <ArrowLeft className="mr-2" />
+            <span>Back to Products</span>
+          </button>
+        </div>
       <h1 className="text-3xl font-bold ml-[-60px] mb-6 text-gray-400 px-24">Update Category</h1>
         
       <form onSubmit={handleSubmit(onSubmit)} method="POST">
@@ -74,19 +83,24 @@ const { refetch } = useGetCategoriesQuery();
         </div>
 
         <div className="mb-6 mx-10">
-          <label className='font-bold text-lg'>Product Count</label>
-          <input
-            type="text"
-            placeholder="Enter Products Count"
-            {...register('productCount')}
-            className={`w-full p-4 border mt-1 border-gray-600 rounded-md dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg ${errors.productCount ? 'border-red-500' : ''}`}
-          />
-          {errors.productCount && <p className="text-red-500 text-sm">{errors.productCount.message}</p>}
-        </div>
+  <label className="font-bold text-lg">Category Description</label>
+  <textarea
+    placeholder="Write your category description here"
+    {...register('categoryDescription')}
+    className={`w-full p-4 border mt-1 border-gray-600 rounded-md dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg ${
+      errors.categoryDescription ? 'border-red-500' : ''
+    }`}
+    rows="5"
+  ></textarea>
+  {errors.categoryDescription && (
+    <p className="text-red-500 text-sm">{errors.categoryDescription.message}</p>
+  )}
+</div>
+
 
         <button
           type="submit"
-          className="py-3 w-[371px] ml-10 mt-4 text-lg font-bold dark:bg-blue-600 bg-orange-500 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="py-3 w-[400px] ml-10 mt-4 text-lg font-bold dark:bg-blue-600 bg-orange-500 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Update
         </button>
