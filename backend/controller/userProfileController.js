@@ -1,6 +1,6 @@
 const Address = require('../model/Address');
 const ErrorHandler = require('../utils/ErrorHandler');
-const User = require('../model/User');
+const User = require('../model/User');  
 
 // Add Address
 

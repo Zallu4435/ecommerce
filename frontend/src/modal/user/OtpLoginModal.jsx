@@ -6,21 +6,27 @@ import {
   useVerifyResetPasswordMutation,
 } from "../../redux/apiSliceFeatures/userApiSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { setCredentials, setEmailOtpToken, setResetPassword } from "../../redux/slice/userSlice";
+import {
+  setCredentials,
+  setEmailOtpToken,
+  setResetPassword,
+} from "../../redux/slice/userSlice";
 import { toast } from "react-toastify";
 
 const OTPLoginModal = ({ isOpen, change }) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [resendCountdown, setResendCountdown] = useState(30);
   const [errorMessage, setErrorMessage] = useState("");
+
   const inputRefs = useRef([]);
   const [otpVerify] = useOtpVerifyMutation();
-  const [verifyResetPassword] = useVerifyResetPasswordMutation();
-  const [otpLogin] =  useOtpLoginMutation();
-
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const [verifyResetPassword] = useVerifyResetPasswordMutation();
+  const [otpLogin] = useOtpLoginMutation();
   const token = useSelector((state) => state.user.otpToken);
+  const forget_email = useSelector((state) => state.user.forget_email);
 
   useEffect(() => {
     if (resendCountdown > 0) {
@@ -59,20 +65,11 @@ const OTPLoginModal = ({ isOpen, change }) => {
     const otpString = otp.join("");
 
     try {
-      console.log("Verifying OTP:", {
-        token: token,
-        otp: otpString,
-      });
-
-      console.log(change, "change")
-
       if (change === "otp") {
         const response = await otpVerify({
           token: token,
           otp: otpString,
         }).unwrap();
-
-        console.log("OTP Verify Response:", response);
 
         dispatch(
           setCredentials({
@@ -90,8 +87,6 @@ const OTPLoginModal = ({ isOpen, change }) => {
           otp: otpString,
         }).unwrap();
 
-        console.log("Reset OTP Verify Response:", response);
-
         toast.success("OTP verified successfully!");
         dispatch(setResetPassword(response.resetToken));
         navigate("/reset-password", { state: { token: response.resetToken } });
@@ -103,13 +98,12 @@ const OTPLoginModal = ({ isOpen, change }) => {
     }
   };
 
-  const handleResendOTP = async() => {
-
+  const handleResendOTP = async () => {
     // otp-login
-    
+    await otpLogin({
+      email: forget_email,
+    }).unwrap();
 
-    await otpLogin({ email: localStorage.getItem('email-for-forgot') }).unwrap();
-    
     toast.info("OTP has been resent!");
     setResendCountdown(30);
   };

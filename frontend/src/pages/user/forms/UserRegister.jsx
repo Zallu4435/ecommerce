@@ -1,6 +1,10 @@
-import React, { useState } from "react";
-import { Input, InputContainer, Label } from "../../../components/user/StyledComponents/StyledComponents";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import {
+  Input,
+  InputContainer,
+  Label,
+} from "../../../components/user/StyledComponents/StyledComponents";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "../../../validation/schemas/SignupSchema";
@@ -8,14 +12,10 @@ import { toast } from "react-toastify";
 import { useRegisterUserMutation } from "../../../redux/apiSliceFeatures/userApiSlice";
 import SignupSuccessModal from "../../../modal/user/SignUpModal";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "../../../redux/slice/userSlice";
-
 
 const UserRegister = () => {
-
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [registerUser] = useRegisterUserMutation();
-  const dispatch = useDispatch();
   // React Hook Form with zod schema
   const {
     register,
@@ -27,24 +27,21 @@ const UserRegister = () => {
   });
 
   const onsubmit = async (data, e) => {
-      e.preventDefault();
+    e.preventDefault();
 
-      try {
-        const response = await registerUser(data).unwrap();
-        console.log(response, "response from the backend signup");
-        toast.info('Check your Gmail for the link to access your account!');
-        setIsModalOpen(true);
+    try {
+      await registerUser(data).unwrap();
+      toast.info("Check your Gmail for the link to access your account!");
+      setIsModalOpen(true);
+    } catch (err) {
+      toast.error(err?.data?.message);
+    }
 
-      } catch (err) {
-        toast.error(err?.data?.message);
-      }
-
-      reset();
-
+    reset();
   };
 
   const closeModal = () => {
-    setIsModalOpen(false); 
+    setIsModalOpen(false);
   };
 
   return (
@@ -57,7 +54,9 @@ const UserRegister = () => {
           {/* Row 1: Username & Phone */}
           <div className="flex flex-col sm:flex-col md:flex-row gap-4 mb-4">
             <InputContainer className="flex-1">
-              <Label className="dark:text-gray-100 text-gray-800">Username</Label>
+              <Label className="dark:text-gray-100 text-gray-800">
+                Username
+              </Label>
               <Input
                 type="text"
                 {...register("username")}
@@ -101,7 +100,9 @@ const UserRegister = () => {
           {/* Row 3: Password & Confirm Password */}
           <div className="flex flex-col sm:flex-col md:flex-row gap-4 mb-6">
             <InputContainer className="flex-1">
-              <Label className="dark:text-gray-100 text-gray-800">Password</Label>
+              <Label className="dark:text-gray-100 text-gray-800">
+                Password
+              </Label>
               <Input
                 type="password"
                 {...register("password")}

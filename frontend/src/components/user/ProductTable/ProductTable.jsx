@@ -1,11 +1,12 @@
-import React from 'react';
-import TableRow from './TableRow';
+import React from "react";
+import TableRow from "./TableRow";
 
 const ProductTable = ({ type, data, onRemove }) => {
+  console.log(data, "data from  wishlist table ");
   return (
     <div className="flex flex-col items-center justify-center m-4 md:m-10 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 md:p-6">
       {/* Heading */}
-      {type === 'wishlist' && (
+      {type === "wishlist" && (
         <h2 className="text-2xl md:text-4xl font-bold text-gray-800 dark:text-gray-100 mb-4 md:mb-6 text-center">
           Your Wishlist
         </h2>
@@ -26,7 +27,7 @@ const ProductTable = ({ type, data, onRemove }) => {
                 Price
               </th>
               <th className="px-6 py-4 text-center border-b bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-100">
-                Quantity
+                stockQuantity
               </th>
               <th className="px-6 py-4 text-center border-b bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-100">
                 Subtotal
@@ -41,12 +42,12 @@ const ProductTable = ({ type, data, onRemove }) => {
         </table>
       </div>
 
-      {/* Collapsed Cards for Small Screens */}
+      {/* Collapsed Cards for Small Screens
       <div className="grid gap-6 w-full max-w-6xl mt-4 md:hidden px-4">
         {data.map((item) => (
           <TableRow key={item.id} item={item} onRemove={onRemove} />
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };

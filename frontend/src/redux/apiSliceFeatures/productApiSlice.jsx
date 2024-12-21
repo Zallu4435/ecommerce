@@ -19,12 +19,17 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
       query: (id) => `/products/getProduct/${id}`,
       providesTags: (result, error, id) => [{ type: 'Entity', id }],
     }),
+
+    getPopularProducts: builder.query({
+      query: () => '/products/get-popular-prducts'
+    })
   }),
 });
 
 export const {
   useGetProductsQuery,
   useGetProductByIdQuery,
+  useGetPopularProductsQuery,
   useAddEntityMutation: useAddProductMutation,
   useUpdateEntityMutation: useUpdateProductMutation,
   useDeleteEntityMutation: useDeleteProductMutation,

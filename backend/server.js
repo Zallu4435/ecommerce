@@ -1,5 +1,6 @@
 const app = require('./app');
 const connectDatabase = require('./db/database');
+require('events').EventEmitter.defaultMaxListeners = 20;
 
 
 

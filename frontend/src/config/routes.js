@@ -1,7 +1,7 @@
 // routes.js
 import Home from "../pages/user/Home";
 import Cart from "../pages/user/Cart";
-import Compare from "../pages/user/Compare";
+import Compare from "../pages/user/compare/Compare.jsx";
 import Wishlist from "../pages/user/Whishlist";
 import UserProfileLayout from "../layouts/UserProfileLayout";
 import UserLogin from "../pages/user/forms/UserLogin";
@@ -41,7 +41,7 @@ export const routes = [
   { path: "/", component: Home, isProtected: false },
   { path: "/login", component: UserLogin, isProtected: false },
   { path: "/signup", component: UserRegister, isProtected: false },
-  { path: "/product", component: ProductDetails, isProtected: false },
+  { path: "/product/:id", component: ProductDetails, isProtected: false },
   { path: "/contact", component: ContactUs, isProtected: false },
   { path: "/about", component: AboutUs, isProtected: false },
   { path: "/shop", component: ShopPage, isProtected: false },

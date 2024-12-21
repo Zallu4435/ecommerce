@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import ShoppingCard from './ShoppingCards'; // Adjust the path if necessary
-import { products } from '../../products/products';
+import ShoppingCard from './shoppingCard/ShoppingCards'; // Adjust the path if necessary
+import { useGetPopularProductsQuery } from '../../redux/apiSliceFeatures/productApiSlice';
 
 export const CardContainer = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [cardsPerPage, setCardsPerPage] = useState(8); // Default for extra-large screens
+  const [cardsPerPage, setCardsPerPage] = useState(8);
+  
+  const { data: popular_Products = [], error, isLoading } = useGetPopularProductsQuery();
+
+  // console.log(popular_Products._id, "popular_Products")
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -25,7 +30,7 @@ export const CardContainer = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const totalPages = Math.ceil(products.length / cardsPerPage);
+  const totalPages = Math.ceil(popular_Products.length / cardsPerPage);
 
   // Calculate the indices of the cards to display on the current page
   const startIndex = (currentPage - 1) * cardsPerPage;
@@ -38,10 +43,13 @@ export const CardContainer = () => {
     }
   };
 
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading products!</div>;
+
   return (
     <div className="flex flex-col items-center shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] p-6 rounded-lg">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4">
-        {products.slice(startIndex, endIndex).map((products, index) => (
+        {popular_Products.slice(startIndex, endIndex).map((products, index) => (
           <ShoppingCard key={index} {...products} />
         ))}
       </div>

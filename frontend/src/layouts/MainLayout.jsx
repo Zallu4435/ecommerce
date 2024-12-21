@@ -6,7 +6,6 @@ import Header from "../components/user/Header";
 import Navbar from "../components/user/Navbar";
 import Footer from "../components/user/Footer";
 import { routes } from "../config/routes";
-import { toast } from "react-toastify";
 
 const MainLayout = () => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
@@ -32,12 +31,6 @@ const MainLayout = () => {
     return isAuthenticated ? children : <Navigate to="/login" replace />;
   };
 
-  // Redirect to home if the user is already authenticated and tries to access login/signup
-  const RedirectIfAuthenticated = ({ children }) => {
-    toast.info('To log in, please log out first!')
-    return isAuthenticated ? <Navigate to="/" replace /> : children;
-  };
-
   return (
     <div>
       <Header />
@@ -58,27 +51,13 @@ const MainLayout = () => {
                 />
               );
             }
-
-            // Apply the redirect logic for login and signup routes
-            if (path === "/login" || path === "/signup") {
-              return (
-                <Route
-                  key={index}
-                  path={path}
-                  element={
-                    <RedirectIfAuthenticated>
-                      <Component />
-                    </RedirectIfAuthenticated>
-                  }
-                />
-              );
-            }
-
             return <Route key={index} path={path} element={<Component />} />;
           })}
         </Routes>
       </main>
-      {location.pathname !== "/login" && location.pathname !== "/signup" && <Footer />}
+      {location.pathname !== "/login" && location.pathname !== "/signup" && (
+        <Footer />
+      )}
     </div>
   );
 };

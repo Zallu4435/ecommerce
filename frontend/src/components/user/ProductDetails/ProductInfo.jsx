@@ -1,16 +1,22 @@
-import React from 'react';
+import React from "react";
 
-const ProductInfo = () => {
+const ProductInfo = ({ productName, originalPrice, description }) => {
   return (
     <div className="mt-8 p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
-      <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-4">Dummy Product Name</h1>
-      <p className="text-2xl font-semibold text-green-600 mb-6">$199.99</p>
+      <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        {productName}
+      </h1>
+      <p className="text-2xl font-semibold text-green-600 mb-6">
+        ₹ {originalPrice}
+      </p>
       <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-        Experience the best with this amazing product! Equipped with top-notch features and a sleek design, it’s the ultimate choice for anyone seeking excellence.
+        {description}{" "}
       </p>
 
       {/* Specifications */}
-      <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Specifications</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
+        Specifications
+      </h2>
       <table className="w-full text-left text-gray-700 dark:text-gray-300">
         <tbody>
           <tr className="border-b">

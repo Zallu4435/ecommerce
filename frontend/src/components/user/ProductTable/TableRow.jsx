@@ -1,6 +1,44 @@
-import { roundedImg_1 } from '../../../assets/images';
+import { useState } from "react";
+import {
+  useAddToCartMutation,
+  useGetCartQuery,
+} from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { toast } from "react-toastify";
 
 const TableRow = ({ item, onRemove }) => {
+  const {
+    originalPrice,
+    productName,
+    cartItemId,
+    productImage,
+    stockQuantity,
+    productId
+  } = item;
+
+  const { refetch: refetchCart } = useGetCartQuery(); // Refetch cart data
+  const [addToCart] = useAddToCartMutation();
+
+  console.log(productId, "product id from the click ")
+
+  const [isAdding, setIsAdding] = useState(false); // Loading state
+
+  const handleAddToCart = async () => {
+    const productDetails = {
+      productId: productId,
+      quantity: 1,
+    };
+
+    try {
+      setIsAdding(true); // Set loading state
+      await addToCart(productDetails);
+      await refetchCart();
+      toast.success("Item added to cart!");
+    } catch (error) {
+      toast.error(error.message || "Failed to add item to cart.");
+    } finally {
+      setIsAdding(false); // Reset loading state
+    }
+  };
 
   return (
     <>
@@ -9,27 +47,38 @@ const TableRow = ({ item, onRemove }) => {
         <td className="px-6 py-4 border-b text-center">
           <button
             className="text-red-500 hover:underline"
-            onClick={() => onRemove(item.id)}
+            onClick={() => onRemove(productId)}
           >
             ❌ Remove
           </button>
         </td>
         <td className="px-6 py-4 md:px-0 border-b flex items-center gap-4">
           <img
-            src={roundedImg_1}
+            src={productImage}
             className="h-[60px] rounded-lg object-cover"
-            alt={item.name}
+            alt={productName}
           />
           <div>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">⭐ 4.5 (200)</p>
+            <p className="font-semibold text-gray-900 dark:text-gray-100">
+              {productName}
+            </p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              ⭐ 4.5 (200)
+            </p>
           </div>
         </td>
-        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">${item.price.toFixed(2)}</td>
-        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">{item.stock}</td>
+        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
+          ${originalPrice.toFixed(2)}
+        </td>
+        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
+          {stockQuantity}
+        </td>
         <td className="px-6 py-4 border-b text-center">
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600">
-            Add to Cart
+          <button
+             onClick={handleAddToCart}
+             disabled={isAdding}
+           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600">
+          {isAdding ? "Adding to Cart..." : "Add to Cart"}
           </button>
         </td>
       </tr>
@@ -39,30 +88,42 @@ const TableRow = ({ item, onRemove }) => {
         <div className="flex justify-between items-center mb-4">
           <button
             className="text-red-500 font-semibold hover:underline"
-            onClick={() => onRemove(item.id)}
+            onClick={() => onRemove(cartItemId)}
           >
             ❌ Remove
           </button>
-          <span className="text-gray-900 dark:text-gray-100">${item.price.toFixed(2)}</span>
+          <span className="text-gray-900 dark:text-gray-100">
+            ${originalPrice.toFixed(2)}
+          </span>
         </div>
         <div className="flex items-center gap-4 mb-4">
           <img
-            src={roundedImg_1}
+            src={productImage}
             className="h-[60px] rounded-lg object-cover"
-            alt={item.name}
+            alt={productName}
           />
           <div>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">⭐ 4.5 (200 reviews)</p>
+            <p className="font-semibold text-gray-900 dark:text-gray-100">
+              {productName}
+            </p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              ⭐ 4.5 (200 reviews)
+            </p>
           </div>
         </div>
         <div className="flex justify-between items-center mb-4">
-          <span className="font-semibold text-gray-700 dark:text-gray-300">Quantity:</span>
-          <span>{item.stock}</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-300">
+            stockQuantity:
+          </span>
+          <span>{stockQuantity}</span>
         </div>
         <div className="flex justify-center">
-          <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600">
-            Add to Cart
+          <button
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600"
+          >
+            {isAdding ? "Adding to Cart..." : "Add to Cart"}
           </button>
         </div>
       </div>

@@ -1,12 +1,13 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState: {
     user: null,
     token: null,
     isAuthenticated: false,
-    otpToken: null
+    otpToken: null,
+    forgot_email: null,
   },
   reducers: {
     setCredentials: (state, action) => {
@@ -19,10 +20,10 @@ const userSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      state.otpToken = null
+      state.otpToken = null;
     },
     setGmailCredentials: (state) => {
-      state.isAuthenticated = true
+      state.isAuthenticated = true;
     },
     setEmailOtpToken: (state, action) => {
       state.otpToken = action.payload;
@@ -30,12 +31,22 @@ const userSlice = createSlice({
     setResetPassword: (state, action) => {
       state.resetToken = action.payload;
     },
+    setForgotEmail: (state, action) => {
+      state.forgot_email = action.payload;
+    },
   },
 });
 
-export const { setCredentials, clearCredentials, setGmailCredentials, setEmailOtpToken, setResetPassword } = userSlice.actions;
+
+export const {
+  setCredentials,
+  clearCredentials,
+  setGmailCredentials,
+  setEmailOtpToken,
+  setResetPassword,
+  setForgotEmail,
+} = userSlice.actions;
 export default userSlice.reducer;
 
 export const selectCurrentUser = (state) => state.user.user;
 export const selectCurrentToken = (state) => state.user.token;
-

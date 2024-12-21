@@ -1,15 +1,24 @@
-import { useState, useEffect } from 'react';
-import ProductImage from '../../components/user/ProductDetails/ProductImage';
-import ProductInfo from '../../components/user/ProductDetails/ProductInfo';
-import RatingsAndReviews from '../../components/user/ProductDetails/RatingsAndReviews';
-import AddToCart from '../../components/user/ProductDetails/AddToCart';
-import AddToWishlist from '../../components/user/ProductDetails/AddToWhishlist';
-import AddReview from '../../components/user/ProductDetails/AddReview';
-import CompareButton from '../../components/user/ProductDetails/CompareButton';
-import RelatedProduct from '../../components/user/ProductDetails/RelatedProducts';
+import { useState, useEffect } from "react";
+import ProductImage from "../../components/user/ProductDetails/ProductImage";
+import ProductInfo from "../../components/user/ProductDetails/ProductInfo";
+import RatingsAndReviews from "../../components/user/ProductDetails/RatingsAndReviews";
+import AddToCart from "../../components/user/ProductDetails/AddToCart";
+import AddToWishlist from "../../components/user/ProductDetails/AddToWhishlist";
+import AddReview from "../../components/user/ProductDetails/AddReview";
+import CompareButton from "../../components/user/ProductDetails/CompareButton";
+import RelatedProduct from "../../components/user/ProductDetails/RelatedProducts";
+import { useParams } from "react-router-dom";
+import { useGetProductByIdQuery } from "../../redux/apiSliceFeatures/productApiSlice";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const ProductDetails = () => {
   const [scrolled, setScrolled] = useState(false);
+  const { id } = useParams();
+  const {
+    data: productDetails = {},
+    error,
+    isLoading,
+  } = useGetProductByIdQuery(id);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,34 +27,55 @@ const ProductDetails = () => {
         setScrolled(isScrolled);
       }
     };
-
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [scrolled]);
 
-  return (
-    <div className='bg-gray-50 space-y-24 dark:bg-gray-900 text-gray-900 dark:text-gray-100'>
-    <div className='space-y-14'>
+  // Destructure productDetails
+  const { image, variantImages, productName, originalPrice, description, _id, colorOption, sizeOption } = productDetails.product || {};
 
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return <div>Error fetching product details.</div>;
+  }
+
+  if (!productDetails || Object.keys(productDetails).length === 0) {
+    return <div>No product details available.</div>;
+  }
+
+  return (
+    <div className="bg-gray-50 space-y-24 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <div className="space-y-14">
         <div className="mt-6 max-w-7xl mx-auto p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.5)] rounded-lg">
           {/* Main Section */}
           <div className="grid grid-cols-1 md:mt-10 lg:grid-cols-3 gap-4 sm:gap-8">
             {/* Product Image */}
             <div className="lg:col-span-2">
-              <ProductImage />
+              <ProductImage
+                image={image}
+                variantImages={variantImages}
+              />
             </div>
 
             {/* Add to Cart and Wishlist Section */}
             <div className="lg:col-span-1 space-y-4">
-              <AddToCart />
-              <AddToWishlist />
+              <AddToCart productId={_id} colorOption={colorOption} sizeOption={sizeOption}/>
+              <AddToWishlist productId={_id}/>
             </div>
           </div>
 
           {/* Product Information */}
-          <ProductInfo className="mt-8" />
+          <ProductInfo 
+            className="mt-8" 
+            productName={productName} 
+            originalPrice={originalPrice} 
+            description={description}
+          />
 
           {/* Compare Button */}
           <CompareButton className="mt-8" />
@@ -59,7 +89,6 @@ const ProductDetails = () => {
       </div>
 
       <RelatedProduct className="mt-8" />
-
     </div>
   );
 };

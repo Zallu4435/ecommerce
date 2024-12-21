@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   setCredentials,
   setEmailOtpToken,
+  setForgotEmail,
 } from "../../../redux/slice/userSlice";
 import OTPLoginModal from "../../../modal/user/OtpLoginModal";
 
@@ -60,6 +61,7 @@ const Login = () => {
       dispatch(setCredentials(response.user, response.accessToken));
       navigate("/");
     } catch (error) {
+      toast.error("Google Login Failed");
       console.error("Google Login Failed:", error);
     }
   };
@@ -67,9 +69,8 @@ const Login = () => {
   const handleOtpLogin = async (data) => {
     try {
       // Send OTP for login
-      localStorage.setItem('email-for-forgot',data.email)
+      setForgotEmail(data.email);
       const response = await otpLogin({ email: data.email }).unwrap();
-      console.log(response, "response");
 
       dispatch(setEmailOtpToken(response.token));
       toast.success("OTP sent to your email!");
@@ -77,7 +78,6 @@ const Login = () => {
       toast.error(error?.data?.message || "Failed to send OTP");
     }
   };
-
 
   return (
     <div className="dark:bg-gray-900 bg-gray-50 flex items-center justify-center min-h-screen p-6">

@@ -15,11 +15,11 @@ const wishlistSchema = new mongoose.Schema({
                     required: true
                 },
                 createdAt: {
-                    type: Date.now,
+                    type: Date,
                     default: Date.now
                 },
                 updatedAt: {
-                    type: Date.now,
+                    type: Date,
                     default: Date.now
                 }
             }

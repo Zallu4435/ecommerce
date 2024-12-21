@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import ShoppingCard from "../../components/user/ShoppingCards"; // Import the ShoppingCard component
+import ShoppingCard from "../../components/user/shoppingCard/ShoppingCards"; // Import the ShoppingCard component
 import { products } from "../../products/products";
 
 const ShopPage = () => {

@@ -6,7 +6,8 @@ const {
   getProductDetails, 
   createProduct, 
   updateProduct, 
-  deleteProduct 
+  deleteProduct ,
+  getPopularProducts
 } = require('../controller/productController');
 
 
@@ -14,6 +15,7 @@ const {
 router.get('/getProducts', catchAsyncErrors(getAllProducts)); // Get all products
 router.get('/getProduct/:id', catchAsyncErrors(getProductDetails)); // Get product details
 
+router.get('/get-popular-prducts', catchAsyncErrors(getPopularProducts));
 // Admin only (with authentication check)
 router.post(
   '/create', 

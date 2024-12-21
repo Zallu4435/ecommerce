@@ -1,36 +1,59 @@
 import React, { useState } from 'react';
 import { FaShoppingCart } from 'react-icons/fa';
 import { roundedImg_1 } from '../../../assets/images';
+import { useUpdateQuantityMutation } from '../../../redux/apiSliceFeatures/CartApiSlice';
 
 const TableRowForCartlist = ({ item, onRemove }) => {
-  const [quantity, setQuantity] = useState(item.quantity || 1);
+  const [quantity, setQuantity] = useState(item?.quantity || 1); 
 
-  const handleIncrease = () => setQuantity((prev) => prev + 1);
-  const handleDecrease = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const { originalPrice, productName, cartItemId, productImage } = item;
 
-  const calculateSubtotal = () => (item.price * quantity).toFixed(2);
+  const [updateQuantity] = useUpdateQuantityMutation()
+
+  const handleQuantityUpdate = async (newQuantity) => {
+    try {
+      // API call to update the quantity in the database
+      await updateQuantity({
+        cartItemId,
+        quantity: newQuantity,
+      });
+      setQuantity(newQuantity); // Update local state only if API call is successful
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      alert("Failed to update quantity. Please try again.");
+    }
+  };
+
+  const handleIncrease = () => handleQuantityUpdate(quantity + 1);
+
+  const handleDecrease = () => {
+    if (quantity > 1) {
+      handleQuantityUpdate(quantity - 1);
+    }
+  };
+
+  const calculateSubtotal = () => (originalPrice * quantity).toFixed(2);
 
   return (
     <>
       {/* Full Row for Larger Screens */}
       <tr className="hidden md:table-row hover:bg-gray-100 dark:hover:bg-gray-700 transition">
         <td className="px-6 py-4 border-b text-center">
-          <button className="text-red-500 hover:underline" onClick={() => onRemove(item.id)}>
+          <button className="text-red-500 hover:underline" onClick={() => onRemove(cartItemId)}>
             ❌ Remove
           </button>
         </td>
         <td className="px-6 py-4 border-b flex items-center gap-4">
           <img
-            src={roundedImg_1}
+            src={productImage}
             className="h-[60px] rounded-lg object-cover"
-            alt={item.name}
+            alt={productName} 
           />
           <div>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
+            <p className="font-semibold text-gray-900 dark:text-gray-100">{productName}</p>
             <p className="text-xs sm:text-sm text-gray-600 text-nowrap dark:text-gray-400">⭐ 4.5 (200)</p>
           </div>
         </td>
-        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">${item.price.toFixed(2)}</td>
         <td className="px-6 py-4 border-b text-center">
           <div className="flex items-center justify-center">
             <button
@@ -48,6 +71,7 @@ const TableRowForCartlist = ({ item, onRemove }) => {
             </button>
           </div>
         </td>
+        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">${originalPrice}</td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">${calculateSubtotal()}</td>
       </tr>
 
@@ -56,25 +80,24 @@ const TableRowForCartlist = ({ item, onRemove }) => {
         <div className="flex justify-between items-center mb-4">
           <button
             className="text-red-500 font-semibold hover:underline"
-            onClick={() => onRemove(item.id)}
+            onClick={() => onRemove(cartItemId)} // Adjusted to remove using the main item ID
           >
             ❌ Remove
           </button>
-          <span className="text-gray-900 dark:text-gray-100">${item.price.toFixed(2)}</span>
         </div>
         <div className="flex items-center gap-4 mb-4">
           <img
             src={roundedImg_1}
             className="h-[60px] rounded-lg object-cover"
-            alt={item.name}
+            // alt={item.items[0].name}
           />
           <div>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
+            {/* <p className="font-semibold text-gray-900 dark:text-gray-100">{item.items[0].name}</p> */}
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">⭐ 4.5 (200 reviews)</p>
           </div>
         </div>
         <div className="flex justify-between items-center mb-4">
-          <span className="font-semibold text-gray-700 dark:text-gray-300">Quantity:</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-300">{quantity}</span>
           <div className="flex items-center">
             <button
               className="px-2 py-0 bg-gray-200 dark:bg-gray-600 border rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
