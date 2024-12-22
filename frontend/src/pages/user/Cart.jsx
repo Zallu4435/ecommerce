@@ -10,8 +10,6 @@ const Cart = () => {
   
   // Use RTK Query hook to fetch cart data
   const { data: cartItems, error, isLoading } = useGetCartQuery();
-
-  console.log(cartItems, "cartItems from cart")
   
   // Use RTK Query hook to remove item from the cart
   const [removeFromCart] = useRemoveFromCartMutation();
@@ -25,15 +23,19 @@ const Cart = () => {
   };
 
   const calculateSubtotal = () =>
-    cartItems ? cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0) : 0;
+    cartItems ? cartItems.reduce((acc, item) => acc + item.originalPrice * item.quantity, 0) : 0;
 
   const calculateTax = (subtotal) => (subtotal * 0.08).toFixed(2); // Example: 8% tax
   const shippingCost = 15.0; // Flat shipping cost
   const calculateTotal = (subtotal) =>
     (parseFloat(subtotal) + parseFloat(calculateTax(subtotal)) + shippingCost).toFixed(2);
 
+  console.log(calculateTotal, "calculateTotal")
+  console.log(calculateTax, "calculateTax")
+  
   const subtotal = calculateSubtotal();
-
+  console.log(subtotal, "calculateSubtotal")
+  
   if (isLoading) {
     return <LoadingSpinner />
   }
@@ -59,20 +61,20 @@ const Cart = () => {
           <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Cart Total</h2>
           <div className="mb-4 flex justify-between text-gray-700 dark:text-gray-300">
             <span className="font-medium">Subtotal</span>
-            <span className="font-medium">${subtotal.toFixed(2)}</span>
+            <span className="font-medium">₹ {subtotal.toFixed(2)}</span>
           </div>
           <div className="mb-4 flex justify-between text-gray-700 dark:text-gray-300">
             <span className="font-medium">Tax (8%)</span>
-            <span className="font-medium">${calculateTax(subtotal)}</span>
+            <span className="font-medium">₹ {calculateTax(subtotal)}</span>
           </div>
           <div className="mb-4 flex justify-between text-gray-700 dark:text-gray-300">
             <span className="font-medium">Shipping</span>
-            <span className="font-medium">${shippingCost.toFixed(2)}</span>
+            <span className="font-medium">₹ {shippingCost.toFixed(2)}</span>
           </div>
           <hr className="my-4 border-gray-300 dark:border-gray-600" />
           <div className="mb-6 flex justify-between text-gray-800 dark:text-gray-100 text-lg font-bold">
             <span>Total</span>
-            <span>${calculateTotal(subtotal)}</span>
+            <span>₹ {calculateTotal(subtotal)}</span>
           </div>
           <button 
             onClick={() => navigate('/checkout')}

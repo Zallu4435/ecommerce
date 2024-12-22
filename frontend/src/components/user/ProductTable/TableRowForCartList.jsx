@@ -71,8 +71,8 @@ const TableRowForCartlist = ({ item, onRemove }) => {
             </button>
           </div>
         </td>
-        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">${originalPrice}</td>
-        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">${calculateSubtotal()}</td>
+        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">₹ {originalPrice}</td>
+        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">₹ {calculateSubtotal()}</td>
       </tr>
 
       {/* Collapsed Card for Smaller Screens */}
@@ -116,7 +116,7 @@ const TableRowForCartlist = ({ item, onRemove }) => {
         </div>
         <div className="flex justify-between items-center">
           <span className="font-semibold text-gray-700 dark:text-gray-300">Subtotal:</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">${calculateSubtotal()}</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">₹ {calculateSubtotal()}</span>
         </div>
       </div>
     </>

@@ -13,7 +13,7 @@ import {
 } from "../../redux/slice/userSlice";
 import { toast } from "react-toastify";
 
-const OTPLoginModal = ({ isOpen, change }) => {
+const OTPLoginModal = ({ isOpen, change, onClose }) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [resendCountdown, setResendCountdown] = useState(30);
   const [errorMessage, setErrorMessage] = useState("");
@@ -81,6 +81,7 @@ const OTPLoginModal = ({ isOpen, change }) => {
         toast.success("Login successful!");
         navigate("/");
         dispatch(setEmailOtpToken(null));
+        onClose();
       } else if (change === "forget-password") {
         const response = await verifyResetPassword({
           token: token,
@@ -90,6 +91,7 @@ const OTPLoginModal = ({ isOpen, change }) => {
         toast.success("OTP verified successfully!");
         dispatch(setResetPassword(response.resetToken));
         navigate("/reset-password", { state: { token: response.resetToken } });
+        onClose();
       }
     } catch (error) {
       console.error("OTP Verification Error:", error);
@@ -108,6 +110,12 @@ const OTPLoginModal = ({ isOpen, change }) => {
     setResendCountdown(30);
   };
 
+  const handleClose = () => {
+    dispatch(setEmailOtpToken(null));
+    onClose();
+  };
+
+
   if (!isOpen) return null;
 
   return (
@@ -115,10 +123,7 @@ const OTPLoginModal = ({ isOpen, change }) => {
       <div className="relative bg-gradient-to-r from-red-400 via-purple-500 to-pink-500 p-10 rounded-2xl max-w-lg w-full shadow-2xl text-center">
         <p
           className="font-bold text-white cursor-pointer"
-          onClick={() => {
-            navigate(-1);
-            dispatch(setEmailOtpToken(null));
-          }}
+          onClick={handleClose}
         >
           Back to email
         </p>

@@ -14,7 +14,7 @@ const ProductGrid = ({ compareItem, handleAddToCart, handleRemoveProduct, isAddi
       <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">{product.productName}</h2>
       <p className="text-gray-600 dark:text-gray-300 mb-2">{product.description}</p>
       <div className="flex justify-between items-center mb-4">
-        <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">${product.originalPrice.toFixed(2)}</span>
+        <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">₹ {product.originalPrice.toFixed(2)}</span>
         <div className="text-yellow-500">
           {Array.from({ length: 5 }, (_, i) => (
             <span key={i} className={i < product.rating ? "text-yellow-500" : "text-gray-300"}>★</span>

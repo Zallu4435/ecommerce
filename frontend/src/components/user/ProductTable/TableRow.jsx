@@ -68,7 +68,7 @@ const TableRow = ({ item, onRemove }) => {
           </div>
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
-          ${originalPrice.toFixed(2)}
+          ₹ {originalPrice.toFixed(2)}
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
           {stockQuantity}
@@ -93,7 +93,7 @@ const TableRow = ({ item, onRemove }) => {
             ❌ Remove
           </button>
           <span className="text-gray-900 dark:text-gray-100">
-            ${originalPrice.toFixed(2)}
+            ₹ {originalPrice.toFixed(2)}
           </span>
         </div>
         <div className="flex items-center gap-4 mb-4">

@@ -1,18 +1,18 @@
+import React, { useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
 import { setScrolled } from "../redux/slice/scrollSlice";
 import Header from "../components/user/Header";
 import Navbar from "../components/user/Navbar";
 import Footer from "../components/user/Footer";
-import { routes } from "../config/routes";
+import Login from "../pages/user/forms/UserLogin";
+import Signup from "../pages/user/forms/UserRegister";
+import { routes } from "../routes/routes";
 
 const MainLayout = () => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
   const dispatch = useDispatch();
   const location = useLocation();
-
-  console.log(isAuthenticated, "isAuthenticated");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,8 +28,20 @@ const MainLayout = () => {
   }, [dispatch]);
 
   const ProtectedRoute = ({ children }) => {
-    return isAuthenticated ? children : <Navigate to="/login" replace />;
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace state={{ from: location }} />;
+    }
+    return children;
   };
+
+  const AuthRoute = ({ children }) => {
+    if (isAuthenticated) {
+      return <Navigate to="/" replace />;
+    }
+    return children;
+  };
+
+  const shouldShowFooter = !['/login', '/signup'].includes(location.pathname);
 
   return (
     <div>
@@ -51,13 +63,24 @@ const MainLayout = () => {
                 />
               );
             }
+            if (path === '/login' || path === '/signup') {
+              return (
+                <Route
+                  key={index}
+                  path={path}
+                  element={
+                    <AuthRoute>
+                      <Component />
+                    </AuthRoute>
+                  }
+                />
+              );
+            }
             return <Route key={index} path={path} element={<Component />} />;
           })}
         </Routes>
       </main>
-      {location.pathname !== "/login" && location.pathname !== "/signup" && (
-        <Footer />
-      )}
+      {shouldShowFooter && <Footer />}
     </div>
   );
 };

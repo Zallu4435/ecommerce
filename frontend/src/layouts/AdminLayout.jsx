@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
-import { adminRoutes } from "../config/routes";
+import { adminRoutes } from "../routes/routes";
 import AdminSidebar from "../components/admin/AdminSidebar";
 import { useSelector } from "react-redux";
 

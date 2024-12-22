@@ -21,7 +21,7 @@ const ComparisonTable = ({ compareItem }) => {
               <td className="py-3 px-4 font-medium text-gray-800 dark:text-gray-100">{feature}</td>
               {compareItem.map((product) => (
                 <td key={product.productId} className="py-3 px-4 text-center text-gray-800 dark:text-gray-100">
-                  {feature === 'Price' ? `$${product.originalPrice.toFixed(2)}` : 
+                  {feature === 'Price' ? `₹ ${product.originalPrice.toFixed(2)}` : 
                   feature === 'Rating' ? Array.from({ length: 5 }, (_, i) => (
                     <span key={i} className={i < product.rating ? "text-yellow-500" : "text-gray-300"}>★</span>
                   )) :

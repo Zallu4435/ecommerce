@@ -94,6 +94,13 @@ const AdminProductUpdateForm = () => {
   };
   
   const onSubmit = async (formData, e) => {
+
+    const fileInput = document.querySelector('input[name="imageUrl"]');
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      data.imageUrl = file; // Update the data object with the main image file
+    }
+
     e.preventDefault();
 
     try {
