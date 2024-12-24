@@ -29,12 +29,8 @@ const Cart = () => {
   const shippingCost = 15.0; // Flat shipping cost
   const calculateTotal = (subtotal) =>
     (parseFloat(subtotal) + parseFloat(calculateTax(subtotal)) + shippingCost).toFixed(2);
-
-  console.log(calculateTotal, "calculateTotal")
-  console.log(calculateTax, "calculateTax")
   
   const subtotal = calculateSubtotal();
-  console.log(subtotal, "calculateSubtotal")
   
   if (isLoading) {
     return <LoadingSpinner />
@@ -43,6 +39,11 @@ const Cart = () => {
   if (error) {
     return <div>Error loading cart data</div>;
   }
+
+  const handleCheckout = () => {
+    const total = calculateTotal(subtotal); // Calculate the total
+    navigate("/checkout", { state: { cartItems, total } }); // Pass cart items and total
+  };
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
@@ -77,7 +78,7 @@ const Cart = () => {
             <span>₹ {calculateTotal(subtotal)}</span>
           </div>
           <button 
-            onClick={() => navigate('/checkout')}
+            onClick={handleCheckout}
             className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all transform mt-5 hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600"
           >
             Proceed to Checkout

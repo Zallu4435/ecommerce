@@ -8,7 +8,7 @@ const PaymentSchema = new mongoose.Schema(
             required: true 
         },
         transactionId: { 
-            type: mongoose.Schema.Types.ObjectId 
+            type: mongoose.Schema.Types.ObjectId, 
             ref: 'Wallet'
         },
         status: { 
@@ -20,6 +20,11 @@ const PaymentSchema = new mongoose.Schema(
         amount: { 
             type: Number, required: true 
         },
+        OrderId : {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Order',
+            required: true 
+        }
     },
     {
         timestamps: true,

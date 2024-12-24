@@ -14,10 +14,10 @@
     },
     orders: {
       'Username': 'username',
-      'Total Orders': 'totalOrders',
+      'Total Orders': 'ordersCount',
       'Total Amount': 'totalAmount',
       'Last Order Date': 'lastOrderDate',
-      'Status': 'status',
+      'Status': 'lastOrderStatus',
       'Actions': 'actions',
     },
     coupons: {

@@ -1,99 +1,132 @@
-import { useState } from 'react';
-import { useAddToCartMutation, useGetCartQuery } from '../../../redux/apiSliceFeatures/CartApiSlice';
-import { toast } from 'react-toastify';
+import { useState } from "react";
+import {
+  useAddToCartMutation,
+  useGetCartQuery,
+} from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
-const AddToCart = ({ productId, colorOption, sizeOption }) => {
-  const [quantity, setQuantity] = useState(1); // Default quantity is 1
-  const [selectedSize, setSelectedSize] = useState(sizeOption[0] || 'M');
-  const [selectedColor, setSelectedColor] = useState(colorOption[0] || 'Red');  
-  const [isLoading, setIsLoading] = useState(false); // To handle loading state
-  const [message, setMessage] = useState(''); // To display success/error message
-  const { refetch: refetchCart } = useGetCartQuery(); // Refetch cart data
+const TAX_RATE = 0.08;
+const SHIPPING_COST = 5;
 
-
+const AddToCart = ({
+  productId,
+  colorOption,
+  sizeOption,
+  originalPrice,
+  productImage,
+  productName
+}) => {
+  const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState(sizeOption[0] || "M");
+  const [selectedColor, setSelectedColor] = useState(colorOption[0] || "Red");
+  const [isLoading, setIsLoading] = useState(false);
+  const { refetch: refetchCart } = useGetCartQuery();
   const [addToCart] = useAddToCartMutation();
+  const navigate = useNavigate();
+  const MAX_QUANTITY = 7;
 
-  const MAX_QUANTITY = 7; // Maximum quantity limit
+  const subTotal = quantity * originalPrice;
+  const taxAmount = subTotal * TAX_RATE;
+  const totalPrice = subTotal + taxAmount + SHIPPING_COST;
 
-  // console.log(colorOption, sizeOption, "color ans size ")
-
-  // Handle increase in quantity, ensuring it doesn't exceed MAX_QUANTITY
   const handleIncrease = () => {
     if (quantity < MAX_QUANTITY) {
       setQuantity((prev) => prev + 1);
     }
   };
 
-  // Handle decrease in quantity, ensuring it doesn't go below 1
   const handleDecrease = () => {
     if (quantity > 1) {
       setQuantity((prev) => prev - 1);
     }
   };
 
-  // Handle adding the item to the cart
   const handleAddToCart = async () => {
-    const productDetails = {
-      productId,
-      quantity,
-      size: selectedSize,
-      color: selectedColor,
-    };
-
-    // Start loading state
     setIsLoading(true);
-    setMessage('');
-
     try {
-      // Call the dummy API to simulate adding to cart
-      const response = await addToCart(productDetails);
+      const response = await addToCart({
+        productId,
+        quantity,
+        size: selectedSize,
+        color: selectedColor,
+      });
       await refetchCart();
-      setMessage(response.message); // Show success message
+      if (response?.data?.message) {
+        toast.success(response.data.message);
+      }
     } catch (error) {
-      toast(error.message);
+      toast.error(error?.data?.message || error.message);
     } finally {
-      setIsLoading(false); // Stop loading state
+      setIsLoading(false);
     }
   };
 
+  const handleCheckout = () => {
+    // Prepare the product details and total for checkout
+    const productDetails = {
+      productImage,
+      quantity,
+      originalPrice,
+      productName,
+    };
+  
+    const total = totalPrice; // This is the final price with tax and shipping
+  
+    // Navigate to the checkout page with the product details and total
+    navigate("/checkout", { state: { cartItems: [productDetails], total, productId } });
+  };
+  
+
   return (
-    <div className="p-6 bg-blue-50 grid dark:bg-gray-700 shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.5)] rounded-lg">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Order Details</h2>
-
-      {/* Price */}
-      <p className="text-xl font-bold text-gray-800 dark:text-gray-100">Price: $199.99</p>
-      <p className="text-sm text-green-600 mb-4">In Stock</p>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-1">
-        {/* Quantity Selector */}
-        <div className="flex items-center gap-4 mb-6">
-          <p className="text-gray-700 dark:text-gray-300">Quantity:</p>
-          <div className="flex items-center border rounded-lg overflow-hidden">
-            <button
-              className="px-3 py-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
-              onClick={handleDecrease}
-            >
-              -
-            </button>
-            <span className="px-4 py-1 text-gray-800 dark:text-gray-100">{quantity}</span>
-            <button
-              className="px-3 py-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
-              onClick={handleIncrease}
-              disabled={quantity >= MAX_QUANTITY} // Disable the button if quantity reaches MAX_QUANTITY
-            >
-              +
-            </button>
-          </div>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full md:w-96 mx-auto flex flex-col space-y-4 transition-all duration-300 transform hover:scale-105">
+ 
+      <div className="flex-grow space-y-4">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+          Order Summary
+        </h2>
+        <div className="flex justify-between">
+          <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
+            Price: ₹{originalPrice}
+          </p>
+          <p className="text-sm text-green-600 dark:text-green-400 mb-4">
+            In Stock
+          </p>
         </div>
 
-        <div className="flex space-x-10 md:mt-[-80px] lg:mt-0">
-          {/* Size Selector */}
-          <div className="mb-6">
-            <label className="block text-gray-700 dark:text-gray-300 mb-2">Size:</label>
+        <div className="space-y-4">
+          <div className="flex items-center mb-2">
+            <label className="text-gray-700 dark:text-gray-300 mr-2 w-20">
+              Quantity:
+            </label>
+            <div className="flex items-center border rounded-lg overflow-hidden">
+              <button
+                className="px-3 py-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100 transition-colors duration-200"
+                onClick={handleDecrease}
+              >
+                -
+              </button>
+              <span className="px-4 py-1 text-gray-800 dark:text-gray-100">
+                {quantity}
+              </span>
+              <button
+                className="px-3 py-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100 transition-colors duration-200"
+                onClick={handleIncrease}
+                disabled={quantity >= MAX_QUANTITY}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center mb-2">
+            <label className="text-gray-700 dark:text-gray-300 mr-2 w-20">
+              Size:
+            </label>
             <select
               value={selectedSize}
               onChange={(e) => setSelectedSize(e.target.value)}
-              className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 w-full transition-colors duration-200"
             >
               {sizeOption.map((size) => (
                 <option key={size} value={size}>
@@ -103,13 +136,14 @@ const AddToCart = ({ productId, colorOption, sizeOption }) => {
             </select>
           </div>
 
-          {/* Color Selector */}
-          <div className="mb-6">
-            <label className="block text-gray-700 dark:text-gray-300 mb-2">Color:</label>
+          <div className="flex items-center">
+            <label className="text-gray-700 dark:text-gray-300 mr-2 w-20">
+              Color:
+            </label>
             <select
               value={selectedColor}
               onChange={(e) => setSelectedColor(e.target.value)}
-              className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 w-full transition-colors duration-200"
             >
               {colorOption.map((color) => (
                 <option key={color} value={color}>
@@ -119,30 +153,49 @@ const AddToCart = ({ productId, colorOption, sizeOption }) => {
             </select>
           </div>
         </div>
+
+        <div className="mb-6 border-t pt-4 border-gray-300 dark:border-gray-600">
+          <p className="text-gray-700 dark:text-gray-300 flex justify-between">
+            <span>Subtotal:</span>
+            <span>₹{subTotal.toFixed(2)}</span>
+          </p>
+          <p className="text-gray-700 dark:text-gray-300 flex justify-between">
+            <span>Tax (8%):</span>
+            <span>₹{taxAmount.toFixed(2)}</span>
+          </p>
+          <p className="text-gray-700 dark:text-gray-300 flex justify-between">
+            <span>Shipping:</span>
+            <span>₹{SHIPPING_COST.toFixed(2)}</span>
+          </p>
+          <p className="text-xl font-bold text-gray-800 dark:text-gray-100 flex justify-between">
+            <span>Total:</span>
+            <span>₹{totalPrice.toFixed(2)}</span>
+          </p>
+        </div>
       </div>
 
-      {/* Loading indicator or message */}
-      {isLoading ? (
-        <p className="text-gray-700 dark:text-gray-300">Adding to cart...</p>
-      ) : (
-        message && <p className="text-green-600 dark:text-green-400">{message}</p>
+      {isLoading && (
+        <p className="text-center text-gray-700 dark:text-gray-300 mb-4">
+          Adding to cart...
+        </p>
       )}
 
-      {/* Buttons */}
-      <button
-        className="w-full mt-4 px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 dark:hover:bg-green-500"
-        onClick={handleAddToCart}
-        disabled={isLoading} // Disable button while loading
-      >
-        {isLoading ? 'Loading...' : 'Buy Now'}
-      </button>
-      <button
-        className="w-full mt-2 px-6 py-3 bg-gray-200 dark:bg-gray-600 dark:text-gray-100 text-gray-800 rounded-lg shadow-lg hover:bg-gray-300 dark:hover:bg-gray-500"
-        onClick={handleAddToCart}
-        disabled={isLoading} // Disable button while loading
-      >
-        {isLoading ? 'Loading...' : 'Add to Cart'}
-      </button>
+      <div className="flex flex-col gap-4 mt-auto">
+        <button
+          className="w-full px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 dark:hover:bg-green-500 transition-all duration-300 transform hover:scale-105"
+          onClick={handleCheckout}
+          disabled={isLoading}
+        >
+          Buy Now
+        </button>
+        <button
+          className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-all duration-300 transform hover:scale-105"
+          onClick={handleAddToCart}
+          disabled={isLoading}
+        >
+          Add to Cart
+        </button>
+      </div>
     </div>
   );
 };

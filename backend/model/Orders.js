@@ -9,7 +9,7 @@ const OrdersSchema = new mongoose.Schema({
             },
             ProductId: {
                 type: mongoose.Schema.Types.ObjectId, 
-                ref: 'Product'
+                ref: 'products'
             },
             Quantity: { 
                 type: Number 
@@ -24,10 +24,10 @@ const OrdersSchema = new mongoose.Schema({
             }
         },
     ],
-    PaymentId: {
-         type: mongoose.Schema.Types.ObjectId, 
-         ref: 'Payment' 
-    }, 
+    // PaymentId: {
+    //      type: mongoose.Schema.Types.ObjectId, 
+    //      ref: 'Payment' 
+    // }, 
     CoupenId: {
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Coupen' 
@@ -39,10 +39,17 @@ const OrdersSchema = new mongoose.Schema({
     Status: {
          type: String, default: 'Pending'
     }, 
-    AddressId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Address' 
-    },  
+    Address: {
+        username: { type: String, },
+        street: { type: String, },
+        city: { type: String, },
+        state: { type: String, },
+        country: { type: String, },
+        zipCode: { type: String, },
+        phone: { type: String, },
+        house: { type: String, },
+        landmark: { type: String, }
+    }
 },
 {
     timestamps: true,  // Automatically adds createdAt and updatedAt at the document level

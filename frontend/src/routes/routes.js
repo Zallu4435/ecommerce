@@ -14,6 +14,8 @@ import ActivationPage from "../pages/user/ActivationPage.jsx";
 import NotFound from "../pages/user/NotFound.jsx";
 import CheckoutPage from "../pages/user/checkout/Checkout.jsx";
 import PaymentSuccess from "../pages/user/PaymentSuccess.jsx";
+import ProceedToPaymentPage from '../pages/payment/ProceedToPayment.jsx'
+import TrackOrder from '../pages/user/userProfile/TrackOrder.jsx'
 
 // admin routes
 import UserManagement from '../pages/admin/UserManagement.jsx'
@@ -52,6 +54,8 @@ export const routes = [
   { path: "/profile*", component: UserProfileLayout, isProtected: true },
   { path: "/checkout", component: CheckoutPage, isprotected: true },
   { path: "/payment-success", component: PaymentSuccess, isprotected: true },
+  { path: "/proceed-to-payment", component: ProceedToPaymentPage, isProtected: true },
+  { path: "/track-order/:id", component: TrackOrder, isProtected: true },
   { path: "*", component: NotFound, isProtected: false },
 ];
 

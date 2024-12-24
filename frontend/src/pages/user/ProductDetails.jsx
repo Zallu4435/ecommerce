@@ -64,7 +64,7 @@ const ProductDetails = () => {
 
             {/* Add to Cart and Wishlist Section */}
             <div className="lg:col-span-1 space-y-4">
-              <AddToCart productId={_id} colorOption={colorOption} sizeOption={sizeOption}/>
+              <AddToCart productId={_id} productImage={image} productName={productName} colorOption={colorOption} sizeOption={sizeOption} originalPrice={originalPrice}/>
               <AddToWishlist productId={_id}/>
             </div>
           </div>

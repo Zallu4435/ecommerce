@@ -44,6 +44,22 @@ export const addressPasswordApi = createApi({
         body: passwordData,
       }),
     }),
+
+    checkoutAddress: builder.query({
+      query: () => '/userProfile/checkout-address',
+    }),
+
+    processPayment: builder.mutation({
+      query: (paymentData) => ({
+        url: '/userProfile/process-payment', // The API endpoint for processing payments
+        method: 'POST',
+        body: paymentData,
+      }),
+    }),
+
+    getOrders: builder.query({
+      query: () => 'orders/getOrders', // Endpoint to fetch orders
+    }),
   }),
 });
 
@@ -53,5 +69,8 @@ export const {
   useAddAddressMutation,
   useEditAddressMutation,
   useRemoveAddressMutation,
-  useChangePasswordMutation
+  useChangePasswordMutation,
+  useCheckoutAddressQuery,
+  useProcessPaymentMutation,
+  useGetOrdersQuery
 } = addressPasswordApi;

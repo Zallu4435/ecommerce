@@ -24,12 +24,13 @@ const AdminTable = ({
     products: "Products",
   };
 
-  // Filter data based on the search term
+  // console.log(data[type], "type");
+  // console.log(config[type].headers, "config for type");
+    // Filter data based on the search term
   const filteredData = data[type]?.filter((item) => {
     return config[type].headers.some((header) => {
       const field = headerToFieldMap[type][header]; // Get the field name from the mapping
       const value = item[field]; // Use the field to access the data
-
       // If search is empty, return all items
       if (!search) return true;
 

@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import AdminTable from '../../components/admin/AdminTable'
-import { useGetOrdersQuery } from '../../redux/apiSliceFeatures/OrderApiSlice';
+import { useGetUsersOrdersQuery } from '../../redux/apiSliceFeatures/OrderApiSlice';
+// import { useGetOrdersQuery } from '../../redux/apiSliceFeatures/OrderApiSlice';
 
 const OrderManagement = () => {
 
   const [search, setSearch] = useState('');      
 
-  const { data = [], isLoading, isError } = useGetOrdersQuery();
+  const { data: ordersData =  [], isLoading, isError } = useGetUsersOrdersQuery();
+
+  // console.log(data, "data")
 
   return (
       <div className="dark:bg-gray-900 dark:bg-black mx-[150px] py-2 dark:text-white bg-orange-50 h-[715px] px-14 my-12">
@@ -16,7 +19,7 @@ const OrderManagement = () => {
 
             <AdminTable 
               type="orders" 
-              data={data} 
+              data={{ orders: ordersData }}
               search={search} 
               setSearch={setSearch} 
               isLoading={isLoading}

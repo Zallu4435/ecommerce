@@ -1,50 +1,73 @@
-import React from 'react'
+import { useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 
-const OrderDetails = () => {
+const OrderDetails = ({ onOrderChange, address }) => {
+  const location = useLocation();
 
-    const calculateTotal = () =>
-        products.reduce((total, product) => total + product.price * product.quantity, 0);
+  // Retrieve data passed via React Router
+  const { cartItems, productId, total } = location.state || {};
 
-    const products = [
-        { id: 1, name: "Product 1", image: "https://via.placeholder.com/100", price: 20.0, quantity: 1 },
-        { id: 2, name: "Product 2", image: "https://via.placeholder.com/100", price: 30.0, quantity: 2 },
-      ];
-    
+  console.log(productId, "cartItems from cart")
+
+  // Ref to keep track of the previous order data to avoid unnecessary updates
+  const prevOrderRef = useRef(null);
+
+  useEffect(() => {
+    const currentOrder = { cartItems, total, productId };
+
+    // Only call `onOrderChange` if the order data changes
+    if (
+      onOrderChange &&
+      cartItems &&
+      JSON.stringify(prevOrderRef.current) !== JSON.stringify(currentOrder)
+    ) {
+      prevOrderRef.current = currentOrder; // Update the ref
+      onOrderChange(currentOrder);
+    }
+  }, [onOrderChange, cartItems, total, productId]);
+
+  if (!cartItems || cartItems.length === 0) {
+    return (
+      <div className="text-center mt-20 text-xl font-semibold">
+        No items to display!
+      </div>
+    );
+  }
 
   return (
     <>
-        {/* Order Details */}
-        <div className="bg-white p-6 shadow-md rounded-md">
-          <h2 className="text-xl font-semibold mb-4">Order Items</h2>
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="flex justify-between items-center border-b border-gray-200 py-2"
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-16 h-16 object-cover rounded-md"
-              />
-              <div className="flex-grow ml-4">
-                <span className="font-medium">{product.name}</span>
-              </div>
-              <div>
-                <span>
-                  {product.quantity} x ${product.price.toFixed(2)}
-                </span>
-              </div>
+      {/* Order Details */}
+      <div className="bg-white p-6 shadow-md rounded-md">
+        <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+        {cartItems.map((product) => (
+          <div
+            key={product.id}
+            className="flex justify-between items-center border-b border-gray-200 py-2"
+          >
+            <img
+              src={product.productImage}
+              alt={product.productName}
+              className="w-16 h-16 object-cover rounded-md"
+            />
+            <div className="flex-grow ml-4">
+              <span className="font-medium">{product.productName}</span>
             </div>
-          ))}
-          <div className="border-t mt-4 pt-4">
-            <div className="flex justify-between">
-              <span className="font-semibold">Total:</span>
-              <span className="font-semibold">${calculateTotal().toFixed(2)}</span>
+            <div>
+              <span>
+                {product.quantity} x ₹ {product.originalPrice.toFixed(2)}
+              </span>
             </div>
           </div>
+        ))}
+        <div className="border-t mt-4 pt-4">
+          <div className="flex justify-between">
+            <span className="font-semibold">Total:</span>
+            <span className="font-semibold">₹{total}</span>
+          </div>
         </div>
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default OrderDetails
+export default OrderDetails;

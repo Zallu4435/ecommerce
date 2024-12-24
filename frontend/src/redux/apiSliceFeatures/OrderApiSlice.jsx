@@ -3,26 +3,40 @@ import { crudApiSlice } from './crudApiSlice';
 export const orderApiSlice = crudApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Fetch all orders
-    getOrders: builder.query({
-      query: () => '/orders/getOrders',
-      providesTags: (result) =>
-        Array.isArray(result)
-          ? [
-              ...result.map(({ id }) => ({ type: 'Entity', id })),
-              { type: 'Entity', id: 'orders-LIST' },
-            ]
-          : [{ type: 'Entity', id: 'orders-LIST' }],
+    getUsersOrders: builder.query({
+      query: () => 'orders/getUsersOrders', 
+      providesTags:['Order'],
     }),
 
     // Fetch order details by ID
     getOrderById: builder.query({
       query: (id) => `/orders/getOrder/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Entity', id }],
+      providesTags:['Order'],
     }),
+
+    fetchUserOrders: builder.query({
+      query: (userId) => `/orders/user-order-modal?userId=${userId}`,
+    }),
+    
+    
+
+    
+    updateOrders: builder.mutation({
+      query: (orders) => ({
+        url: "/orders/update-bulk", // Assume a bulk update endpoint
+        method: "PATCH",
+        body: orders,
+      }),
+      invalidatesTags: ["Order"],
+
+    }),
+
   }),
 });
 
 export const {
-  useGetOrdersQuery,
+  useGetUsersOrdersQuery,
   useGetOrderByIdQuery,
+  useFetchUserOrdersQuery,
+  useUpdateOrdersMutation,
 } = orderApiSlice;
