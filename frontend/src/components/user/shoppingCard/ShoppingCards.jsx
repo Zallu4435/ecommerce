@@ -44,6 +44,7 @@ const ShoppingCard = ({
             className="w-full absolute z-10 h-full object-cover transform hover:scale-105 transition-transform duration-300 cursor-pointer"
             onClick={handleImageClick}
           />
+          
         </div>
 
         <div className="absolute top-2 left-0 right-0 bottom-0 flex justify-between p-2 mt-2">

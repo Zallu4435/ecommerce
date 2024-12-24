@@ -5,7 +5,6 @@ import { ArrowLeft, Upload } from 'lucide-react';
 import { useNavigate, useParams } from "react-router-dom";
 import {
   productValidationSchema,
-  validateImageVariants,
 } from "../../validation/admin/ProductFormValidation";
 import ProductImageVariantAddModal from "../../modal/admin/ProductImageVarientAddModal";
 import {
@@ -41,7 +40,7 @@ const AdminProductUpdateForm = () => {
     resolver: zodResolver(productValidationSchema),
     defaultValues: {
       sizeOption: [],
-      variantImages: [],
+      variantImages: imageFiles.map(file => file?.url || ""), // Ensure variantImages field contains URLs
       colorOption: [],
     },
   });
@@ -49,22 +48,25 @@ const AdminProductUpdateForm = () => {
   useEffect(() => {
     if (data?.product) {
       const { product } = data;
+  
+      // Set the form fields
       Object.keys(product).forEach((key) => {
         setValue(key, product[key]);
       });
-
+  
+      // Set the image files for the variant images
       if (product.variantImages && product.variantImages.length > 0) {
+        // If there are existing images, map them into a format that includes a `url` and `isExisting`
         setImageFiles(product.variantImages.map(url => ({ url, isExisting: true })));
+        setValue('variantImages', product.variantImages); // Ensure react-hook-form knows about the variantImages
       }
     }
   }, [data, setValue]);
+  
+  console.log(imageFiles,'hasdfsadfasdf')
 
   const handleImageUpload = (uploadedFiles) => {
-    try {
-      // Validate uploaded files
-      validateImageVariants(uploadedFiles);
-  
-      // Ensure uploadedFiles is an array with File objects or strings (URLs)
+    try {      
       if (!Array.isArray(uploadedFiles)) {
         throw new Error("Uploaded files must be an array.");
       }
@@ -72,8 +74,10 @@ const AdminProductUpdateForm = () => {
       const newImageFiles = uploadedFiles.map(file => {
         if (file) {
           if (typeof file === 'string') {
+            // Treat it as an existing image URL from Cloudinary
             return { url: file, isExisting: true };
           } else if (file instanceof File) {
+            // Handle new files to upload to Cloudinary
             return { file, isExisting: false };
           } else {
             throw new Error("Invalid file type.");
@@ -82,25 +86,15 @@ const AdminProductUpdateForm = () => {
         return null;
       });
   
-      // Set the new image files and update form value
       setImageFiles(newImageFiles);
       setValue("variantImages", newImageFiles);
-  
-      // Close modal
       setIsModalOpen(false);
     } catch (error) {
-      alert(error.message, "hahahahahahahahahahahah");  // Display the error message
+      alert(error.message);
     }
   };
   
   const onSubmit = async (formData, e) => {
-
-    const fileInput = document.querySelector('input[name="imageUrl"]');
-    if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      data.imageUrl = file; // Update the data object with the main image file
-    }
-
     e.preventDefault();
 
     try {

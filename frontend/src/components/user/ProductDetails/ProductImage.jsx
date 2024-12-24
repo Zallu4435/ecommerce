@@ -19,13 +19,13 @@ const ProductImage = ({ image, variantImages }) => {
   };
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
+    <div className="px-40 py-10 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
       {/* Main Product Image with Magnifier */}
       <div className="relative">
         <Magnifier
           src={mainImage || "https://via.placeholder.com/500x500"}
           alt="Main Product"
-          className="px-[150px] py-[30px] h-[350px] object-cover rounded-lg duration-300"
+          className=" object-cover rounded-lg duration-300"
           mgShape="circle" // Circle magnifier
           mgShowOverflow={false}
           mgWidth={150}

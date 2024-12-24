@@ -1,64 +1,10 @@
-import { useRef, useState } from "react";
-import ReactCrop, {
-  centerCrop,
-  convertToPixelCrop,
-  makeAspectCrop,
-} from "react-image-crop";
- const setCanvasPreview = (
-    image, // HTMLImageElement
-    canvas, // HTMLCanvasElement
-    crop // PixelCrop
-  ) => {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      throw new Error("No 2d context");
-    }
-  
-    // devicePixelRatio slightly increases sharpness on retina devices
-    // at the expense of slightly slower render times and needing to
-    // size the image back down if you want to download/upload and be
-    // true to the images natural size.
-    const pixelRatio = window.devicePixelRatio;
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-  
-    canvas.width = Math.floor(crop.width * scaleX * pixelRatio);
-    canvas.height = Math.floor(crop.height * scaleY * pixelRatio);
-  
-    ctx.scale(pixelRatio, pixelRatio);
-    ctx.imageSmoothingQuality = "high";
-    ctx.save();
-  
-    const cropX = crop.x * scaleX;
-    const cropY = crop.y * scaleY;
-  
-    // Move the crop origin to the canvas origin (0,0)
-    ctx.translate(-cropX, -cropY);
-    ctx.drawImage(
-      image,
-      0,
-      0,
-      image.naturalWidth,
-      image.naturalHeight,
-      0,
-      0,
-      image.naturalWidth,
-      image.naturalHeight
-    );
-  
-    ctx.restore();
-  };
-
-  
-const ASPECT_RATIO = 1;
-const MIN_DIMENSION = 150;
-
-const ImageCropper = ({ closeModal, updateAvatar }) => {
+const ImageCropper = ({ closeModal, updateAvatar, imageSrc }) => {
   const imgRef = useRef(null);
   const previewCanvasRef = useRef(null);
-  const [imgSrc, setImgSrc] = useState("");
+  const [imgSrc, setImgSrc] = useState(imageSrc || "");
   const [crop, setCrop] = useState();
   const [error, setError] = useState("");
+  const [isCloudinaryImage, setIsCloudinaryImage] = useState(false);
 
   const onSelectFile = (e) => {
     const file = e.target.files?.[0];
@@ -81,6 +27,9 @@ const ImageCropper = ({ closeModal, updateAvatar }) => {
       setImgSrc(imageUrl);
     });
     reader.readAsDataURL(file);
+
+    // Reset the Cloudinary flag when selecting a new file
+    setIsCloudinaryImage(false);
   };
 
   const onImageLoad = (e) => {
@@ -99,6 +48,66 @@ const ImageCropper = ({ closeModal, updateAvatar }) => {
     const centeredCrop = centerCrop(crop, width, height);
     setCrop(centeredCrop);
   };
+
+  const setCanvasPreview = (
+    image, // HTMLImageElement
+    canvas, // HTMLCanvasElement
+    crop // PixelCrop
+  ) => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("No 2d context");
+    }
+
+    const pixelRatio = window.devicePixelRatio;
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    canvas.width = Math.floor(crop.width * scaleX * pixelRatio);
+    canvas.height = Math.floor(crop.height * scaleY * pixelRatio);
+
+    ctx.scale(pixelRatio, pixelRatio);
+    ctx.imageSmoothingQuality = "high";
+    ctx.save();
+
+    const cropX = crop.x * scaleX;
+    const cropY = crop.y * scaleY;
+
+    ctx.translate(-cropX, -cropY);
+    ctx.drawImage(
+      image,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight,
+      0,
+      0,
+      image.naturalWidth,
+      image.naturalHeight
+    );
+
+    ctx.restore();
+  };
+
+  const handleSave = () => {
+    setCanvasPreview(
+      imgRef.current,
+      previewCanvasRef.current,
+      convertToPixelCrop(crop, imgRef.current.width, imgRef.current.height)
+    );
+    const dataUrl = previewCanvasRef.current.toDataURL();
+    updateAvatar(dataUrl);
+    closeModal();
+  };
+
+  // Update the isCloudinaryImage flag whenever imgSrc changes
+  useEffect(() => {
+    if (imgSrc && imgSrc.startsWith("https://res.cloudinary.com/")) {
+      setIsCloudinaryImage(true);
+    } else {
+      setIsCloudinaryImage(false); // Reset the flag if not a Cloudinary image
+    }
+  }, [imgSrc]); // Re-run whenever imgSrc changes
 
   return (
     <>
@@ -132,20 +141,8 @@ const ImageCropper = ({ closeModal, updateAvatar }) => {
           </ReactCrop>
           <button
             className="text-white font-mono text-xs py-2 px-4 rounded-2xl mt-4 bg-sky-500 hover:bg-sky-600"
-            onClick={() => {
-              setCanvasPreview(
-                imgRef.current, // HTMLImageElement
-                previewCanvasRef.current, // HTMLCanvasElement
-                convertToPixelCrop(
-                  crop,
-                  imgRef.current.width,
-                  imgRef.current.height
-                )
-              );
-              const dataUrl = previewCanvasRef.current.toDataURL();
-              updateAvatar(dataUrl);
-              closeModal();
-            }}
+            onClick={handleSave}
+            disabled={isCloudinaryImage} // Disable button if it's a Cloudinary image
           >
             Crop Image
           </button>
@@ -167,4 +164,5 @@ const ImageCropper = ({ closeModal, updateAvatar }) => {
     </>
   );
 };
+
 export default ImageCropper;

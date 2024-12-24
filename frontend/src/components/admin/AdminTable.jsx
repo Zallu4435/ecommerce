@@ -24,8 +24,6 @@ const AdminTable = ({
     products: "Products",
   };
 
-  // console.log(data[type], "type");
-  // console.log(config[type].headers, "config for type");
     // Filter data based on the search term
   const filteredData = data[type]?.filter((item) => {
     return config[type].headers.some((header) => {
