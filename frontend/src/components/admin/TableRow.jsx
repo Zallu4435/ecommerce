@@ -4,7 +4,7 @@ import DeleteConfirmationModal from "../../modal/admin/ConfirmDeleteModal";
 import { useState } from "react";
 import { defaultProfile } from "../../assets/images";
 import OrdersModal from "../../modal/admin/OrderStatus";
-import { useFetchUserOrdersQuery } from "../../redux/apiSliceFeatures/OrderApiSlice";
+import { useNavigate } from "react-router-dom";
 
 // Define a new component for each row that calls the hook inside it
 const TableRow = ({ item, type }) => {
@@ -14,6 +14,7 @@ const TableRow = ({ item, type }) => {
   const [itemToDelete, setItemToDelete] = useState(null); // Item to be deleted
   const [isModalOpen, setModalOpen] = useState(false);
 const [userId, setUserId] = useState('');
+const navigate = useNavigate();
 
 
 
@@ -38,6 +39,10 @@ const [userId, setUserId] = useState('');
   const handleUpdateClick = (id) => {
     setUserId(id); // Set the userId to the state
     setModalOpen(true); // Open the modal
+  };
+
+  const handleOrderView = (orderId) => {
+    navigate(`view/orders/${orderId}`);
   };
 
   return (
@@ -135,7 +140,7 @@ const [userId, setUserId] = useState('');
                 borderColor="#D4A017"
                 textColor="#D4A017"
                 hoverColor="white"
-                onClick={() => handleView("orders")}
+                onClick={() => handleOrderView(item._id)}
               >
                 View
               </Button>

@@ -215,14 +215,171 @@ exports.checkoutAddress = async (req, res) => {
 
 
 // Assuming we have a payment gateway function to handle payment
-exports.processPayment = async (req, res) => {
+// exports.processPayment = async (req, res) => {
 
+//   try {
+//     const {  address, order, couponCode, newAddress, payment, quantity } = req.body;
+//     const userId = req.user;
+
+//     console.log(order?.productId, "address from from ")
+   
+
+//     let items = [];
+
+//     if (order?.productId) {
+//       // Direct single product order
+//       const product = await Product.findById(order?.productId);
+//       if (!product) {
+//         return res.status(400).json({ message: "Product not found." });
+//       }
+//       items.push({
+//         ProductId: order?.productId,
+//         Price: product.price,
+//         Quantity: quantity, 
+//       });
+//     } else if (order && order.cartItems && order.cartItems.length > 0) {
+//       // Cart-based order
+//       const cart = await Cart.findOne({ userId });
+//       if (!cart) {
+//         return res.status(400).json({ message: "Cart not found for this user." });
+//       }
+ 
+//       for (let item of order.cartItems) {
+//         const { cartItemId, quantity, originalPrice } = item;
+//         const cartItem = cart.items.find(ci => ci._id.toString() === cartItemId);
+//         if (!cartItem) {
+//           return res.status(400).json({ message: `Cart item ${cartItemId} not found.` });
+//         }
+
+//         items.push({
+//           ProductId: cartItem.productId,
+//           Price: originalPrice,  
+//           Quantity: quantity,
+//           Color: cartItem.color,
+//           Size: cartItem.size
+//         });
+//       }
+//     } else {
+//       return res.status(400).json({ message: "Either productId or cartItems are required." });
+//     }
+
+//     // Step 3: Validate Coupon
+//     let coupon = null;
+//     if (couponCode) {
+//       coupon = await Coupon.findOne({ code: couponCode });
+//       if (!coupon) {
+//         return res.status(400).json({ message: "Invalid coupon code." });
+//       }
+//     }
+//     // Step 4: Create the Order
+//     const orderStatus = payment?.paymentMethod === "cod" ? "Order Placed" : "Confirmed";
+//     const orderRecord = new Order({
+//       UserId: userId,
+//       items: items,
+//       TotalAmount: order?.total,
+//       Address: address,
+//       Status: orderStatus,
+//       CouponId: coupon?._id || null,
+//     });
+
+//     await orderRecord.save();
+
+//     // console.log(orderRecord, "orderRecored ")
+//     // Step 5: Handle Payment
+//     let paymentRecord = null;
+
+//     if (payment?.paymentMethod === "cod") {
+//       paymentRecord = new Payment({
+//         userId: userId,
+//         OrderId: orderRecord._id,
+//         status: "Pending",
+//         method: payment?.paymentMethod,
+//         amount: order?.total,
+//         transactionId: null,
+//       });
+
+//       await paymentRecord.save();
+//       console.log("COD Payment recorded:", paymentRecord);
+//     }
+//     // } else {
+//     //   const paymentResult = await processPaymentGateway({
+//     //     amount: calculatedTotal,
+//     //     orderId: orderRecord._id,
+//     //   });
+
+//     //   if (!paymentResult.success) {
+//     //     // If payment fails, update order status and return error
+//     //     orderRecord.Status = "Failed";
+//     //     await orderRecord.save();
+//     //     return res.status(500).json({ message: "Payment failed.", orderId: orderRecord._id });
+//     //   }
+
+//     //   paymentRecord = new Payment({
+//     //     UserId: userId,
+//     //     OrderId: orderRecord._id,
+//     //     Status: "Success",
+//     //     Method: paymentMethod,
+//     //     Amount: calculatedTotal,
+//     //     TransactionId: paymentResult.transactionId,
+//     //   });
+
+//     //   await paymentRecord.save();
+//     //   console.log("Online Payment recorded:", paymentRecord);
+//     // }
+
+//     // Link payment to the order
+//     // orderRecord.PaymentId = paymentRecord._id;
+//     // await orderRecord.save();
+//     // console.log(object)
+//     // Step 6: Respond to Client
+
+
+//     res.status(200).json({
+//       message: "Order placed successfully",
+//       orderId: orderRecord._id,
+//       paymentId: paymentRecord?._id || null,
+//       status: orderStatus,
+//     });
+//   } catch (error) {
+//     console.error("Error processing order:", error);
+//     res.status(500).json({ message: "An error occurred while processing the order." });
+//   }
+// };
+exports.checkProductStock = async (req, res) => {
+
+  console.log("reached inside the checkproduct ")
   try {
-    const {  address, order, couponCode, newAddress, payment, quantity } = req.body;
+    const { productId, quantity } = req.query; // Get productId and quantity from query params
+
+    if (!productId || !quantity) {
+      return res.status(400).json({ message: "ProductId and quantity are required." });
+    }
+
+    // Find the product by ID
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found." });
+    }
+
+    // Check if the quantity in stock is enough
+    if (product.stockQuantity >= quantity) {
+      return res.status(200).json({ isStockAvailable: true });
+    } else {
+      return res.status(200).json({ isStockAvailable: false });
+    }
+  } catch (error) {
+    console.error("Error checking stock:", error);
+    return res.status(500).json({ message: "Error checking product stock." });
+  }
+};
+
+exports.processPayment = async (req, res) => {
+  try {
+    const { address, order, couponCode, newAddress, payment, quantity } = req.body;
     const userId = req.user;
 
-    console.log(order?.productId, "address from from ")
-   
+    console.log(order?.productId, "address from form");
 
     let items = [];
 
@@ -232,6 +389,13 @@ exports.processPayment = async (req, res) => {
       if (!product) {
         return res.status(400).json({ message: "Product not found." });
       }
+      // Decrease stock quantity based on the ordered quantity
+      if (product.stockQuantity < quantity) {
+        return res.status(400).json({ message: "Not enough stock available." });
+      }
+      product.stockQuantity -= quantity;
+      await product.save(); // Update the product's stock quantity
+
       items.push({
         ProductId: order?.productId,
         Price: product.price,
@@ -243,13 +407,25 @@ exports.processPayment = async (req, res) => {
       if (!cart) {
         return res.status(400).json({ message: "Cart not found for this user." });
       }
- 
+
       for (let item of order.cartItems) {
         const { cartItemId, quantity, originalPrice } = item;
         const cartItem = cart.items.find(ci => ci._id.toString() === cartItemId);
         if (!cartItem) {
           return res.status(400).json({ message: `Cart item ${cartItemId} not found.` });
         }
+
+        const product = await Product.findById(cartItem.productId);
+        if (!product) {
+          return res.status(400).json({ message: "Product not found." });
+        }
+
+        // Decrease stock quantity based on the ordered quantity
+        if (product.stockQuantity < quantity) {
+          return res.status(400).json({ message: `Not enough stock for ${product.productName}.` });
+        }
+        product.stockQuantity -= quantity;
+        await product.save(); // Update the product's stock quantity
 
         items.push({
           ProductId: cartItem.productId,
@@ -271,8 +447,9 @@ exports.processPayment = async (req, res) => {
         return res.status(400).json({ message: "Invalid coupon code." });
       }
     }
+
     // Step 4: Create the Order
-    const orderStatus = payment?.paymentMethod === "cod" ? "Pending" : "Confirmed";
+    const orderStatus = payment?.paymentMethod === "cod" ? "Order Placed" : "Confirmed";
     const orderRecord = new Order({
       UserId: userId,
       items: items,
@@ -284,7 +461,6 @@ exports.processPayment = async (req, res) => {
 
     await orderRecord.save();
 
-    // console.log(orderRecord, "orderRecored ")
     // Step 5: Handle Payment
     let paymentRecord = null;
 
@@ -301,39 +477,8 @@ exports.processPayment = async (req, res) => {
       await paymentRecord.save();
       console.log("COD Payment recorded:", paymentRecord);
     }
-    // } else {
-    //   const paymentResult = await processPaymentGateway({
-    //     amount: calculatedTotal,
-    //     orderId: orderRecord._id,
-    //   });
 
-    //   if (!paymentResult.success) {
-    //     // If payment fails, update order status and return error
-    //     orderRecord.Status = "Failed";
-    //     await orderRecord.save();
-    //     return res.status(500).json({ message: "Payment failed.", orderId: orderRecord._id });
-    //   }
-
-    //   paymentRecord = new Payment({
-    //     UserId: userId,
-    //     OrderId: orderRecord._id,
-    //     Status: "Success",
-    //     Method: paymentMethod,
-    //     Amount: calculatedTotal,
-    //     TransactionId: paymentResult.transactionId,
-    //   });
-
-    //   await paymentRecord.save();
-    //   console.log("Online Payment recorded:", paymentRecord);
-    // }
-
-    // Link payment to the order
-    // orderRecord.PaymentId = paymentRecord._id;
-    // await orderRecord.save();
-    // console.log(object)
     // Step 6: Respond to Client
-
-
     res.status(200).json({
       message: "Order placed successfully",
       orderId: orderRecord._id,
@@ -345,5 +490,3 @@ exports.processPayment = async (req, res) => {
     res.status(500).json({ message: "An error occurred while processing the order." });
   }
 };
-
-

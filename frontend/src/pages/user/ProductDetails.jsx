@@ -20,6 +20,8 @@ const ProductDetails = () => {
     isLoading,
   } = useGetProductByIdQuery(id);
 
+  // console.log(productDetails, "productDetails")
+
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 100;
@@ -34,8 +36,9 @@ const ProductDetails = () => {
   }, [scrolled]);
 
   // Destructure productDetails
-  const { image, variantImages, productName, originalPrice, description, _id, colorOption, sizeOption } = productDetails.product || {};
+  const { image, variantImages, productName, originalPrice, description, _id, colorOption, sizeOption, stockQuantity, category } = productDetails.product || {};
 
+  // console.log(category, "category")
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -64,7 +67,7 @@ const ProductDetails = () => {
 
             {/* Add to Cart and Wishlist Section */}
             <div className="lg:col-span-1 space-y-4">
-              <AddToCart productId={_id} productImage={image} productName={productName} colorOption={colorOption} sizeOption={sizeOption} originalPrice={originalPrice}/>
+              <AddToCart productId={_id} stockQuantity={stockQuantity} productImage={image} productName={productName} colorOption={colorOption} sizeOption={sizeOption} originalPrice={originalPrice}/>
               <AddToWishlist productId={_id}/>
             </div>
           </div>
@@ -88,7 +91,7 @@ const ProductDetails = () => {
         </div>
       </div>
 
-      <RelatedProduct className="mt-8" />
+      <RelatedProduct category={category} className="mt-8" />
     </div>
   );
 };

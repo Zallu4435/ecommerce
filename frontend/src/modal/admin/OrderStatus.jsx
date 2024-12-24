@@ -42,6 +42,13 @@ const OrdersModal = ({ isOpen, onClose, userId }) => {
     }
   };
 
+  // Filter out "Delivered" and "Cancelled" orders before rendering
+  const filteredOrders = orders.filter(
+    (order) => order.Status !== 'Delivered' && order.Status !== 'Cancelled'
+  );
+
+  const allDelivered = orders.every(order => order.Status === 'Delivered'); // Check if all orders are delivered
+
   if (!isOpen) return null;
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Failed to load orders.</p>;
@@ -50,6 +57,15 @@ const OrdersModal = ({ isOpen, onClose, userId }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-md max-w-2xl w-full">
         <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">Update Orders</h2>
+
+        {allDelivered && (
+          <p className="text-green-500 font-semibold mb-4">All orders have been delivered!</p>
+        )}
+
+        {filteredOrders.length === 0 && !allDelivered && (
+          <p className="text-gray-500 mb-4">No orders to update (all orders are either delivered or cancelled).</p>
+        )}
+
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white dark:bg-gray-800">
             <thead>
@@ -60,7 +76,7 @@ const OrdersModal = ({ isOpen, onClose, userId }) => {
               </tr>
             </thead>
             <tbody className="text-gray-700 dark:text-gray-300">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <tr key={order._id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
                   <td className="py-3 px-4">{order._id}</td>
                   <td className="py-3 px-4">{order.Status || 'Pending'}</td>

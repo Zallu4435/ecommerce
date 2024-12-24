@@ -4,6 +4,72 @@ const mongoose = require('mongoose')
 const products = require('../model/Products')
 const User = require('../model/User')
 
+// exports.getAllOrders = async (req, res) => {
+//   console.log("Reached inside the getAllOrders function");
+//   try {
+//     const userId = req.user; // Assuming you have user information in the request
+//     console.log("User ID:", userId);
+    
+//     if (!userId) {
+//       return res.status(401).json({ message: 'Unauthorized' });
+//     }
+
+
+//     const pipeline = [
+//       {
+//         $match: { UserId: new mongoose.Types.ObjectId(userId) }
+//       },
+//       {
+//         $unwind: '$items'
+//       },
+//       {
+//         $lookup: {
+//           from: 'products',
+//           localField: 'items.ProductId',
+//           foreignField: '_id',
+//           as: 'productDetails'
+//         }
+//       },
+//       {
+//         $unwind: '$productDetails'
+//       },
+//       {
+//         $project: {
+//           _id: 1,
+//           UserId: 1,
+//           TotalAmount: 1,
+//           Status: 1,
+//           createdAt: 1,
+//           updatedAt: 1,
+//           Items: {
+//             _id: '$items._id',
+//             ProductId: '$items.ProductId',
+//             Price: '$items.Price',
+//             Quantity: '$items.Quantity',
+//             ProductName: '$productDetails.productName', // Add more fields if needed
+//             ProductImage: '$productDetails.image'
+//           }
+//         }
+//       },
+//       {
+//         $sort: { createdAt: -1 }
+//       }
+//     ];
+    
+    
+//     console.log("Pipeline:", pipeline);
+    
+//     const orders = await Order.aggregate(pipeline);
+//     console.log("Orders:", orders);
+    
+
+//     res.status(200).json(orders);
+//   } catch (error) {
+//     console.error('Error fetching user orders:', error);
+//     res.status(500).json({ message: 'An error occurred while fetching user orders' });
+//   }
+// };
+
 exports.getAllOrders = async (req, res) => {
   console.log("Reached inside the getAllOrders function");
   try {
@@ -14,13 +80,12 @@ exports.getAllOrders = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-
     const pipeline = [
       {
         $match: { UserId: new mongoose.Types.ObjectId(userId) }
       },
       {
-        $unwind: '$items'
+        $unwind: '$items' // Unwind items in each order
       },
       {
         $lookup: {
@@ -31,7 +96,7 @@ exports.getAllOrders = async (req, res) => {
         }
       },
       {
-        $unwind: '$productDetails'
+        $unwind: '$productDetails' // Unwind the product details
       },
       {
         $project: {
@@ -46,9 +111,20 @@ exports.getAllOrders = async (req, res) => {
             ProductId: '$items.ProductId',
             Price: '$items.Price',
             Quantity: '$items.Quantity',
-            ProductName: '$productDetails.productName', // Add more fields if needed
+            ProductName: '$productDetails.productName',
             ProductImage: '$productDetails.image'
           }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          UserId: { $first: '$UserId' },
+          TotalAmount: { $first: '$TotalAmount' },
+          Status: { $first: '$Status' },
+          createdAt: { $first: '$createdAt' },
+          updatedAt: { $first: '$updatedAt' },
+          Items: { $push: '$Items' } // Group all items back together under the 'Items' field
         }
       },
       {
@@ -56,41 +132,131 @@ exports.getAllOrders = async (req, res) => {
       }
     ];
     
-    
     console.log("Pipeline:", pipeline);
     
     const orders = await Order.aggregate(pipeline);
     console.log("Orders:", orders);
     
-
     res.status(200).json(orders);
   } catch (error) {
     console.error('Error fetching user orders:', error);
     res.status(500).json({ message: 'An error occurred while fetching user orders' });
   }
-};
+};    
 
 
 
 
-// Get order details
-exports.getOrderDetails = async (req, res, next) => {
+
+exports.getOrderById = async (req, res) => {
+  console.log('Entering getOrdersByUserId function');
   try {
-    const order = await Order.findById(req.params.id);
+    const { id: userId } = req.params;
+    console.log('User ID:', userId);
 
-    if (!order) {
-      return next(new ErrorHandler("Order not found", 404));
+    // Validate object ID
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.log('Invalid user ID');
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+    
+    console.log('Fetching orders for user');
+    const orders = await Order.aggregate([
+      {
+        $match: { UserId: new mongoose.Types.ObjectId(userId) }
+      },
+      {
+        $lookup: {
+          from: 'users', // Assuming your users collection name
+          localField: 'UserId',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: '$user'
+      },
+      {
+        $lookup: {
+          from: 'products', // Assuming your products collection name
+          localField: 'items.ProductId',
+          foreignField: '_id',
+          as: 'productDetails'
+        }
+      },
+      {
+        $addFields: {
+          'items': {
+            $map: {
+              input: '$items',
+              as: 'item',
+              in: {
+                $mergeObjects: [
+                  '$$item',
+                  {
+                    productDetails: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$productDetails',
+                            cond: { $eq: ['$$this._id', '$$item.ProductId'] }
+                          }
+                        },
+                        0
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          username: '$user.username',
+          email: '$user.email',
+          status: '$Status',
+          totalAmount: '$TotalAmount',
+          orderDate: '$createdAt',
+          updatedAt: 1,
+          items: {
+            $map: {
+              input: '$items',
+              as: 'item',
+              in: {
+                productName: '$$item.productDetails.productName',
+                productImage: '$$item.productDetails.image',
+                quantity: '$$item.Quantity',
+                price: '$$item.Price',
+                originalPrice: '$$item.productDetails.originalPrice'
+              }
+            }
+          },
+          shippingAddress: '$Address'
+        }
+      },
+      {
+        $sort: { orderDate: -1 }
+      }
+    ]);
+    
+    console.log('Orders found:', orders.length);
+    if (!orders || orders.length === 0) {
+      console.log('No orders found for this user');
+      return res.status(404).json({ message: 'No orders found for this user' });
     }
 
-    res.status(200).json({
-      success: true,
-      order,
-    });
+    console.log('Transformed orders:', orders.length);
+    res.status(200).json(orders);
   } catch (error) {
-    next(error);
+    console.error('Error in getOrdersByUserId:', error);
+    res.status(500).json({ message: 'Error fetching order details', error: error.message });
   }
 };
 
+// Example in Express route handler
 // Create a new order
 exports.createOrder = async (req, res, next) => {
   try {
@@ -186,24 +352,36 @@ exports.updateOrderStatus = async (req, res) => {
 
 
 // Delete an order
-exports.deleteOrder = async (req, res, next) => {
-  try {
-    const order = await Order.findById(req.params.id);
+// Example Express route for canceling an order
+exports.cancelOrder = async (req, res) => {
+  const { orderId } = req.params;
+  console.log(orderId, "from cancel order");
 
-    if (!order) {
-      return next(new ErrorHandler("Order not found", 404));
+  try {
+    // Find the order by its ID and update the status to 'Cancelled'
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { Status: 'Cancelled' },  // Ensure 'status' matches your schema field name
+      { new: true }  // This ensures the updated document is returned
+    );
+
+    // Log the updated order to see if the status has changed
+    console.log(updatedOrder, "updated order");
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: 'Order not found' });
     }
 
-    await order.remove();
-
     res.status(200).json({
-      success: true,
-      message: "Order deleted successfully",
+      message: 'Order canceled successfully',
+      updatedOrder,
     });
   } catch (error) {
-    next(error);
+    console.error('Error canceling order:', error);
+    res.status(500).json({ message: 'Failed to cancel order' });
   }
 };
+
 
 
 exports.getAllUsersOrders = async (req, res) => {

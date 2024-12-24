@@ -5,15 +5,18 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
     // Fetch all products
     getProducts: builder.query({
       query: () => '/products/getProducts',
-      providesTags: (result) =>
-        Array.isArray(result)
-          ? [
-              ...result.map(({ id }) => ({ type: 'Entity', id })),
-              { type: 'Entity', id: 'products-LIST' },
-            ]
-          : [{ type: 'Entity', id: 'products-LIST' }],
-        }),
+      providesTags:['Products'],
+    }),
  
+    getShopProducts: builder.query({
+      query: () => '/products/getShopProducts',
+      providesTags:['Products'],
+    }),
+
+    getRelatedProducts: builder.query({
+      query: (category) => `/products/relatedProduct?category=${category}`,
+      providesTags:['Products'],
+    }),
     // Fetch product details by ID
     getProductById: builder.query({
       query: (id) => `/products/getProduct/${id}`,
@@ -29,9 +32,12 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
 export const {
   useGetProductsQuery,
   useGetProductByIdQuery,
+  useGetShopProductsQuery,
   useGetPopularProductsQuery,
+  useGetRelatedProductsQuery,
   useAddEntityMutation: useAddProductMutation,
   useUpdateEntityMutation: useUpdateProductMutation,
   useDeleteEntityMutation: useDeleteProductMutation,
   useBanEntityMutation: useBanProductMutation,
+
 } = productApiSlice;

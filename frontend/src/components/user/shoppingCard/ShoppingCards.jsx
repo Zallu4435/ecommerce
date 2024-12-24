@@ -7,14 +7,14 @@ import { useAddToCartMutation, useGetCartQuery } from '../../../redux/apiSliceFe
 import { useAddToWishlistMutation, useGetWishlistQuery } from '../../../redux/apiSliceFeatures/WishlistApiSlice';
 import { useAddToComparisonMutation, useGetComparisonListQuery } from '../../../redux/apiSliceFeatures/ComparisonApiSlice';
 import { icons } from './icons';
-import { handleAddToCart, handleAddToWishlist, handleAddToComparison, handleViewProduct } from './actionHandlers';
+import { handleAddToCart } from './actionHandlers';
 import { DUMMY_RATING, DUMMY_REVIEWS } from './constants';
 
 const ShoppingCard = ({
   _id,
   productName,
   originalPrice,
-  offerPrice,
+  offerPrice, 
   image,
 }) => {
   const formattedPrice = parseFloat(offerPrice);
@@ -39,7 +39,7 @@ const ShoppingCard = ({
       <div className="relative flex justify-center py-6 px-12 sm:py-8 items-center bg-gray-100 dark:bg-gray-700">
         <div className="relative w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] overflow:hidden">
           <img
-            src={image || roundedImg_1}
+            src={image}
             alt="Hover Test"
             className="w-full absolute z-10 h-full object-cover transform hover:scale-105 transition-transform duration-300 cursor-pointer"
             onClick={handleImageClick}
@@ -125,7 +125,7 @@ const ShoppingCard = ({
         >
           {isAdding ? "Adding to Cart..." : "Add to Cart"}
           {!isAdding && <FaShoppingCart />}
-        </button>
+        </button> 
       </div>
     </div>
   );

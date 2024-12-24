@@ -7,13 +7,17 @@ const {
   createProduct, 
   updateProduct, 
   deleteProduct ,
-  getPopularProducts
+  getPopularProducts,
+  getAllShopProducts,
+  getRelatedProducts
 } = require('../controller/productController');
 
 
 // User and Admin
 router.get('/getProducts', catchAsyncErrors(getAllProducts)); // Get all products
+router.get('/getShopProducts', catchAsyncErrors(getAllShopProducts)); // Get all products
 router.get('/getProduct/:id', catchAsyncErrors(getProductDetails)); // Get product details
+router.get('/relatedProduct', catchAsyncErrors(getRelatedProducts)); // Get all products
 
 router.get('/get-popular-prducts', catchAsyncErrors(getPopularProducts));
 // Admin only (with authentication check)

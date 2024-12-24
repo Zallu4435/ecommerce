@@ -19,7 +19,12 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
     }),
     
     
-
+    cancelOrder: builder.mutation({
+      query: (orderId) => ({
+        url: `/orders/cancel/${orderId}`,
+        method: 'PATCH',  // Or DELETE based on your API design
+      }),
+    }),
     
     updateOrders: builder.mutation({
       query: (orders) => ({
@@ -39,4 +44,5 @@ export const {
   useGetOrderByIdQuery,
   useFetchUserOrdersQuery,
   useUpdateOrdersMutation,
+  useCancelOrderMutation
 } = orderApiSlice;

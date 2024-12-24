@@ -1,32 +1,34 @@
-import { useEffect, useState } from "react";
-import ShoppingCard from "../../components/user/shoppingCard/ShoppingCards"; // Import the ShoppingCard component
-import { products } from "../../products/products";
+import { useEffect, useState } from 'react';
+import ShoppingCard from '../../components/user/shoppingCard/ShoppingCards'; // Import the ShoppingCard component
+import { useGetShopProductsQuery } from '../../redux/apiSliceFeatures/productApiSlice';
 
 const ShopPage = () => {
-  const [selectedSize, setSelectedSize] = useState("all");
-  const [selectedColor, setSelectedColor] = useState("all");
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const { data, error, isLoading } = useGetShopProductsQuery();
+  const products = Array.isArray(data?.products) ? data.products : []; // Access products from the 'data.products' object
+
+  const [selectedSize, setSelectedSize] = useState('all');
+  const [selectedColor, setSelectedColor] = useState('all');
+  const [priceRange, setPriceRange] = useState([0, 10000]);
   const [currentPage, setCurrentPage] = useState(1);
   const [cardsPerPage, setCardsPerPage] = useState(16);
 
   useEffect(() => {
     const handleResize = () => {
-        if (window.innerWidth >= 1200) { 
-            setCardsPerPage(16);
-        } else if (window.innerWidth >= 1024) {
-            setCardsPerPage(12);
-        } else if (window.innerWidth >= 768) {
-            setCardsPerPage(8);
-        } else {
-            setCardsPerPage(6);
-        }
+      if (window.innerWidth >= 1200) {
+        setCardsPerPage(16);
+      } else if (window.innerWidth >= 1024) {
+        setCardsPerPage(12);
+      } else if (window.innerWidth >= 768) {
+        setCardsPerPage(8);
+      } else {
+        setCardsPerPage(6);
+      }
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
-
   }, []);
 
   const totalPages = Math.ceil(products.length / cardsPerPage);
@@ -35,21 +37,21 @@ const ShopPage = () => {
   const endIndex = startIndex + cardsPerPage;
 
   const handlePageChange = (newPage) => {
-    if(newPage > 0 && newPage <= totalPages) {
-        setCurrentPage(newPage)
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
     }
-  }
+  };
 
   // Filter products based on selected size, color, and price range
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = products.filter((product) => {
     // Filter by Size
-    const isSizeMatch = selectedSize === "all" || product.sizes.includes(selectedSize);
+    const isSizeMatch = selectedSize === 'all' || product.sizeOption?.includes(selectedSize);
 
     // Filter by Color
-    const isColorMatch = selectedColor === "all" || product.colors.includes(selectedColor)
+    const isColorMatch = selectedColor === 'all' || product.colorOption?.includes(selectedColor);
 
     // Filter by Price Range
-    const isPriceInRange = product.price >= priceRange[0] && product.price <= priceRange[1];
+    const isPriceInRange = product.originalPrice >= priceRange[0] && product.originalPrice <= priceRange[1];
 
     return isSizeMatch && isColorMatch && isPriceInRange;
   });
@@ -71,9 +73,9 @@ const ShopPage = () => {
               className="px-6 py-2 border rounded-lg text-gray-700 dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Sizes</option>
-              <option value="S">Small</option>
-              <option value="M">Medium</option>
-              <option value="L">Large</option>
+              {['XS', 'S', 'M', 'L', 'XL'].map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
             </select>
           </div>
 
@@ -86,10 +88,9 @@ const ShopPage = () => {
               className="px-6 py-2 border rounded-lg text-gray-700 dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Colors</option>
-              <option value="Red">Red</option>
-              <option value="Blue">Blue</option>
-              <option value="Black">Black</option>
-              <option value="White">White</option>
+              {['white', 'red', 'blue', 'black'].map((color) => (
+                <option key={color} value={color}>{color}</option>
+              ))}
             </select>
           </div>
 
@@ -99,7 +100,7 @@ const ShopPage = () => {
             <input
               type="range"
               min="0"
-              max="1000"
+              max="10000"
               value={priceRange[1]}
               onChange={(e) => setPriceRange([0, e.target.value])}
               className="w-full px-2 py-2 bg-gray-200 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
@@ -113,37 +114,47 @@ const ShopPage = () => {
 
       {/* Product Grid */}
       <div className="container lg:px-10 md:px-4 px-4 pr-10 md:gap-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-x-36">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.slice(startIndex, endIndex).map((product) => (
-            <ShoppingCard
-              key={product.id}
-              name={product.name}
-              price={product.price}
-              originalPrice={product.originalPrice}
-              image={product.image}
-            />
-          ))
+        {isLoading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p>Error loading products.</p>
+        ) : filteredProducts.length > 0 ? (
+          filteredProducts.slice(startIndex, endIndex).map((product) => {
+            return (
+              <ShoppingCard
+                key={product.id}
+                _id={product.id}
+                productName={product.productName}
+                price={product.originalPrice}
+                originalPrice={product.originalPrice}
+                image={product.image}
+              />
+            );
+          })
+          
         ) : (
           <p className="text-center text-xl text-gray-700 dark:text-white">
             No products available with the selected filters.
           </p>
         )}
       </div>
+
+      {/* Pagination */}
       <div className="flex justify-center space-x-4 mt-6">
         <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
         >
-            previous
+          Previous
         </button>
         <span className="font-semibold text-gray-800 dark:text-gray-200">{currentPage} / {totalPages}</span>
         <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
         >
-            Next
+          Next
         </button>
       </div>
     </div>

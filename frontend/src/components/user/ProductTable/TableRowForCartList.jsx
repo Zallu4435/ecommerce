@@ -1,30 +1,43 @@
-import React, { useState } from 'react';
-import { FaShoppingCart } from 'react-icons/fa';
-import { roundedImg_1 } from '../../../assets/images';
-import { useUpdateQuantityMutation } from '../../../redux/apiSliceFeatures/CartApiSlice';
+import React, { useState, useEffect } from "react";
+import { FaShoppingCart } from "react-icons/fa";
+import { roundedImg_1 } from "../../../assets/images";
+import { useUpdateQuantityMutation } from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { toast } from "react-toastify";
 
 const TableRowForCartlist = ({ item, onRemove }) => {
-  const [quantity, setQuantity] = useState(item?.quantity || 1); 
+  const [quantity, setQuantity] = useState(item?.quantity || 1);
+  const [isOutOfStock, setIsOutOfStock] = useState(false); 
 
   const { originalPrice, productName, cartItemId, productImage } = item;
 
-  const [updateQuantity] = useUpdateQuantityMutation()
+  const [updateQuantity] = useUpdateQuantityMutation();
 
   const handleQuantityUpdate = async (newQuantity) => {
     try {
-      // API call to update the quantity in the database
-      await updateQuantity({
+      const response = await updateQuantity({
         cartItemId,
         quantity: newQuantity,
       });
-      setQuantity(newQuantity); // Update local state only if API call is successful
+
+      if (response?.error) {
+        toast.error("Out of Stock!");
+        setIsOutOfStock(true); 
+      } else {
+        setQuantity(newQuantity); 
+        setIsOutOfStock(false); 
+      }
     } catch (error) {
       console.error("Error updating quantity:", error);
       alert("Failed to update quantity. Please try again.");
+      setIsOutOfStock(true); 
     }
   };
 
-  const handleIncrease = () => handleQuantityUpdate(quantity + 1);
+  const handleIncrease = () => {
+    if (!isOutOfStock) { 
+      handleQuantityUpdate(quantity + 1);
+    }
+  };
 
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -39,7 +52,10 @@ const TableRowForCartlist = ({ item, onRemove }) => {
       {/* Full Row for Larger Screens */}
       <tr className="hidden md:table-row hover:bg-gray-100 dark:hover:bg-gray-700 transition">
         <td className="px-6 py-4 border-b text-center">
-          <button className="text-red-500 hover:underline" onClick={() => onRemove(cartItemId)}>
+          <button
+            className="text-red-500 hover:underline"
+            onClick={() => onRemove(cartItemId)}
+          >
             ❌ Remove
           </button>
         </td>
@@ -47,11 +63,15 @@ const TableRowForCartlist = ({ item, onRemove }) => {
           <img
             src={productImage}
             className="h-[60px] rounded-lg object-cover"
-            alt={productName} 
+            alt={productName}
           />
           <div>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{productName}</p>
-            <p className="text-xs sm:text-sm text-gray-600 text-nowrap dark:text-gray-400">⭐ 4.5 (200)</p>
+            <p className="font-semibold text-gray-900 dark:text-gray-100">
+              {productName}
+            </p>
+            <p className="text-xs sm:text-sm text-gray-600 text-nowrap dark:text-gray-400">
+              ⭐ 4.5 (200)
+            </p>
           </div>
         </td>
         <td className="px-6 py-4 border-b text-center">
@@ -62,7 +82,9 @@ const TableRowForCartlist = ({ item, onRemove }) => {
             >
               -
             </button>
-            <span className="px-4 py-1 text-gray-800 dark:text-gray-100">{quantity}</span>
+            <span className="px-4 py-1 text-gray-800 dark:text-gray-100">
+              {quantity}
+            </span>
             <button
               className="px-3 py-1 bg-gray-200 dark:bg-gray-600 border rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
               onClick={handleIncrease}
@@ -71,8 +93,12 @@ const TableRowForCartlist = ({ item, onRemove }) => {
             </button>
           </div>
         </td>
-        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">₹ {originalPrice}</td>
-        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">₹ {calculateSubtotal()}</td>
+        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
+          ₹ {originalPrice}
+        </td>
+        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
+          ₹ {calculateSubtotal()}
+        </td>
       </tr>
 
       {/* Collapsed Card for Smaller Screens */}
@@ -93,11 +119,15 @@ const TableRowForCartlist = ({ item, onRemove }) => {
           />
           <div>
             {/* <p className="font-semibold text-gray-900 dark:text-gray-100">{item.items[0].name}</p> */}
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">⭐ 4.5 (200 reviews)</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              ⭐ 4.5 (200 reviews)
+            </p>
           </div>
         </div>
         <div className="flex justify-between items-center mb-4">
-          <span className="font-semibold text-gray-700 dark:text-gray-300">{quantity}</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-300">
+            {quantity}
+          </span>
           <div className="flex items-center">
             <button
               className="px-2 py-0 bg-gray-200 dark:bg-gray-600 border rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
@@ -105,7 +135,9 @@ const TableRowForCartlist = ({ item, onRemove }) => {
             >
               -
             </button>
-            <span className="px-2 py-0 text-gray-800 dark:text-gray-100">{quantity}</span>
+            <span className="px-2 py-0 text-gray-800 dark:text-gray-100">
+              {quantity}
+            </span>
             <button
               className="px-2 py-0 bg-gray-200 dark:bg-gray-600 border rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100"
               onClick={handleIncrease}
@@ -115,8 +147,12 @@ const TableRowForCartlist = ({ item, onRemove }) => {
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-700 dark:text-gray-300">Subtotal:</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">₹ {calculateSubtotal()}</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-300">
+            Subtotal:
+          </span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">
+            ₹ {calculateSubtotal()}
+          </span>
         </div>
       </div>
     </>

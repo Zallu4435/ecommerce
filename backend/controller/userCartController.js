@@ -170,7 +170,49 @@ exports.calculateCartTotal = async (req, res) => {
 
 
 
-// Update cart item quantity
+// // Update cart item quantity
+// exports.updateCartQuantity = async (req, res) => {
+//   try {
+//     const { cartItemId, quantity } = req.body;
+
+//     if (!cartItemId || quantity === undefined) {
+//       return res.status(400).json({ message: 'cartItemId and quantity are required' });
+//     }
+
+//     // Find the cart by user ID
+//     const cart = await Cart.findOne({ userId: req.user });
+
+//     if (!cart) {
+//       return res.status(404).json({ message: 'Cart not found' });
+//     }
+
+//     // Find the index of the item in the cart items array
+//     const itemIndex = cart.items.findIndex(item => item._id.toString() === cartItemId);
+
+//     if (itemIndex === -1) {
+//       return res.status(404).json({ message: 'Cart item not found' });
+//     }
+
+//     // Update the quantity of the found item
+//     cart.items[itemIndex].quantity = quantity;
+
+//     // Save the updated cart
+//     await cart.save();
+
+//     return res.status(200).json({
+//       message: 'Cart item updated successfully',
+//       cart,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       message: 'Error updating cart item',
+//       error: error.message,
+//     });
+//   }
+// };
+
+
 exports.updateCartQuantity = async (req, res) => {
   try {
     const { cartItemId, quantity } = req.body;
@@ -191,6 +233,18 @@ exports.updateCartQuantity = async (req, res) => {
 
     if (itemIndex === -1) {
       return res.status(404).json({ message: 'Cart item not found' });
+    }
+
+    // Retrieve the product from your database (assuming you have a Product model)
+    const product = await Product.findById(cart.items[itemIndex].productId);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Check if the desired quantity exceeds the available stock
+    if (quantity > product.stockQuantity) {
+      return res.status(400).json({ message: 'Out of stock' });
     }
 
     // Update the quantity of the found item

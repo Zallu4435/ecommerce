@@ -1,95 +1,83 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { useGetRelatedProductsQuery } from "../../../redux/apiSliceFeatures/productApiSlice";
+import {
+  useAddToCartMutation,
+  useGetCartQuery,
+} from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { toast } from "react-toastify";
 
-// Define the related products array with additional products
-const relatedProducts = [
-  {
-    name: 'Product 1',
-    price: 99.99,
-    image: 'https://via.placeholder.com/400',
-    rating: 4.5,
-  },
-  {
-    name: 'Product 2',
-    price: 129.99,
-    image: 'https://via.placeholder.com/400',
-    rating: 4.2,
-  },
-  {
-    name: 'Product 3',
-    price: 89.99,
-    image: 'https://via.placeholder.com/400',
-    rating: 4.7,
-  },
-  {
-    name: 'Product 4',
-    price: 149.99,
-    image: 'https://via.placeholder.com/400',
-    rating: 4.0,
-  },
-  {
-    name: 'Product 5',
-    price: 109.99,
-    image: 'https://via.placeholder.com/400',
-    rating: 4.3,
-  },
-  {
-    name: 'Product 6',
-    price: 179.99,
-    image: 'https://via.placeholder.com/400',
-    rating: 4.8,
-  },
-  {
-    name: 'Product 7',
-    price: 79.99,
-    image: 'https://via.placeholder.com/400',
-    rating: 4.4,
-  },
-  {
-    name: 'Product 8',
-    price: 139.99,
-    image: 'https://via.placeholder.com/400',
-    rating: 4.6,
-  },
-];
-
-const RelatedProduct = () => {
-  // State to manage the current index of products displayed
+const RelatedProduct = ({ category }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [productsPerPage, setProductsPerPage] = useState(4);
+  const [isAdding, setIsAdding] = useState(false);
 
-  // Function to update the products per page based on the window width
+  const {
+    data: relatedProduct = [],
+    isLoading,
+    isError,
+  } = useGetRelatedProductsQuery(category, {
+    skip: !category, // Skip the query if no category is passed
+  });
+  const { refetch: refetchCart } = useGetCartQuery();
+  const [addToCart] = useAddToCartMutation();
+
+  // Function to update the products per page based on window width
   const updateProductsPerPage = () => {
     if (window.innerWidth >= 1240) {
       setProductsPerPage(7);
     } else if (window.innerWidth >= 1024) {
-      setProductsPerPage(5); // 5 products per page for large screens
+      setProductsPerPage(5);
     } else if (window.innerWidth >= 768) {
-      setProductsPerPage(3); // 3 products per page for medium screens
+      setProductsPerPage(3);
     } else {
-      setProductsPerPage(2); // 2 products per page for small screens
+      setProductsPerPage(2);
     }
   };
 
-  // Call updateProductsPerPage on initial render and when the window is resized
   useEffect(() => {
     updateProductsPerPage();
-    window.addEventListener('resize', updateProductsPerPage);
+    window.addEventListener("resize", updateProductsPerPage);
     return () => {
-      window.removeEventListener('resize', updateProductsPerPage);
+      window.removeEventListener("resize", updateProductsPerPage);
     };
   }, []);
 
-  // Function to handle the next slide
+  // Handle loading and error states
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error fetching products.</div>;
+  }
+
   const nextSlide = () => {
-    if (currentIndex + productsPerPage < relatedProducts.length) {
+    if (currentIndex + productsPerPage < relatedProduct.length) {
       setCurrentIndex(currentIndex + productsPerPage);
     }
   };
 
-  // Function to handle the previous slide
   const prevSlide = () => {
     if (currentIndex - productsPerPage >= 0) {
       setCurrentIndex(currentIndex - productsPerPage);
+    }
+  };
+
+  const handleAddToCart = async (id) => {
+    const productDetails = {
+      productId: id,
+      quantity: 1,
+    };
+
+    try {
+      setIsAdding(true);
+      await addToCart(productDetails);
+      await refetchCart();
+      toast.success("Item added to cart!");
+    } catch (error) {
+      toast.error(error.message || "Failed to add item to cart.");
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -107,46 +95,50 @@ const RelatedProduct = () => {
         <button
           onClick={nextSlide}
           className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
-          disabled={currentIndex + productsPerPage >= relatedProducts.length}
+          disabled={currentIndex + productsPerPage >= relatedProduct.length}
         >
           Next
         </button>
       </div>
 
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Related Products</h2>
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
+        Related Products
+      </h2>
       <div className="relative">
-        {/* Product container */}
         <div className="flex overflow-x-auto gap-4 pb-4">
-          {relatedProducts
+          {relatedProduct
             .slice(currentIndex, currentIndex + productsPerPage)
             .map((product, index) => (
               <div
                 key={index}
-                className="bg-white dark:bg-gray-800 shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.5)] rounded-lg overflow-hidden hover:shadow-lg transition duration-300 ease-in-out"
+                className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-300 ease-in-out"
               >
                 {/* Product Image */}
                 <img
                   src={product.image}
-                  alt={product.name}
+                  alt={product.productName}
                   className="w-full h-64 object-cover"
                 />
-
                 {/* Product Info */}
                 <div className="p-4 flex flex-col justify-between">
-                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 truncate">{product.name}</h3>
-
+                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 truncate">
+                    {product.productName}
+                  </h3>
                   {/* Rating */}
                   <div className="flex items-center mt-2">
                     <span className="text-yellow-500 mr-1">⭐</span>
-                    <span>{product.rating}</span>
+                    <span>{product.rating || "N/A"}</span>
                   </div>
-
                   {/* Price */}
-                  <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-2">${product.price}</p>
-
+                  <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-2">
+                    ₹ {product.offerPrice}
+                  </p>
                   {/* Add to Cart Button */}
-                  <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300">
-                    Add to Cart
+                  <button
+                    onClick={() => handleAddToCart(product._id)}
+                    className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
+                  >
+                    {isAdding ? "Adding to Cart..." : "Add to Cart"}
                   </button>
                 </div>
               </div>

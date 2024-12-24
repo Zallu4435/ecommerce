@@ -60,6 +60,13 @@ export const addressPasswordApi = createApi({
     getOrders: builder.query({
       query: () => 'orders/getOrders', // Endpoint to fetch orders
     }),
+
+    checkProductStock: builder.query({
+      query: ({ productId, quantity }) => ({
+        url: `/products/${productId}/stock`, // Adjust the endpoint path as necessary
+        params: { quantity }, // Pass the productId and quantity as params
+      }),
+    }),
   }),
 });
 
@@ -72,5 +79,6 @@ export const {
   useChangePasswordMutation,
   useCheckoutAddressQuery,
   useProcessPaymentMutation,
-  useGetOrdersQuery
+  useGetOrdersQuery,
+  useCheckProductStockQuery
 } = addressPasswordApi;

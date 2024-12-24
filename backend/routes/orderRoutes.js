@@ -3,10 +3,10 @@ const router = express.Router();
 const catchAsyncErrors = require('../middleware/catchAsyncError');
 const {
   getAllOrders,
-  getOrderDetails,
+  getOrderById,
   createOrder,
   updateOrderStatus,
-  deleteOrder,
+  cancelOrder,
   getAllUsersOrders,
   getUserOrdersMoadl,
 
@@ -17,7 +17,7 @@ const { isAuthenticated } = require('../middleware/auth');
 router.get('/getOrders',isAuthenticated, catchAsyncErrors(getAllOrders)); // Get all orders
 router.get('/getUsersOrders', catchAsyncErrors(getAllUsersOrders)); // Get all orders
 
-router.get('/getOrder/:id', catchAsyncErrors(getOrderDetails)); // Get order details
+router.get('/getOrder/:id', catchAsyncErrors(getOrderById)); // Get order details
 
 router.get('/user-order-modal', catchAsyncErrors(getUserOrdersMoadl))
 // Admin only (with authentication check)
@@ -31,9 +31,9 @@ router.patch(
   catchAsyncErrors(updateOrderStatus)
 ); // Update order
 
-router.delete(
-  '/delete/:id', 
-  catchAsyncErrors(deleteOrder)
+router.patch(
+  '/cancel/:orderId', 
+  catchAsyncErrors(cancelOrder)
 ); // Delete order
 
 module.exports = router;

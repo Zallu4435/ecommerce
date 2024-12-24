@@ -15,7 +15,8 @@ const AddToCart = ({
   sizeOption,
   originalPrice,
   productImage,
-  productName
+  productName,
+  stockQuantity, // This is the passed prop
 }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(sizeOption[0] || "M");
@@ -31,7 +32,7 @@ const AddToCart = ({
   const totalPrice = subTotal + taxAmount + SHIPPING_COST;
 
   const handleIncrease = () => {
-    if (quantity < MAX_QUANTITY) {
+    if (quantity < MAX_QUANTITY && quantity < stockQuantity) {
       setQuantity((prev) => prev + 1);
     }
   };
@@ -44,6 +45,14 @@ const AddToCart = ({
 
   const handleAddToCart = async () => {
     setIsLoading(true);
+
+    // Check if the stock is available for the selected quantity
+    if (quantity > stockQuantity) {
+      toast.error("Sorry, not enough stock available.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await addToCart({
         productId,
@@ -52,6 +61,7 @@ const AddToCart = ({
         color: selectedColor,
       });
       await refetchCart();
+
       if (response?.data?.message) {
         toast.success(response.data.message);
       }
@@ -63,24 +73,23 @@ const AddToCart = ({
   };
 
   const handleCheckout = () => {
-    // Prepare the product details and total for checkout
     const productDetails = {
       productImage,
       quantity,
       originalPrice,
       productName,
     };
-  
+
     const total = totalPrice; // This is the final price with tax and shipping
-  
+
     // Navigate to the checkout page with the product details and total
-    navigate("/checkout", { state: { cartItems: [productDetails], total, productId } });
+    navigate("/checkout", {
+      state: { cartItems: [productDetails], total, productId },
+    });
   };
-  
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full md:w-96 mx-auto flex flex-col space-y-4 transition-all duration-300 transform hover:scale-105">
- 
       <div className="flex-grow space-y-4">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
           Order Summary
@@ -89,8 +98,16 @@ const AddToCart = ({
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
             Price: ₹{originalPrice}
           </p>
-          <p className="text-sm text-green-600 dark:text-green-400 mb-4">
-            In Stock
+          <p
+            className={`text-sm font-bold mb-4 ${
+              stockQuantity > 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            {stockQuantity > 0
+              ? `Stock Left ${stockQuantity}`
+              : "Out of Stock"}
           </p>
         </div>
 
@@ -112,7 +129,7 @@ const AddToCart = ({
               <button
                 className="px-3 py-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100 transition-colors duration-200"
                 onClick={handleIncrease}
-                disabled={quantity >= MAX_QUANTITY}
+                disabled={quantity >= MAX_QUANTITY || quantity >= stockQuantity}
               >
                 +
               </button>
@@ -191,7 +208,7 @@ const AddToCart = ({
         <button
           className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-all duration-300 transform hover:scale-105"
           onClick={handleAddToCart}
-          disabled={isLoading}
+          disabled={isLoading || stockQuantity === 0}
         >
           Add to Cart
         </button>
