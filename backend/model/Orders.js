@@ -21,7 +21,10 @@ const OrdersSchema = new mongoose.Schema({
             updatedAt: {
                 type: Date,  // Corrected the type
                 default: Date.now  // Sets the default to the current date
-            }
+            },
+            Status: {
+                type: String, default: 'Pending'
+           }, 
         },
     ],
     // PaymentId: {
@@ -37,7 +40,7 @@ const OrdersSchema = new mongoose.Schema({
         default: 0 
     }, 
     Status: {
-         type: String, default: 'Pending'
+         type: String, default: 'Order Placed'
     }, 
     Address: {
         username: { type: String, },

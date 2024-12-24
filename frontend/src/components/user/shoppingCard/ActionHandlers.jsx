@@ -30,8 +30,13 @@ export const handleAddToWishlist = async (_id, { addToWishlist, refetchWishlist 
 
 export const handleAddToComparison = async (_id, { addToComparison, refetchComparison }) => {
   try {
-    await addToComparison(_id);
+    const response = await addToComparison(_id);
     await refetchComparison();
+    console.log(response, "compRISON")
+    if(response?.error) {
+      toast.error(response?.error?.data?.message || "failed to add")
+      return;
+    }
     toast.success("Product added to Comparison");
   } catch (error) {
     toast.error(`Error: ${error.message}`);

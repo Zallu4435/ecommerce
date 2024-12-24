@@ -376,16 +376,17 @@ exports.checkProductStock = async (req, res) => {
 
 exports.processPayment = async (req, res) => {
   try {
-    const { address, order, couponCode, newAddress, payment, quantity } = req.body;
+    const { address, order, couponCode, newAddress, payment, quantity, productId } = req.body;
     const userId = req.user;
 
-    console.log(order?.productId, "address from form");
-
+    console.log(order)
+    // console.log(productId, order, couponCode, newAddress, payment, quantity, "address from form");
     let items = [];
 
-    if (order?.productId) {
+    if (productId) {
       // Direct single product order
-      const product = await Product.findById(order?.productId);
+      const product = await Product.findById(productId);
+
       if (!product) {
         return res.status(400).json({ message: "Product not found." });
       }
@@ -393,14 +394,18 @@ exports.processPayment = async (req, res) => {
       if (product.stockQuantity < quantity) {
         return res.status(400).json({ message: "Not enough stock available." });
       }
-      product.stockQuantity -= quantity;
+      // console.log(product.stockQuantity, , "reached reched ")
+
+      product.stockQuantity -= order.cartItems[0]?.quantity;
       await product.save(); // Update the product's stock quantity
 
       items.push({
-        ProductId: order?.productId,
+        ProductId: productId,
         Price: product.price,
-        Quantity: quantity, 
+        Quantity: order.cartItems[0]?.quantity,
+        // Status: "Order Placed", // Status for this item
       });
+
     } else if (order && order.cartItems && order.cartItems.length > 0) {
       // Cart-based order
       const cart = await Cart.findOne({ userId });
@@ -429,10 +434,11 @@ exports.processPayment = async (req, res) => {
 
         items.push({
           ProductId: cartItem.productId,
-          Price: originalPrice,  
+          Price: originalPrice,
           Quantity: quantity,
           Color: cartItem.color,
-          Size: cartItem.size
+          Size: cartItem.size,
+          Status: "Order Placed", // Status for this item
         });
       }
     } else {
@@ -449,41 +455,34 @@ exports.processPayment = async (req, res) => {
     }
 
     // Step 4: Create the Order
-    const orderStatus = payment?.paymentMethod === "cod" ? "Order Placed" : "Confirmed";
     const orderRecord = new Order({
       UserId: userId,
       items: items,
       TotalAmount: order?.total,
       Address: address,
-      Status: orderStatus,
       CouponId: coupon?._id || null,
     });
 
     await orderRecord.save();
 
     // Step 5: Handle Payment
-    let paymentRecord = null;
+    const paymentRecord = new Payment({
+      userId: userId,
+      OrderId: orderRecord._id,
+      status: "Order Placed",
+      method: payment?.paymentMethod,
+      amount: order?.total,
+      transactionId: null,
+    });
 
-    if (payment?.paymentMethod === "cod") {
-      paymentRecord = new Payment({
-        userId: userId,
-        OrderId: orderRecord._id,
-        status: "Pending",
-        method: payment?.paymentMethod,
-        amount: order?.total,
-        transactionId: null,
-      });
-
-      await paymentRecord.save();
-      console.log("COD Payment recorded:", paymentRecord);
-    }
+    await paymentRecord.save();
+    console.log("Payment recorded:", paymentRecord);
 
     // Step 6: Respond to Client
     res.status(200).json({
       message: "Order placed successfully",
       orderId: orderRecord._id,
-      paymentId: paymentRecord?._id || null,
-      status: orderStatus,
+      paymentId: paymentRecord._id,
     });
   } catch (error) {
     console.error("Error processing order:", error);

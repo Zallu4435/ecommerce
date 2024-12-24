@@ -18,7 +18,7 @@ const AdminTable = ({
 
   const types = {
     users: "Users",
-    category: "Category",
+    categories: "Category",
     coupons: "Coupons",
     orders: "Orders",
     products: "Products",

@@ -112,7 +112,8 @@ exports.getAllOrders = async (req, res) => {
             Price: '$items.Price',
             Quantity: '$items.Quantity',
             ProductName: '$productDetails.productName',
-            ProductImage: '$productDetails.image'
+            ProductImage: '$productDetails.image',
+            Status: '$items.Status'
           }
         }
       },
@@ -379,6 +380,49 @@ exports.cancelOrder = async (req, res) => {
   } catch (error) {
     console.error('Error canceling order:', error);
     res.status(500).json({ message: 'Failed to cancel order' });
+  }
+};
+
+exports.cancelIndividualOrder = async (req, res) => {
+  const { orderId, productId } = req.params;
+  try {
+    // Find the order by its ID
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    // Check if the Items array exists and is an array
+    if (!Array.isArray(order.items)) {
+      return res.status(400).json({ message: 'Order items not found or invalid' });
+    }
+
+    // Find the index of the item with the specified productId
+    const itemIndex = order.items.findIndex(item => item.ProductId.toString() === productId);
+
+    console.log(itemIndex, "itemIndex")
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: 'Item not found in the order' });
+    }
+
+    // Cancel the specific item by updating its status
+    order.items[itemIndex].Status = 'Cancelled';
+
+    // Save the updated order
+    const updatedOrder = await order.save();
+
+    // Log the updated order
+    console.log(updatedOrder, "updated order");
+
+    // Respond to the client
+    res.status(200).json({
+      message: 'Item cancelled successfully',
+      updatedOrder,
+    });
+
+  } catch (error) {
+    console.error('Error canceling order item:', error);
+    res.status(500).json({ message: 'Failed to cancel item' });
   }
 };
 

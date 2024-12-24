@@ -111,7 +111,7 @@ const RelatedProduct = ({ category }) => {
             .map((product, index) => (
               <div
                 key={index}
-                className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-300 ease-in-out"
+                className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition duration-300 ease-in-out"
               >
                 {/* Product Image */}
                 <img

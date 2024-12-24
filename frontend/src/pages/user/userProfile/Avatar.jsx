@@ -7,6 +7,7 @@ const Avatar = ({ avatar, username, id, onAvatarUpdate }) => {
   const [user, setUser] = useState({ avatar, username });
   const [isLoading, setIsLoading] = useState(false); // State for loading spinner
   const [updateAvatar] = useUpdateAvatarMutation(); // Hook for the RTK Query mutation
+  
 
   useEffect(() => {
     // Update the avatar state whenever the props change
@@ -27,7 +28,6 @@ const Avatar = ({ avatar, username, id, onAvatarUpdate }) => {
         // Save the avatar URL to the backend
         const { data } = await updateAvatar(formData).unwrap();
 
-        console.log(user, "user user")
 
         // Update the user's avatar with the URL from the backend response
         setUser({ ...user, avatar: data.avatarUrl });

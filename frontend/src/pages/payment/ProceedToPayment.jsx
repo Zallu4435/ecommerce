@@ -20,6 +20,8 @@ const ProceedToPaymentPage = () => {
     );
   }
 
+  console.log(order.productId, "productId")
+
   const handleConfirmPayment = async () => {
     try {
       // Prepare the data to send to the backend
@@ -27,7 +29,7 @@ const ProceedToPaymentPage = () => {
         address,
         order,
         payment,
-        // productId: productId || null,
+        productId: order.productId || null,
         couponCode: coupon?.code || null, // Include coupon code if present
       };
   

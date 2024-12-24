@@ -8,8 +8,6 @@ export const CardContainer = () => {
   
   const { data: popular_Products = [], error, isLoading } = useGetPopularProductsQuery();
 
-  // console.log(popular_Products._id, "popular_Products")
-
 
   useEffect(() => {
     const handleResize = () => {

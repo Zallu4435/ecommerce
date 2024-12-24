@@ -24,6 +24,15 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
         url: `/orders/cancel/${orderId}`,
         method: 'PATCH',  // Or DELETE based on your API design
       }),
+      invalidatesTags:['Order']
+    }),
+
+    cancelIndividualOrder: builder.mutation({
+      query: ({ orderId, productId }) => ({
+        url: `orders/orders/${orderId}/cancel/${productId}`,
+        method: 'PATCH',
+      }),
+      invalidatesTags:['Order']
     }),
     
     updateOrders: builder.mutation({
@@ -44,5 +53,6 @@ export const {
   useGetOrderByIdQuery,
   useFetchUserOrdersQuery,
   useUpdateOrdersMutation,
-  useCancelOrderMutation
+  useCancelOrderMutation,
+  useCancelIndividualOrderMutation
 } = orderApiSlice;

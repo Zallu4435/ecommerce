@@ -132,8 +132,12 @@ const navigate = useNavigate();
             <td className="px-6 py-4 border border-gray-600">
               {item.lastOrderDate}
             </td>
-            <td className="px-6 py-4 border border-gray-600">
-              {item.lastOrderStatus}
+            <td className="px-[55px] font-bold text-green-500 py-4 border border-gray-600">
+            <p
+                onClick={() => handleUpdateClick(item._id)}
+                >
+                Click to Update
+              </p>
             </td>
             <td className="px-6 flex py-4 gap-6">
               <Button
@@ -143,14 +147,6 @@ const navigate = useNavigate();
                 onClick={() => handleOrderView(item._id)}
               >
                 View
-              </Button>
-              <Button
-                borderColor="#16a34a"
-                textColor="#16a34a"
-                hoverColor="white"
-                onClick={() => handleUpdateClick(item._id)}
-                >
-                Update
               </Button>
             </td>
           </>
@@ -270,7 +266,7 @@ export const config = {
       "Total Orders",
       "Total Amount",
       "Last Order Date",
-      "Status",
+      "Update Remaining Status",
       "Actions",
     ],
     rowRenderer: (item) => <TableRow item={item} type="orders" />,

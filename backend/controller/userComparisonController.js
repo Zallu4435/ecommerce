@@ -20,7 +20,7 @@ exports.addToComparison = async (req, res) => {
       }
 
       // Add new product to the items array (limit to 3 items)
-      if (existingComparison.items.length >= 3) {
+      if (existingComparison.items.length > 3) {
         return res.status(400).json({ message: 'Comparison list can only contain 3 products' });
       }
 

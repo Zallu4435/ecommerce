@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useUpdateUserInfoMutation } from '../../redux/apiSliceFeatures/userApiSlice';
-
+import { toast } from 'react-toastify'
 
 function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
   const [updateUserInfo] = useUpdateUserInfoMutation();
@@ -41,6 +41,7 @@ function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
       await updateUserInfo({ updateData: formData, oldEmail }).unwrap();
       onClose();
     } catch (error) {
+      toast.error(error?.data?.message)
       console.error('Failed to update user info', error);
     }
   };

@@ -1,4 +1,3 @@
-import example from "./adminBg.jpg"
 import logoLight from './logo.png'
 import heroImg_1 from'./heroImg1.png'
 import heroImg_2 from './heroImg2.png'

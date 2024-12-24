@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import {
+  productValidationSchema,
+} from "../../validation/admin/ProductFormValidation";
 import ProductImageVarientAddModal from "../../modal/admin/ProductImageVarientAddModal";
 import {
   Input,
@@ -24,6 +26,7 @@ const AdminProductUpdateForm = () => {
   const [imageFiles, setImageFiles] = useState([null, null, null]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [addEntity] = useAddEntityMutation();
+  
 
   const {
     control,
@@ -32,16 +35,13 @@ const AdminProductUpdateForm = () => {
     formState: { errors },
     watch,
   } = useForm({
-    resolver: zodResolver(),
+    resolver: zodResolver(productValidationSchema),
     defaultValues: {
       sizeOption: [],
       variantImages: [],
       colorOption: [],
     },
   });
-
-  // Inside your React component (e.g., App.js or a higher-order component)
-
   const handleImageUpload = (uploadedFiles) => {
     try {
       setImageFiles(uploadedFiles);
@@ -49,25 +49,26 @@ const AdminProductUpdateForm = () => {
       setValue("variantImages", uploadedFiles);
       setIsModalOpen(false);
     } catch (error) {
-      console.log(error);
       alert(error.message);
-      
     }
   };
+  
+  
   const onSubmit = async (data, e) => {
     e.preventDefault();
-  
+
+    console.log("Form data submitted:", data);
+
     try {
+
       // Upload the main image to Cloudinary
       if (data.image) {
         console.log("Uploading main image...");
         const mainImageUrl = await uploadImageToCloudinary(data.image);
         data.image = mainImageUrl; // Replace the file with the Cloudinary URL
         console.log("Main image uploaded:", mainImageUrl);
-      } else {
-        console.warn("No main image provided.");
       }
-  
+
       // Upload variant images to Cloudinary
       if (imageFiles && imageFiles.length > 0) {
         const variantImageUrls = await Promise.all(
@@ -76,29 +77,24 @@ const AdminProductUpdateForm = () => {
               const uploadedUrl = await uploadImageToCloudinary(file);
               return uploadedUrl;
             }
-            return null;
+            return null; // If there's no file, return null
           })
         );
-        data.variantImages = variantImageUrls.filter((url) => url !== null); // Remove null values
-      } else {
-        console.warn("No variant images provided. Setting to empty array.");
-        data.variantImages = []; // Default to empty array if no images
+
+        // Update the variants field with the Cloudinary URLs
+        data.variantImages = variantImageUrls.filter((url) => url !== null);
       }
-  
-      // Log the final data before submission
-      console.log("Final data being submitted:", data);
-  
+
       // Send the final data to the backend
       await addEntity({ entity: "products", data }).unwrap();
-      console.log("Data successfully submitted:", data);
-  
+      console.log("Final data sent to backend:", data);
       navigate(-1); // Redirect to the previous page
     } catch (err) {
       console.error("Error during form submission:", err);
       toast.error(err?.data?.message || "An error occurred");
     }
   };
-  
+
   const toggleSizeSelection = (size) => {
     const currentSizes = watch("sizeOption") || [];
     const newSizes = currentSizes.includes(size)
@@ -116,6 +112,11 @@ const AdminProductUpdateForm = () => {
 
     setValue("colorOption", newColor);
   };
+
+  console.log(errors, "error");
+
+  console.log(watch("colorOption"));
+  console.log(watch("sizeOption"));
 
   return (
     <div className="dark:bg-black min-h-screen flex ml-12 items-center justify-center p-4">
@@ -413,6 +414,7 @@ const AdminProductUpdateForm = () => {
           <div>
             <button
               type="submit"
+              disabled={imageFiles.length === 0}
               className="w-full dark:bg-blue-600 bg-orange-500 text-white px-6 py-3 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 flex items-center justify-center"
             >
               <Upload className="mr-2" />

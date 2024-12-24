@@ -9,7 +9,6 @@ function UserProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data, isLoading, isError, error, refetch } = useGetUserQuery();
 
-  console.log(data, "data")
   const [userAvatar, setUserAvatar] = useState('');
   const [userUsername, setUserUsername] = useState('');
 

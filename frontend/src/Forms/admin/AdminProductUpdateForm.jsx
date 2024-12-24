@@ -40,7 +40,7 @@ const AdminProductUpdateForm = () => {
     resolver: zodResolver(productValidationSchema),
     defaultValues: {
       sizeOption: [],
-      variantImages: imageFiles.map(file => file?.url || ""), // Ensure variantImages field contains URLs
+      variantImages: [],
       colorOption: [],
     },
   });
@@ -62,8 +62,8 @@ const AdminProductUpdateForm = () => {
       }
     }
   }, [data, setValue]);
-  
-  console.log(imageFiles,'hasdfsadfasdf')
+
+
 
   const handleImageUpload = (uploadedFiles) => {
     try {      

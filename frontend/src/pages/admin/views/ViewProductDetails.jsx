@@ -52,20 +52,20 @@ const ViewProductDetails = () => {
     { label: 'Description', value: product.description },
     { label: 'Price', value: (
       <>
-        <span className="line-through text-red-500">${product.originalPrice}</span>{' '}
-        <span className="text-green-500">
-          ${ (product.originalPrice * (1 - product.offerPrice / 100)).toFixed(2) }
+        <span className="line-through text-red-500 mr-2">₹{product.originalPrice}</span>{' '}
+        <span className="text-green-500 font-semibold">
+        ₹{ product.offerPrice }
         </span>
       </>
-    )},
+    )},    
     { label: 'Stock', value: `${product.stock} items available` },
     { label: 'Available Sizes', value: product.sizeOption.join(', ') },
     { label: 'Available Colors', value: product.colorOption.join(', ') },
   ];
 
   return (
-    <div className="flex justify-center mx-12 items-center min-h-screen dark:bg-black p-4">
-      <div className="container mx-auto w-[1200px] bg-white shadow-md rounded-lg p-8 dark:bg-gray-900 dark:text-white">
+    <div className="flex justify-center mx-12 bg-orange-50 items-center min-h-screen dark:bg-black p-4">
+      <div className="container mx-auto w-[1200px] bg-orange-50 shadow-md rounded-lg p-8 dark:bg-gray-900 dark:text-white">
         <button
           onClick={() => navigate(-1)}
           className="mb-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition duration-300"
@@ -79,7 +79,7 @@ const ViewProductDetails = () => {
               <Magnifier
                 src={allImages[mainImageIndex] || 'https://via.placeholder.com/400'}
                 alt={product.productName}
-                className="w-full h-[350px] object-cover rounded-lg shadow-lg"
+                className="w-full object-cover rounded-lg shadow-lg"
                 mgShape="circle"
                 mgShowOverflow={false}
                 mgWidth={150}

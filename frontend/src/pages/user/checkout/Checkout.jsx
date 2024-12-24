@@ -8,6 +8,7 @@ import ApplyCoupen from "./ApplyCoupen";
 const CheckoutPage = () => {
   const navigate = useNavigate();
 
+
   // States for data collection
   const [address, setAddress] = useState(null);
   const [order, setOrder] = useState(null);
@@ -40,6 +41,7 @@ const CheckoutPage = () => {
   };
 
   const handleProceedToPayment = () => {
+    
     // Validation to ensure all required fields are filled
     if (!address) {
       alert("Please select a shipping address.");

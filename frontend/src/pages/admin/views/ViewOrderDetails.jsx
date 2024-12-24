@@ -31,9 +31,9 @@ const ViewOrdersList = () => {
     return <div className="text-center p-4">No orders found</div>;
 
   return (
-    <div className="max-w-7xl mx-auto p-6 ml-10 h-screen bg-white dark:bg-gray-800 shadow-lg rounded-lg">
+    <div className="max-w-7xl mt-10 mx-auto z-10 p-6 h-screen overflow-y-auto scrollbar-hidden bg-white dark:bg-gray-800 shadow-lg rounded-lg">
       {/* Back Button */}
-      <div className="flex justify-between">
+      <div className="flex justify-between bg-white sticky top-0 left-0 right-0 z-10">
         <h2 className="text-3xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
           Your Orders
         </h2>
@@ -46,7 +46,7 @@ const ViewOrdersList = () => {
       </div>
 
       {/* Search Input */}
-      <div className="mb-6 relative">
+      <div className="mb-6 relative sticky top-[60px] z-20 bg-white">
         <input
           type="text"
           placeholder="Search by Order ID or Status"
@@ -58,7 +58,9 @@ const ViewOrdersList = () => {
       </div>
 
       {/* Orders List */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 overflow-y-auto h-calc(calc(100vh - 190px))`} // Adjust height based on your layout
+      >
         {filteredOrders.map((order) => (
           <div
             key={order._id}
@@ -94,8 +96,8 @@ const ViewOrdersList = () => {
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {order.shippingAddress.street}, {order.shippingAddress.city},{" "}
-                  {order.shippingAddress.state}, {order.shippingAddress.zipCode}
-                  , {order.shippingAddress.country}
+                  {order.shippingAddress.state}, {order.shippingAddress.zipCode},{" "}
+                  {order.shippingAddress.country}
                 </p>
               </div>
               <div className="w-full lg:w-auto flex-grow">

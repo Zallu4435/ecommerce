@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Camera, X, Upload, PencilIcon } from 'lucide-react';
 import ImageCropper from "../ImageCropperModal";
 import ReactDOM from "react-dom";
-import { toast } from "react-toastify";
 
 const ProductImageVariantAddModal = ({
   isOpen,
   onClose,
   onImageUpload,
-  initialImages = [],
+  initialImages = [null, null, null],
 }) => {
   const [imageFiles, setImageFiles] = useState(initialImages.map(file => 
     file ? { url: file.url, isExisting: true } : null
@@ -17,15 +16,6 @@ const ProductImageVariantAddModal = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(null);
   const [imageToCrop, setImageToCrop] = useState(null);
-  const [isLoading , setIsLoading] = useState(true);
-  const [images , setImages] = useState([]);
-
-  useEffect(() => {
-    if(initialImages.length>0) {
-      setIsLoading(false)
-      setImages(initialImages);
-    }
-  },[initialImages])
 
   console.log(initialImages)
   useEffect(() => {
@@ -98,31 +88,17 @@ const ProductImageVariantAddModal = ({
     setImageFiles(updatedFiles);
   };
 
-
   const handleOpenCropper = (index) => {
-    const imageFile = imageFiles[index];
-  
-    if (imageFile && imageFile.isExisting && imageFile.url.startsWith("https://res.cloudinary.com/")) {
-      // Show a toast if the image is from Cloudinary
-      toast.error("This image is from Cloudinary and cannot be cropped.");
-      return;
-    }
-  
     setCurrentImageIndex(index);
     setImageToCrop(previews[index]);
     setModalOpen(true);
   };
-  
+
   const handleClose = () => {
     setImageFiles(initialImages.map(file => file ? { url: file.url, isExisting: true } : null));
     setPreviews(new Array(3).fill(null));
     onClose();
   };
-
-
-  if(isLoading) {
-    return (<>Loading......</>);
-  }
 
   return (
     <>
@@ -147,7 +123,7 @@ const ProductImageVariantAddModal = ({
                   {previews[index] ? (
                     <>
                       <img
-                        src={previews[index] || ''}
+                        src={previews[index]}
                         alt={`Preview ${index + 1}`}
                         className="w-full h-full object-cover rounded-lg"
                       />
@@ -196,9 +172,6 @@ const ProductImageVariantAddModal = ({
               </button>
             </div>
           </div>
-
-         
-
         </div>
       )}
 
