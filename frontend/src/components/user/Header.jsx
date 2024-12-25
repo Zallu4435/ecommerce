@@ -1,45 +1,49 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaUser, FaShoppingCart } from 'react-icons/fa';
-import { IoIosSearch } from 'react-icons/io';
-import { FaHeart } from 'react-icons/fa6';
-import { MdOutlineCompare } from 'react-icons/md';
-import { logoLight } from '../../assets/images/index';
-import { logoDark } from '../../assets/images/index'
-import { useSelector } from 'react-redux';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { FaUser, FaShoppingCart } from "react-icons/fa";
+import { IoIosSearch } from "react-icons/io";
+import { FaHeart } from "react-icons/fa6";
+import { MdOutlineCompare } from "react-icons/md";
+import { logoLight } from "../../assets/images/index";
+import { logoDark } from "../../assets/images/index";
+import { useSelector } from "react-redux";
 
 const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
-  const isAuthenticated = useSelector(state => state.user.isAuthenticated)
-
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
+  const avatar = useSelector((state) => state.user.avatar);
+  const username = useSelector((state) => state.user.username);
   const links = [
-    { to: isAuthenticated ? '/profile' : '/login',
-       Icon: FaUser, label: 'Profile' },
-    { to: '/wishlist', Icon: FaHeart, label: 'Wishlist' },
-    { to: '/compare', Icon: MdOutlineCompare, label: 'Compare' },
-    { to: '/cart', Icon: FaShoppingCart, label: 'Cart' },
+    {
+      to: isAuthenticated ? "/profile" : "/login",
+      Icon: isAuthenticated && avatar ? null : FaUser, // Use null if avatar exists
+      avatar: isAuthenticated && avatar ? avatar : null, // Avatar URL if available
+      label: isAuthenticated && username ? username : "Profile", // Use nickname if available
+    },
+    { to: "/wishlist", Icon: FaHeart, label: "Wishlist" },
+    { to: "/compare", Icon: MdOutlineCompare, label: "Compare" },
+    { to: "/cart", Icon: FaShoppingCart, label: "Cart" },
   ];
-
 
   return (
     <header className="dark:bg-gray-800 bg-gray-100 py-4 z-50 shadow-md">
       <div className="container mx-auto px-6 sm:px-8 md:px-12 flex items-center justify-between">
         {/* Logo */}
         <div className="flex-shrink-0">
-        <Link to="/" className="block">
-          {/* Light Mode Logo */}
-          <img
-            src={logoLight}
-            alt="Light Mode Logo"
-            className="h-[60px] my-[-20px] sm:h-12 md:h-14 lg:h-[100px] object-contain dark:hidden"
-          />
-          {/* Dark Mode Logo */}
-          <img
-            src={logoDark}
-            alt="Dark Mode Logo"
-            className="h-[60px] my-[-20px] sm:h-12 md:h-14 lg:h-[100px] object-contain hidden dark:block"
-          />
-        </Link>
+          <Link to="/" className="block">
+            {/* Light Mode Logo */}
+            <img
+              src={logoLight}
+              alt="Light Mode Logo"
+              className="h-[60px] my-[-20px] sm:h-12 md:h-14 lg:h-[100px] object-contain dark:hidden"
+            />
+            {/* Dark Mode Logo */}
+            <img
+              src={logoDark}
+              alt="Dark Mode Logo"
+              className="h-[60px] my-[-20px] sm:h-12 md:h-14 lg:h-[100px] object-contain hidden dark:block"
+            />
+          </Link>
         </div>
 
         {/* Search Bar */}
@@ -62,7 +66,15 @@ const Header = () => {
               to={link.to}
               className="flex flex-col items-center group p-2 sm:p-3"
             >
-              <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300" />
+              {link.avatar ? (
+                <img
+                  src={link.avatar}
+                  alt="User Avatar"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-300 dark:border-gray-600"
+                />
+              ) : (
+                <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300" />
+              )}
               <span className="hidden sm:block text-xs text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300 mt-1">
                 {link.label}
               </span>

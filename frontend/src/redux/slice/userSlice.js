@@ -5,16 +5,20 @@ const userSlice = createSlice({
   initialState: {
     user: null,
     token: null,
+    avatar: null,
+    username: null,
     isAuthenticated: false,
     otpToken: null,
     forgot_email: null,
   },
   reducers: {
     setCredentials: (state, action) => {
-      const { user, accessToken } = action.payload;
+      const { user, accessToken, avatar, username} = action.payload;
       state.user = user;
       state.token = accessToken;
       state.isAuthenticated = true;
+      state.avatar = avatar;
+      state.username = username;
     },
     clearCredentials: (state) => {
       state.user = null;

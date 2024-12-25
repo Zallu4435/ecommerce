@@ -14,13 +14,15 @@ const ShoppingCard = ({
   _id,
   productName,
   originalPrice,
-  offerPrice, 
+  price, 
   image,
 }) => {
-  const formattedPrice = parseFloat(offerPrice);
+  const formattedPrice = parseFloat(price);
   const formattedOriginalPrice = parseFloat(originalPrice);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+
+  // console.log(formattedPrice, "offerPrice")
 
   const navigate = useNavigate();
   const { refetch: refetchCart } = useGetCartQuery();
@@ -108,10 +110,10 @@ const ShoppingCard = ({
 
         <div className="inline-flex items-center space-x-2">
           <span className="text-gray-500 line-through text-sm sm:text-base">
-            &#8377;{formattedOriginalPrice.toFixed(2)}
+            &#8377;{formattedPrice.toFixed(2)}
           </span>
           <span className="text-red-500 font-semibold text-sm sm:text-base">
-            &#8377;{formattedPrice.toFixed(2)}
+          &#8377;{formattedOriginalPrice.toFixed(2)}
           </span>
         </div>
 

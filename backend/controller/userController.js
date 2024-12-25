@@ -111,6 +111,7 @@ exports.loginUser = async (req, res, next) => {
     return next(new ErrorHandler("User doesn't exist!", 400));
   }
 
+  console.log(user, "userlogin")
   if (user.isBlocked) {
     return next(new ErrorHandler("User banned! Can't login"))
   }

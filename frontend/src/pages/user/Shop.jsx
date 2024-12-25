@@ -16,7 +16,7 @@ const ShopPage = () => {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1200) {
-        setCardsPerPage(8);
+        setCardsPerPage(9);
       } else if (window.innerWidth >= 1024) {
         setCardsPerPage(6);
       } else if (window.innerWidth >= 768) {
@@ -91,13 +91,13 @@ const ShopPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-50 py-16">
+    <div className="min-h-screen dark:bg-black bg-gradient-to-br from-gray-100 via-white to-gray-50 py-16">
       <div className="container mx-auto flex gap-6">
         {/* Sidebar Filters */}
-        <div className="w-[300px] sticky ml-[-20px] me-[10px] top-16 h-[calc(100vh-4rem)] bg-white rounded-lg shadow-lg p-6 overflow-auto">
+        <div className="w-[300px] scrollbar-hidden dark:bg-gray-800 dark:text-white sticky ml-[-20px] me-[10px] top-16 h-[calc(100vh-4rem)] bg-white rounded-lg shadow-lg p-6 overflow-auto">
           {/* Size Filter */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Size</h3>
+            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">Size</h3>
             <div className="grid grid-cols-3 gap-4">
               {["XS", "S", "M", "L", "XL"].map((size) => (
                 <label key={size} className="flex items-center">
@@ -117,7 +117,7 @@ const ShopPage = () => {
 
           {/* Color Filter */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Color</h3>
+            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">Color</h3>
             <div className="grid grid-cols-2 gap-4">
               {["white", "red", "blue", "black"].map((color) => (
                 <label key={color} className="flex items-center">
@@ -137,7 +137,7 @@ const ShopPage = () => {
 
           {/* Price Range Filter */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">
+            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">
               Price Range
             </h3>
             <input
@@ -148,14 +148,14 @@ const ShopPage = () => {
               onChange={(e) => setPriceRange([0, e.target.value])}
               className="w-full"
             />
-            <div className="mt-2 text-sm text-gray-600">
+            <div className="mt-2 text-sm dark:text-white text-gray-600">
               &#8377;{priceRange[0]} - &#8377;{priceRange[1]}
             </div>
           </div>
 
           {/* Sorting Options */}
           <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Sort By</h3>
+            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">Sort By</h3>
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
@@ -189,7 +189,7 @@ const ShopPage = () => {
                     _id={product.id}
                     productName={product.productName}
                     price={product.originalPrice}
-                    originalPrice={product.originalPrice}
+                    originalPrice={product.offerPrice}
                     image={product.image}
                   />
                 ))

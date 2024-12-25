@@ -1,20 +1,22 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useCheckoutAddressQuery } from "../../../redux/apiSliceFeatures/addressPasswordApiSlice";
-import { FaHandPointLeft, FaHandPointRight } from "react-icons/fa";
-import { useForm, Controller, useWatch } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addressSchema } from "../../../validation/schemas/addressSchema";
+import { FaTimes } from "react-icons/fa";
 
 const ShippingAddress = ({ onAddressSelect }) => {
   const { data: addresses = [], isLoading, isError } = useCheckoutAddressQuery();
   const [selectedAddressIndex, setSelectedAddressIndex] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [currentAddress, setCurrentAddress] = useState(null);
 
   const {
     control,
     reset,
-    getValues,
-    formState: { errors } 
+    handleSubmit,
+    formState: { errors },
   } = useForm({
     defaultValues: {
       username: "",
@@ -27,38 +29,25 @@ const ShippingAddress = ({ onAddressSelect }) => {
       state: "",
     },
     resolver: zodResolver(addressSchema),
+    mode: "onBlur",
   });
-
-  // Watch all form fields
-  const formValues = useWatch({ control });
 
   useEffect(() => {
     if (addresses.length > 0) {
+      setCurrentAddress(addresses[selectedAddressIndex]);
       reset(addresses[selectedAddressIndex]);
     }
   }, [addresses, selectedAddressIndex, reset]);
 
   useEffect(() => {
-    handleAddressChange();
-  }, [formValues, selectedAddressIndex]);
-
-  // Initial load
-  useEffect(() => {
-    if (addresses.length > 0) {
-      handleAddressChange();
+    if (currentAddress) {
+      onAddressSelect(currentAddress);
     }
-  }, [addresses]);
+  }, [currentAddress, onAddressSelect]);
 
-  const increment = () => {
-    if (selectedAddressIndex < addresses.length - 1) {
-      setSelectedAddressIndex(selectedAddressIndex + 1);
-    }
-  };
-
-  const decrement = () => {
-    if (selectedAddressIndex > 0) {
-      setSelectedAddressIndex(selectedAddressIndex - 1);
-    }
+  const onSubmit = (data) => {
+    setCurrentAddress(data);
+    setIsEditing(false);
   };
 
   const handleReset = () => {
@@ -72,86 +61,149 @@ const ShippingAddress = ({ onAddressSelect }) => {
       city: "",
       state: "",
     });
-    setSelectedAddressIndex(0);
-    handleAddressChange();
+    setIsEditing(true);
   };
 
-  const handleAddressChange = () => {
-    if (addresses.length > 0) {
-      const selectedAddress = addresses[selectedAddressIndex] || {};
-      const formValues = getValues();
-      const combinedAddress = { ...selectedAddress, ...formValues };
-      onAddressSelect(combinedAddress);
-    } else {
-      onAddressSelect(getValues());
-    }
+  const handleSelectAddress = (index) => {
+    setSelectedAddressIndex(index);
+    setCurrentAddress(addresses[index]);
+    setIsEditing(false);
+    setShowModal(false);
   };
-
-  const fields = [
-    "username",
-    "phone",
-    "zipCode",
-    "house",
-    "street",
-    "landmark",
-    "city",
-    "state",
-  ];
 
   if (isLoading) {
-    return <div>Loading addresses...</div>;
+    return <div className="text-center">Loading addresses...</div>;
   }
 
   if (isError) {
-    return <div>Error loading addresses.</div>;
+    return <div className="text-center text-red-500">Error loading addresses.</div>;
   }
 
   return (
-    <div className="bg-white p-6 shadow-md rounded-md">
-      <div className="flex justify-between">
-        <h2 className="text-xl font-bold mb-4">Shipping Address</h2>
-        <div className="flex gap-10">
-          <div className="flex items-center space-x-2">
-            <div className="flex gap-4 text-2xl cursor-pointer">
-              <FaHandPointLeft onClick={decrement} />
-              <FaHandPointRight onClick={increment} />
+    <div className="bg-white p-6 shadow-lg rounded-lg">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Shipping Address</h2>
+
+      {isEditing ? (
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {["username", "phone", "zipCode", "house", "street", "landmark", "city", "state"].map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {field.charAt(0).toUpperCase() + field.slice(1)}
+                </label>
+                <Controller
+                  name={field}
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      {...field}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  )}
+                />
+                {errors[field] && <p className="text-red-500 text-sm">{errors[field]?.message}</p>}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div>
+          <h3 className="text-lg font-semibold mb-2 text-gray-800">Selected Address:</h3>
+          <div className="p-4 bg-gray-100 rounded-lg">
+            {currentAddress ? (
+              <>
+                <p className="text-sm text-gray-700">{currentAddress.username}</p>
+                <p className="text-sm text-gray-700">{currentAddress.street}</p>
+                <p className="text-sm text-gray-700">
+                  {currentAddress.city}, {currentAddress.state} - {currentAddress.zipCode}
+                </p>
+                <p className="text-sm text-gray-700">{currentAddress.phone}</p>
+              </>
+            ) : (
+              <p className="text-sm text-gray-700">No address selected</p>
+            )}
+          </div>
+          <div className="flex justify-end gap-4 mt-6">
+            {addresses.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="bg-gray-500 hover:bg-gray-600 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+              >
+                Change Address
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleReset}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+            >
+              New Address
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-lg w-full shadow-lg relative">
+            <button
+              className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-red-500"
+              onClick={() => setShowModal(false)}
+            >
+              <FaTimes className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+              Select an Address:
+            </h3>
+            <ul className="list-disc pl-5 space-y-2">
+              {addresses.map((address, index) => (
+                <li
+                  key={index}
+                  className={`cursor-pointer hover:underline text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md p-2 transition duration-200 ${
+                    index === selectedAddressIndex ? 'bg-blue-100 dark:bg-blue-700' : ''
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSelectAddress(index)}
+                    className="text-left w-full"
+                  >
+                    {`${address.username}, ${address.street}, ${address.city}`}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-md transition duration-200"
+              >
+                Close
+              </button>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="bg-blue-500 text-md hover:bg-blue-600 text-white font-bold px-6 rounded"
-          >
-            New
-          </button>
         </div>
-      </div>
-      <form>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {fields.map((field) => (
-            <div key={field}>
-              <label className="block text-sm font-medium">
-                {field.charAt(0).toUpperCase() + field.slice(1)}
-              </label>
-              <Controller
-                name={field}
-                control={control}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                )}
-              />
-              {errors[field] && (
-                <p className="text-red-500 text-sm">{errors[field]?.message}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      </form>
+      )}
     </div>
   );
 };
 
 export default ShippingAddress;
+

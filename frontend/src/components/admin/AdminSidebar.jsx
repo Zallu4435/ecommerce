@@ -37,7 +37,7 @@ const AdminSidebar = () => {
         {/* Profile Section */}
         <div className="flex items-center mb-6">
           <img
-            src="https://via.placeholder.com/50"
+            src={admin.avatar || "https://via.placeholder.com/50"}
             alt="Profile"
             className="w-12 h-12 rounded-full"
           />

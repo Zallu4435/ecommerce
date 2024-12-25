@@ -34,6 +34,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("");
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const {
     register,
@@ -56,6 +58,7 @@ const Login = () => {
       if (formNum === 1) {
         setLoadingText("Logging in...");
         const response = await loginUser(data).unwrap();
+        // console.log(response.user, "user response")
         dispatch(setCredentials(response.user, response.accessToken));
         navigate("/");
       } else if (formNum === 2 || formNum === 3) {
@@ -121,17 +124,60 @@ const Login = () => {
               )}
             </div>
             <div className="relative">
-              <input
-                type="password"
-                {...register("password")}
-                className="w-full lg:p-4 p-3 md:p-4 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your Password"
-                disabled={isLoading}
-              />
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
-              )}
-            </div>
+  <input
+    type={showPassword ? "text" : "password"}
+    {...register("password")}
+    className="w-full lg:p-4 p-3 md:p-4 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+    placeholder="Enter your Password"
+    disabled={isLoading}
+  />
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+  >
+    {showPassword ? (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        className="w-5 h-5"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3.98 8.223a9.998 9.998 0 0116.04 0M2.455 12C3.732 14.637 7.29 19 12 19s8.268-4.363 9.545-7m-1.866-2.605A10 10 0 012.455 12m11.403-2.222a3 3 0 11-4.854 3.444m4.854-3.444a3.002 3.002 0 00-4.854 0"
+        />
+      </svg>
+    ) : (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        className="w-5 h-5"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M2.458 12C3.732 8.935 7.295 6 12 6s8.268 2.935 9.542 6c-1.274 3.065-4.837 6-9.542 6S3.732 15.065 2.458 12z"
+        />
+      </svg>
+    )}
+  </button>
+  {errors.password && (
+    <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+  )}
+</div>
+
             <button
               type="submit"
               className="w-full p-3 font-semibold dark:bg-blue-600 bg-blue-500 text-white rounded-lg dark:hover:bg-blue-700 hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
