@@ -21,13 +21,14 @@ import TrackOrder from '../pages/user/userProfile/TrackOrder.jsx'
 import UserManagement from '../pages/admin/UserManagement.jsx'
 import CategoryManagement from '../pages/admin/CategoryManagement.jsx'
 import OrderManagement from '../pages/admin/OrderMangement.jsx'
+import SalesManagement from '../pages/admin/SalesManagement.jsx'
 import CouponManagement from '../pages/admin/CoupenManagement.jsx'
 import AdminCreateCouponForm from '../Forms/admin/AdminCreateCoupensForm.jsx'
 import AdminUpdateCouponForm from '../Forms/admin/AdminUpdateCouponForm.jsx'
 import ProductManagement from '../pages/admin/ProductManagement.jsx'
 import AdminProductCreateForm from '../Forms/admin/AdminProductCreateForm.jsx'
 import AdminProductUpdateForm from '../Forms/admin/AdminProductUpdateForm.jsx'
-import OrderDetails from '../Forms/admin/OrderViewPage.jsx'
+// import OrderDetails from '../Forms/admin/OrderViewPage.jsx'
 import AdminUsersForm from '../Forms/admin/AdminUsersForm.jsx'
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx'
 import ViewProductDetails from "../pages/admin/views/ViewProductDetails.jsx";
@@ -35,8 +36,8 @@ import ViewUserDetails from "../pages/admin/views/ViewUserDetails.jsx";
 import AdminCategoryUpdateForm from '../Forms/admin/AdminCategoryUpdateForm.jsx'
 import AdminCategoryCreateForm from '../Forms/admin/AdminCategoryCreateForm.jsx'
 import ProductImageVarientAddModal from '../modal/admin/ProductImageVarientAddModal.jsx'
-import ViewOrderDetails from '../pages/admin/views/ViewOrderDetails.jsx'
-
+import ViewOrderDetails from '../pages/admin/views/AllOrdersTable.jsx'
+import ViewCouponDetails from '../pages/admin/views/ViewCouponDetails.jsx'
 
 
 export const routes = [
@@ -66,12 +67,13 @@ export const adminRoutes = [
   { path: "/categoryManagement", component: CategoryManagement },
   { path: "/orderManagement", component: OrderManagement },
   { path: "/couponManagement", component: CouponManagement },
+  { path: "/salesManagement", component: SalesManagement },
   { path: "/productManagement", component: ProductManagement },
   { path: "/couponManagement/update/coupons/:id", component: AdminUpdateCouponForm },
   { path: "/couponManagement/create/coupons", component: AdminCreateCouponForm },
   { path: "/productManagement/create/products", component: AdminProductCreateForm },
   { path: "/productManagement/update/products/:id", component: AdminProductUpdateForm },
-  { path: "/orderManagement/view/orders", component: OrderDetails },
+  // { path: "/orderManagement/view/orders", component: OrderDetails },
   { path: "/userManagement/update/users/:id", component: AdminUsersForm },
   { path: "/productManagement/view/products/:id", component: ViewProductDetails },
   { path: "/userManagement/view/users/:id", component: ViewUserDetails },
@@ -79,6 +81,7 @@ export const adminRoutes = [
   { path: "/categoryManagement/update/category/:id", component: AdminCategoryUpdateForm },
   { path: "/productManagement/create/products/image-varient", component: ProductImageVarientAddModal },
   { path: "/orderManagement/view/orders/:id", component: ViewOrderDetails },
+  { path: "/couponManagement/view/coupons/:id", component: ViewCouponDetails },
   { path: "*", component: NotFound },
 
 ];

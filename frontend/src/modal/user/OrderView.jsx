@@ -1,86 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { FaTimes } from 'react-icons/fa'; // Importing a close icon
-import { useCancelIndividualOrderMutation } from '../../redux/apiSliceFeatures/OrderApiSlice';
-import { toast } from 'react-toastify';
-import { useGetOrdersQuery } from '../../redux/apiSliceFeatures/addressPasswordApiSlice';
+import React, { useEffect } from 'react';
+import { useGetAddressByOrderIdQuery } from '../../redux/apiSliceFeatures/OrderApiSlice';
+import { FaTimes } from 'react-icons/fa'; // Importing close icon
 
-const OrderDetailsModal = ({ order, onClose, onAllItemsCancelled }) => {
-  const [cancelIndividualOrder] = useCancelIndividualOrderMutation(); // Hook for canceling an item
-  const [orderState, setOrderState] = useState(order); // Create a local state to manage the order items and their statuses
-  const { refetch } = useGetOrdersQuery();
-  const [allCancelled, setAllCancelled] = useState(false); // Track if all items have been cancelled
+const OrderDetailsModal = ({ order, onClose }) => {
+  console.log(order, "order");
 
-  // Handle individual item cancellation
-  const handleCancelOrder = async (productId) => {
-    try {
-      // Call the cancel order mutation
-      await cancelIndividualOrder({ orderId: orderState._id, productId }); // Call mutation with orderId and productId
+  // Fetch address details using the order ID when the modal opens
+  const { data: address, error, isLoading } = useGetAddressByOrderIdQuery(order._id, {
+    skip: !order._id, // Only make the request if order._id exists
+  });
 
-      // Update the item's status locally to 'Cancelled' without needing a full re-fetch
-      const updatedItems = orderState.Items.map(item => 
-        item.ProductId === productId ? { ...item, Status: 'Cancelled' } : item
-      );
-      setOrderState({ ...orderState, Items: updatedItems }); // Update the order state with new item statuses
-      refetch();
-      toast.success('Item cancelled');
-    } catch (error) {
-      console.error('Error canceling order:', error);
-      alert('Failed to cancel item');
-    }
-  };
-
-  const handleClose = () => {
-    refetch();
-    onClose();
-  };
-
-  // Effect to check if all items are cancelled and trigger the callback once
+  // Fetch data only when the modal opens
   useEffect(() => {
-    // Check if all items are cancelled
-    const allItemsCancelled = orderState.Items.every(item => item.Status === 'Cancelled');
-    
-    if (allItemsCancelled && !allCancelled) {
-      onAllItemsCancelled(orderState._id); // Trigger full order cancellation if all items are cancelled
-      setAllCancelled(true); // Prevent triggering the callback again
+    if (order && order._id) {
+      // Trigger any side effect if needed here
     }
-  }, [orderState.Items, orderState._id, allCancelled, onAllItemsCancelled]); // Trigger only if all items are cancelled
+  }, [order]);
+
+  if (isLoading) return <p className="text-center text-gray-500">Loading address...</p>;
+  if (error) return <p className="text-center text-red-500">Error fetching address details: {error.message}</p>;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-lg w-full shadow-lg relative">
-        <button
-          className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-red-500"
-          onClick={handleClose}
-        >
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 relative">
+        <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-red-500 transition">
           <FaTimes className="w-5 h-5" />
         </button>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Order Items</h2>
-        <ul className="space-y-4">
-          {orderState.Items.map((item, index) => (
-            <li key={index} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow">
-              <div className="flex items-center">
-                <img
-                  src={item.ProductImage}
-                  alt={item.ProductName}
-                  className="w-16 h-16 object-cover rounded-lg mr-4"
-                />
-                <div>
-                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-100">{item.ProductName}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Quantity: {item.Quantity}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Status: {item.Status}</p>
-                </div>
-              </div>
-              {/* Disable the Cancel button if the item status is 'Cancelled' */}
-              <button
-                onClick={() => handleCancelOrder(item.ProductId)} // Trigger cancel item
-                className={`bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-300 ${item.Status === 'Cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={item.Status === 'Cancelled'} // Disable the cancel button
-              >
-                Cancel
-              </button>
-            </li>
-          ))}
-        </ul>
+        
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+          Order Details
+        </h2>
+
+        {/* Order Info */}
+        <div className="mb-6 p-4 rounded-lg shadow-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white">
+          <h3 className="text-xl font-semibold mb-4">Order Information</h3>
+          <p><strong>Status:</strong> {order.Status}</p>
+          <p><strong>Total Amount:</strong> ₹{order.TotalAmount}</p>
+          <p><strong>Order Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
+        </div>
+
+        {/* Address Info */}
+        {address && (
+          <div className="mb-6 p-4 rounded-lg shadow-lg bg-gradient-to-br from-teal-500 to-green-500 text-white">
+            <h3 className="text-xl font-semibold mb-4">Shipping Address</h3>
+            <p><strong>Street:</strong> {address.street}</p>
+            <p><strong>City:</strong> {address.city}</p>
+            <p><strong>State:</strong> {address.state}</p>
+            <p><strong>Zip Code:</strong> {address.zipCode}</p>
+            <p><strong>Country:</strong> {address.country}</p>
+          </div>
+        )}
+
+        {/* Product Info */}
+        <div className="mb-6 p-4 rounded-lg shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+          <h3 className="text-xl font-semibold mb-4">Product Information</h3>
+          <div className="flex items-center space-x-4">
+            <img
+              src={order.ProductImage}
+              alt={order.ProductName}
+              className="w-16 h-16 object-cover rounded-lg shadow-lg"
+            />
+            <div>
+              <p><strong>Product Name:</strong> {order.ProductName}</p>
+              <p><strong>Quantity:</strong> {order.Quantity}</p>
+              <p><strong>Price per unit:</strong> ₹ {order.offerPrice}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition duration-300 shadow-lg"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );

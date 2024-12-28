@@ -376,11 +376,10 @@ exports.checkProductStock = async (req, res) => {
 
 exports.processPayment = async (req, res) => {
   try {
-    const { address, order, couponCode, newAddress, payment, quantity, productId } = req.body;
+    const { address, order, couponCode, payment, quantity, productId } = req.body;
     const userId = req.user;
 
-    console.log(order)
-    // console.log(productId, order, couponCode, newAddress, payment, quantity, "address from form");
+    // console.log(order);
     let items = [];
 
     if (productId) {
@@ -390,11 +389,11 @@ exports.processPayment = async (req, res) => {
       if (!product) {
         return res.status(400).json({ message: "Product not found." });
       }
+      
       // Decrease stock quantity based on the ordered quantity
       if (product.stockQuantity < quantity) {
         return res.status(400).json({ message: "Not enough stock available." });
       }
-      // console.log(product.stockQuantity, , "reached reched ")
 
       product.stockQuantity -= order.cartItems[0]?.quantity;
       await product.save(); // Update the product's stock quantity
@@ -403,7 +402,7 @@ exports.processPayment = async (req, res) => {
         ProductId: productId,
         Price: product.price,
         Quantity: order.cartItems[0]?.quantity,
-        // Status: "Order Placed", // Status for this item
+        Status: "Order Placed", // Status for this item
       });
 
     } else if (order && order.cartItems && order.cartItems.length > 0) {
@@ -454,21 +453,45 @@ exports.processPayment = async (req, res) => {
       }
     }
 
-    // Step 4: Create the Order
+    // Step 4: Handle Address
+    let addressReference = null;
+    
+    // Check if the address already exists for the user
+    // console.log(address, "address from address")
+    const existingAddress = await Address.findOne({ _id: address._id, userId });
+    // console.log(existingAddress, "existing address")
+    
+    if (existingAddress) {
+      addressReference = existingAddress._id; // Use the existing address
+    } else {
+      // Create a new address if not found
+      const newAddressRecord = new Address({
+        userId: userId,
+        ...address, // Use the address data passed from the request body
+      });
+
+      const savedAddress = await newAddressRecord.save();
+      addressReference = savedAddress._id; // Use the newly created address's _id
+    }
+    // console.log(addressReference, "addressReference")
+
+  
+    // Step 5: Create the Order
     const orderRecord = new Order({
       UserId: userId,
       items: items,
       TotalAmount: order?.total,
-      Address: address,
+      AddressId: addressReference, // Reference to the address document
       CouponId: coupon?._id || null,
     });
 
+    console.log(orderRecord, "orderRecord")
     await orderRecord.save();
 
-    // Step 5: Handle Payment
+    // Step 6: Handle Payment
     const paymentRecord = new Payment({
       userId: userId,
-      OrderId: orderRecord._id,
+       OrderId: orderRecord._id,
       status: "Order Placed",
       method: payment?.paymentMethod,
       amount: order?.total,
@@ -478,7 +501,7 @@ exports.processPayment = async (req, res) => {
     await paymentRecord.save();
     console.log("Payment recorded:", paymentRecord);
 
-    // Step 6: Respond to Client
+    // Step 7: Respond to Client
     res.status(200).json({
       message: "Order placed successfully",
       orderId: orderRecord._id,

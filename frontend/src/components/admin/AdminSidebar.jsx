@@ -14,6 +14,7 @@ const AdminSidebar = () => {
     { name: 'Orders Management', icon: <GrHome />, path: '/admin/orderManagement' },
     { name: 'Category Management', icon: <GrHome />, path: '/admin/categoryManagement' },
     { name: 'Coupons Management', icon: <GrHome />, path: '/admin/couponManagement' },
+    { name: 'Sales Management', icon: <GrHome />, path: '/admin/salesManagement' },
   ];
   const admin = useSelector(state => state.admin.admin);
   const [logoutAdmin] = useLogoutAdminMutation();

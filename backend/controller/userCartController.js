@@ -108,12 +108,13 @@ exports.getCartItems = async (req, res) => {
           originalPrice: '$productDetails.originalPrice', // Product price
           ratings: '$productDetails.ratings', // Product ratings
           quantity: '$items.quantity', // Quantity from cart
+          stockQuantity: '$productDetails.stockQuantity'
         },
       },
     ]);
 
     // Debugging: Log the final aggregated cart items
-    // console.log('Cart Items with Product Details:', cartItems);
+    console.log('Cart Items with Product Details:', cartItems);
 
     // Send the response with cart items
     return res.status(200).json(cartItems);

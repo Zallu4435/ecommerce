@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { HiOutlineArrowLeft } from "react-icons/hi"; // Importing an icon for the back button
 import { useGetOrdersQuery, useProcessPaymentMutation } from "../../redux/apiSliceFeatures/addressPasswordApiSlice";
+import { toast } from 'react-toastify';
 
 const ProceedToPaymentPage = () => {
   const location = useLocation();
@@ -20,7 +21,7 @@ const ProceedToPaymentPage = () => {
     );
   }
 
-  console.log(order.productId, "productId")
+  // console.log(order.productId, "productId")
 
   const handleConfirmPayment = async () => {
     try {
@@ -36,11 +37,12 @@ const ProceedToPaymentPage = () => {
       // Make the API call to process the payment
       const response = await processPayment(payload);
       console.log(response, )
-      if (response?.data?.message === "Order placed successfully") {
-        refetchOrder();
-        // console.log('Payment successful:', response);
-        navigate("/payment-success");
-      }
+      if (response?.error) {
+        toast.error('An errro occured!')
+      } 
+      refetchOrder();
+      // console.log('Payment successful:', response);
+      navigate("/payment-success");
     } catch (error) {
       console.error("An error occurred:", error.response?.data || error.message);
       alert("An unexpected error occurred. Please try again later.");

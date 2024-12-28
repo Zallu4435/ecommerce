@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import AdminTable from '../../components/admin/AdminTable';
-import { useGetCouponsQuery } from '../../redux/apiSliceFeatures/couponApiSlice';
 import { useButtonHandlers } from '../../components/admin/ButtonHandlers';
+import { useGetAllCouponsQuery } from '../../redux/apiSliceFeatures/CouponApiSlice';
 
 const CouponManagement = () => {
 
   const [search, setSearch] = useState('');
   
-  const { data = [], isLoading, isError } = useGetCouponsQuery();
+  const { data = [], isLoading, isError } = useGetAllCouponsQuery();
     const { handleCreate } = useButtonHandlers();
   
   

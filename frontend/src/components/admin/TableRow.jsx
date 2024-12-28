@@ -3,43 +3,44 @@ import { useButtonHandlers } from "./ButtonHandlers";
 import DeleteConfirmationModal from "../../modal/admin/ConfirmDeleteModal";
 import { useState } from "react";
 import { defaultProfile } from "../../assets/images";
-import OrdersModal from "../../modal/admin/OrderStatus";
+// import OrdersModal from "../../modal/admin/OrderStatus";
 import { useNavigate } from "react-router-dom";
+import { useGetAllCouponsQuery } from "../../redux/apiSliceFeatures/CouponApiSlice";
 
 // Define a new component for each row that calls the hook inside it
 const TableRow = ({ item, type }) => {
-  const { handleBan, handleDelete, handleUpdate, handleView, } =
+  const { handleBan, handleDelete, handleUpdate, handleView } =
     useButtonHandlers();
   const [showModal, setShowModal] = useState(false); // Modal visibility state
   const [itemToDelete, setItemToDelete] = useState(null); // Item to be deleted
-  const [isModalOpen, setModalOpen] = useState(false);
-const [userId, setUserId] = useState('');
-const navigate = useNavigate();
-
-
-
+  // const [isModalOpen, setModalOpen] = useState(false);
+  // const [userId, setUserId] = useState('');
+  const navigate = useNavigate();
+  const { refetch: refetchCoupon } = useGetAllCouponsQuery();
 
   const openModal = (item) => {
-    setItemToDelete(item); // Set the item to delete
-    setShowModal(true); // Show the modal
+    setItemToDelete(item);
+    // console.log(item , 'items from tabkrow')
+    setShowModal(true);
   };
 
   const closeModal = () => {
-    setShowModal(false); // Hide the modal
-    setItemToDelete(null); // Clear the item
+    setShowModal(false);
+    setItemToDelete(null);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     handleDelete(
       itemToDelete.id ? itemToDelete.id : itemToDelete._id,
       type === "categories" ? "category" : type
-    ); // Trigger delete action
-    closeModal(); // Close the modal after deletion
+    );
+    await refetchCoupon();
+    closeModal();
   };
-  const handleUpdateClick = (id) => {
-    setUserId(id); // Set the userId to the state
-    setModalOpen(true); // Open the modal
-  };
+  // const handleUpdateClick = (id) => {
+  //   setUserId(id); // Set the userId to the state
+  //   setModalOpen(true); // Open the modal
+  // };
 
   const handleOrderView = (orderId) => {
     navigate(`view/orders/${orderId}`);
@@ -132,21 +133,14 @@ const navigate = useNavigate();
             <td className="px-6 py-4 border border-gray-600">
               {item.lastOrderDate}
             </td>
-            <td className="px-[55px] font-bold text-green-500 py-4 border border-gray-600">
-            <p
-                onClick={() => handleUpdateClick(item._id)}
-                >
-                Click to Update
-              </p>
-            </td>
-            <td className="px-6 flex py-4 gap-6">
+            <td className="px-6 flex text-nowrap py-4 gap-6">
               <Button
                 borderColor="#D4A017"
                 textColor="#D4A017"
                 hoverColor="white"
                 onClick={() => handleOrderView(item._id)}
               >
-                View
+                View Individual Orders
               </Button>
             </td>
           </>
@@ -154,23 +148,27 @@ const navigate = useNavigate();
 
         {type === "coupons" && (
           <>
+            {console.log(item, "ite from tablerou")}
+            {/* Coupon Code */}
             <td className="px-6 py-4 border border-gray-600">
-              {item.couponCode}
+              {item.couponCode || "N/A"}
             </td>
             <td className="px-6 py-4 border border-gray-600">
-              {item.discount?.$numberDecimal || item.discount || "N/A"}
+              {item.title || "N/A"}
             </td>
             <td className="px-6 py-4 border border-gray-600">
               {item.expiry ? new Date(item.expiry).toLocaleDateString() : "N/A"}
             </td>
-            <td className="px-6 py-4 border border-gray-600">
-              {item.maxDiscount.$numberDecimal || item.maxDiscount || "N/A"}
-            </td>
-            <td className="px-6 py-4 border border-gray-600">
-              {item.minPurchase?.$numberDecimal || item.minPurchase || "N/A"}
-            </td>
-
+            {/* Actions */}
             <td className="px-6 flex py-4 gap-6">
+              <Button
+                borderColor="#d97706"
+                textColor="#d97706"
+                hoverColor="white"
+                onClick={() => handleView(item.id, "coupons")}
+              >
+                View
+              </Button>
               <Button
                 borderColor="#16a34a"
                 textColor="#16a34a"
@@ -244,8 +242,7 @@ const navigate = useNavigate();
         itemName={itemToDelete?.productName || itemToDelete?.categoryName}
       />
 
-<OrdersModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} userId={userId} />
-
+      {/* <OrdersModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} userId={userId} /> */}
     </>
   );
 };
@@ -266,7 +263,6 @@ export const config = {
       "Total Orders",
       "Total Amount",
       "Last Order Date",
-      "Update Remaining Status",
       "Actions",
     ],
     rowRenderer: (item) => <TableRow item={item} type="orders" />,
@@ -274,10 +270,11 @@ export const config = {
   coupons: {
     headers: [
       "Coupon Code",
-      "Discount Value",
-      "Expiry Date",
-      "Max Discount",
-      "Min Purchase",
+      "Coupon Title",
+      // "Discount Per..",
+      // "Max Discount",
+      // "Max Amount",
+      "Valid Until",
       "Actions",
     ],
     rowRenderer: (item) => <TableRow item={item} type="coupons" />,

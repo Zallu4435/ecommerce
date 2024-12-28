@@ -1,35 +1,85 @@
 const mongoose = require('mongoose');
 
-const CouponsSchema = new mongoose.Schema(
-    {
-    UserId: {
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User',      
-    },
-    CoupenCode: {
-        type: String,         
-    },
-    discount: {
-        type: mongoose.Schema.Types.Decimal128, 
-        required: true,      
-    },
-    minPurchase: {
-        type: mongoose.Schema.Types.Decimal128, 
-        default: 0,         
-    },
-    expiry: {
-        type: Date,           
-        required: true,      
-    },
-    maxDiscount: {
-        type: mongoose.Schema.Types.Decimal128,
-        default: 0,           
-    },
+const couponSchema = new mongoose.Schema({
+  couponCode: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    maxlength: 50
   },
-  {
-        timestamps: true,   
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 3,
+    maxlength: 100
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 10,
+    maxlength: 500
+  },
+  discount: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 100
+  },
+  minAmount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  maxAmount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  expiry: {
+    type: Date,
+    required: true,
+  },
+  applicables: {
+    type: [String],
+    default: [],
+  },
+  usersTaken: {
+    type: [String],
+    default: [],
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    immutable: true,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+// Virtual field for expiry status
+couponSchema.virtual("isExpired").get(function () {
+  return this.expiry < Date.now();
+});
+
+// Middleware to update the updatedAt field and check expiry
+couponSchema.pre("save", function (next) {
+  if (this.expiry < Date.now()) {
+    return next(new Error("Cannot save or update an expired coupon."));
   }
-);
+  this.updatedAt = Date.now();
+  next();
+});
 
+// Ensure virtual fields are included when converting document to JSON
+couponSchema.set('toJSON', { virtuals: true });
+couponSchema.set('toObject', { virtuals: true });
 
-module.exports =  mongoose.model('Coupons', CouponsSchema);
+const Coupon = mongoose.model("Coupon", couponSchema);
+
+module.exports = Coupon;
+

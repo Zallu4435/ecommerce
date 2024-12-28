@@ -9,6 +9,7 @@ const userProfile = require('./userProfileRoutes');
 const userCartRoutes = require('./userCartRoutes');
 const userWishlistRoutes = require('./userWishlistRoutes');
 const userComparisonRoutes = require('./userComparisonRoutes');
+const salesRoutes = require('./salesRoutes');
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.use('/products', productRoutes);
 router.use('/coupons', couponRoutes)
 router.use('/category', categoryRoutes)
 router.use('/orders', orderRoutes)
+router.use('/sales', salesRoutes)
 router.use('/admin', adminRoutes)
 router.use('/userProfile', userProfile)
 router.use('/user-cart', userCartRoutes);

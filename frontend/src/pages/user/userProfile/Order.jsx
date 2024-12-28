@@ -3,51 +3,47 @@ import { useNavigate } from 'react-router-dom';
 import { useGetOrdersQuery } from '../../../redux/apiSliceFeatures/addressPasswordApiSlice';
 import { useCancelOrderMutation } from '../../../redux/apiSliceFeatures/OrderApiSlice';
 import OrderDetailsModal from '../../../modal/user/OrderView';
+import CancelConfirmationModal from '../../../modal/user/ConfirmOrderCancelModal';
 
 const OrdersList = () => {
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState({ orderId: null, productId: null });
 
   // Fetch orders using RTK Query
   const { data: orders = [], error, isLoading, refetch } = useGetOrdersQuery();
-  const [cancelOrder] = useCancelOrderMutation(); // Use the cancel order mutation
-  const [selectedOrder, setSelectedOrder] = useState(null); // State to track the selected order for modal
+  const [cancelOrder] = useCancelOrderMutation();
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   if (isLoading) return <p>Loading orders...</p>;
   if (error) return <p>Error fetching orders: {error.message}</p>;
+// Make sure you pass only the primitive values, not the entire object
+const handleCancelClick = (orderId, productId) => {
+  setOrderToCancel({ orderId, productId });
+  setShowModal(true);
+};
 
-  // Cancel order function
-  const handleCancelOrder = async (orderId) => {
-    try {
-      // Call the cancel order mutation
-      await cancelOrder(orderId).unwrap();
-      refetch();
-      // Optionally, refetch or update local state to reflect the cancellation
-    } catch (error) {
-      console.error('Error canceling order:', error);
-      alert('Failed to cancel order');
-    }
-  };
+const handleConfirmCancel = async () => {
+  const { orderId, productId } = orderToCancel;
+  setShowModal(false);
 
-  // Handle when all items are cancelled in the modal, trigger full order cancellation
-  const handleFullOrderCancel = async (orderId) => {
-    try {
-      // Trigger the cancel order mutation for the full order
-      await cancelOrder(orderId).unwrap();
-      refetch(); // Refetch to update UI after cancellation
-    } catch (error) {
-      console.error('Error canceling full order:', error);
-      alert('Failed to cancel full order');
-    }
-  };
+  try {
+    // Ensure you pass only orderId and productId as strings
+    await cancelOrder({ orderId, productId }).unwrap();
+    refetch();
+  } catch (err) {
+    console.error('Error canceling order:', err);
+    alert('Failed to cancel order');
+  }
+};
 
-  // Toggle order details modal visibility
+
   const toggleOrderDetails = (order) => {
-    setSelectedOrder(order); // Open the modal with the selected order details
+    setSelectedOrder(order);
   };
 
-  // Close modal
   const closeModal = () => {
-    setSelectedOrder(null); // Close the modal
+    setSelectedOrder(null);
   };
 
   return (
@@ -62,8 +58,8 @@ const OrdersList = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <img
-                    src={order.Items[0]?.ProductImage} // Use the first item's image as the order image
-                    alt={order.Items[0]?.ProductName} // Use the first item's name as the alt text
+                    src={order.ProductImage}
+                    alt={order.ProductName}
                     className="w-16 h-16 object-cover rounded-lg mr-4"
                   />
                   <div>
@@ -71,7 +67,7 @@ const OrdersList = () => {
                       Order ID: {order._id}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {order.Items.length} {order.Items.length === 1 ? 'Item' : 'Items'} {/* Display the number of items */}
+                      {order.Quantity} {order.Quantity === 1 ? 'Item' : 'Items'}
                     </p>
                     <p className={`text-sm font-semibold ${order.Status === 'Delivered' ? 'text-green-500' : 'text-yellow-500'}`}>
                       {order.Status}
@@ -87,15 +83,14 @@ const OrdersList = () => {
                   </button>
                   <button
                     className={`bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition ${order.Status === 'Delivered' || order.Status === 'Cancelled' ? 'opacity-40 cursor-not-allowed filter' : ''}`}
-                    onClick={() => handleCancelOrder(order._id)}
-                    disabled={order.Status === 'Delivered' || order.Status === 'Cancelled'} // Disable cancel button if status is Delivered or Cancelled
+                    onClick={() => handleCancelClick(order._id, order.ProductId)} // Ensure ProductId exists
+                    disabled={order.Status === 'Delivered' || order.Status === 'Cancelled'}
                   >
                     Cancel Order
                   </button>
                   <button
-                    className={`bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition ${order.Items.length <= 1 ? 'opacity-40 cursor-not-allowed filter' : ''}`}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
                     onClick={() => toggleOrderDetails(order)}
-                    disabled={order.Items.length <= 1} // Disable view button if order has 1 or fewer items
                   >
                     View Items
                   </button>
@@ -105,9 +100,17 @@ const OrdersList = () => {
           ))}
         </ul>
       )}
-      {selectedOrder && <OrderDetailsModal order={selectedOrder} onClose={closeModal} onAllItemsCancelled={handleFullOrderCancel} />}
+      {selectedOrder && <OrderDetailsModal order={selectedOrder} onClose={closeModal} />}
+      <CancelConfirmationModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        onConfirm={handleConfirmCancel}
+        orderId={orderToCancel.orderId}
+        productId={orderToCancel.productId}
+      />
     </div>
   );
 };
+
 
 export default OrdersList;

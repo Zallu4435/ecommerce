@@ -20,22 +20,22 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
     
     
     cancelOrder: builder.mutation({
-      query: (orderId) => ({
-        url: `/orders/cancel/${orderId}`,
-        method: 'PATCH',  // Or DELETE based on your API design
-      }),
-      invalidatesTags:['Order']
-    }),
-
-    cancelIndividualOrder: builder.mutation({
       query: ({ orderId, productId }) => ({
-        url: `orders/orders/${orderId}/cancel/${productId}`,
+        url: `/orders/${orderId}/cancel/${productId}`, // Pass productId as a query string
         method: 'PATCH',
       }),
-      invalidatesTags:['Order']
     }),
     
-    updateOrders: builder.mutation({
+
+    // cancelIndividualOrder: builder.mutation({
+    //   query: ({ orderId, productId }) => ({
+    //     url: `orders/orders/${orderId}/cancel/${productId}`,
+    //     method: 'PATCH',
+    //   }),
+    //   invalidatesTags:['Order']
+    // }),
+    
+    updateOrderStatus: builder.mutation({
       query: (orders) => ({
         url: "/orders/update-bulk", // Assume a bulk update endpoint
         method: "PATCH",
@@ -43,6 +43,9 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Order"],
 
+    }),
+    getAddressByOrderId: builder.query({
+      query: (orderId) => `orders/${orderId}/address`, // Adjust the endpoint as per your backend
     }),
 
   }),
@@ -52,7 +55,8 @@ export const {
   useGetUsersOrdersQuery,
   useGetOrderByIdQuery,
   useFetchUserOrdersQuery,
-  useUpdateOrdersMutation,
   useCancelOrderMutation,
-  useCancelIndividualOrderMutation
+  useCancelIndividualOrderMutation,
+  useUpdateOrderStatusMutation,
+  useGetAddressByOrderIdQuery
 } = orderApiSlice;

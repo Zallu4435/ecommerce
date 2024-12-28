@@ -45,7 +45,6 @@ const AddToCart = ({
 
   const handleAddToCart = async () => {
     setIsLoading(true);
-
     // Check if the stock is available for the selected quantity
     if (quantity > stockQuantity) {
       toast.error("Sorry, not enough stock available.");
@@ -198,20 +197,21 @@ const AddToCart = ({
       )}
 
       <div className="flex flex-col gap-4 mt-auto">
+      <button
+    style={{ opacity: isLoading || stockQuantity <= 0 ? 0.5 : 1, cursor: isLoading || stockQuantity <= 0 ? 'not-allowed' : 'pointer' }}
+    className="w-full px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 dark:hover:bg-green-500 transition-all duration-300 transform hover:scale-105"
+    onClick={handleCheckout}
+    disabled={isLoading || stockQuantity <= 0}
+>
+    Buy Now
+</button>
         <button
-          className="w-full px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 dark:hover:bg-green-500 transition-all duration-300 transform hover:scale-105"
-          onClick={handleCheckout}
-          disabled={isLoading}
-        >
-          Buy Now
-        </button>
-        <button
-          className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-all duration-300 transform hover:scale-105"
-          onClick={handleAddToCart}
-          disabled={isLoading || stockQuantity === 0}
-        >
-          Add to Cart
-        </button>
+    className={`w-full px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-all duration-300 transform hover:scale-105 ${stockQuantity <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+    onClick={handleAddToCart}
+    disabled={isLoading || stockQuantity <= 0}
+>
+    Add to Cart
+</button>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const OrdersSchema = new mongoose.Schema({
     UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  // Assuming a User model
+    AddressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
     items: [
         {
             Price: { 
@@ -39,20 +40,6 @@ const OrdersSchema = new mongoose.Schema({
         type: Number, 
         default: 0 
     }, 
-    Status: {
-         type: String, default: 'Order Placed'
-    }, 
-    Address: {
-        username: { type: String, },
-        street: { type: String, },
-        city: { type: String, },
-        state: { type: String, },
-        country: { type: String, },
-        zipCode: { type: String, },
-        phone: { type: String, },
-        house: { type: String, },
-        landmark: { type: String, }
-    }
 },
 {
     timestamps: true,  // Automatically adds createdAt and updatedAt at the document level

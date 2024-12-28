@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { FaShoppingCart } from "react-icons/fa";
-import { roundedImg_1 } from "../../../assets/images";
 import { useUpdateQuantityMutation } from "../../../redux/apiSliceFeatures/CartApiSlice";
 import { toast } from "react-toastify";
 
 const TableRowForCartlist = ({ item, onRemove }) => {
   const [quantity, setQuantity] = useState(item?.quantity || 1);
-  const [isOutOfStock, setIsOutOfStock] = useState(false); 
 
-  const { originalPrice, productName, cartItemId, productImage } = item;
+  const { originalPrice, productName, cartItemId, productImage, stockQuantity } = item;
 
   const [updateQuantity] = useUpdateQuantityMutation();
+
+  // Calculate isOutOfStock dynamically from the item
+  const isOutOfStock = stockQuantity <= 0;
 
   const handleQuantityUpdate = async (newQuantity) => {
     try {
@@ -21,20 +21,17 @@ const TableRowForCartlist = ({ item, onRemove }) => {
 
       if (response?.error) {
         toast.error("Out of Stock!");
-        setIsOutOfStock(true); 
       } else {
-        setQuantity(newQuantity); 
-        setIsOutOfStock(false); 
+        setQuantity(newQuantity);
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      alert("Failed to update quantity. Please try again.");
-      setIsOutOfStock(true); 
+      toast.error("Failed to update quantity. Please try again.");
     }
   };
 
   const handleIncrease = () => {
-    if (!isOutOfStock) { 
+    if (!isOutOfStock) {
       handleQuantityUpdate(quantity + 1);
     }
   };
@@ -73,6 +70,11 @@ const TableRowForCartlist = ({ item, onRemove }) => {
               ⭐ 4.5 (200)
             </p>
           </div>
+          {isOutOfStock && (
+            <span className="text-red-500 bg-red-100 dark:bg-red-900 px-2 py-1 rounded-md text-sm font-semibold animate-bounce">
+              Out of Stock
+            </span>
+          )}
         </td>
         <td className="px-6 py-4 border-b text-center">
           <div className="flex items-center justify-center">
@@ -106,23 +108,28 @@ const TableRowForCartlist = ({ item, onRemove }) => {
         <div className="flex justify-between items-center mb-4">
           <button
             className="text-red-500 font-semibold hover:underline"
-            onClick={() => onRemove(cartItemId)} // Adjusted to remove using the main item ID
+            onClick={() => onRemove(cartItemId)}
           >
             ❌ Remove
           </button>
         </div>
         <div className="flex items-center gap-4 mb-4">
           <img
-            src={roundedImg_1}
+            src={productImage}
             className="h-[60px] rounded-lg object-cover"
-            // alt={item.items[0].name}
+            alt={productName}
           />
           <div>
-            {/* <p className="font-semibold text-gray-900 dark:text-gray-100">{item.items[0].name}</p> */}
+            <p className="font-semibold text-gray-900 dark:text-gray-100">{productName}</p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               ⭐ 4.5 (200 reviews)
             </p>
           </div>
+          {isOutOfStock && (
+            <span className="text-red-500 bg-red-100 dark:bg-red-900 px-2 py-1 rounded-md text-sm font-semibold animate-bounce">
+              Out of Stock
+            </span>
+          )}
         </div>
         <div className="flex justify-between items-center mb-4">
           <span className="font-semibold text-gray-700 dark:text-gray-300">

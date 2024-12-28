@@ -71,8 +71,17 @@ const TableRow = ({ item, onRemove }) => {
           ₹ {originalPrice.toFixed(2)}
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
-          {stockQuantity}
-        </td>
+  {stockQuantity ? (
+    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md font-semibold">
+      In Stock
+    </span>
+  ) : (
+    <span className="px-2 py-1 bg-red-100 text-red-800 rounded-md font-semibold">
+      Out of Stock
+    </span>
+  )}
+</td>
+
         <td className="px-6 py-4 border-b text-center">
           <button
              onClick={handleAddToCart}

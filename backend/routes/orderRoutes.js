@@ -9,7 +9,8 @@ const {
   cancelOrder,
   getAllUsersOrders,
   getUserOrdersMoadl,
-  cancelIndividualOrder
+  cancelIndividualOrder,
+  getAddressByOrderId
 
 } = require('../controller/orderController');
 const { isAuthenticated } = require('../middleware/auth');
@@ -20,7 +21,9 @@ router.get('/getUsersOrders', catchAsyncErrors(getAllUsersOrders)); // Get all o
 
 router.get('/getOrder/:id', catchAsyncErrors(getOrderById)); // Get order details
 
-router.get('/user-order-modal', catchAsyncErrors(getUserOrdersMoadl))
+router.get('/user-order-modal', catchAsyncErrors(getUserOrdersMoadl));
+router.get('/:orderId/address', catchAsyncErrors(getAddressByOrderId));
+
 // Admin only (with authentication check)
 router.post(
   '/create', 
@@ -33,15 +36,14 @@ router.patch(
 ); // Update order
 
 router.patch(
-  '/cancel/:orderId', 
+  '/:orderId/cancel/:productId', 
   catchAsyncErrors(cancelOrder)
 ); // Delete order
-cancelIndividualOrder
 
-router.patch(
-  '/orders/:orderId/cancel/:productId', 
-  catchAsyncErrors(cancelIndividualOrder)
-); 
+// router.patch(
+//   '/orders/:orderId/cancel/:productId', 
+//   catchAsyncErrors(cancelIndividualOrder)
+// ); 
 
 
 module.exports = router;
