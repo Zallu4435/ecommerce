@@ -15,6 +15,7 @@ const OrdersSchema = new mongoose.Schema({
             Quantity: { 
                 type: Number 
             },
+            //coupon discount
             createdAt: {  // Corrected the typo here
                 type: Date,  // Corrected the type
                 default: Date.now  // Sets the default to the current date

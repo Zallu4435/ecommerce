@@ -173,7 +173,7 @@ const TableRow = ({ item, type }) => {
                 borderColor="#16a34a"
                 textColor="#16a34a"
                 hoverColor="white"
-                onClick={() => handleUpdate(item.id, "coupons")}
+                onClick={() => handleUpdate(item._id, "coupons")}
               >
                 Update
               </Button>

@@ -18,6 +18,7 @@ const CheckoutPage = () => {
   });
   const [coupon, setCoupon] = useState(null);
 
+
   // Handlers for data updates
   const handleAddressSelect = (selectedAddress) => {
     setAddress(selectedAddress);

@@ -1,18 +1,104 @@
 const Coupon = require('../model/Coupon'); // Coupon model
 const ErrorHandler = require('../utils/ErrorHandler');
+const mongoose = require('mongoose');
 
 // Get all coupons (User and Admin)
+// exports.getCoupon = async (req, res, next) => {
+//   try {
+
+//     const coupon = await Coupon.findById(req.params.id);
+//     if (!coupon) {
+//       return next(new ErrorHandler("Coupon not found", 404));
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       coupon,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+
+
 exports.getCoupon = async (req, res, next) => {
   try {
+    const coupon = await Coupon.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(req.params.id) }, // Match the coupon by ID
+      },
+      {
+        $set: {
+          applicableUsers: {
+            $map: {
+              input: "$applicableUsers",
+              as: "userId",
+              in: { $toObjectId: "$$userId" }, // Convert string to ObjectId
+            },
+          },
+          applicableProducts: {
+            $map: {
+              input: "$applicableProducts",
+              as: "productId",
+              in: { $toObjectId: "$$productId" }, // Convert string to ObjectId
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'users', // Name of the User collection
+          localField: 'applicableUsers',
+          foreignField: '_id',
+          as: 'applicableUsers',
+        },
+      },
+      {
+        $lookup: {
+          from: 'products', // Name of the Product collection
+          localField: 'applicableProducts',
+          foreignField: '_id',
+          as: 'applicableProducts',
+        },
+      },
+      {
+        $project: {
+          couponCode: 1,
+          title: 1,
+          description: 1,
+          discount: 1,
+          minAmount: 1,
+          maxAmount: 1,
+          expiry: 1,
+          applicableUsers: {
+            $map: {
+              input: "$applicableUsers",
+              as: "user",
+              in: "$$user.email", // Extract only email
+            },
+          },
+          applicableProducts: {
+            $map: {
+              input: "$applicableProducts",
+              as: "product",
+              in: "$$product.productName", // Extract only productName
+            },
+          },
+          usersTaken: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ]);
 
-    const coupon = await Coupon.findById(req.params.id);
-    if (!coupon) {
+    if (!coupon || coupon.length === 0) {
       return next(new ErrorHandler("Coupon not found", 404));
     }
 
     res.status(200).json({
       success: true,
-      coupon,
+      coupon: coupon[0], // Aggregation returns an array; pick the first element
     });
   } catch (error) {
     next(error);
@@ -32,6 +118,7 @@ exports.getAllCoupons = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 // Get single coupon details (User and Admin)
@@ -217,4 +304,35 @@ exports.validateCoupon = async (req, res, next) => {
       next(error);
     }
   };
+  
+
+
+
+  exports.checkoutCoupons = async (req, res) => {
+    const { productId } = req.params;
+    const userId = req.user; // Get userId from req.user, which was set in isAuthenticated middleware
+
+    console.log(userId, productId, 'userId , productId');
+
+    // Validate productId and userId
+    if (!userId || !productId) {
+        return res.status(400).json({ error: 'User ID and Product ID are required' });
+    }
+
+    try {
+        // Fetch only the 'code' and '_id' (Mongoose ID) fields from coupons in the database
+        const availableCoupons = await Coupon.find({
+            applicableUsers: userId,
+            applicableProducts: productId
+        }).select('couponCode discount'); // Select only the 'code' and '_id' fields
+
+        console.log(availableCoupons, 'available coupons ')
+        return res.status(200).json(availableCoupons);
+    } catch (error) {
+        console.error('Error fetching coupons:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+
   

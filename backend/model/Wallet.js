@@ -6,9 +6,18 @@ const WalletSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
         },
-        TransactionAmount: { 
-            type: Number 
+        balance: {
+            type: Number,
+            required :true, 
+            default: 0,
+            min: 0
         },
+        status: {
+            type: String,
+            required: true,
+            enum: ['Active', 'Suspended', 'Closed'],
+            default: "Active"
+        }
     },
     { 
         timestamps: true 

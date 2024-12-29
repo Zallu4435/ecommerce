@@ -42,24 +42,22 @@ const couponSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  applicables: {
+  applicableUsers: {
     type: [String],
     default: [],
   },
-  usersTaken: {
+  applicableProducts: {
     type: [String],
     default: [],
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-    immutable: true,
+  appliedUsers: {
+    type: [String],
+    default: [],
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, {
+  timestamps: true,  // Automatically adds createdAt and updatedAt at the document level
+}
+);
 
 // Virtual field for expiry status
 couponSchema.virtual("isExpired").get(function () {

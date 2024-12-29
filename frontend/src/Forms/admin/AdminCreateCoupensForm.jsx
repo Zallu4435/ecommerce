@@ -1,45 +1,68 @@
-import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { couponSchema } from '../../validation/admin/CouponFormValidation';
-import { Input, InputContainer, Label } from '../../components/user/StyledComponents/StyledComponents';
-import { toast } from 'react-toastify';
-import { useAddEntityMutation } from '../../redux/apiSliceFeatures/crudApiSlice';
-import { useGetAllCouponsQuery } from '../../redux/apiSliceFeatures/CouponApiSlice';
+import React, { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Input,
+  InputContainer,
+  Label,
+} from "../../components/user/StyledComponents/StyledComponents";
+import { toast } from "react-toastify";
+import { useAddEntityMutation } from "../../redux/apiSliceFeatures/crudApiSlice";
+import { useGetAllCouponsQuery } from "../../redux/apiSliceFeatures/CouponApiSlice";
+import { useGetUsersQuery } from "../../redux/apiSliceFeatures/userApiSlice";
+import { useGetProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
+import { couponSchema } from "../../validation/admin/CouponFormValidation";
+
 
 const AdminCouponCreateForm = () => {
   const navigate = useNavigate();
   const [addEntity] = useAddEntityMutation();
-    const { refetch } = useGetAllCouponsQuery();
+  const { refetch } = useGetAllCouponsQuery();
 
-  // console.log(products?.products, "users")
+  // Fetch users and products
+  const { data: users = [] } = useGetUsersQuery();
+  const { data: products = [] } = useGetProductsQuery();
+
   const {
     control,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm({
     resolver: zodResolver(couponSchema),
     defaultValues: {
-      couponCode: '',
-      title: '',
-      description: '',
-      discount: '',
-      minAmount: '',
-      maxAmount: '',
-      expiry: '',
+      couponCode: "",
+      title: "",
+      description: "",
+      discount: "",
+      minAmount: "",
+      maxAmount: "",
+      expiry: "",
+      applicableUsers: [],
+      applicableProducts: [],
     },
   });
 
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+
   const onSubmit = async (formData) => {
     try {
-      // Convert string values to numbers for numeric fields
       const dataToSubmit = {
         ...formData,
         discount: parseFloat(formData.discount),
         minAmount: parseFloat(formData.minAmount),
         maxAmount: parseFloat(formData.maxAmount),
+        applicableUsers: selectedUsers.map((user) => user.userId),
+        applicableProducts: selectedProducts.map(
+          (product) => product.productId
+        ),
       };
       await addEntity({ entity: "coupons", data: dataToSubmit }).unwrap();
       await refetch();
@@ -51,9 +74,43 @@ const AdminCouponCreateForm = () => {
     }
   };
 
+  const handleUserSelect = (userId, username) => {
+    setSelectedUsers((prev) => {
+      const isSelected = prev.some((user) => user.userId === userId);
+      if (isSelected) {
+        return prev.filter((user) => user.userId !== userId);
+      } else {
+        return [...prev, { userId, username }];
+      }
+    });
+  };
+
+  const handleProductSelect = (productId, productName) => {
+    setSelectedProducts((prev) => {
+      const isSelected = prev.some(
+        (product) => product.productId === productId
+      );
+      if (isSelected) {
+        return prev.filter((product) => product.productId !== productId);
+      } else {
+        return [...prev, { productId, productName }];
+      }
+    });
+  };
+
+  const handleUserRemove = (userId) => {
+    setSelectedUsers((prev) => prev.filter((user) => user.userId !== userId));
+  };
+
+  const handleProductRemove = (productId) => {
+    setSelectedProducts((prev) =>
+      prev.filter((product) => product.productId !== productId)
+    );
+  };
+
   return (
-    <div className="dark:bg-black mx-[100px] min-h-screen flex w-full items-center justify-center p-4">
-      <div className="w-[800px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
+    <div className="dark:bg-black min-h-screen flex w-full items-center justify-center p-4">
+      <div className="w-[800px] dark:bg-gray-900 px-10 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
         <div className="flex justify-between">
           <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
             Create Coupon
@@ -71,144 +128,39 @@ const AdminCouponCreateForm = () => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-2 gap-6">
-            <InputContainer>
-              <Label className="dark:text-white">Coupon Code *</Label>
-              <Controller
-                name="couponCode"
-                control={control}
-                rules={{ required: 'Coupon code is required' }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="text"
-                    placeholder="Enter unique coupon code"
-                    className="w-full"
-                  />
+            {[
+              { name: "couponCode", label: "Coupon Code", type: "text" },
+              { name: "title", label: "Coupon Title", type: "text" },
+              {
+                name: "discount",
+                label: "Discount Percentage",
+                type: "number",
+              },
+              { name: "minAmount", label: "Minimum Amount", type: "number" },
+              { name: "maxAmount", label: "Maximum Amount", type: "number" },
+              { name: "expiry", label: "Expiry Date", type: "date" },
+            ].map((field) => (
+              <InputContainer key={field.name}>
+                <Label className="dark:text-white">{field.label} *</Label>
+                <Controller
+                  name={field.name}
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      type={field.type}
+                      value={value}
+                      onChange={onChange}
+                      className="w-full"
+                    />
+                  )}
+                />
+                {errors[field.name] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors[field.name].message}
+                  </p>
                 )}
-              />
-              {errors.couponCode && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.couponCode.message}
-                </p>
-              )}
-            </InputContainer>
-
-            <InputContainer>
-              <Label className="dark:text-white">Coupon Title *</Label>
-              <Controller
-                name="title"
-                control={control}
-                rules={{ required: 'Coupon title is required' }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="text"
-                    placeholder="Enter coupon title"
-                    className="w-full"
-                  />
-                )}
-              />
-              {errors.title && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.title.message}
-                </p>
-              )}
-            </InputContainer>
-
-            <InputContainer>
-              <Label className="dark:text-white">Discount Percentage *</Label>
-              <Controller
-                name="discount"
-                control={control}
-                rules={{ required: 'Discount is required' }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    placeholder="Enter discount percentage"
-                    className="w-full"
-                  />
-                )}
-              />
-              {errors.discount && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.discount.message}
-                </p>
-              )}
-            </InputContainer>
-
-            <InputContainer>
-              <Label className="dark:text-white">Minimum Amount *</Label>
-              <Controller
-                name="minAmount"
-                control={control}
-                rules={{ required: 'Minimum amount is required' }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="Enter minimum purchase amount"
-                    className="w-full"
-                  />
-                )}
-              />
-              {errors.minAmount && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.minAmount.message}
-                </p>
-              )}
-            </InputContainer>
-
-            <InputContainer>
-              <Label className="dark:text-white">Maximum Amount *</Label>
-              <Controller
-                name="maxAmount"
-                control={control}
-                rules={{ required: 'Maximum amount is required' }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="Enter maximum discount amount"
-                    className="w-full"
-                  />
-                )}
-              />
-              {errors.maxAmount && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.maxAmount.message}
-                </p>
-              )}
-            </InputContainer>
-
-            <InputContainer>
-              <Label className="dark:text-white">Expiry Date *</Label>
-              <Controller
-                name="expiry"
-                control={control}
-                rules={{ required: 'Expiry date is required' }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="date"
-                    placeholder="Select expiry date"
-                    className="w-full"
-                  />
-                )}
-              />
-              {errors.expiry && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.expiry.message}
-                </p>
-              )}
-            </InputContainer>
+              </InputContainer>
+            ))}
           </div>
 
           <InputContainer className="col-span-2 mt-6">
@@ -216,11 +168,9 @@ const AdminCouponCreateForm = () => {
             <Controller
               name="description"
               control={control}
-              rules={{ required: 'Description is required' }}
               render={({ field }) => (
                 <textarea
                   {...field}
-                  placeholder="Enter coupon description"
                   className="w-full h-40 p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
                 />
               )}
@@ -232,6 +182,68 @@ const AdminCouponCreateForm = () => {
             )}
           </InputContainer>
 
+          <div>
+            <InputContainer>
+              <Label className="dark:text-white">Applicable Users *</Label>
+              <button
+                type="button"
+                onClick={() => setShowUserModal(true)}
+                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white text-left"
+              >
+                {selectedUsers.length > 0
+                  ? `${selectedUsers.length} user(s) selected`
+                  : "Click to select users"}
+              </button>
+              <div className="mt-2">
+                {selectedUsers.map((user) => (
+                  <span
+                    key={user.userId}
+                    className="inline-block bg-blue-200 rounded-md p-1 mr-2 mb-2"
+                  >
+                    {user.username}
+                    <button
+                      type="button"
+                      onClick={() => handleUserRemove(user.userId)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </InputContainer>
+
+            <InputContainer>
+              <Label className="dark:text-white">Applicable Products *</Label>
+              <button
+                type="button"
+                onClick={() => setShowProductModal(true)}
+                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white text-left"
+              >
+                {selectedProducts.length > 0
+                  ? `${selectedProducts.length} product(s) selected`
+                  : "Click to select products"}
+              </button>
+              <div className="mt-2">
+                {selectedProducts.map((product) => (
+                  <span
+                    key={product.productId}
+                    className="inline-block bg-green-200 rounded-md p-1 mr-2 mb-2"
+                  >
+                    {product.productName}
+                    <button
+                      type="button"
+                      onClick={() => handleProductRemove(product.productId)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </InputContainer>
+          </div>
+
           <div className="flex justify-end gap-4 mt-4">
             <button
               type="submit"
@@ -241,10 +253,148 @@ const AdminCouponCreateForm = () => {
             </button>
           </div>
         </form>
+
+        {showUserModal && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-1/3 max-h-[80vh] overflow-y-auto shadow-2xl">
+              {/* Header with Close and Confirm buttons */}
+              <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 flex justify-between items-center mb-4 rounded-t-lg">
+                <h3 className="text-lg font-semibold text-blue-600 dark:text-gray-100">
+                  Select Users
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowUserModal(false)}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => setShowUserModal(false)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="sticky top-16 bg-white dark:bg-gray-800 p-4 mb-4 rounded-t-lg">
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* User List */}
+              <div className="p-4 overflow-y-auto flex-grow">
+                <div className="space-y-2">
+                  {users?.users
+                    ?.filter((user) =>
+                      user.email
+                        .toLowerCase()
+                        .includes(userSearchQuery.toLowerCase())
+                    )
+                    .map((user) => (
+                      <div
+                        key={user.id}
+                        className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center rounded-md"
+                        onClick={() => handleUserSelect(user.id, user.email)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.some(
+                            (u) => u.userId === user.id
+                          )}
+                          onChange={() => {}}
+                          className="mr-2"
+                        />
+                        <span className="text-gray-800 dark:text-gray-100">
+                          {user.email}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showProductModal && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-1/3 max-h-[80vh] overflow-y-auto shadow-2xl">
+              <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 flex justify-between items-center rounded-t-lg">
+                <h3 className="text-lg font-semibold text-blue-600 dark:text-gray-100">
+                  Select Products
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowProductModal(false)}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => setShowProductModal(false)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="sticky top-16 bg-white dark:bg-gray-800 p-4 rounded-t-lg">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={productSearchQuery}
+                  onChange={(e) => setProductSearchQuery(e.target.value)}
+                  className="w-full p-2 mb-4 border border-gray-300 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="p-4 overflow-y-auto flex-grow">
+                <div className="space-y-2">
+                  {products?.products
+                    ?.filter((product) =>
+                      product.productName
+                        .toLowerCase()
+                        .includes(productSearchQuery.toLowerCase())
+                    )
+                    .map((product) => (
+                      <div
+                        key={product.id}
+                        className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center rounded-md"
+                        onClick={() =>
+                          handleProductSelect(product.id, product.productName)
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.some(
+                            (p) => p.productId === product.id
+                          )}
+                          onChange={() => {}}
+                          className="mr-2"
+                        />
+                        <span className="text-gray-800 dark:text-gray-100">
+                          {product.productName}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
 };
 
 export default AdminCouponCreateForm;
-

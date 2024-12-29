@@ -67,6 +67,10 @@ export const addressPasswordApi = createApi({
         params: { quantity }, // Pass the productId and quantity as params
       }),
     }),
+
+    getCheckoutCoupons: builder.query({
+      query: (productId) => `/coupons/checkout-coupons/${productId}`
+    })
   }),
 });
 
@@ -80,5 +84,6 @@ export const {
   useCheckoutAddressQuery,
   useProcessPaymentMutation,
   useGetOrdersQuery,
-  useCheckProductStockQuery
+  useCheckProductStockQuery,
+  useGetCheckoutCouponsQuery
 } = addressPasswordApi;

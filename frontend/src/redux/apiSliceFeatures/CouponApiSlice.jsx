@@ -25,6 +25,7 @@ export const couponApiSlice = crudApiSlice.injectEndpoints({
       query: () => '/coupons/getCouponStats', // Assuming there is a route for coupon stats
       providesTags: [{ type: 'Coupon', id: 'coupon-stats' }],
     }),
+
   }),
 });
 

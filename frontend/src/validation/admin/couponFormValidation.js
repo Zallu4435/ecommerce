@@ -33,5 +33,8 @@ export const couponSchema = z.object({
     .string()
     .refine((val) => !isNaN(Date.parse(val)), "Expiry must be a valid date")
     .refine((val) => Date.parse(val) > Date.now(), "Expiry date must be in the future"),
+
+    applicableUsers: z.array(z.string()),
+    applicableProducts: z.array(z.string()),
 });
 

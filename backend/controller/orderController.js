@@ -122,10 +122,6 @@ exports.getAllOrders = async (req, res) => {
     const orders = await Order.aggregate(pipeline);
     console.log(orders, "orders")
 
-    if (!orders.length) {
-      return res.status(404).json({ message: "No orders found" });
-    }
-
     res.status(200).json(orders); // Send each item as a separate order object
   } catch (error) {
     console.error("Error fetching user orders:", error);
