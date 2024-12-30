@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { HiOutlineArrowLeft } from 'react-icons/hi';
-import { toast } from 'react-toastify';
-import { useProcessPaymentMutation } from '../../redux/apiSliceFeatures/addressPasswordApiSlice';
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { HiOutlineArrowLeft } from "react-icons/hi";
+import { toast } from "react-toastify";
+import { useProcessPaymentMutation } from "../../redux/apiSliceFeatures/addressPasswordApiSlice";
 
 const ProceedToPaymentPage = () => {
   const location = useLocation();
@@ -12,7 +12,8 @@ const ProceedToPaymentPage = () => {
 
   // console.log(order, 'order')
 
-  const [processPayment, { isLoading: isPaymentProcessing }] = useProcessPaymentMutation();
+  const [processPayment, { isLoading: isPaymentProcessing }] =
+    useProcessPaymentMutation();
 
   if (!address || !order || !payment) {
     return (
@@ -24,8 +25,8 @@ const ProceedToPaymentPage = () => {
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -45,26 +46,26 @@ const ProceedToPaymentPage = () => {
     try {
       setLoading(true);
 
-      if (payment.paymentMethod === 'online') {
-        if (payment.onlinePaymentMethod === 'razorpay') {
+      if (payment.paymentMethod === "online") {
+        if (payment.onlinePaymentMethod === "razorpay") {
           const scriptLoaded = await loadRazorpayScript();
           if (!scriptLoaded) {
-            toast.error('Razorpay SDK failed to load. Please try again later.');
+            toast.error("Razorpay SDK failed to load. Please try again later.");
             setLoading(false);
             return;
           }
 
           // Dummy Razorpay Options
           const options = {
-            key: 'rzp_test_1rT7BxhvJixZp1', // Replace with Razorpay Test Key ID
+            key: "rzp_test_1rT7BxhvJixZp1", // Replace with Razorpay Test Key ID
             amount: (coupon ? discountedPrice : order.total) * 100, // Amount in paise
-            currency: 'INR',
-            name: 'Test Business',
-            description: 'Test Transaction',
-            image: 'https://example.com/logo.png', // Dummy logo URL
+            currency: "INR",
+            name: "Test Business",
+            description: "Test Transaction",
+            image: "https://example.com/logo.png", // Dummy logo URL
             handler: async function (response) {
-              console.log('Payment successful!', response);
-              toast.success('Payment successful!');
+              console.log("Payment successful!", response);
+              toast.success("Payment successful!");
 
               try {
                 // Prepare data for backend request
@@ -73,45 +74,47 @@ const ProceedToPaymentPage = () => {
                   order,
                   couponCode: coupon ? coupon.couponCode : null,
                   payment: {
-                    paymentMethod: 'razorpay',
-                    onlinePaymentMethod: 'razorpay',
+                    paymentMethod: "razorpay",
+                    onlinePaymentMethod: "razorpay",
                   },
                   productId: null, // Assuming it's a cart order, pass productId if it's single product
-                  quantity: null,  // For cart-based order, quantity is handled
+                  quantity: null, // For cart-based order, quantity is handled
                 };
 
                 // Call the RTK query mutation to process the payment
-                const { data } = await processPayment(paymentData).unwrap();
-                console.log('Order placed successfully:', data);
+                const data = await processPayment(paymentData).unwrap();
+                console.log("Order placed successfully:", data);
 
-                navigate('/payment-success', {
+                navigate("/payment-success", {
                   state: { paymentId: data.paymentId, orderId: data.orderId },
                 });
               } catch (error) {
-                console.error('Error processing payment:', error);
-                toast.error('Failed to process the order or payment. Please try again.');
+                console.error("Error processing payment:", error);
+                toast.error(
+                  "Failed to process the order or payment. Please try again."
+                );
               }
             },
             prefill: {
-              name: 'John Doe',
-              email: 'john.doe@example.com',
-              contact: '9876543210',
+              name: "John Doe",
+              email: "john.doe@example.com",
+              contact: "9876543210",
             },
             notes: {
-              address: 'Dummy Address for Testing',
+              address: "Dummy Address for Testing",
             },
             theme: {
-              color: '#3399cc',
+              color: "#3399cc",
             },
           };
 
           const razorpayInstance = new window.Razorpay(options);
           razorpayInstance.open();
-        } else if (payment.onlinePaymentMethod === 'card') {
-          toast.info('Processing card payment...');
+        } else if (payment.onlinePaymentMethod === "card") {
+          toast.info("Processing card payment...");
           const isSuccessful = await simulateCardPayment();
           if (isSuccessful) {
-            toast.success('Card payment successful!');
+            toast.success("Card payment successful!");
 
             // Prepare data for backend request
             const paymentData = {
@@ -119,28 +122,28 @@ const ProceedToPaymentPage = () => {
               order,
               couponCode: coupon ? coupon.couponCode : null,
               payment: {
-                paymentMethod: 'card',
-                onlinePaymentMethod: 'card',
+                paymentMethod: "card",
+                onlinePaymentMethod: "card",
               },
               productId: null,
               quantity: null,
             };
 
             // Call the RTK query mutation to process the payment
-            const { data } = await processPayment(paymentData).unwrap();
-            console.log('Order placed successfully:', data);
+            const data = await processPayment(paymentData).unwrap();
+            console.log("Order placed successfully:", data);
 
-            navigate('/payment-success', {
+            navigate("/payment-success", {
               state: { paymentId: data.paymentId, orderId: data.orderId },
             });
           } else {
-            toast.error('Card payment failed. Please try again.');
+            toast.error("Card payment failed. Please try again.");
           }
         } else {
-          toast.error('Unsupported online payment method.');
+          toast.error("Unsupported online payment method.");
         }
-      } else if (payment.paymentMethod === 'cod') {
-        toast.info('Cash on Delivery selected. Confirming order...');
+      } else if (payment.paymentMethod === "cod") {
+        toast.info("Cash on Delivery selected. Confirming order...");
         setTimeout(async () => {
           try {
             // Prepare data for backend request
@@ -149,7 +152,7 @@ const ProceedToPaymentPage = () => {
               order,
               couponCode: coupon ? coupon.couponCode : null,
               payment: {
-                paymentMethod: 'cod',
+                paymentMethod: "cod",
                 onlinePaymentMethod: null,
               },
               productId: null,
@@ -157,23 +160,25 @@ const ProceedToPaymentPage = () => {
             };
 
             // Call the RTK query mutation to process the payment
-            const { data } = await processPayment(paymentData).unwrap();
-            console.log('Order placed successfully:', data);
+            const data = await processPayment(paymentData).unwrap();
+            // console.log('Order placed successfully:', data);
 
-            navigate('/payment-success', {
+            navigate("/payment-success", {
               state: { paymentId: data.paymentId, orderId: data.orderId },
             });
           } catch (error) {
-            console.error('Error processing payment:', error);
-            toast.error('Failed to process the order or payment. Please try again.');
+            console.error("Error processing payment:", error);
+            toast.error(
+              "Failed to process the order or payment. Please try again."
+            );
           }
         }, 1500);
       } else {
-        toast.error('Invalid payment method selected.');
+        toast.error("Invalid payment method selected.");
       }
     } catch (error) {
-      console.error('An error occurred:', error.message || error);
-      toast.error('An unexpected error occurred. Please try again later.');
+      console.error("An error occurred:", error?.message || error);
+      toast.error("An unexpected error occurred. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -181,14 +186,16 @@ const ProceedToPaymentPage = () => {
 
   // Calculate the offer price (total - discount)
   const discountedPrice = coupon
-    ? order.total - (order.total * (coupon.discount / 100))
+    ? order.total - order.total * (coupon.discount / 100)
     : order.total;
 
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-green-600 dark:text-green-300">Proceed to Payment</h2>
+          <h2 className="text-3xl font-bold text-green-600 dark:text-green-300">
+            Proceed to Payment
+          </h2>
           <button
             onClick={() => navigate(-1)}
             className="flex items-center bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-300"
@@ -199,56 +206,83 @@ const ProceedToPaymentPage = () => {
 
         {/* Address Section */}
         <div className="mb-6 p-4 border border-gray-300 dark:border-gray-700 rounded-md">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Shipping Address</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Shipping Address
+          </h3>
           <div className="mt-2 text-gray-700 dark:text-gray-300 space-y-1">
             <p>{address.line1}</p>
-            <p>{address.city}, {address.state}, {address.zip}</p>
+            <p>
+              {address.city}, {address.state}, {address.zip}
+            </p>
             <p>{address.country}</p>
           </div>
         </div>
 
         {/* Order Summary */}
         <div className="mb-6 p-4 border border-gray-300 dark:border-gray-700 rounded-md">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Order Summary</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Order Summary
+          </h3>
           <div className="mt-2 space-y-2">
             {order.cartItems.map((item) => (
-              <div key={item.id} className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600">
-                <span className="text-gray-700 dark:text-gray-300">{item.productName}</span>
-                <span className="text-gray-700 dark:text-gray-300">{item.quantity} x ₹{item.originalPrice.toFixed(2)}</span>
+              <div
+                key={item.id}
+                className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-600"
+              >
+                <span className="text-gray-700 dark:text-gray-300">
+                  {item.productName}
+                </span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  {item.quantity} x ₹{item.originalPrice.toFixed(2)}
+                </span>
               </div>
             ))}
             <div className="flex justify-between py-2 mt-4">
               <span className="font-semibold">Total</span>
-              <span className="font-semibold text-xl text-gray-900 dark:text-gray-100">₹{discountedPrice.toFixed(2)}</span>
+              <span className="font-semibold text-xl text-gray-900 dark:text-gray-100">
+                ₹
+                {typeof discountedPrice === "number" && !isNaN(discountedPrice)
+                  ? discountedPrice.toFixed(2)
+                  : discountedPrice}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Payment Section */}
         <div className="mb-6 p-4 border border-gray-300 dark:border-gray-700 rounded-md">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Payment Method</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Payment Method
+          </h3>
           <div className="mt-4">
             <div className="flex items-center">
               <input
                 type="radio"
                 id="cod"
                 name="paymentMethod"
-                checked={payment.paymentMethod === 'cod'}
+                checked={payment.paymentMethod === "cod"}
                 onChange={() => {}}
                 className="mr-3"
               />
-              <label htmlFor="cod" className="text-gray-700 dark:text-gray-300">Cash on Delivery</label>
+              <label htmlFor="cod" className="text-gray-700 dark:text-gray-300">
+                Cash on Delivery
+              </label>
             </div>
             <div className="flex items-center mt-2">
               <input
                 type="radio"
                 id="online"
                 name="paymentMethod"
-                checked={payment.paymentMethod === 'online'}
+                checked={payment.paymentMethod === "online"}
                 onChange={() => {}}
                 className="mr-3"
               />
-              <label htmlFor="online" className="text-gray-700 dark:text-gray-300">Online Payment</label>
+              <label
+                htmlFor="online"
+                className="text-gray-700 dark:text-gray-300"
+              >
+                Online Payment
+              </label>
             </div>
           </div>
         </div>
@@ -259,7 +293,9 @@ const ProceedToPaymentPage = () => {
             className="bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition duration-300"
             disabled={isPaymentProcessing || loading}
           >
-            {isPaymentProcessing || loading ? 'Processing...' : 'Confirm Payment'}
+            {isPaymentProcessing || loading
+              ? "Processing..."
+              : "Confirm Payment"}
           </button>
         </div>
       </div>

@@ -679,7 +679,7 @@ const handleSingleProductOrder = async (productId, quantity) => {
   await product.save();
   return {
     ProductId: productId,
-    Price: product.price,
+    Price: product.originalPrice,
     Quantity: quantity,
     Status: "Order Placed",
   };
@@ -757,19 +757,27 @@ const handleAddress = async (address, userId) => {
 };
 
 // Updated helper function to create order record
-const createOrderRecord = async (userId, items, totalAmount, addressId, couponId) => {
-  console.log('Creating order record with:', { userId, items, totalAmount, addressId, couponId });
+const createOrderRecord = async (userId, items, subtotal, couponDiscount, totalAmount, addressId, couponId) => {
+  console.log('Creating order record with:', { userId, items, subtotal, couponDiscount, totalAmount, addressId, couponId });
+
+  // Create a new order with the additional fields
   const orderRecord = new Order({
     UserId: userId,
     items,
-    TotalAmount: totalAmount,
+    Subtotal: subtotal, // Total before any discounts
+    CouponDiscount: couponDiscount, // Discount applied from the coupon
+    TotalAmount: totalAmount, // Final total after applying the discount
     AddressId: addressId,
     CouponId: couponId,
   });
+
+  // Save the order to the database
   const savedOrder = await orderRecord.save();
   console.log('Order saved successfully:', savedOrder);
+
   return savedOrder;
 };
+
 
 // Helper function to create payment record
 
@@ -838,10 +846,10 @@ const createPaymentRecord = async (userId, orderId, paymentMethod, totalAmount, 
 exports.processPayment = async (req, res) => {
   try {
     console.log('Processing payment. Request body:', req.body);
-    const { address, order, couponCode, payment, productId, quantity } = req.body;
+    const { address, order, couponCode, payment,} = req.body;
     const userId = req.user;
     console.log('User ID:', userId);
-console.log(order?.cartItems, 'cartItems')
+
     let items = [];
 
     // Step 1: Handle the Product or Cart Items
@@ -859,20 +867,24 @@ console.log(order?.cartItems, 'cartItems')
 
     // Step 2: Validate and Apply Coupon
     const coupon = await validateAndApplyCoupon(couponCode, userId);
-    console.log('Coupon applied:', coupon);
+    const couponDiscount = coupon ? (order.total * coupon.discount) / 100 : 0; // Assuming the coupon has a 'discount' property
+    console.log('Coupon applied:', coupon, 'Coupon discount:', couponDiscount)
 
     // Step 3: Handle Address Reference
     const addressReference = await handleAddress(address, userId);
     console.log('Address reference:', addressReference);
 
+    const totalAmount = order.total - couponDiscount;
+    console.log(totalAmount, 'totalAmount')
+
     // Step 4: Create the Order Record
     console.log('Creating order record');
-    const savedOrder = await createOrderRecord(userId, items, order.total, addressReference, coupon?._id);
+    const savedOrder = await createOrderRecord(userId, items, order.total, couponDiscount, totalAmount,  addressReference, coupon?._id);
     console.log('Order created:', savedOrder);
-
+          
     // Step 5: Handle Payment
     console.log('Creating payment record');
-    const paymentRecord = await createPaymentRecord(userId, savedOrder._id, payment.paymentMethod, order.total);
+    const paymentRecord = await createPaymentRecord(userId, savedOrder._id, payment.paymentMethod, totalAmount);
     console.log('Payment record created:', paymentRecord);
 
     // Step 6: Respond to Client

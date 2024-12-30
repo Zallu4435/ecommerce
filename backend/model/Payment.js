@@ -12,7 +12,9 @@ const PaymentSchema = new mongoose.Schema(
             ref: 'Wallet'
         },
         status: { 
-            type: String, required: true 
+            type: String, 
+            enum: ['Successful', 'Pending', 'Failed', 'Refunded'], 
+            default: 'Pending' 
         },
         method: { 
             type: String, required: true 

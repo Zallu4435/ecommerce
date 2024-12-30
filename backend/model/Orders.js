@@ -15,7 +15,11 @@ const OrdersSchema = new mongoose.Schema({
             Quantity: { 
                 type: Number 
             },
-            //coupon discount
+            RefundStatus: { 
+                type: String, 
+                enum: ['Not Initiated', 'Pending', 'Refunded', 'Failed'], 
+                default: 'Not Initiated' 
+            },
             createdAt: {  // Corrected the typo here
                 type: Date,  // Corrected the type
                 default: Date.now  // Sets the default to the current date
@@ -33,6 +37,10 @@ const OrdersSchema = new mongoose.Schema({
     //      type: mongoose.Schema.Types.ObjectId, 
     //      ref: 'Payment' 
     // }, 
+    CouponDiscount: { type: Number, default: 0 }, // Discount applied via coupon
+    TotalAmount: { type: Number, required: true }, // Total after discount
+    Subtotal: { type: Number, required: true }, // Total before discount
+    RefundAmount: { type: Number, default: 0 }, // Total refund amount for this order
     CoupenId: {
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Coupen' 
