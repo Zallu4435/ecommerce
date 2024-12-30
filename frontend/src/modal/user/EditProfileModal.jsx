@@ -88,6 +88,7 @@ function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              readOnly
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700 dark:text-white dark:focus:ring-pink-500"
             />
           </div>

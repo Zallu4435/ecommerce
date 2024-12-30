@@ -25,7 +25,32 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
 
     getPopularProducts: builder.query({
       query: () => '/products/get-popular-prducts'
-    })
+    }),
+
+    searchProducts: builder.query({
+      query: (searchTerm) => ({
+        url: '/products/search',
+        method: 'GET',
+        params: { q: searchTerm }
+      }),
+    }),
+
+    getFilteredProducts: builder.query({
+      query: (params) => ({
+        url: '/products/filter',
+        method: 'GET',
+        params: {
+          sizes: params.sizes.join(','),
+          colors: params.colors.join(','),
+          minPrice: params.minPrice,
+          maxPrice: params.maxPrice,
+          sortBy: params.sortBy,
+          page: params.page,
+          limit: params.limit,
+          category: params.category
+        },
+      }),
+    }),
   }),
 });
 
@@ -35,6 +60,8 @@ export const {
   useGetShopProductsQuery,
   useGetPopularProductsQuery,
   useGetRelatedProductsQuery,
+  useGetFilteredProductsQuery,
+  useSearchProductsQuery,
   useAddEntityMutation: useAddProductMutation,
   useUpdateEntityMutation: useUpdateProductMutation,
   useDeleteEntityMutation: useDeleteProductMutation,

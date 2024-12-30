@@ -1,15 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { IoIosArrowDown } from 'react-icons/io';
-import { SiPlatformdotsh } from 'react-icons/si';
-import { ThemeSwitcherButton } from '../../context/SettingsTheme';
-import { useSelector } from 'react-redux';
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { IoIosArrowDown } from "react-icons/io";
+import { SiPlatformdotsh } from "react-icons/si";
+import { ThemeSwitcherButton } from "../../context/SettingsTheme";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
   const scrolled = useSelector((state) => state.root.scroll.scrolled);
+
+  const navigate = useNavigate();
 
   const handleDropdownToggle = () => {
     setShowDropdown(!showDropdown);
@@ -26,27 +28,36 @@ const Navbar = () => {
         setShowDropdown(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const categories = [
-    { path: '/mens', label: 'Mens' },
-    { path: '/womens', label: 'Womens' },
-    { path: '/childrens', label: 'Childrens' },
+    { path: "/shop?category=men", label: "Mens" },
+    { path: "/shop?category=women", label: "Womens" },
+    { path: "/shop?category=child", label: "Childrens" },
   ];
 
   const navLinks = [
-    { path: '/', label: 'Home' },
-    { path: '/shop', label: 'Shop' },
-    { path: '/about', label: 'About' },
-    { path: '/contact', label: 'Contact Us' },
+    { path: "/", label: "Home" },
+    { path: "/shop", label: "Shop" },
+    { path: "/about", label: "About" },
+    { path: "/contact", label: "Contact Us" },
   ];
 
+  const handleCategoryClick = (category) => {
+    navigate(`/shop?category=${category.toLowerCase()}`);
+    setShowDropdown(false);
+  };
+
   return (
-    <nav className={`${scrolled ? 'fixed top-0 left-0 right-0' : 'relative'} bg-gray-800 dark:bg-gray-50 dark:text-gray-900 text-white p-4 pb-0 md:p-6 flex flex-col md:flex-row md:items-center z-40 `}>
+    <nav
+      className={`${
+        scrolled ? "fixed top-0 left-0 right-0" : "relative"
+      } bg-gray-800 dark:bg-gray-50 dark:text-gray-900 text-white p-4 pb-0 md:p-6 flex flex-col md:flex-row md:items-center z-40 `}
+    >
       <div className="flex items-center justify-between w-full md:hidden mb-4 md:mb-0">
         {/* Hamburger Menu */}
         <button
@@ -74,16 +85,17 @@ const Navbar = () => {
               Categories
               <IoIosArrowDown />
             </button>
+
             {showDropdown && (
-              <div className="absolute z-10 top-full left-0 mt-2 w-40 bg-gray-700 dark:bg-gray-800 text-white dark:text-gray-100 p-3 rounded-lg shadow-xl">
+              <div className="absolute z-10 top-full left-0 md:left-auto md:right-0 mt-2 w-52 bg-gray-700 dark:bg-gray-800 text-white dark:text-gray-100 p-3 rounded-lg shadow-xl">
                 {categories.map((category) => (
-                  <Link
+                  <button
                     key={category.path}
-                    to={category.path}
-                    className="block px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
+                    onClick={() => handleCategoryClick(category.label)}
+                    className="block w-full text-left px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition duration-200 ease-in-out dark:text-gray-100"
                   >
                     {category.label}
-                  </Link>
+                  </button>
                 ))}
               </div>
             )}
@@ -92,9 +104,16 @@ const Navbar = () => {
       )}
 
       {/* Desktop Navbar */}
-      <div className={`w-full ${menuOpen ? 'block' : 'hidden'} md:flex md:items-center md:justify-between`}>
+      <div
+        className={`w-full ${
+          menuOpen ? "block" : "hidden"
+        } md:flex md:items-center md:justify-between`}
+      >
         {/* Categories Dropdown (Visible only on desktop) */}
-        <div className="relative hidden md:flex items-center md:ml-4" ref={dropdownRef}>
+        <div
+          className="relative hidden md:flex items-center md:ml-4"
+          ref={dropdownRef}
+        >
           <button
             className="text-white dark:text-gray-900 focus:outline-none flex items-center text-xl gap-2 font-bold mx-4 md:mx-0"
             onClick={handleDropdownToggle}

@@ -58,7 +58,10 @@ export const addressPasswordApi = createApi({
     }),
 
     getOrders: builder.query({
-      query: () => 'orders/getOrders', // Endpoint to fetch orders
+      query: ({ page, limit }) => ({
+        url: 'orders/getOrders',
+        params: { page, limit },
+      }),
     }),
 
     checkProductStock: builder.query({
@@ -70,7 +73,8 @@ export const addressPasswordApi = createApi({
 
     getCheckoutCoupons: builder.query({
       query: (productId) => `/coupons/checkout-coupons/${productId}`
-    })
+    }),
+
   }),
 });
 

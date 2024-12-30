@@ -81,6 +81,10 @@ exports.getAllOrders = async (req, res) => {
 
     const userIdObj = new mongoose.Types.ObjectId(userId); // Convert userId to ObjectId if needed
 
+    // Extract pagination parameters from the request query
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not provided
+
     const pipeline = [
       {
         $match: { UserId: userIdObj }, // Match the userId
@@ -120,11 +124,25 @@ exports.getAllOrders = async (req, res) => {
       {
         $sort: { createdAt: -1 }, // Sort by creation date (most recent first)
       },
+      {
+        $skip: (page - 1) * limit, // Skip documents for previous pages
+      },
+      {
+        $limit: limit, // Limit the number of documents returned
+      },
     ];
 
     const orders = await Order.aggregate(pipeline);
 
-    res.status(200).json(orders); // Send each item as a separate order object
+    // Get total count of documents for pagination metadata
+    const totalOrders = await Order.countDocuments({ UserId: userIdObj });
+
+    res.status(200).json({
+      orders,
+      currentPage: page,
+      totalPages: Math.ceil(totalOrders / limit),
+      totalOrders,
+    });
   } catch (error) {
     console.error("Error fetching user orders:", error);
     res
@@ -132,6 +150,7 @@ exports.getAllOrders = async (req, res) => {
       .json({ message: "An error occurred while fetching user orders" });
   }
 };
+
 
 exports.getOrderById = async (req, res) => {
   console.log("Entering getOrdersByUserId function");

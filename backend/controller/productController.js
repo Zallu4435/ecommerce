@@ -92,6 +92,109 @@ exports.getRelatedProducts = async (req, res) => {
   }
 };
 
+exports.searchProducts = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const products = await Product.find(
+      { $text: { $search: q } },
+      { score: { $meta: 'textScore' } }
+    )
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(10);
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getFilteredProducts = async (req, res) => {
+  try {
+    console.log(req.query, 'Request Query');
+
+    const {
+      sizes,
+      colors,
+      minPrice,
+      maxPrice,
+      sortBy,
+      page = 1,
+      limit = 10,
+      category,
+      brand
+    } = req.query;
+
+    // Initialize the query object
+    const query = {};
+
+    // Apply size filter if provided
+    if (sizes && sizes !== '') {
+      query.sizeOption = { $in: sizes.split(',') };
+    }
+
+    // Apply color filter if provided
+    if (colors && colors !== '') {
+      query.colorOption = { $in: colors.split(',') };
+    }
+
+    // Apply price range filter if provided
+    if (minPrice || maxPrice) {
+      query.originalPrice = {};
+      if (minPrice) query.originalPrice.$gte = Number(minPrice);
+      if (maxPrice) query.originalPrice.$lte = Number(maxPrice);
+    }
+
+    // Apply category filter if provided (handle 'null' or empty string)
+    if (category && category !== 'null' && category !== '') {
+      query.category = { $regex: new RegExp('^' + category + '$', 'i') }; // Case-insensitive regex
+    }
+    
+
+    // Apply brand filter if provided
+    if (brand) {
+      query.brand = { $regex: brand, $options: 'i' }; // Case-insensitive search for brand
+    }
+
+    console.log(query, 'Generated Query');
+
+    // Define sorting options
+    const sortOptions = {
+      priceLowToHigh: { originalPrice: 1 },
+      priceHighToLow: { originalPrice: -1 },
+      newArrivals: { createdAt: -1 },
+      aToZ: { productName: 1 },
+      zToA: { productName: -1 }
+    };
+
+    // Fetch filtered or all products with pagination and sorting
+    const products = await Product.find(query)
+      .sort(sortOptions[sortBy] || {}) // Default to no sorting if `sortBy` is undefined
+      .skip((page - 1) * limit) // Skip documents for pagination
+      .limit(Number(limit)); // Limit the number of documents per page
+
+    console.log(products, 'Fetched Products');
+
+    // Calculate total number of matching products
+    const total = await Product.countDocuments(query);
+
+    // Respond with the results
+    res.json({
+      products,
+      totalPages: Math.ceil(total / limit), // Calculate total pages
+      currentPage: Number(page),
+      total
+    });
+  } catch (error) {
+    console.error(error, 'Error Fetching Products');
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 // Create new product (Admin only)
 exports.createProduct = async (req, res, next) => {
   try {

@@ -353,14 +353,60 @@ exports.updatePassword = async (req, res, next) => {
 
 
 
+// exports.getAllUsers = async (req, res) => {
+//   try {
+//     const users = await User.find().select('id username avatar email role createdAt isBlocked');
+
+//     if (users.length === 0) {
+//       return res.status(404).json({ message: 'No users found' });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       users: users.map(user => ({
+//         id: user.id,
+//         name: user.username,
+//         email: user.email,
+//         role: user.role,
+//         joinDate: user.createdAt,
+//         isBlocked: user.isBlocked,
+//         avatar: user.avatar
+//       }))
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
+
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('id username avatar email role createdAt isBlocked');
+    // Get page, limit, and search from query params
+    const { page = 1, limit = 10, search = '' } = req.query;
+
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Search filter
+    const searchFilter = search ? { username: { $regex: search, $options: 'i' } } : {};
+
+    // Find users with pagination and search filter
+    const users = await User.find(searchFilter)
+      .select('id username avatar email role createdAt isBlocked')
+      .skip(skip)
+      .limit(limitNumber);
+
+    // Get the total count of users for pagination metadata
+    const totalUsers = await User.countDocuments(searchFilter);
 
     if (users.length === 0) {
       return res.status(404).json({ message: 'No users found' });
     }
 
+    // Send paginated data
     res.status(200).json({
       success: true,
       users: users.map(user => ({
@@ -371,14 +417,17 @@ exports.getAllUsers = async (req, res) => {
         joinDate: user.createdAt,
         isBlocked: user.isBlocked,
         avatar: user.avatar
-      }))
+      })),
+      totalUsers,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalUsers / limitNumber), // Calculate total pages
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);

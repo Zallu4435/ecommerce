@@ -10,7 +10,8 @@ const {
   changePassword,
   checkoutAddress,
   processPayment,
-  checkProductStock
+  checkProductStock,
+  getFilteredProducts
 } = require("../controller/userProfileController");
 
 

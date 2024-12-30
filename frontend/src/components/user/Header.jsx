@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useCallback, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaShoppingCart } from "react-icons/fa";
 import { IoIosSearch } from "react-icons/io";
 import { FaHeart } from "react-icons/fa6";
@@ -7,23 +7,68 @@ import { MdOutlineCompare } from "react-icons/md";
 import { logoLight } from "../../assets/images/index";
 import { logoDark } from "../../assets/images/index";
 import { useSelector } from "react-redux";
+import { useSearchProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
+import debounce from "lodash/debounce";
 
 const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
   const avatar = useSelector((state) => state.user.avatar);
   const username = useSelector((state) => state.user.username);
+  const navigate = useNavigate();
+
+  const { data: searchResults, isLoading } = useSearchProductsQuery(debouncedSearchTerm, {
+    skip: debouncedSearchTerm.length < 3,
+  });
+
   const links = [
     {
       to: isAuthenticated ? "/profile" : "/login",
-      Icon: isAuthenticated && avatar ? null : FaUser, // Use null if avatar exists
-      avatar: isAuthenticated && avatar ? avatar : null, // Avatar URL if available
-      label: isAuthenticated && username ? username : "Profile", // Use nickname if available
+      Icon: isAuthenticated && avatar ? null : FaUser,
+      avatar: isAuthenticated && avatar ? avatar : null,
+      label: isAuthenticated && username ? username : "Profile",
     },
     { to: "/wishlist", Icon: FaHeart, label: "Wishlist" },
     { to: "/compare", Icon: MdOutlineCompare, label: "Compare" },
     { to: "/cart", Icon: FaShoppingCart, label: "Cart" },
   ];
+
+  const debouncedSearch = useCallback(
+    debounce((term) => {
+      setDebouncedSearchTerm(term);
+    }, 300),
+    []
+  );
+
+  useEffect(() => {
+    debouncedSearch(searchTerm);
+  }, [searchTerm, debouncedSearch]);
+
+  useEffect(() => {
+    // Reset debouncedSearchTerm and searchResults when the search term is empty
+    if (searchTerm === "") {
+      setDebouncedSearchTerm("");
+    }
+  }, [searchTerm]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchTerm.length >= 3) {
+      navigate(`/shop?q=${encodeURIComponent(searchTerm)}`);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setDebouncedSearchTerm("");
+    navigate("/shop");
+  };
 
   return (
     <header className="dark:bg-gray-800 bg-gray-100 py-4 z-50 shadow-md">
@@ -31,13 +76,11 @@ const Header = () => {
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link to="/" className="block">
-            {/* Light Mode Logo */}
             <img
               src={logoLight}
               alt="Light Mode Logo"
               className="h-[60px] my-[-20px] sm:h-12 md:h-14 lg:h-[100px] object-contain dark:hidden"
             />
-            {/* Dark Mode Logo */}
             <img
               src={logoDark}
               alt="Dark Mode Logo"
@@ -47,15 +90,53 @@ const Header = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="flex-grow max-w-xl mx-4 hidden md:block">
-          <div className="relative">
+        <div className="flex-grow max-w-xl mx-4 z-50 hidden md:block">
+          <form onSubmit={handleSearchSubmit} className="relative">
             <input
               type="text"
               placeholder="Search For Products"
               className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 transition-all duration-300 dark:bg-gray-700 dark:text-gray-200"
+              value={searchTerm}
+              onChange={handleSearchChange}
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ×
+              </button>
+            )}
             <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
-          </div>
+            {isLoading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
+              </div>
+            )}
+          </form>
+          {debouncedSearchTerm && searchResults && searchResults.length > 0 && (
+            <div className="absolute z-10 w-[555px] mt-2 bg-white dark:bg-gray-700 rounded-md ml-[10px] shadow-lg">
+              {searchResults.slice(0, 5).map((product) => (
+            <Link
+            key={product._id}
+            to={`/product/${product._id}`}
+            className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+          >
+            {product.productName}
+          </Link>
+          
+              ))}
+              {searchResults.length > 5 && (
+                <Link
+                to={`/shop?q=${encodeURIComponent(searchTerm)}`}
+                className="block px-4 py-2 text-center text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-600"
+                >
+                  View all results
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Navigation Links */}
@@ -94,14 +175,53 @@ const Header = () => {
       {/* Mobile Search Bar */}
       {showSearch && (
         <div className="md:hidden px-6 py-4 bg-gray-100 dark:bg-gray-800">
-          <div className="relative">
+          <form onSubmit={handleSearchSubmit} className="relative">
             <input
               type="text"
               placeholder="Search For Products"
               className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 transition-all duration-300 dark:bg-gray-700 dark:text-gray-200"
+              value={searchTerm}
+              onChange={handleSearchChange}
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ×
+              </button>
+            )}
             <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
-          </div>
+            {isLoading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
+              </div>
+            )}
+          </form>
+          {debouncedSearchTerm && searchResults && searchResults.length > 0 && (
+            <div className="mt-2 bg-white dark:bg-gray-700 rounded-md shadow-lg">
+              {searchResults.slice(0, 5).map((product) => (
+             <Link
+             key={product._id}
+             to={`/product/${product._id}`}
+             className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+           >
+             {product.productName}
+           </Link>
+           
+              ))}
+              {searchResults.length > 5 && (
+                <Link
+                to={`/shop?q=${encodeURIComponent(searchTerm)}`}
+                className="block px-4 py-2 text-center text-bl
+                e-500 hover:bg-gray-100 dark:hover:bg-gray-600"
+                >
+                  View all results
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       )}
     </header>

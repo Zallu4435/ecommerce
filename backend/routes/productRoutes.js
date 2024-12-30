@@ -9,7 +9,9 @@ const {
   deleteProduct ,
   getPopularProducts,
   getAllShopProducts,
-  getRelatedProducts
+  getRelatedProducts,
+  getFilteredProducts,
+  searchProducts
 } = require('../controller/productController');
 
 
@@ -18,6 +20,8 @@ router.get('/getProducts', catchAsyncErrors(getAllProducts)); // Get all product
 router.get('/getShopProducts', catchAsyncErrors(getAllShopProducts)); // Get all products
 router.get('/getProduct/:id', catchAsyncErrors(getProductDetails)); // Get product details
 router.get('/relatedProduct', catchAsyncErrors(getRelatedProducts)); // Get all products
+router.get("/filter", catchAsyncErrors(getFilteredProducts));
+router.get("/search", catchAsyncErrors(searchProducts));
 
 router.get('/get-popular-prducts', catchAsyncErrors(getPopularProducts));
 // Admin only (with authentication check)

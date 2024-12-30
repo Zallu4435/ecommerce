@@ -348,6 +348,7 @@ exports.checkoutAddress = async (req, res) => {
 //     res.status(500).json({ message: "An error occurred while processing the order." });
 //   }
 // };
+
 exports.checkProductStock = async (req, res) => {
 
   console.log("reached inside the checkproduct ")
@@ -900,4 +901,6 @@ exports.processPayment = async (req, res) => {
     res.status(500).json({ message: error.message || "An error occurred while processing the order." });
   }
 };
+
+
 
