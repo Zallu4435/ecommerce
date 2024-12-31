@@ -1,5 +1,6 @@
 const Product = require("../model/Products");
 const ErrorHandler = require("../utils/ErrorHandler");
+const Review = require('../model/Review');
 
 // Get all products (User and Admin)
 exports.getAllProducts = async (req, res, next) => {
@@ -49,25 +50,41 @@ exports.getAllShopProducts = async (req, res, next) => {
   }
 };
 
-// Get single product details (User and Admin)
+
 exports.getProductDetails = async (req, res, next) => {
   try {
+    // Find the product by ID
     const product = await Product.findById(req.params.id);
-
     if (!product) {
       return next(new ErrorHandler("Product not found", 404));
     }
 
+    // Fetch reviews for this product
+    const reviews = await Review.find({ productId: product._id }).populate('userId', 'username avatar'); // Populate user details (optional)
+
+    // Calculate average rating and total reviews
+    const totalReviews = reviews.length;
+    const averageRating =
+      totalReviews > 0
+        ? reviews.reduce((acc, review) => acc + review.rating, 0) / totalReviews
+        : 0;
+
+    // Send product details and reviews
     res.status(200).json({
       success: true,
-      product,
+      product: {
+        ...product.toObject(),
+        averageRating,   // Add average rating
+        totalReviews,    // Add total reviews count
+        reviews,         // Add reviews array
+      },
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Controller to fetch products based on category
+
 exports.getRelatedProducts = async (req, res) => {
   try {
     const { category } = req.query; // Get the category from query parameters
@@ -76,21 +93,48 @@ exports.getRelatedProducts = async (req, res) => {
       return res.status(400).json({ message: "Category is required" });
     }
 
-    // Fetch products based on the category from the database
-    const products = await Product.find({ category }).sort({ rating: -1 }); // Adjust the sorting as needed
+    // Fetch products based on the category
+    const products = await Product.find({ category }).sort({ rating: -1 }); // Adjust sorting as needed
 
     if (!products || products.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No products found for this category" });
+      return res.status(404).json({ message: "No products found for this category" });
     }
 
-    res.status(200).json(products);
+    // Fetch reviews for these products from the Review collection
+    const productIds = products.map((product) => product._id); // Get product IDs
+    const reviews = await Review.find({ productId: { $in: productIds } }); // Get reviews for products
+
+    // Index reviews by productId for easy lookup
+    const reviewsByProductId = reviews.reduce((acc, review) => {
+      if (!acc[review.productId]) {
+        acc[review.productId] = [];
+      }
+      acc[review.productId].push(review); // Add review to the array of its corresponding productId
+      return acc;
+    }, {});
+
+    // Map over products and calculate the average rating and number of reviews
+    const productsWithRatings = products.map((product) => {
+      const productReviews = reviewsByProductId[product._id] || []; // Get reviews for this product
+      const totalReviews = productReviews.length; // Total number of reviews
+      const averageRating = totalReviews
+        ? productReviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+        : 0; // Calculate average rating if there are reviews
+
+      return {
+        ...product.toObject(), // Convert the product document to plain object
+        averageRating, // Add average rating field
+        totalReviews,   // Add total number of reviews field
+      };
+    });
+
+    res.status(200).json(productsWithRatings); // Send products with average rating and total reviews
   } catch (error) {
     console.error("Error fetching products by category:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 exports.searchProducts = async (req, res) => {
   try {
@@ -111,6 +155,7 @@ exports.searchProducts = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 exports.getFilteredProducts = async (req, res) => {
   try {
@@ -152,7 +197,6 @@ exports.getFilteredProducts = async (req, res) => {
     if (category && category !== 'null' && category !== '') {
       query.category = { $regex: new RegExp('^' + category + '$', 'i') }; // Case-insensitive regex
     }
-    
 
     // Apply brand filter if provided
     if (brand) {
@@ -176,14 +220,33 @@ exports.getFilteredProducts = async (req, res) => {
       .skip((page - 1) * limit) // Skip documents for pagination
       .limit(Number(limit)); // Limit the number of documents per page
 
-    console.log(products, 'Fetched Products');
+    // Fetch reviews for each product and calculate average rating and total reviews
+    const productsWithReviews = await Promise.all(
+      products.map(async (product) => {
+        const reviews = await Review.find({ productId: product._id });
+
+        const totalReviews = reviews.length;
+        const averageRating =
+          totalReviews > 0
+            ? reviews.reduce((acc, review) => acc + review.rating, 0) / totalReviews
+            : 0;
+
+        return {
+          ...product.toObject(),
+          averageRating: Number(averageRating.toFixed(1)), // Include average rating
+          totalReviews // Include total review count
+        };
+      })
+    );
+
+    console.log(productsWithReviews, 'Products with Reviews');
 
     // Calculate total number of matching products
     const total = await Product.countDocuments(query);
 
     // Respond with the results
     res.json({
-      products,
+      products: productsWithReviews,
       totalPages: Math.ceil(total / limit), // Calculate total pages
       currentPage: Number(page),
       total
@@ -195,7 +258,6 @@ exports.getFilteredProducts = async (req, res) => {
 };
 
 
-// Create new product (Admin only)
 exports.createProduct = async (req, res, next) => {
   try {
     // console.log(req.body, "body from the products ")
@@ -257,11 +319,35 @@ exports.deleteProduct = async (req, res, next) => {
   }
 };
 
+
 exports.getPopularProducts = async (req, res) => {
   try {
+    // Fetch popular products sorted by rating
     const products = await Product.find().sort({ rating: -1 }).limit(8);
 
-    res.status(200).json(products);
+    // Fetch reviews for each product and calculate average rating and review count
+    const productsWithReviews = await Promise.all(
+      products.map(async (product) => {
+        // Get reviews for the current product
+        const reviews = await Review.find({ productId: product._id });
+
+        // Calculate the average rating and total review count
+        const totalReviews = reviews.length;
+        const averageRating =
+          totalReviews > 0
+            ? reviews.reduce((acc, review) => acc + review.rating, 0) / totalReviews
+            : 0;
+
+        // Add the reviews information to the product object
+        return {
+          ...product.toObject(),
+          averageRating,
+          totalReviews,
+        };
+      })
+    );
+
+    res.status(200).json(productsWithReviews);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to fetch products" });

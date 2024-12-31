@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { HomeIcon, ChevronRightIcon } from '@heroicons/react/solid';
+import { DesktopComputerIcon, ChevronRightIcon } from '@heroicons/react/solid';
 
 const Breadcrumb = () => {
   const location = useLocation();
@@ -36,9 +36,9 @@ const Breadcrumb = () => {
     <nav className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
       <ol className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
         <li>
-          <Link to="/admin" className="hover:underline text-blue-500 flex items-center">
-            <HomeIcon className="h-5 w-5 mr-1" />
-            Home
+          <Link to="/admin/dashboard" className="hover:underline text-blue-500 flex items-center">
+            <DesktopComputerIcon className="h-5 w-5 mr-1" />
+            Dashboard
           </Link>
         </li>
         {baseSection && (
@@ -80,4 +80,3 @@ const Breadcrumb = () => {
 };
 
 export default Breadcrumb;
-

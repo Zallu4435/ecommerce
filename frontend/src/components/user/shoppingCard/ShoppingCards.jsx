@@ -1,24 +1,41 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { FaTimes, FaShoppingCart, FaStar } from 'react-icons/fa';
-import { roundedImg_1 } from '../../../assets/images';
-import { useAddToCartMutation, useGetCartQuery } from '../../../redux/apiSliceFeatures/CartApiSlice';
-import { useAddToWishlistMutation, useGetWishlistQuery } from '../../../redux/apiSliceFeatures/WishlistApiSlice';
-import { useAddToComparisonMutation, useGetComparisonListQuery } from '../../../redux/apiSliceFeatures/ComparisonApiSlice';
-import { icons } from './icons';
-import { handleAddToCart } from './actionHandlers';
-import { DUMMY_RATING, DUMMY_REVIEWS } from './constants';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import {
+  FaTimes,
+  FaShoppingCart,
+  FaStar,
+  FaRegStar,
+  FaStarHalfAlt,
+} from "react-icons/fa";
+import { roundedImg_1 } from "../../../assets/images";
+import {
+  useAddToCartMutation,
+  useGetCartQuery,
+} from "../../../redux/apiSliceFeatures/CartApiSlice";
+import {
+  useAddToWishlistMutation,
+  useGetWishlistQuery,
+} from "../../../redux/apiSliceFeatures/WishlistApiSlice";
+import {
+  useAddToComparisonMutation,
+  useGetComparisonListQuery,
+} from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
+import { icons } from "./icons";
+import { handleAddToCart } from "./actionHandlers";
+import { DUMMY_RATING, DUMMY_REVIEWS } from "./constants";
 
 const ShoppingCard = ({
   _id,
   productName,
   originalPrice,
-  price, 
   image,
+  averageRating,
+  totalReviews,
+  offerPrice,
 }) => {
-  const formattedPrice = parseFloat(price);
-  const formattedOriginalPrice = parseFloat(originalPrice);
+  const formattedPrice = parseFloat(originalPrice);
+  const formattedOriginalPrice = parseFloat(offerPrice);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -46,7 +63,6 @@ const ShoppingCard = ({
             className="w-full absolute z-10 h-full object-cover transform hover:scale-105 transition-transform duration-300 cursor-pointer"
             onClick={handleImageClick}
           />
-          
         </div>
 
         <div className="absolute top-2 left-0 right-0 bottom-0 flex justify-between p-2 mt-2">
@@ -80,7 +96,14 @@ const ShoppingCard = ({
                 {icons.map(({ Icon, color, action }, index) => (
                   <div
                     key={index}
-                    onClick={() => action(_id, { addToWishlist, refetchWishlist, addToComparison, refetchComparison })}
+                    onClick={() =>
+                      action(_id, {
+                        addToWishlist,
+                        refetchWishlist,
+                        addToComparison,
+                        refetchComparison,
+                      })
+                    }
                     className="bg-gray-200 dark:bg-gray-700 p-2 sm:p-3 rounded-full cursor-pointer"
                   >
                     <Icon className={`${color} text-sm sm:text-xl`} />
@@ -96,16 +119,29 @@ const ShoppingCard = ({
         <h3 className="text-lg sm:text-xl font-semibold">{productName}</h3>
 
         <div className="flex mt-2">
-          {Array(5)
-            .fill(<FaStar className="text-yellow-400" />)
-            .map((star, index) => (
-              <span key={index}>{star}</span>
-            ))}
+          {Array.from({ length: 5 }, (_, index) => {
+            if (index + 1 <= Math.floor(averageRating)) {
+              // Full star
+              return <FaStar key={index} className="text-yellow-400" />;
+            } else if (index < averageRating && averageRating % 1 !== 0) {
+              // Half star
+              return <FaStarHalfAlt key={index} className="text-yellow-400" />;
+            } else {
+              // Empty star
+              return <FaRegStar key={index} className="text-gray-300" />;
+            }
+          })}
         </div>
 
         <div className="flex space-x-3 sm:space-x-5 text-gray-700 dark:text-gray-300">
-          <p className="text-sm sm:text-base">Rating: {DUMMY_RATING}</p>
-          <p className="text-sm sm:text-base">{DUMMY_REVIEWS} reviews</p>
+          <p className="text-sm sm:text-base">
+            Rating:{" "}
+            {typeof averageRating === "number" && !isNaN(averageRating)
+              ? averageRating.toFixed(1)
+              : averageRating || "N/A"}
+          </p>
+
+          <p className="text-sm sm:text-base">({totalReviews} reviews)</p>
         </div>
 
         <div className="inline-flex items-center space-x-2">
@@ -113,12 +149,14 @@ const ShoppingCard = ({
             &#8377;{formattedPrice.toFixed(2)}
           </span>
           <span className="text-red-500 font-semibold text-sm sm:text-base">
-          &#8377;{formattedOriginalPrice.toFixed(2)}
+            &#8377;{formattedOriginalPrice.toFixed(2)}
           </span>
         </div>
 
         <button
-          onClick={() => handleAddToCart(_id, addToCart, refetchCart, setIsAdding)}
+          onClick={() =>
+            handleAddToCart(_id, addToCart, refetchCart, setIsAdding)
+          }
           disabled={isAdding}
           className={`w-full py-2 sm:py-3 flex justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${
             isAdding
@@ -128,11 +166,10 @@ const ShoppingCard = ({
         >
           {isAdding ? "Adding to Cart..." : "Add to Cart"}
           {!isAdding && <FaShoppingCart />}
-        </button> 
+        </button>
       </div>
     </div>
   );
 };
 
 export default ShoppingCard;
-

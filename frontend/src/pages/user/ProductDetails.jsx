@@ -20,7 +20,7 @@ const ProductDetails = () => {
     isLoading,
   } = useGetProductByIdQuery(id);
 
-  // console.log(productDetails, "productDetails")
+  console.log(productDetails, "productDetails")
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,7 +36,7 @@ const ProductDetails = () => {
   }, [scrolled]);
 
   // Destructure productDetails
-  const { image, variantImages, productName, originalPrice, description, _id, colorOption, sizeOption, stockQuantity, category } = productDetails.product || {};
+  const { image, variantImages, productName, originalPrice, description, _id, colorOption, sizeOption, stockQuantity, category, averageRating, totalReviews } = productDetails.product || {};
 
   // console.log(category, "category")
   if (isLoading) {
@@ -78,16 +78,18 @@ const ProductDetails = () => {
             productName={productName} 
             originalPrice={originalPrice} 
             description={description}
+            totalReviews={totalReviews}
+            averageRating={averageRating}
           />
 
           {/* Compare Button */}
           <CompareButton className="mt-8" />
 
           {/* Add Review Section */}
-          <AddReview className="mt-8" />
+          <AddReview className="mt-8" productId={_id} />
 
           {/* Reviews Section */}
-          <RatingsAndReviews className="mt-8" />
+          <RatingsAndReviews className="mt-8" productId={_id} />
         </div>
       </div>
 

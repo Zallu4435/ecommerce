@@ -4,18 +4,22 @@ import { Link } from 'react-router-dom';
 import { SettingsTheme } from '../../context/SettingsTheme';
 import { useSelector } from 'react-redux';
 import { useLogoutAdminMutation } from '../../redux/apiSliceFeatures/AdminApiSlice';
+import { FaUser, FaBox, FaShoppingCart, FaListAlt, FaTags, FaChartBar, FaTachometerAlt } from 'react-icons/fa';
 
 const AdminSidebar = () => {
-
+  
   const menuItems = [
-    { name: 'Dashboard', icon: <GrHome />, path: '/admin/dashboard' },
-    { name: 'User Management', icon: <GrHome />, path: '/admin/userManagement' },
-    { name: 'Products Management', icon: <GrHome />, path: '/admin/productManagement' },
-    { name: 'Orders Management', icon: <GrHome />, path: '/admin/orderManagement' },
-    { name: 'Category Management', icon: <GrHome />, path: '/admin/categoryManagement' },
-    { name: 'Coupons Management', icon: <GrHome />, path: '/admin/couponManagement' },
-    { name: 'Sales Management', icon: <GrHome />, path: '/admin/salesManagement' },
+    { name: 'Dashboard', icon: <FaTachometerAlt />, path: '/admin/dashboard' },  // Replaced GrHome with FaTachometerAlt
+    { name: 'User Management', icon: <FaUser />, path: '/admin/userManagement' },
+    { name: 'Products Management', icon: <FaBox />, path: '/admin/productManagement' },
+    { name: 'Orders Management', icon: <FaShoppingCart />, path: '/admin/orderManagement' },
+    { name: 'Category Management', icon: <FaListAlt />, path: '/admin/categoryManagement' },
+    { name: 'Coupons Management', icon: <FaTags />, path: '/admin/couponManagement' },
+    { name: 'Sales Management', icon: <FaChartBar />, path: '/admin/salesManagement' },
   ];
+  
+  
+  
   const admin = useSelector(state => state.admin.admin);
   const [logoutAdmin] = useLogoutAdminMutation();
 

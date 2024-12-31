@@ -7,7 +7,7 @@ export const CardContainer = () => {
   const [cardsPerPage, setCardsPerPage] = useState(8);
   
   const { data: popular_Products = [], error, isLoading } = useGetPopularProductsQuery();
-
+console.log(popular_Products, 'popularproducts ')
 
   useEffect(() => {
     const handleResize = () => {

@@ -5,6 +5,7 @@ import {
   useGetCartQuery,
 } from "../../../redux/apiSliceFeatures/CartApiSlice";
 import { toast } from "react-toastify";
+import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 
 const RelatedProduct = ({ category }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -18,6 +19,8 @@ const RelatedProduct = ({ category }) => {
   } = useGetRelatedProductsQuery(category, {
     skip: !category, // Skip the query if no category is passed
   });
+
+  console.log(relatedProduct, "relatedProducts");
   const { refetch: refetchCart } = useGetCartQuery();
   const [addToCart] = useAddToCartMutation();
 
@@ -126,9 +129,50 @@ const RelatedProduct = ({ category }) => {
                   </h3>
                   {/* Rating */}
                   <div className="flex items-center mt-2">
-                    <span className="text-yellow-500 mr-1">⭐</span>
-                    <span>{product.rating || "N/A"}</span>
+                    {/* Display stars based on rating */}
+                    <div className="flex items-center mr-2">
+                      {[...Array(5)].map((_, index) => {
+                        const rating = product.averageRating;
+
+                        if (index < Math.floor(rating)) {
+                          // Full Star
+                          return (
+                            <FaStar
+                              key={index}
+                              className="text-yellow-500 text-xl"
+                            />
+                          );
+                        } else if (
+                          index < Math.ceil(rating) &&
+                          rating % 1 !== 0
+                        ) {
+                          // Half Star
+                          return (
+                            <FaStarHalfAlt
+                              key={index}
+                              className="text-yellow-500 text-xl"
+                            />
+                          );
+                        } else {
+                          // Empty Star
+                          return (
+                            <FaRegStar
+                              key={index}
+                              className="text-gray-300 text-xl"
+                            />
+                          );
+                        }
+                      })}
+                    </div>
+
+                    {/* Display Rating and Total Reviews */}
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm text-gray-500 ml-2">
+                        ({product.totalReviews || "N/A"} reviews)
+                      </span>
+                    </div>
                   </div>
+
                   {/* Price */}
                   <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-2">
                     ₹ {product.offerPrice}

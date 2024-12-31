@@ -11,6 +11,7 @@ const userWishlistRoutes = require('./userWishlistRoutes');
 const userComparisonRoutes = require('./userComparisonRoutes');
 const salesRoutes = require('./salesRoutes');
 const walletRoutes = require('./walletRoutes');
+const reviewRoutes = require('./reviewRoutes')
 
 const router = express.Router();
 
@@ -25,7 +26,9 @@ router.use('/wallet', walletRoutes)
 router.use('/userProfile', userProfile)
 router.use('/user-cart', userCartRoutes);
 router.use('/user-wishlist', userWishlistRoutes);
-router.use('/user-comparison', userComparisonRoutes)
+router.use('/user-comparison', userComparisonRoutes);
+router.use('/reviews', reviewRoutes)
+
 
 
 module.exports = router; 

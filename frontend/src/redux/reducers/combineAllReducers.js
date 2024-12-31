@@ -11,7 +11,9 @@ import { cartApi } from '../apiSliceFeatures/CartApiSlice'
 import { wishlistApiSlice } from '../apiSliceFeatures/WishlistApiSlice';
 import { comparisonApiSlice } from '../apiSliceFeatures/ComparisonApiSlice'
 import { salesApiSlice } from '../apiSliceFeatures/SalesApiSlice';
-import { walletApiSlice } from '../apiSliceFeatures/WalletApiSlice'
+import { walletApiSlice } from '../apiSliceFeatures/WalletApiSlice';
+import { reviewApi } from '../apiSliceFeatures/ReviewApiSlice';
+
 // Combine all reducers
 const rootReducer = combineReducers({
   user: userReducer,
@@ -26,6 +28,7 @@ const rootReducer = combineReducers({
   salesApi: salesApiSlice.reducer,
   comparisonApi: comparisonApiSlice.reducer,
   walletApi: walletApiSlice.reducer,
+  reviewApi: reviewApi.reducer,
   root: defaultReducer
 });
 
@@ -42,6 +45,7 @@ export const apiMiddleware = [
   comparisonApiSlice.middleware,
   salesApiSlice.middleware,
   walletApiSlice.middleware,
+  reviewApi.middleware,
   ];
 
 

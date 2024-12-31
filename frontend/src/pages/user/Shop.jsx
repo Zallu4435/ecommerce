@@ -42,7 +42,7 @@ const ShopPage = () => {
     },
     { skip: !!searchQuery }
   );
-
+  
   const {
     data: searchData,
     error: searchError,
@@ -93,13 +93,13 @@ const ShopPage = () => {
     );
   };
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    navigate({
-      pathname: location.pathname,
-      search: query ? `q=${query}` : category ? `category=${category}` : "",
-    });
-  };
+  // const handleSearch = (query) => {
+  //   setSearchQuery(query);
+  //   navigate({
+  //     pathname: location.pathname,
+  //     search: query ? `q=${query}` : category ? `category=${category}` : "",
+  //   });
+  // };
 
   const handleClearSearch = () => {
     setSearchQuery("");
@@ -215,9 +215,11 @@ const ShopPage = () => {
                     key={product._id || Math.random()}
                     _id={product._id || ""}
                     productName={product.productName || "Unnamed Product"}
-                    price={product.originalPrice || 0}
-                    originalPrice={product.offerPrice || 0}
+                    originalPrice={product.originalPrice || 0}
+                    offerPrice={product.offerPrice || 0}
                     image={product.image || "/default-image.jpg"}
+                    averageRating={product.averageRating || 0}
+                    totalReviews={product.totalReviews || 0}
                   />
                 ))
               ) : (
