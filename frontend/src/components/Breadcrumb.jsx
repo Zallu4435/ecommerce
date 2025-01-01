@@ -33,7 +33,7 @@ const Breadcrumb = () => {
   };
 
   return (
-    <nav className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
+    <nav className="bg-orange-100 fixed right-0 z-50 left-[420px] dark:bg-gray-700 p-3 rounded-md">
       <ol className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
         <li>
           <Link to="/admin/dashboard" className="hover:underline text-blue-500 flex items-center">

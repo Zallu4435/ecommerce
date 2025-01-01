@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetOrdersQuery } from '../../../redux/apiSliceFeatures/addressPasswordApiSlice';
 import { useCancelOrderMutation } from '../../../redux/apiSliceFeatures/OrderApiSlice';
-import OrderDetailsModal from '../../../modal/user/OrderView';
+import OrderDetailsModal from '../../../modal/user/OrderDetailsModal';
 import CancelConfirmationModal from '../../../modal/user/ConfirmOrderCancelModal';
 
 const OrdersList = () => {

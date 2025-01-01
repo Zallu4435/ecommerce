@@ -3,9 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {
-  productValidationSchema,
-} from "../../validation/admin/ProductFormValidation";
+import { productValidationSchema } from "../../validation/admin/ProductFormValidation";
 import ProductImageVarientAddModal from "../../modal/admin/ProductImageVarientAddModal";
 import {
   Input,
@@ -26,7 +24,6 @@ const AdminProductUpdateForm = () => {
   const [imageFiles, setImageFiles] = useState([null, null, null]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [addEntity] = useAddEntityMutation();
-  
 
   const {
     control,
@@ -52,15 +49,13 @@ const AdminProductUpdateForm = () => {
       alert(error.message);
     }
   };
-  
-  
+
   const onSubmit = async (data, e) => {
     e.preventDefault();
 
     console.log("Form data submitted:", data);
 
     try {
-
       // Upload the main image to Cloudinary
       if (data.image) {
         console.log("Uploading main image...");
@@ -113,17 +108,20 @@ const AdminProductUpdateForm = () => {
     setValue("colorOption", newColor);
   };
 
-  console.log(errors, "error");
+  // console.log(errors, "error");
 
-  console.log(watch("colorOption"));
-  console.log(watch("sizeOption"));
+  // console.log(watch("colorOption"));
+  // console.log(watch("sizeOption"));
 
   return (
-    <div className="dark:bg-black min-h-screen flex ml-12 items-center justify-center p-4">
+    <div className="dark:bg-black min-h-screen flex mt-10 items-center justify-center">
       <pre>{JSON.stringify(errors.message)}</pre>
-      <div className="w-full max-w-[1300px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
+      <div className="w-full max-w-[1300px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 shadow-md">
         {/* Back Button */}
-        <div className="flex items-center mb-6">
+        <div className="flex justify-between mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
+            Add Product
+          </h1>
           <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
@@ -132,10 +130,6 @@ const AdminProductUpdateForm = () => {
             <span>Back to Products</span>
           </button>
         </div>
-
-        <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
-          Add Product
-        </h1>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Product Name and Image URL */}
@@ -150,6 +144,7 @@ const AdminProductUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter product name"
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -185,7 +180,10 @@ const AdminProductUpdateForm = () => {
                 name="category"
                 control={control}
                 render={({ field }) => (
-                  <select {...field} className="w-full p-3 border rounded-md">
+                  <select
+                    {...field}
+                    className="w-full p-3 border rounded-md dark:text-white dark:bg-gray-800"
+                  >
                     <option value="">Select category</option>
                     <option value="Men">Men</option>
                     <option value="Women">Women</option>
@@ -213,6 +211,7 @@ const AdminProductUpdateForm = () => {
                     {...field}
                     placeholder="Enter product description"
                     rows="4"
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -258,6 +257,7 @@ const AdminProductUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter Brand Name"
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -279,6 +279,7 @@ const AdminProductUpdateForm = () => {
                     type="number"
                     placeholder="Enter original Price"
                     onChange={(e) => onChange(Number(e.target.value))}
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -300,6 +301,7 @@ const AdminProductUpdateForm = () => {
                     type="number"
                     placeholder="Enter Offer Price"
                     onChange={(e) => onChange(Number(e.target.value))}
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -324,6 +326,7 @@ const AdminProductUpdateForm = () => {
                     type="number"
                     placeholder="Enter Stock Quantity"
                     onChange={(e) => onChange(Number(e.target.value))}
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -344,6 +347,7 @@ const AdminProductUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter Return Policy"
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />

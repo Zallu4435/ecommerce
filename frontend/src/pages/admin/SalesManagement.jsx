@@ -15,7 +15,7 @@ import {
 } from "../../redux/apiSliceFeatures/SalesApiSlice";
 
 const Card = ({ title, value, icon, bgColor, iconColor }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition transform hover:scale-105">
+  <div className="bg-yellow-100 dark:bg-gray-800 rounded-lg shadow p-6 transition transform hover:scale-105">
     <div className="flex items-center">
       <div className={`bg-${bgColor}-500 rounded-full p-3`}>
         {icon &&
@@ -36,41 +36,43 @@ const Card = ({ title, value, icon, bgColor, iconColor }) => (
 );
 
 const Table = ({ data, columns, title }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+  <div className="bg-yellow-50 dark:bg-gray-800 rounded-lg shadow mb-8">
     <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
         {title}
       </h2>
     </div>
     <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-gray-50 dark:bg-gray-700 text-left">
-            {columns.map((col) => (
-              <th
-                key={col}
-                className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-              >
-                {col}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-          {data?.map((row, index) => (
-            <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-              {Object.values(row).map((cell, idx) => (
-                <td
-                  key={idx}
-                  className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100"
+      <div className="min-h-[200px] max-h-[400px] scrollbar-hidden overflow-y-auto"> {/* Added scroll with min height */}
+        <table className="w-full">
+          <thead>
+            <tr className="bg-yellow-100 dark:bg-gray-700 text-left">
+              {columns.map((col) => (
+                <th
+                  key={col}
+                  className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                 >
-                  {cell}
-                </td>
+                  {col}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {data?.map((row, index) => (
+              <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                {Object.values(row).map((cell, idx) => (
+                  <td
+                    key={idx}
+                    className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 );
@@ -82,7 +84,7 @@ const AdminSalesManagement = () => {
     data: recentOrders,
     isLoading: loadingOrders,
     error: errorOrders,
-  } = useGetSalesDataQuery({ dateRange },  { refetchOnMountOrArgChange: true });
+  } = useGetSalesDataQuery({ dateRange }, { refetchOnMountOrArgChange: true });
   const {
     data: salesOverview,
     isLoading: loadingSalesOverview,
@@ -93,8 +95,6 @@ const AdminSalesManagement = () => {
     isLoading: loadingTopProducts,
     error: errorTopProducts,
   } = useGetTopSellingProductsQuery();
-
-  // console.log(salesOverview, "salesOverview");
 
   const handleDateRangeChange = (e) => {
     const selectedDateRange = e.target.value;
@@ -116,7 +116,7 @@ const AdminSalesManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-orange-50 mt-10 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between">
           <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-8">
@@ -127,7 +127,7 @@ const AdminSalesManagement = () => {
             <select
               value={dateRange}
               onChange={handleDateRangeChange}
-              className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md py-2 pl-3 pr-10 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="appearance-none bg-red-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md py-2 pl-3 pr-10 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400"
             >
               <option>Today</option>
               <option>This Week</option>
@@ -151,7 +151,7 @@ const AdminSalesManagement = () => {
             title="Total Revenue"
             value={`₹${salesOverview?.totalRevenue?.toLocaleString() || 0}`}
             icon={
-              <div className="bg-blue-500 text-white rounded-full p-3 relative">
+              <div className="bg-red-300 text-white rounded-full p-3 relative">
                 <span className="text-2xl font-bold absolute bottom-[34px] left-[40px]">
                   ₹
                 </span>
@@ -188,50 +188,48 @@ const AdminSalesManagement = () => {
 
         {/* Recent Orders */}
         <Table
-  data={
-    noOrders
-      ? [
-          {
-            "Order ID": (
-              <td
-              className="text-lg col-span-5 font-semibold text-center text-red-600 dark:text-gray-300"
-              colSpan={5} // Ensure this spans the correct number of columns
-            >
-              No orders for {dateRange === "Today" ? "Today" : dateRange}
-            </td>
-            
-            ),
-            Customer: "",
-            Quantity: "",
-            Total: "",
-            Status: "",
+          data={
+            noOrders
+              ? [
+                  {
+                    "Order ID": (
+                      <td
+                        className="text-lg col-span-5 font-semibold text-center text-red-600 dark:text-gray-300"
+                        colSpan={5} // Ensure this spans the correct number of columns
+                      >
+                        No orders for{" "}
+                        {dateRange === "Today" ? "Today" : dateRange}
+                      </td>
+                    ),
+                    Customer: "",
+                    Quantity: "",
+                    Total: "",
+                    Status: "",
+                  },
+                ]
+              : recentOrders?.orders?.map((order) => ({
+                  "Order ID": order._id,
+                  Customer: order.customer || "N/A",
+                  Quantity: order.quantity || 0,
+                  Total: `₹${order.total?.toLocaleString() || 0}`,
+                  Status: (
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        order.status === "Delivered"
+                          ? "bg-green-100 text-green-800"
+                          : order.status === "Processing"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                  ),
+                }))
           }
-        ]
-      : recentOrders?.orders?.map((order) => ({
-          "Order ID": order._id,
-          Customer: order.customer || "N/A",
-          Quantity: order.quantity || 0,
-          Total: `₹${order.total?.toLocaleString() || 0}`,
-          Status: (
-            <span
-              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                order.status === "Delivered"
-                  ? "bg-green-100 text-green-800"
-                  : order.status === "Processing"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {order.status}
-            </span>
-          ),
-      }))
-  }
-  columns={["Order ID", "Customer", "Quantity", "Total", "Status"]}
-  title="Recent Orders"
-/>
-
-
+          columns={["Order ID", "Customer", "Quantity", "Total", "Status"]}
+          title="Recent Orders"
+        />
 
         {/* Top Selling Products */}
         <Table

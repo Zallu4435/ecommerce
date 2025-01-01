@@ -27,15 +27,15 @@ const AdminDashboard = () => {
   }, [stats]);
 
   if (isLoading) {
-    return <p className="text-center">Loading...</p>;
+    return <p className="text-center text-gray-700 dark:text-white">Loading...</p>;
   }
 
   if (isError) {
-    return <p className="text-center">Error loading data. Please try again later.</p>;
+    return <p className="text-center text-red-500 dark:text-red-400">Error loading data. Please try again later.</p>;
   }
 
   if (!stats) {
-    return <p className="text-center">No data available.</p>; // Handle cases where stats is null/undefined
+    return <p className="text-center text-gray-700 dark:text-white">No data available.</p>; // Handle cases where stats is null/undefined
   }
 
   const handleMetricChange = (event) => {
@@ -56,15 +56,15 @@ const AdminDashboard = () => {
     labels: metricType === 'monthly' ? months : ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
     datasets: [
       {
-        label: metricType === 'monthly' ? 'Monthly Sales ($)' : metricType === 'weekly' ? 'Weekly Sales ($)' : 'Yearly Sales ($)',
+        label: metricType === 'monthly' ? 'Monthly Sales (₹)' : metricType === 'weekly' ? 'Weekly Sales (₹)' : 'Yearly Sales (₹)',
         data: [parseFloat(stats?.totalRevenue) || 0], // Provide a default value
-        backgroundColor: 'rgba(255, 99, 132, 0.6)', // Gradient background color
-        borderColor: '#F95738',
+        backgroundColor: 'rgba(75, 192, 192, 0.6)', // Soft teal for background
+        borderColor: '#B0B0B0',
         borderWidth: 2,
         borderRadius: 10,
         barThickness: 20,
-        hoverBackgroundColor: 'rgba(255, 99, 132, 0.8)', // Hover color effect
-        hoverBorderColor: '#FF5733', // Hover border color
+        hoverBackgroundColor: 'rgba(75, 192, 192, 0.8)', // Hover color effect
+        hoverBorderColor: '#36A2EB', // Hover border color
       },
     ],
   };
@@ -76,14 +76,14 @@ const AdminDashboard = () => {
       legend: {
         position: 'top',
         labels: {
-          color: '#333',
+          color: '#B0B0B0',
           font: { size: 14 },
         },
       },
       tooltip: {
         enabled: true,
-        backgroundColor: '#F5F5F5',
-        borderColor: '#CCC',
+        backgroundColor: '#B0B0B0',
+        borderColor: '#B0B0B0',
         borderWidth: 1,
         cornerRadius: 5,
         titleFont: { size: 14, weight: 'bold' },
@@ -93,12 +93,12 @@ const AdminDashboard = () => {
     },
     scales: {
       x: {
-        ticks: { color: '#666', display: true, autoSkip: false, font: { size: 12, weight: 'bold' } },
+        ticks: { color: '#B0B0B0', display: true, autoSkip: false, font: { size: 12, weight: 'bold' } },
         grid: { display: false },
       },
       y: {
-        ticks: { color: '#666', stepSize: 5000, font: { size: 12, weight: 'bold' } },
-        grid: { color: '#E5E5E5' },
+        ticks: { color: '#B0B0B0', stepSize: 5000, font: { size: 12, weight: 'bold' } },
+        grid: { color: '#B0B0B0' },
       },
     },
     layout: {
@@ -116,7 +116,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-orange-50 dark:bg-gray-900 mt-10 p-6">
       <h1 className="text-3xl font-bold text-center text-gray-700 dark:text-white mb-6">Admin Dashboard</h1>
 
       <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-6">
@@ -141,7 +141,7 @@ const AdminDashboard = () => {
               onChange={handleYearChange}
               className="p-2 w-full rounded-md border border-gray-300 dark:bg-gray-700 dark:text-white"
             >
-              {[2022, 2023, 2024].map((year) => (
+              {[2024, 2023, 2022].map((year) => (
                 <option key={year} value={year}>
                   {year}
                 </option>
@@ -169,9 +169,9 @@ const AdminDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {[{ title: 'Total Revenue', value: `₹${stats?.totalRevenue?.toLocaleString() || 0}`, bg: 'bg-orange-500' },
-          { title: 'Total Users', value: stats?.totalUsers || 0, bg: 'bg-blue-500' },
-          { title: 'Total Products', value: stats?.totalProducts || 0, bg: 'bg-green-500' }].map(
+        {[{ title: 'Total Revenue', value: `₹${stats?.totalRevenue?.toLocaleString() || 0}`, bg: 'bg-orange-400' },
+          { title: 'Total Users', value: stats?.totalUsers || 0, bg: 'bg-blue-400' },
+          { title: 'Total Products', value: stats?.totalProducts || 0, bg: 'bg-green-400' }].map(
           ({ title, value, bg }) => (
             <div key={title} className={`p-6 text-white rounded-lg shadow-lg ${bg} flex flex-col justify-center items-center text-center`}>
               <h3 className="text-xl font-semibold">{title}</h3>
@@ -181,7 +181,7 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="bg-yellow-50 dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h3 className="text-2xl font-bold mb-4 text-center text-gray-700 dark:text-white">
           {metricType === 'monthly' ? 'Monthly Sales' : metricType === 'weekly' ? 'Weekly Sales' : 'Yearly Sales'}
         </h3>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGetCouponQuery } from '../../../redux/apiSliceFeatures/CouponApiSlice';
+import { ArrowLeft } from 'lucide-react';
 
 const ViewCouponDetails = () => {
   const { id } = useParams();
@@ -30,12 +31,20 @@ const ViewCouponDetails = () => {
   }
 
   return (
-    <div className="flex items-center ml-[150px] justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="max-w-3xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-4">
+    <div className="flex flex-col items-center justify-center mt-10 min-h-screen px-12 bg-orange-50 dark:bg-gray-900">
+      <div className='flex justify-between mt-[-60px] mb-5 items-center w-full'> {/* Adjusted margin-top here */}
+        <h2 className="text-2xl font-bold text-gray-500 dark:text-gray-300 mb-4">
           Coupon Details
         </h2>
-
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+        >
+          <ArrowLeft className="mr-2" />
+          <span>Back to Products</span>
+        </button>
+      </div>
+      <div className="w-full bg-yellow-50 dark:bg-gray-800 rounded-lg shadow-lg p-6">
         {/* General Details */}
         <div className="space-y-4 border-b pb-6">
           <div className="flex justify-between items-center">
@@ -60,9 +69,7 @@ const ViewCouponDetails = () => {
             <span className="font-semibold text-gray-600 dark:text-gray-400">
               Description:
             </span>
-            <p className="text-gray-800 dark:text-gray-200 mt-1">
-              {coupon?.description}
-            </p>
+            <p className="text-gray-800 dark:text-gray-200 mt-2">{coupon?.description}</p>
           </div>
 
           <div className="flex justify-between items-center">
@@ -106,11 +113,7 @@ const ViewCouponDetails = () => {
               Is Expired:
             </span>
             <span
-              className={`font-medium px-2 py-1 rounded ${
-                coupon?.isExpired
-                  ? 'bg-red-500 text-white'
-                  : 'bg-green-500 text-white'
-              }`}
+              className={`font-medium px-5 py-1 rounded ${coupon?.isExpired ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
             >
               {coupon?.isExpired ? 'Expired' : 'Active'}
             </span>

@@ -20,7 +20,6 @@ const TableRow = ({ item, type }) => {
 
   const openModal = (item) => {
     setItemToDelete(item);
-    // console.log(item , 'items from tabkrow')
     setShowModal(true);
   };
 
@@ -42,9 +41,12 @@ const TableRow = ({ item, type }) => {
   //   setModalOpen(true); // Open the modal
   // };
 
-  const handleOrderView = (orderId) => {
-    navigate(`view/orders/${orderId}`);
+  const handleOrderView = (orderId, username) => {
+    navigate(`view/orders/${orderId}`, {
+      state: { username }, // Passing the username through state
+    });
   };
+  
 
   return (
     <>
@@ -74,7 +76,6 @@ const TableRow = ({ item, type }) => {
                 hoverColor="white"
                 onClick={() => handleBan("admin", item.id)}
               >
-                {console.log(item.isBlocked ? "Unban" : "Ban")}
                 {item.isBlocked ? "Ban" : "Unban"}
               </Button>
               <Button
@@ -91,9 +92,8 @@ const TableRow = ({ item, type }) => {
 
         {type === "categories" && (
           <>
-            {console.log(item, "categories")}
             <td className="px-6 py-4">{item.categoryName}</td>
-            <td className="px-6 py-4 border w-[460px] h-[50px] overflow-hidden border-gray-600">
+            <td className="px-6 py-4 border w-[550px] h-[50px] overflow-hidden border-gray-600">
               {item.categoryDescription}
             </td>
             <td className="px-6 py-4 border border-gray-600">
@@ -122,7 +122,6 @@ const TableRow = ({ item, type }) => {
 
         {type === "orders" && (
           <>
-            {console.log(item, "item")}
             <td className="px-6 py-4">{item.username}</td>
             <td className="px-6 py-4 border border-gray-600">
               {item.ordersCount}
@@ -138,8 +137,8 @@ const TableRow = ({ item, type }) => {
                 borderColor="#D4A017"
                 textColor="#D4A017"
                 hoverColor="white"
-                onClick={() => handleOrderView(item._id)}
-              >
+                onClick={() => handleOrderView(item._id, item.username)}
+                >
                 View Individual Orders
               </Button>
             </td>
@@ -148,13 +147,15 @@ const TableRow = ({ item, type }) => {
 
         {type === "coupons" && (
           <>
-            {console.log(item, "ite from tablerou")}
-            {/* Coupon Code */}
+          {console.log(item, 'from couppon table')}
             <td className="px-6 py-4 border border-gray-600">
               {item.couponCode || "N/A"}
             </td>
             <td className="px-6 py-4 border border-gray-600">
               {item.title || "N/A"}
+            </td>
+            <td className="px-6 py-4 border border-gray-600">
+            {item.discount ? `${item.discount} %` : "N/A"}
             </td>
             <td className="px-6 py-4 border border-gray-600">
               {item.expiry ? new Date(item.expiry).toLocaleDateString() : "N/A"}
@@ -191,7 +192,6 @@ const TableRow = ({ item, type }) => {
 
         {type === "products" && (
           <>
-            {console.log(item, "item from the table ")}
             <td className="px-6 py-4 border border-gray-600">
               {item.productName}
             </td>
@@ -271,9 +271,7 @@ export const config = {
     headers: [
       "Coupon Code",
       "Coupon Title",
-      // "Discount Per..",
-      // "Max Discount",
-      // "Max Amount",
+      "Discount",
       "Valid Until",
       "Actions",
     ],

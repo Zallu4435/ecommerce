@@ -10,7 +10,6 @@ import AdminLayout from './layouts/AdminLayout'
 import AdminLogin from './pages/admin/AdminLogin'
 import PersistLogin from './PersistLogin'
 import ResetPassword from './pages/user/forms/UserResetPassword'
-import { useGetAddressesQuery } from './redux/apiSliceFeatures/addressPasswordApiSlice'
 
 
 const App = () => {
@@ -30,7 +29,7 @@ const App = () => {
   return (
     <>
 
-      <GoogleOAuthProvider clientId="978525226345-rsvsmqcr536r622rv7ri03g81otjc9d7.apps.googleusercontent.com">
+<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_SECRET}>
           <Routes>
               <Route element={<PersistLogin />} >
               <Route path="/*" element={<MainLayout />} /> 

@@ -23,6 +23,13 @@ export default {
         105: "1.05",
         110: "1.10",
       },
+
+      fontFamily: {
+        roboto: ['Roboto', 'sans-serif'],  // Add 'Roboto' font
+        playfair: ["'Playfair Display'", 'serif'],
+        poppins: ["'Poppins'", 'sans-serif'],
+
+      },
     },
   },
   variants: {

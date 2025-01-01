@@ -17,7 +17,7 @@ const AdminLayout = () => {
   return (
     <div className="flex overflow-hidden dark:bg-black">
       <AdminSidebar />
-      <main className="flex-1 p-6">
+      <main className="flex-1 ml-[420px] ">
         {/* Breadcrumb added here */}
         <Breadcrumb />
 

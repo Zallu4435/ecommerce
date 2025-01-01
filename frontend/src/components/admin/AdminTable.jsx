@@ -55,7 +55,7 @@ const AdminTable = ({
     });
   });
 
-  console.log(filteredData, "filteredData");
+  // console.log(filteredData, "filteredData");
 
   return (
     <div>
@@ -71,7 +71,7 @@ const AdminTable = ({
       </div>
 
       {/* Scrollable Table */}
-      <div className="overflow-y-auto max-h-[550px] scrollbar-hidden">
+      <div className="overflow-y-auto max-h-[600px] scrollbar-hidden">
         <table className="w-full table-auto border-collapse border border-gray-600">
           {/* Table Header */}
           <thead className="bg-gray-100 dark:bg-gray-900 sticky top-0 z-20 border-t-4 border-gray-600">

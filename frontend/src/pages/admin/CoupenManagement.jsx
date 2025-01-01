@@ -12,9 +12,9 @@ const CouponManagement = () => {
   
   
   return (
-    <div className='dark:bg-black h-screen mx-16 flex'>
+    <div className='dark:bg-black h-screen fixed left-[420px] top-10 right-0 flex'>
 
-      <div className='dark:bg-gray-900 bg-orange-50 px-20 my-12 dark:text-white text-gray-800'>
+      <div className='dark:bg-gray-900 w-full bg-orange-50 px-20 dark:text-white text-gray-800'>
         <div className="flex justify-between mt-5 items-center">
           <h1 className="text-3xl font-bold text-gray-400">
             Coupon Management

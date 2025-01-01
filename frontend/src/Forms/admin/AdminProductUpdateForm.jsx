@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft, Upload } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  productValidationSchema,
-} from "../../validation/admin/ProductFormValidation";
+import { productValidationSchema } from "../../validation/admin/ProductFormValidation";
 import ProductImageVariantAddModal from "../../modal/admin/ProductImageVarientAddModal";
 import {
   Input,
@@ -48,32 +46,32 @@ const AdminProductUpdateForm = () => {
   useEffect(() => {
     if (data?.product) {
       const { product } = data;
-  
+
       // Set the form fields
       Object.keys(product).forEach((key) => {
         setValue(key, product[key]);
       });
-  
+
       // Set the image files for the variant images
       if (product.variantImages && product.variantImages.length > 0) {
         // If there are existing images, map them into a format that includes a `url` and `isExisting`
-        setImageFiles(product.variantImages.map(url => ({ url, isExisting: true })));
-        setValue('variantImages', product.variantImages); // Ensure react-hook-form knows about the variantImages
+        setImageFiles(
+          product.variantImages.map((url) => ({ url, isExisting: true }))
+        );
+        setValue("variantImages", product.variantImages); // Ensure react-hook-form knows about the variantImages
       }
     }
   }, [data, setValue]);
 
-
-
   const handleImageUpload = (uploadedFiles) => {
-    try {      
+    try {
       if (!Array.isArray(uploadedFiles)) {
         throw new Error("Uploaded files must be an array.");
       }
-  
-      const newImageFiles = uploadedFiles.map(file => {
+
+      const newImageFiles = uploadedFiles.map((file) => {
         if (file) {
-          if (typeof file === 'string') {
+          if (typeof file === "string") {
             // Treat it as an existing image URL from Cloudinary
             return { url: file, isExisting: true };
           } else if (file instanceof File) {
@@ -85,7 +83,7 @@ const AdminProductUpdateForm = () => {
         }
         return null;
       });
-  
+
       setImageFiles(newImageFiles);
       setValue("variantImages", newImageFiles);
       setIsModalOpen(false);
@@ -93,7 +91,7 @@ const AdminProductUpdateForm = () => {
       alert(error.message);
     }
   };
-  
+
   const onSubmit = async (formData, e) => {
     e.preventDefault();
 
@@ -112,7 +110,7 @@ const AdminProductUpdateForm = () => {
             return fileObj?.url || null;
           })
         );
-        formData.variantImages = variantImageUrls.filter(url => url !== null);
+        formData.variantImages = variantImageUrls.filter((url) => url !== null);
       }
 
       await updateEntity({ entity: "products", data: formData, id }).unwrap();
@@ -144,9 +142,12 @@ const AdminProductUpdateForm = () => {
   if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div className="dark:bg-black ml-12 min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-[1300px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
-        <div className="flex items-center mb-6">
+    <div className="dark:bg-black min-h-screen flex mt-10 items-center justify-center">
+      <div className="w-full max-w-[1300px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 shadow-md">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
+            Update Product
+          </h1>
           <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
@@ -155,10 +156,6 @@ const AdminProductUpdateForm = () => {
             <span>Back to Products</span>
           </button>
         </div>
-
-        <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
-          Update Product
-        </h1>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid md:grid-cols-3 gap-4 mb-4">
@@ -172,6 +169,7 @@ const AdminProductUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter product name"
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -207,7 +205,10 @@ const AdminProductUpdateForm = () => {
                 name="category"
                 control={control}
                 render={({ field }) => (
-                  <select {...field} className="w-full p-3 border rounded-md">
+                  <select
+                    {...field}
+                    className="w-full p-3 border rounded-md dark:text-white dark:bg-gray-800"
+                  >
                     <option value="">Select category</option>
                     <option value="Electronics">Men</option>
                     <option value="Clothing">Women</option>
@@ -234,6 +235,7 @@ const AdminProductUpdateForm = () => {
                     {...field}
                     placeholder="Enter product description"
                     rows="4"
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -278,6 +280,7 @@ const AdminProductUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter Brand Name"
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -299,6 +302,7 @@ const AdminProductUpdateForm = () => {
                     type="number"
                     placeholder="Enter original Price"
                     onChange={(e) => onChange(Number(e.target.value))}
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -320,6 +324,7 @@ const AdminProductUpdateForm = () => {
                     type="number"
                     placeholder="Enter Offer Price"
                     onChange={(e) => onChange(Number(e.target.value))}
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -343,6 +348,7 @@ const AdminProductUpdateForm = () => {
                     type="number"
                     placeholder="Enter Stock Quantity"
                     onChange={(e) => onChange(Number(e.target.value))}
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -363,6 +369,7 @@ const AdminProductUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter Return Policy"
+                    className="dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -377,10 +384,7 @@ const AdminProductUpdateForm = () => {
               <CheckboxContainer>
                 {["white", "black", "red", "green", "yellow", "blue"].map(
                   (color) => (
-                    <div
-                      key={color}
-                      className="flex gap-2 items-center"
-                    >
+                    <div key={color} className="flex gap-2 items-center">
                       <input
                         type="checkbox"
                         id={`color-${color}`}
@@ -417,12 +421,22 @@ const AdminProductUpdateForm = () => {
                   fileObj && (
                     <div key={index} className="flex flex-col items-center">
                       <img
-                        src={fileObj.isExisting ? fileObj.url : (fileObj.file instanceof File ? URL.createObjectURL(fileObj.file) : '')}
+                        src={
+                          fileObj.isExisting
+                            ? fileObj.url
+                            : fileObj.file instanceof File
+                            ? URL.createObjectURL(fileObj.file)
+                            : ""
+                        }
                         alt={`Image ${index + 1}`}
                         className="w-20 h-20 object-cover rounded-full shadow-md"
                       />
                       <p className="text-sm text-gray-500">
-                        {fileObj.isExisting ? 'Existing Image' : (fileObj.file instanceof File ? fileObj.file.name : 'Invalid File')}
+                        {fileObj.isExisting
+                          ? "Existing Image"
+                          : fileObj.file instanceof File
+                          ? fileObj.file.name
+                          : "Invalid File"}
                       </p>
                     </div>
                   )
@@ -453,4 +467,3 @@ const AdminProductUpdateForm = () => {
 };
 
 export default AdminProductUpdateForm;
-

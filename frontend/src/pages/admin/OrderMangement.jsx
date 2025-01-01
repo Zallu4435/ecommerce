@@ -12,7 +12,7 @@ const OrderManagement = () => {
   // console.log(data, "data")
 
   return (
-      <div className="dark:bg-gray-900 dark:bg-black mx-[150px] py-2 dark:text-white bg-orange-50 h-[715px] px-14 my-12">
+      <div className="dark:bg-gray-900 py-2 h-screen fixed left-[420px] top-10 right-0 dark:text-white bg-orange-50 px-14">
           <h1 className="text-3xl mt-5 font-bold text-gray-400">
             Order Management
           </h1>

@@ -174,8 +174,8 @@ const AdminCouponUpdateForm = () => {
   if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div className="dark:bg-black w-full min-h-screen flex items-center justify-center p-4">
-      <div className="w-[800px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
+    <div className="dark:bg-black w-full min-h-screen mt-10 flex items-center justify-center">
+      <div className="dark:bg-gray-900 bg-orange-50 w-full p-6 md:p-8 shadow-md">
         <div className="flex justify-between">
           <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
             Update Coupon
@@ -203,7 +203,7 @@ const AdminCouponUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter coupon code"
-                    className="w-full"
+                    className="w-full dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -224,7 +224,7 @@ const AdminCouponUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter coupon title"
-                    className="w-full"
+                    className="w-full dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -245,7 +245,7 @@ const AdminCouponUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter discount value"
-                    className="w-full"
+                    className="w-full dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -266,7 +266,7 @@ const AdminCouponUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter minimum amount"
-                    className="w-full"
+                    className="w-full dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -287,7 +287,7 @@ const AdminCouponUpdateForm = () => {
                     {...field}
                     type="text"
                     placeholder="Enter maximum amount"
-                    className="w-full"
+                    className="w-full dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -308,7 +308,7 @@ const AdminCouponUpdateForm = () => {
                     {...field}
                     type="date"
                     placeholder="Select expiry date"
-                    className="w-full"
+                    className="w-full dark:text-white dark:bg-gray-800"
                   />
                 )}
               />
@@ -356,7 +356,7 @@ const AdminCouponUpdateForm = () => {
                 {selectedUsers.map((user) => (
                   <span
                     key={user.userId}
-                    className="inline-block bg-blue-200 rounded-md p-1 mr-2 mb-2"
+                    className="inline-block dark:bg-blue-400 bg-blue-200 font-semibold rounded-md p-1 mr-2 mb-2"
                   >
                     {user.username}
                     <button
@@ -386,7 +386,7 @@ const AdminCouponUpdateForm = () => {
                 {selectedProducts.map((product) => (
                   <span
                     key={product.productId}
-                    className="inline-block bg-green-200 rounded-md p-1 mr-2 mb-2"
+                    className="inline-block dark:bg-green-400 bg-green-200 font-semibold rounded-md p-1 mr-2 mb-2"
                   >
                     {product.productName}
                     <button
@@ -405,7 +405,7 @@ const AdminCouponUpdateForm = () => {
           <div className="flex justify-end gap-4 mt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-6 py-3 w-full font-bold text-md bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Update Coupon
             </button>
@@ -414,21 +414,21 @@ const AdminCouponUpdateForm = () => {
 
         {showUserModal && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-1/3 max-h-[80vh] overflow-y-auto shadow-2xl">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-2/4 max-h-[80vh] overflow-y-auto scrollbar-hidden shadow-2xl">
               <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 flex justify-between items-center mb-4 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-blue-600 dark:text-gray-100">
+                <h3 className="text-2xl font-bold text-blue-600 dark:text-gray-100">
                   Select Users
                 </h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowUserModal(false)}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
+                    className="px-8 py-2 bg-red-400 text-white rounded-md hover:bg-red-500 transition duration-200"
                   >
                     Close
                   </button>
                   <button
                     onClick={() => setShowUserModal(false)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+                    className="px-8 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
                   >
                     Confirm
                   </button>
@@ -480,21 +480,21 @@ const AdminCouponUpdateForm = () => {
 
         {showProductModal && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-1/3 max-h-[80vh] overflow-y-auto shadow-2xl">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-2/4 max-h-[80vh] overflow-y-auto scrollbar-hidden shadow-2xl">
               <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 flex justify-between items-center rounded-t-lg">
-                <h3 className="text-lg font-semibold text-blue-600 dark:text-gray-100">
+                <h3 className="text-2xl font-bold text-blue-600 dark:text-gray-100">
                   Select Products
                 </h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowProductModal(false)}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
+                    className="px-8 py-2 bg-red-400 text-white rounded-md hover:bg-red-500 transition duration-200"
                   >
                     Close
                   </button>
                   <button
                     onClick={() => setShowProductModal(false)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+                    className="px-8 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
                   >
                     Confirm
                   </button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetProductByIdQuery } from '../../../redux/apiSliceFeatures/productApiSlice';
 import Magnifier from 'react-magnifier';
+import { ArrowLeft } from 'lucide-react';
 
 const ViewProductDetails = () => {
   const { id } = useParams();
@@ -49,14 +50,14 @@ const ViewProductDetails = () => {
     { label: 'Category', value: product.category },
     { label: 'Brand', value: product.brand },
     { label: 'Return Policy', value: product.returnPolicy },
-    { label: 'Description', value: product.description },
     { label: 'Price', value: (
       <>
-        <span className="line-through text-red-500 mr-2">₹{product.originalPrice}</span>{' '}
-        <span className="text-green-500 font-semibold">
-        ₹{ product.offerPrice }
-        </span>
-      </>
+      <span className="line-through text-gray-400 mr-2">₹{product.originalPrice}</span>{' '}
+      <span className="text-purple-500 font-semibold">
+        ₹{product.offerPrice}
+      </span>
+    </>
+    
     )},    
     { label: 'Stock', value: `${product.stock} items available` },
     { label: 'Available Sizes', value: product.sizeOption.join(', ') },
@@ -64,16 +65,18 @@ const ViewProductDetails = () => {
   ];
 
   return (
-    <div className="flex justify-center mx-12 bg-orange-50 items-center min-h-screen dark:bg-black p-4">
-      <div className="container mx-auto w-[1200px] bg-orange-50 shadow-md rounded-lg p-8 dark:bg-gray-900 dark:text-white">
+    <div className="relative flex justify-center bg-orange-50 items-center min-h-screen dark:bg-gray-900 p-4">
+      <div className="container w-full bg-orange-50 shadow-md rounded-lg p-8 mx-10 dark:bg-gray-900 dark:text-white">
+        {/* Back Button at Top Right */}
         <button
           onClick={() => navigate(-1)}
-          className="mb-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition duration-300"
+          className="absolute top-10 right-[60px] flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
         >
-          Back
+          <ArrowLeft className="mr-2" />
+          <span>Back to Products</span>
         </button>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 ml-[-60px] gap-8 items-start">
           <div className="w-full lg:w-3/4 mx-auto">
             <div className="mb-4">
               <Magnifier
@@ -109,8 +112,8 @@ const ViewProductDetails = () => {
             </div>
           </div>
 
-          <div>
-            <h2 className="text-4xl font-bold mb-4 text-indigo-600 dark:text-indigo-400">{product.productName}</h2>
+          <div className='shadow-lg md:shadow-xl lg:shadow-2xl px-10 py-10 ml-[-60px] transition-all duration-300 dark:shadow-xl dark:shadow-gray-800 hover:dark:shadow-3xl'>
+          <h2 className="text-4xl font-bold mb-4 text-red-400 dark:text-red-400">{product.productName}</h2>
             <p className="text-gray-800 dark:text-gray-200 mb-6">{product.description}</p>
 
             <ul className="space-y-4">
@@ -128,4 +131,3 @@ const ViewProductDetails = () => {
 };
 
 export default ViewProductDetails;
-

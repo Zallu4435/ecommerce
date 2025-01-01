@@ -111,26 +111,21 @@ exports.adminRefreshToken = async (req, res, next) => {
 
 
 exports.getUserDetails = async (req, res) => {
-
-  console.log("reached fo user details ")
+  console.log("reached for user details");
   const { id } = req.params;
 
   try {
-
-    console.log(id, 'userId')
-    // Fetch user details
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Fetch user addresses from Address collection
-    const addresses = await Address.find({ id: id });
+    const addresses = await Address.find({ userId: id });
 
-    // Fetch user orders from Order collection
-    const orders = await Orders.find({ id: id });
+    const orders = await Orders.find({ UserId: id })
+                               .sort({ createdAt: -1 }) // Sort by date, descending
+                               .limit(5); // Limit to last 5 orders
 
-    // Send the response with user details, addresses, and orders
     res.status(200).json({
       user,
       addresses,
@@ -141,8 +136,6 @@ exports.getUserDetails = async (req, res) => {
     res.status(500).json({ error: 'Server Error' });
   }
 };
-
-
 
 
 // API to fetch yearly metrics

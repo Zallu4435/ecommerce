@@ -7,7 +7,6 @@ import { useLogoutAdminMutation } from '../../redux/apiSliceFeatures/AdminApiSli
 import { FaUser, FaBox, FaShoppingCart, FaListAlt, FaTags, FaChartBar, FaTachometerAlt } from 'react-icons/fa';
 
 const AdminSidebar = () => {
-  
   const menuItems = [
     { name: 'Dashboard', icon: <FaTachometerAlt />, path: '/admin/dashboard' },  // Replaced GrHome with FaTachometerAlt
     { name: 'User Management', icon: <FaUser />, path: '/admin/userManagement' },
@@ -36,9 +35,9 @@ const AdminSidebar = () => {
 
 
   return (
-    <div>
+    <>
       {/* Sidebar */}
-      <div className="w-full h-full lg:w-[400px] dark:bg-gray-900 bg-orange-50 p-4">
+      <div className="w-full fixed h-screen overflow-auto lg:w-[400px] dark:bg-gray-900 bg-orange-50 p-4">
         {/* Profile Section */}
         <div className="flex items-center mb-6">
           <img
@@ -105,7 +104,7 @@ const AdminSidebar = () => {
             </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

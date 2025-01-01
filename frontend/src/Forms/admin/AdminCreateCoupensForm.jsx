@@ -109,8 +109,8 @@ const AdminCouponCreateForm = () => {
   };
 
   return (
-    <div className="dark:bg-black min-h-screen flex w-full items-center justify-center p-4">
-      <div className="w-[800px] dark:bg-gray-900 px-10 bg-orange-50 p-6 md:p-8 rounded-md shadow-md">
+    <div className="dark:bg-black min-h-screen flex w-full mt-10 items-center justify-center">
+      <div className="dark:bg-gray-900 px-10 w-full bg-orange-50 p-6 md:p-8 shadow-md">
         <div className="flex justify-between">
           <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
             Create Coupon
@@ -150,7 +150,7 @@ const AdminCouponCreateForm = () => {
                       type={field.type}
                       value={value}
                       onChange={onChange}
-                      className="w-full"
+                      className="w-full dark:text-white dark:bg-gray-800"
                     />
                   )}
                 />
@@ -171,7 +171,7 @@ const AdminCouponCreateForm = () => {
               render={({ field }) => (
                 <textarea
                   {...field}
-                  className="w-full h-40 p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
+                  className="w-full h-[100px] p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
                 />
               )}
             />
@@ -198,7 +198,7 @@ const AdminCouponCreateForm = () => {
                 {selectedUsers.map((user) => (
                   <span
                     key={user.userId}
-                    className="inline-block bg-blue-200 rounded-md p-1 mr-2 mb-2"
+                    className="inline-block dark:bg-blue-400 bg-blue-200 font-semibold rounded-md p-1 mr-2 mb-2"
                   >
                     {user.username}
                     <button
@@ -228,7 +228,7 @@ const AdminCouponCreateForm = () => {
                 {selectedProducts.map((product) => (
                   <span
                     key={product.productId}
-                    className="inline-block bg-green-200 rounded-md p-1 mr-2 mb-2"
+                    className="inline-block dark:bg-green-400 bg-green-200 font-semibold rounded-md p-1 mr-2 mb-2"
                   >
                     {product.productName}
                     <button
@@ -247,7 +247,7 @@ const AdminCouponCreateForm = () => {
           <div className="flex justify-end gap-4 mt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-6 py-3 text-md w-full font-bold bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Create Coupon
             </button>
@@ -256,22 +256,22 @@ const AdminCouponCreateForm = () => {
 
         {showUserModal && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-1/3 max-h-[80vh] overflow-y-auto shadow-2xl">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-2/4 max-h-[80vh] overflow-y-auto scrollbar-hidden shadow-2xl">
               {/* Header with Close and Confirm buttons */}
               <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 flex justify-between items-center mb-4 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-blue-600 dark:text-gray-100">
+                <h3 className="text-2xl font-bold text-gray-400 dark:text-gray-100">
                   Select Users
                 </h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowUserModal(false)}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
+                    className="px-8 py-2 bg-red-400 text-white font-bold rounded-md hover:bg-red-500 transition duration-200"
                   >
                     Close
                   </button>
                   <button
                     onClick={() => setShowUserModal(false)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+                    className="px-8 py-2 bg-blue-500 font-bold text-white rounded-md hover:bg-blue-600 transition duration-200"
                   >
                     Confirm
                   </button>
@@ -325,21 +325,21 @@ const AdminCouponCreateForm = () => {
 
         {showProductModal && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-1/3 max-h-[80vh] overflow-y-auto shadow-2xl">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-2/4 max-h-[80vh] scrollbar-hidden overflow-y-auto shadow-2xl">
               <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 flex justify-between items-center rounded-t-lg">
-                <h3 className="text-lg font-semibold text-blue-600 dark:text-gray-100">
+                <h3 className="text-2xl font-bold text-gray-400 dark:text-gray-100">
                   Select Products
                 </h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowProductModal(false)}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
+                    className="px-8 py-2 bg-red-400 font-bold text-white rounded-md hover:bg-red-500 transition duration-200"
                   >
                     Close
                   </button>
                   <button
                     onClick={() => setShowProductModal(false)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+                    className="px-8 py-2 bg-blue-500 font-bld text-white rounded-md hover:bg-blue-600 transition duration-200"
                   >
                     Confirm
                   </button>
