@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useChangePasswordMutation } from '../../../redux/apiSliceFeatures/addressPasswordApiSlice';
 import { toast } from 'react-toastify';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'; // Eye icon imports
 
 // Zod validation schema
 const passwordSchema = z.object({
@@ -27,6 +28,12 @@ const ChangePassword = () => {
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
+
+  const [showPassword, setShowPassword] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
 
   // Setup react-hook-form and Zod
   const { register, handleSubmit, formState: { errors }, setValue } = useForm({
@@ -60,8 +67,8 @@ const ChangePassword = () => {
   ];
 
   return (
-    <div className="max-w-md mx-auto bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100">Change Password</h2>
+    <div className=" mx-auto bg-white w-[700px] dark:bg-gray-800 py-10 px-20 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold text-center mb-6 text-gray-600 dark:text-gray-200">Change Password</h2>
       {message.text && (
         <p className={`text-sm font-bold mb-4 ${message.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
           {message.text}
@@ -69,17 +76,26 @@ const ChangePassword = () => {
       )}
       <form onSubmit={handleSubmit(onSubmit)}>
         {inputFields.map(({ id, label, type }) => (
-          <div key={id} className="mb-4">
-            <label htmlFor={id} className="block text-gray-700 dark:text-gray-300 mb-2">
+          <div key={id} className="mb-4 relative">
+            <label htmlFor={id} className="block text-gray-700 text-lg dark:text-gray-300 font-bold mb-2">
               {label}
             </label>
-            <input
-              type={type}
-              id={id}
-              name={id}
-              {...register(id)}
-              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 ${errors[id] ? 'border-red-500' : ''}`}
-            />
+            <div className="relative">
+              <input
+                type={showPassword[id] ? 'text' : 'password'}
+                id={id}
+                name={id}
+                {...register(id)}
+                className={`w-full px-4 py-4 border-4 border-gray-300 dark:text-white dark:bg-gray-800 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 ${errors[id] ? 'border-red-500' : ''}`}
+              />
+              <button
+                type="button"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2"
+                onClick={() => setShowPassword({ ...showPassword, [id]: !showPassword[id] })}
+              >
+                {showPassword[id] ? <AiOutlineEyeInvisible size={24} /> : <AiOutlineEye size={24} />}
+              </button>
+            </div>
             {errors[id] && (
               <p className="text-red-500 text-xs mt-1">{errors[id]?.message}</p>
             )}
@@ -87,7 +103,7 @@ const ChangePassword = () => {
         ))}
         <button
           type="submit"
-          className="w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600 transition duration-300"
+          className="w-full font-bold text-lg bg-indigo-500 text-white py-4 rounded-md hover:bg-indigo-600 transition duration-300"
           disabled={isLoading}
         >
           {isLoading ? 'Changing...' : 'Change Password'}

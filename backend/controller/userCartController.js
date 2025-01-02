@@ -72,12 +72,58 @@ exports.addToCart = async (req, res) => {
 
 
 
+// exports.getCartItems = async (req, res) => {
+//   try {
+//     const userId = new mongoose.Types.ObjectId(req.user);
+
+//     // Aggregation pipeline
+//     const cartItems = await Cart.aggregate([
+//       {
+//         $match: { userId: userId }, // Match cart items for the specific user
+//       },
+//       {
+//         $unwind: '$items', // Unwind the items array in the cart
+//       },
+//       {
+//         $lookup: {
+//           from: 'products', // Your Product collection name
+//           localField: 'items.productId', // Field in Cart referencing Product
+//           foreignField: '_id', // Field in Product collection
+//           as: 'productDetails', // Alias for the joined data
+//         },
+//       },
+//       {
+//         $unwind: '$productDetails', // Flatten productDetails array
+//       },
+//       {
+//         $project: {
+//           _id: 0, // Exclude _id from the final result
+//           cartItemId: { $toString: '$items._id' }, // Include productId to allow removal
+//           productName: '$productDetails.productName', // Product name
+//           productImage: '$productDetails.image', // Product image
+//           originalPrice: '$productDetails.originalPrice', // Product price
+//           ratings: '$productDetails.ratings', // Product ratings
+//           quantity: '$items.quantity', // Quantity from cart
+//           stockQuantity: '$productDetails.stockQuantity'
+//         },
+//       },
+//     ]);
+
+//     // Debugging: Log the final aggregated cart items
+//     console.log('Cart Items with Product Details:', cartItems);
+
+//     // Send the response with cart items
+//     return res.status(200).json(cartItems);
+//   } catch (error) {
+//     console.error('Error fetching cart items:', error);
+//     return res.status(500).json({ message: 'Error fetching cart items' });
+//   }
+// };
+
+
+
 exports.getCartItems = async (req, res) => {
   try {
-    // Debugging: Log userId and its type
-    // console.log('req.user:', req.user, 'Type:', typeof req.user);
-
-    // Convert req.user to ObjectId
     const userId = new mongoose.Types.ObjectId(req.user);
 
     // Aggregation pipeline
@@ -100,21 +146,46 @@ exports.getCartItems = async (req, res) => {
         $unwind: '$productDetails', // Flatten productDetails array
       },
       {
+        $lookup: {
+          from: 'reviews', // Your Review collection name
+          localField: 'productDetails._id', // Match productId in Product collection with product _id
+          foreignField: 'productId', // Foreign field to match
+          as: 'reviews', // Alias for the reviews data
+        },
+      },
+      {
+        $addFields: {
+          // Add fields for total reviews and average rating
+          totalReviews: { $size: '$reviews' }, // Count the total number of reviews
+          averageRating: {
+            $cond: {
+              if: { $gt: [{ $size: '$reviews' }, 0] }, // Check if there are reviews
+              then: {
+                $avg: '$reviews.rating', // Calculate average rating
+              },
+              else: 0, // If no reviews, set averageRating to 0
+            },
+          },
+        },
+      },
+      {
         $project: {
           _id: 0, // Exclude _id from the final result
           cartItemId: { $toString: '$items._id' }, // Include productId to allow removal
           productName: '$productDetails.productName', // Product name
           productImage: '$productDetails.image', // Product image
           originalPrice: '$productDetails.originalPrice', // Product price
-          ratings: '$productDetails.ratings', // Product ratings
           quantity: '$items.quantity', // Quantity from cart
-          stockQuantity: '$productDetails.stockQuantity'
+          stockQuantity: '$productDetails.stockQuantity', // Stock quantity
+          productId: '$productDetails._id',
+          totalReviews: 1, // Include total number of reviews
+          averageRating: 1, // Include average rating
         },
       },
     ]);
 
-    // Debugging: Log the final aggregated cart items
-    console.log('Cart Items with Product Details:', cartItems);
+    // Debugging: Log the final aggregated cart items with product details and reviews
+    console.log('Cart Items with Average Rating and Total Reviews:', cartItems);
 
     // Send the response with cart items
     return res.status(200).json(cartItems);
@@ -124,7 +195,12 @@ exports.getCartItems = async (req, res) => {
   }
 };
 
-// Controller to remove an item from the cart
+
+
+
+
+
+
 exports.removeFromCart = async (req, res) => {
   const { id } = req.params; // Item ID passed as parameter in the URL
 

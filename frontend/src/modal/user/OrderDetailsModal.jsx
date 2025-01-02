@@ -13,7 +13,10 @@ const OrderDetailsModal = ({ order, onClose }) => {
   // Fetch data only when the modal opens
   useEffect(() => {
     if (order && order._id) {
-      // Trigger any side effect if needed here
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = 'auto'; // Restore scroll
+      };
     }
   }, [order]);
 
@@ -21,7 +24,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
   if (error) return <p className="text-center text-red-500 dark:text-red-400">Error fetching address details: {error.message}</p>;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-80 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black bg-transparent backdrop-blur-sm flex justify-center items-center z-50">
       <div className="bg-orange-50 dark:bg-gray-900 p-6 rounded-lg shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 relative">
         <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition">
           <FaTimes className="w-5 h-5" />

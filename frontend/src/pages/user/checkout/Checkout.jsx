@@ -70,7 +70,7 @@ const CheckoutPage = () => {
       </div>
 
       {/* Right Section */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md h-fit w-full lg:w-[550px] mx-auto">
+      <div className="bg-white dark:bg-gray-900 p-6 justify-center grid space-y-3 rounded-lg shadow-md h-fit w-full lg:w-[550px] mx-auto">
         <PaymentMethod onPaymentMethodChange={handlePaymentMethodChange} />
         <ApplyCoupen onCouponApply={handleCouponApply} />
 

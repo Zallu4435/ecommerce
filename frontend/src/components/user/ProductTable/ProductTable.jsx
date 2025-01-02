@@ -17,7 +17,7 @@ const ProductTable = ({ type, data, onRemove }) => {
         <table className="w-full table-auto border-collapse border border-gray-300 dark:border-gray-700">
           <thead>
             <tr>
-              <th className="px-6 py-4 text-center border-b bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-100">
+              <th className="px-6 py-4 text-center border-b font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-100">
                 Remove
               </th>
               <th className="px-6 py-4 text-left border-b bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-100">

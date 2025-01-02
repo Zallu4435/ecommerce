@@ -3,7 +3,7 @@ import UserProfile from '../pages/user/userProfile/UserProfile';
 import SideBar from '../components/user/SideBar';
 import Address from '../pages/user/userProfile/Address'
 import NotFound from '../pages/user/NotFound';
-import Password from '../pages/user/userProfile/Password'
+import Password from '../pages/user/userProfile/ChangePassword'
 import Wallet from '../pages/user/userProfile/Wallet';
 import OrdersList from '../pages/user/userProfile/Order';
 import TrackOrder from '../pages/user/userProfile/TrackOrder';

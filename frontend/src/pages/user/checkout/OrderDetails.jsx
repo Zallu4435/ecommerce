@@ -7,7 +7,7 @@ const OrderDetails = ({ onOrderChange, address }) => {
   // Retrieve data passed via React Router
   const { cartItems, productId, total } = location.state || {};
 
-  console.log(productId, "cartItems from cart")
+  // console.log(productId, "cartItems from cart")
 
   // Ref to keep track of the previous order data to avoid unnecessary updates
   const prevOrderRef = useRef(null);
@@ -37,8 +37,8 @@ const OrderDetails = ({ onOrderChange, address }) => {
   return (
     <>
       {/* Order Details */}
-      <div className="bg-white p-6 shadow-md rounded-md">
-        <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+      <div className="bg-white dark:bg-gray-900 p-6 shadow-md rounded-md">
+        <h2 className="text-xl dark:text-gray-200 text-gray-700 font-semibold mb-4">Order Items</h2>
         {cartItems.map((product) => (
           <div
             key={product.id}
@@ -62,7 +62,7 @@ const OrderDetails = ({ onOrderChange, address }) => {
         <div className="border-t mt-4 pt-4">
           <div className="flex justify-between">
             <span className="font-semibold">Total:</span>
-            <span className="font-semibold">₹{total}</span>
+            <span className="font-semibold">₹ {total}</span>
           </div>
         </div>
       </div>

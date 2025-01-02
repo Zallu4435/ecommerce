@@ -26,7 +26,7 @@ const PaymentSuccess = () => {
               Go to Homepage
             </button>
             <button
-              className="w-full bg-white border border-green-500 text-green-500 hover:bg-green-400 
+              className="w-full bg-red-300 border border-green-500 text-white font-bold hover:bg-red-400 
                      py-3 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105"
               onClick={() => navigate('/profile/order')}
             >

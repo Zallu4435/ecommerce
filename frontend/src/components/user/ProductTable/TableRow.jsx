@@ -4,6 +4,8 @@ import {
   useGetCartQuery,
 } from "../../../redux/apiSliceFeatures/CartApiSlice";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+
 
 const TableRow = ({ item, onRemove }) => {
   const {
@@ -12,15 +14,14 @@ const TableRow = ({ item, onRemove }) => {
     cartItemId,
     productImage,
     stockQuantity,
-    productId
+    productId,
   } = item;
 
   const { refetch: refetchCart } = useGetCartQuery(); // Refetch cart data
   const [addToCart] = useAddToCartMutation();
 
-  console.log(productId, "product id from the click ")
-
   const [isAdding, setIsAdding] = useState(false); // Loading state
+  const navigate = useNavigate()
 
   const handleAddToCart = async () => {
     const productDetails = {
@@ -40,6 +41,9 @@ const TableRow = ({ item, onRemove }) => {
     }
   };
 
+  const handleImageClick = () => navigate(`/product/${productId}`);
+
+
   return (
     <>
       {/* Full Row for Larger Screens */}
@@ -55,8 +59,9 @@ const TableRow = ({ item, onRemove }) => {
         <td className="px-6 py-4 md:px-0 border-b flex items-center gap-4">
           <img
             src={productImage}
-            className="h-[60px] rounded-lg object-cover"
+            className="h-[60px] rounded-lg cursor-pointer object-cover"
             alt={productName}
+            onClick={handleImageClick}
           />
           <div>
             <p className="font-semibold text-gray-900 dark:text-gray-100">
@@ -71,23 +76,24 @@ const TableRow = ({ item, onRemove }) => {
           ₹ {originalPrice.toFixed(2)}
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
-  {stockQuantity ? (
-    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md font-semibold">
-      In Stock
-    </span>
-  ) : (
-    <span className="px-2 py-1 bg-red-100 text-red-800 rounded-md font-semibold">
-      Out of Stock
-    </span>
-  )}
-</td>
+          {stockQuantity ? (
+            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md font-semibold">
+              In Stock
+            </span>
+          ) : (
+            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-md font-semibold">
+              Out of Stock
+            </span>
+          )}
+        </td>
 
         <td className="px-6 py-4 border-b text-center">
           <button
-             onClick={handleAddToCart}
-             disabled={isAdding}
-           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600">
-          {isAdding ? "Adding to Cart..." : "Add to Cart"}
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600"
+          >
+            {isAdding ? "Adding to Cart..." : "Add to Cart"}
           </button>
         </td>
       </tr>

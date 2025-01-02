@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FaTruck, FaBox, FaCheckCircle, FaClipboardList, FaShippingFast, FaTimesCircle } from 'react-icons/fa'; // Importing icons
+import { ArrowLeft } from 'lucide-react';
 
 const TrackOrder = () => {
   const navigate = useNavigate();
@@ -52,15 +53,16 @@ const TrackOrder = () => {
   const totalPrice = order.TotalAmount;
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
+    <div className="max-w-6xl mx-auto p-6 bg-white my-10 dark:bg-gray-800 shadow-lg rounded-lg">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold text-gray-800 dark:text-gray-100">Track Order</h2>
+        <h2 className="text-3xl font-bold text-gray-600 dark:text-gray-200">Track Order</h2>
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-          onClick={() => navigate(-1)}
-        >
-          Back
-        </button>
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+          >
+            <ArrowLeft className="mr-2" />
+            <span>Back to Products</span>
+          </button>
       </div>
 
       {/* Tracking Steps */}

@@ -85,19 +85,19 @@ const Wallet = () => {
 
   return (
     <>
-      <div className="bg-white shadow-lg rounded-lg mx-auto w-full max-w-2xl p-10 space-y-6">
-        <h1 className="text-4xl font-bold text-gray-800 text-center mb-6">My Wallet</h1>
+      <div className="bg-white dark:bg-gray-900 shadow-lg rounded-lg mx-auto w-full max-w-2xl p-10 space-y-6">
+        <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-300 text-center mb-6">My Wallet</h1>
 
         <div className="flex justify-center">
           <img
             src={wallet}
             alt="Wallet Card"
-            className="rounded-lg shadow-lg w-[400px] h-[200px] md:w-[500px] md:h-[250px]"
+            className="rounded-lg shadow-lg dark:bg-gray-900 w-[400px] h-[200px] md:w-[500px] md:h-[250px]"
           />
         </div>
 
         <div className="flex justify-center items-center space-x-2">
-          <p className="text-center text-gray-600 text-lg">Current Balance:</p>
+          <p className="text-center text-gray-600 dark:text-gray-200 text-lg">Current Balance:</p>
           <h2 className="text-lg font-semibold text-green-600 text-center">
             ₹{balance.toFixed(2)}
           </h2>
@@ -109,7 +109,7 @@ const Wallet = () => {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="Enter amount"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 text-lg"
           />
         </div>
 
@@ -122,7 +122,7 @@ const Wallet = () => {
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-gray-700 text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition duration-300 w-1/2"
+            className="bg-red-400 text-white px-5 py-2 rounded-lg hover:bg-red-500 transition duration-300 w-1/2"
           >
             Show Transaction History
           </button>

@@ -18,6 +18,19 @@
   overflow: hidden;
 }
 
+/* Add to your global CSS file */
+
+.modal-open {
+  overflow: hidden; /* Prevent background scroll */
+}
+
+/* Transparent background overlay with blur effect */
+.modal-overlay {
+  backdrop-filter: blur(5px); /* Apply blur effect */
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+}
+
+
 /* Hide the scrollbar but keep the scroll functionality */
 /* Hide the scrollbar but keep the scroll functionality */
 /* Hide the scrollbar but keep the scroll functionality */

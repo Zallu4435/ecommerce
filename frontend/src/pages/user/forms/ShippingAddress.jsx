@@ -80,15 +80,15 @@ const ShippingAddress = ({ onAddressSelect }) => {
   }
 
   return (
-    <div className="bg-white p-6 shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Shipping Address</h2>
+    <div className="bg-white dark:bg-gray-900 p-6 shadow-lg rounded-lg">
+      <h2 className="text-2xl font-bold mb-6 dark:text-gray-200 text-gray-800">Shipping Address</h2>
 
       {isEditing ? (
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {["username", "phone", "zipCode", "house", "street", "landmark", "city", "state"].map((field) => (
               <div key={field}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium dark:text-gray-200 text-gray-700 mb-2">
                   {field.charAt(0).toUpperCase() + field.slice(1)}
                 </label>
                 <Controller
@@ -123,19 +123,19 @@ const ShippingAddress = ({ onAddressSelect }) => {
         </form>
       ) : (
         <div>
-          <h3 className="text-lg font-semibold mb-2 text-gray-800">Selected Address:</h3>
-          <div className="p-4 bg-gray-100 rounded-lg">
+          <h3 className="text-lg font-semibold mb-2 dark:text-gray-200 text-gray-800">Selected Address:</h3>
+          <div className="p-4 bg-gray-100 dark:bg-gray-600 rounded-lg">
             {currentAddress ? (
               <>
-                <p className="text-sm text-gray-700">{currentAddress.username}</p>
-                <p className="text-sm text-gray-700">{currentAddress.street}</p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.username}</p>
+                <p className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.street}</p>
+                <p className="text-sm dark:text-gray-200 text-gray-700">
                   {currentAddress.city}, {currentAddress.state} - {currentAddress.zipCode}
                 </p>
-                <p className="text-sm text-gray-700">{currentAddress.phone}</p>
+                <p className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.phone}</p>
               </>
             ) : (
-              <p className="text-sm text-gray-700">No address selected</p>
+              <p className="text-sm dark:text-gray-200 text-gray-700">No address selected</p>
             )}
           </div>
           <div className="flex justify-end gap-4 mt-6">
@@ -143,7 +143,7 @@ const ShippingAddress = ({ onAddressSelect }) => {
               <button
                 type="button"
                 onClick={() => setShowModal(true)}
-                className="bg-gray-500 hover:bg-gray-600 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+                className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold px-6 py-2 rounded-md transition duration-200"
               >
                 Change Address
               </button>

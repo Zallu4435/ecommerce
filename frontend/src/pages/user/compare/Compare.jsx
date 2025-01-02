@@ -54,8 +54,8 @@ const Compare = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-    <h1 className="text-3xl font-semibold text-center mb-8">Product Comparison</h1>
+    <div className="p-6 bg-gray-50 my-10 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <h1 className="text-3xl font-bold text-center text-gray-600 dark:text-gray-200 mb-8">Product Comparison</h1>
     <ComparisonCard 
         compareItem={compareItem} 
         handleAddToCart={handleAddToCart} 

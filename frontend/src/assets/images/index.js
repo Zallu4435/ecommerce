@@ -30,7 +30,8 @@ import notFound from './404.jpg'
 import wallet from './wallet.jpg'
 import defaultProfile from './profile.jpg'
 import logoDark from './darkLogo.png'
-
+import card from './card.jpg'
+import razorpay from './razopay.png'
 
 export {
     aboutUsImg,
@@ -64,5 +65,7 @@ export {
     notFound,
     wallet,
     defaultProfile,
-    logoDark
+    logoDark,
+    card,
+    razorpay
 }

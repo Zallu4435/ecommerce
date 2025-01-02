@@ -2,14 +2,13 @@ import React, { useEffect } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa'; // Importing an icon
 
 const DeleteConfirmationModal = ({ show, onClose, onConfirm, itemName }) => {
+
   useEffect(() => {
-    // Disable scrolling when the modal is open
     if (show) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
     }
-    // Clean up by enabling scrolling when the component unmounts
     return () => {
       document.body.style.overflow = 'auto';
     };

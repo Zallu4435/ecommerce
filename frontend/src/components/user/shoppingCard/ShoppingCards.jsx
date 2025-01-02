@@ -23,7 +23,6 @@ import {
 } from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
 import { icons } from "./icons";
 import { handleAddToCart } from "./actionHandlers";
-import { DUMMY_RATING, DUMMY_REVIEWS } from "./constants";
 
 const ShoppingCard = ({
   _id,

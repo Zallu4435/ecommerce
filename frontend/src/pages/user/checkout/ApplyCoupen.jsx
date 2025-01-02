@@ -52,8 +52,8 @@ const ApplyCoupon = ({ onCouponApply }) => {
   }
 
   return (
-    <div className="bg-white p-6 shadow-md rounded-md">
-      <h2 className="text-xl font-semibold mb-4">Apply Coupon</h2>
+    <div className="bg-gray-100 dark:bg-gray-700 p-6 shadow-md rounded-md">
+      <h2 className="text-xl dark:text-gray-200 text-gray-600 font-semibold mb-4">Apply Coupon</h2>
 
       {appliedCoupon ? (
         <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-md">
@@ -96,7 +96,7 @@ const ApplyCoupon = ({ onCouponApply }) => {
             value={coupon}
             onChange={(e) => setCoupon(e.target.value)}
             placeholder="Enter coupon code"
-            className={`w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+            className={`w-full p-3 border dark:text-gray-200 border-gray-300 bg-gray-300 dark:bg-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
               availableCoupons.length === 0 ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={availableCoupons.length === 0}

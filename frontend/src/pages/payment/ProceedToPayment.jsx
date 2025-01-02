@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { HiOutlineArrowLeft } from "react-icons/hi";
 import { toast } from "react-toastify";
 import { useProcessPaymentMutation } from "../../redux/apiSliceFeatures/addressPasswordApiSlice";
+import { ArrowLeft } from "lucide-react";
 
 const ProceedToPaymentPage = () => {
   const location = useLocation();
@@ -198,9 +198,10 @@ const ProceedToPaymentPage = () => {
           </h2>
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-300"
+            className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
           >
-            <HiOutlineArrowLeft className="mr-2" /> Back
+            <ArrowLeft className="mr-2" />
+            <span>Back to Checkout</span>
           </button>
         </div>
 

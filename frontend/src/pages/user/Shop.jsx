@@ -117,12 +117,12 @@ const ShopPage = () => {
   const isLoading = isFilteredLoading || isSearchLoading;
   const error = filteredError || searchError;
 
-  useEffect(() => {
-    console.log("Filtered Data:", filteredData);
-    console.log("Search Data:", searchData);
-    console.log("Products:", products);
-    console.log("Displayed Products:", displayedProducts);
-  }, [filteredData, searchData, products, displayedProducts]);
+  // useEffect(() => {
+  //   console.log("Filtered Data:", filteredData);
+  //   console.log("Search Data:", searchData);
+  //   console.log("Products:", products);
+  //   console.log("Displayed Products:", displayedProducts);
+  // }, [filteredData, searchData, products, displayedProducts]);
 
   return (
     <div className="min-h-screen dark:bg-black bg-gradient-to-br from-gray-100 via-white to-gray-50 py-16">

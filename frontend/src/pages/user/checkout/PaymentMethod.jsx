@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { card, razorpay } from '../../../assets/images/index'
 
 const PaymentMethod = ({ onPaymentMethodChange }) => {
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -13,12 +14,12 @@ const PaymentMethod = ({ onPaymentMethodChange }) => {
     {
       label: "Razorpay",
       value: "razorpay",
-      img: "https://via.placeholder.com/50?text=Razorpay",
+      img: razorpay,
     },
     {
-      label: "Credit/Debit Card",
+      label: "Credit Card",
       value: "card",
-      img: "https://via.placeholder.com/50?text=Card",
+      img: card,
     },
   ];
 
@@ -41,8 +42,8 @@ const PaymentMethod = ({ onPaymentMethodChange }) => {
   };
 
   return (
-    <div className="bg-white p-6 shadow-md rounded-md w-[440px]">
-      <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
+    <div className="bg-white dark:bg-gray-700 p-6 shadow-md rounded-md w-[440px]">
+      <h2 className="text-xl dark:text-gray-200 text-gray-700 font-semibold mb-4">Payment Method</h2>
       {paymentMethods.map((method) => (
         <div className="flex items-center mb-2" key={method.value}>
           <input
@@ -75,7 +76,7 @@ const PaymentMethod = ({ onPaymentMethodChange }) => {
                 <img
                   src={method.img}
                   alt={method.label}
-                  className="mb-2 w-12 h-12 object-cover"
+                  className="mb-2 w-20 h-12 object-cover"
                 />
                 <span className="text-sm font-medium">{method.label}</span>
               </div>

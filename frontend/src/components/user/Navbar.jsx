@@ -61,10 +61,40 @@ const Navbar = () => {
       <div className="flex items-center justify-between w-full md:hidden mb-4 md:mb-0">
         {/* Hamburger Menu */}
         <button
-          className="text-white dark:text-gray-900 text-2xl focus:outline-none"
+          className="focus:outline-none text-2xl"
           onClick={handleMenuToggle}
         >
-          ☰
+          {/* Light Mode Icon */}
+          <svg
+            className="block dark:hidden w-6 h-6 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16m-7 6h7"
+            />
+          </svg>
+
+          {/* Dark Mode Icon */}
+          <svg
+            className="hidden dark:block w-6 h-6 text-gray-900"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16m-7 6h7"
+            />
+          </svg>
         </button>
 
         {/* Theme Switcher */}

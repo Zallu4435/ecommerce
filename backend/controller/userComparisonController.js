@@ -78,11 +78,57 @@ exports.removeFromComparison = async (req, res) => {
 };
 
 // Get user's comparison list
+// exports.getComparisonList = async (req, res) => {
+//   try {
+//     const userId = new mongoose.Types.ObjectId(req.user);
+
+//     // Aggregation pipeline to get comparison list with populated product details
+//     const comparisonItems = await Comparison.aggregate([
+//       {
+//         $match: { userId: userId }, // Match comparison items for the specific user
+//       },
+//       {
+//         $unwind: '$items', // Unwind the items array in the comparison
+//       },
+//       {
+//         $lookup: {
+//           from: 'products', // Your Product collection name
+//           localField: 'items.productId', // Field in Comparison referencing Product
+//           foreignField: '_id', // Field in Product collection
+//           as: 'productDetails', // Alias for the joined data
+//         },
+//       },
+//       {
+//         $unwind: '$productDetails', // Flatten productDetails array
+//       },
+//       {
+//         $project: {
+//           _id: 0, // Exclude _id from the final result
+//           productId: { $toString: '$productDetails._id' },
+//           comparisonItemId: { $toString: '$items._id' }, // Include itemId to allow removal
+//           productName: '$productDetails.productName', // Product name
+//           productImage: '$productDetails.image', // Product image
+//           originalPrice: '$productDetails.originalPrice', // Product price
+//           ratings: '$productDetails.ratings', // Product ratings
+//           description: '$productDetails.description'
+//         },
+//       },
+//     ]);
+
+//     console.log(comparisonItems, "comparisonItems")
+//     return res.status(200).json(comparisonItems);
+//   } catch (error) {
+//     console.error('Error fetching comparison items:', error);
+//     return res.status(500).json({ message: 'Error fetching comparison items' });
+//   }
+// };
+
+
 exports.getComparisonList = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user);
 
-    // Aggregation pipeline to get comparison list with populated product details
+    // Aggregation pipeline to get comparison list with populated product details and review ratings
     const comparisonItems = await Comparison.aggregate([
       {
         $match: { userId: userId }, // Match comparison items for the specific user
@@ -102,6 +148,20 @@ exports.getComparisonList = async (req, res) => {
         $unwind: '$productDetails', // Flatten productDetails array
       },
       {
+        $lookup: {
+          from: 'reviews', // Your Review collection name
+          localField: 'productDetails._id', // Field in Product referencing reviews
+          foreignField: 'productId', // Field in Reviews referencing Product
+          as: 'productReviews', // Alias for the joined data
+        },
+      },
+      {
+        $addFields: {
+          averageRating: { $avg: '$productReviews.rating' }, // Calculate average rating
+          reviewCount: { $size: '$productReviews' }, // Count number of reviews
+        },
+      },
+      {
         $project: {
           _id: 0, // Exclude _id from the final result
           productId: { $toString: '$productDetails._id' },
@@ -109,13 +169,14 @@ exports.getComparisonList = async (req, res) => {
           productName: '$productDetails.productName', // Product name
           productImage: '$productDetails.image', // Product image
           originalPrice: '$productDetails.originalPrice', // Product price
-          ratings: '$productDetails.ratings', // Product ratings
-          description: '$productDetails.description'
+          averageRating: { $ifNull: ['$averageRating', 0] }, // Default to 0 if no reviews
+          reviewCount: { $ifNull: ['$reviewCount', 0] }, // Default to 0 if no reviews
+          description: '$productDetails.description', // Product description
         },
       },
     ]);
 
-    console.log(comparisonItems, "comparisonItems")
+    console.log(comparisonItems, 'comparisonItems');
     return res.status(200).json(comparisonItems);
   } catch (error) {
     console.error('Error fetching comparison items:', error);

@@ -47,7 +47,6 @@ const Cart = () => {
   const isOutOfStock =
     cartItems && cartItems.some((item) => item.stockQuantity <= 0);
 
-  console.log(isOutOfStock, "isutofStock");
   if (isLoading) {
     return <LoadingSpinner />;
   }
