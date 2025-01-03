@@ -6,7 +6,8 @@ const { sendAdminToken } = require('../utils/jwtToken');
 const Address = require('../model/Address');
 const Orders = require('../model/Orders')
 const Product = require('../model/Products')
-
+const Category = require('../model/Categories')
+const Coupon = require('../model/Coupon')
 
 exports.loginAdmin = async (req, res, next) => {
   try {
@@ -204,3 +205,182 @@ exports.adminDashboard = async (req, res) => {
 };
 
 
+
+
+exports.searchUsers = async (req, res) => {
+  const query = req.query.query;
+  try {
+    const users = await User.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+      ],
+    });
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching users', error });
+  }
+};
+
+
+
+
+exports.searchProducts = async (req, res) => {
+  const query = req.query.query; // Get the query parameter from the request
+  try {
+    // Search for products based on the query in either the name or category
+    const products = await Product.find({
+      $or: [
+        { productName: { $regex: query, $options: 'i' } },   // Case-insensitive search for name
+        { category: { $regex: query, $options: 'i' } }, // Case-insensitive search for category
+      ],
+    });
+
+    // Return the matching products
+    res.status(200).json(products);
+  } catch (error) {
+    // Return an error if something goes wrong
+    res.status(500).json({ message: 'Error fetching products', error });
+  }
+};
+
+
+
+exports.searchOrders = async (req, res) => {
+  const query = req.query.query; // Get the query parameter from the request
+  try {
+    // Aggregation pipeline to find orders based on the query and get the associated email from the users collection
+    const orders = await Orders.aggregate([
+      {
+        $match: {
+          $or: [
+            { orderId: { $regex: query, $options: 'i' } },  // Case-insensitive search for orderId
+            { customerName: { $regex: query, $options: 'i' } }, // Case-insensitive search for customerName
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',          // Name of the users collection
+          localField: 'userId',   // Field in the orders collection
+          foreignField: '_id',    // Field in the users collection to match
+          as: 'userDetails',      // Alias for the resulting user details
+        },
+      },
+      {
+        $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true }, // Unwind the array to get user details in a single document
+      },
+      {
+        $project: { // Select only necessary fields
+          orderId: 1,
+          customerName: 1,
+          email: '$userDetails.email', // Extract email from the user details
+        },
+      },
+    ]);
+
+    // Return the matching orders with the user details
+    res.status(200).json(orders);
+  } catch (error) {
+    // Return an error if something goes wrong
+    res.status(500).json({ message: 'Error fetching orders', error });
+  }
+};
+
+
+
+
+exports.searchCategories = async (req, res) => {
+  const query = req.query.query; // Get the query parameter from the request
+  try {
+    // Search for categories based on the query in either the name or description
+    const categories = await Category.find({
+      $or: [
+        { categoryName: { $regex: query, $options: 'i' } },   // Case-insensitive search for categoryName
+        { description: { $regex: query, $options: 'i' } }, // Case-insensitive search for description
+      ],
+    });
+
+    // Return the matching categories
+    res.status(200).json(categories);
+  } catch (error) {
+    // Return an error if something goes wrong
+    res.status(500).json({ message: 'Error fetching categories', error });
+  }
+};
+
+
+exports.searchCoupons = async (req, res) => {
+  const query = req.query.query; // Get the query parameter from the request
+  try {
+    // Search for coupons based on the query in either the couponCode or description
+    const coupons = await Coupon.find({
+      $or: [
+        { couponCode: { $regex: query, $options: 'i' } },   // Case-insensitive search for couponCode
+        { title: { $regex: query, $options: 'i' } }, // Case-insensitive search for description
+      ],
+    });
+
+    // Return the matching coupons
+    res.status(200).json(coupons);
+  } catch (error) {
+    // Return an error if something goes wrong
+    res.status(500).json({ message: 'Error fetching coupons', error });
+  }
+};
+
+
+const mongoose = require('mongoose'); // Import mongoose for ObjectId handling
+
+exports.searchIndividualOrders = async (req, res) => {
+  const query = req.query.query; // Get the query parameter from the request
+
+  // Log the query parameter to make sure it's what you expect
+  console.log('Query parameter:', query);
+
+  try {
+    // Check if the query is a valid ObjectId
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(query);
+    let matchCondition = {};
+
+    console.log('Is valid ObjectId:', isValidObjectId);
+
+    // If it's a valid ObjectId, search by _id; otherwise, search by orderId or other fields
+    if (isValidObjectId) {
+      // If valid ObjectId, search by _id
+      matchCondition = { _id: mongoose.Types.ObjectId(query) };
+    } else {
+      // If it's not an ObjectId, check if the query is numeric (orderId or any number-related field)
+      const numericQuery = !isNaN(query) ? parseFloat(query) : query;
+
+      // Log the query being treated as a number
+      console.log('Numeric query:', numericQuery);
+
+      // Match against orderId or other fields
+      matchCondition = {
+        $or: [
+          // Check for a match in string format if the query is not an ObjectId
+          { orderId: numericQuery.toString() },  // Search as string if orderId is stored as a string
+          { quantity: numericQuery }, // If you want to also search by quantity
+        ],
+      };
+    }
+
+    // Aggregation pipeline to find orders based on the query
+    const orders = await Orders.aggregate([
+      {
+        $match: matchCondition,
+      },
+    ]);
+
+    // Log the full orders array to check the results
+    console.log('Orders found:', orders);
+
+    // Return the matching orders to the frontend
+    res.status(200).json(orders);
+  } catch (error) {
+    // Return an error if something goes wrong
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: 'Error fetching orders', error });
+  }
+};

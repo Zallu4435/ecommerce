@@ -20,7 +20,6 @@ const TableRowForCartlist = ({ item, onRemove }) => {
     stockQuantity
   } = item;
 
-  console.log(item, 'item from cart')
   const [updateQuantity] = useUpdateQuantityMutation();
 
   const handleQuantityUpdate = async (newQuantity) => {

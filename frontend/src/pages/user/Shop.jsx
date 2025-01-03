@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ShoppingCard from "../../components/user/shoppingCard/ShoppingCards";
-import { useGetFilteredProductsQuery, useSearchProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
+import {
+  useGetFilteredProductsQuery,
+  useSearchProductsQuery,
+} from "../../redux/apiSliceFeatures/productApiSlice";
 import { ErrorBoundary } from "../../ErrorBoundary";
+import { Menu } from "lucide-react";
 
 const ShopPage = () => {
   const location = useLocation();
@@ -15,6 +19,8 @@ const ShopPage = () => {
   const [cardsPerPage, setCardsPerPage] = useState(8);
   const [sortOption, setSortOption] = useState("popularity");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const searchParams = new URLSearchParams(location.search);
   const category = searchParams.get("category");
@@ -42,14 +48,14 @@ const ShopPage = () => {
     },
     { skip: !!searchQuery }
   );
-  
+
   const {
     data: searchData,
     error: searchError,
     isLoading: isSearchLoading,
   } = useSearchProductsQuery(searchQuery, { skip: !searchQuery });
 
-  console.log(searchData, 'search')
+  console.log(searchData, "search");
   const products = searchQuery ? searchData : filteredData?.products;
   const totalPages = searchQuery
     ? Math.ceil((searchData?.totalItems || 0) / cardsPerPage)
@@ -57,14 +63,9 @@ const ShopPage = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1200) {
-        setCardsPerPage(9);
-      } else if (window.innerWidth >= 1024) {
-        setCardsPerPage(6);
-      } else if (window.innerWidth >= 768) {
-        setCardsPerPage(4);
-      } else {
-        setCardsPerPage(2);
+      setIsSmallScreen(window.innerWidth < 1024);
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false);
       }
     };
 
@@ -76,7 +77,14 @@ const ShopPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedSizes, selectedColors, priceRange, sortOption, category, searchQuery]);
+  }, [
+    selectedSizes,
+    selectedColors,
+    priceRange,
+    sortOption,
+    category,
+    searchQuery,
+  ]);
 
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) {
@@ -93,13 +101,9 @@ const ShopPage = () => {
     );
   };
 
-  // const handleSearch = (query) => {
-  //   setSearchQuery(query);
-  //   navigate({
-  //     pathname: location.pathname,
-  //     search: query ? `q=${query}` : category ? `category=${category}` : "",
-  //   });
-  // };
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   const handleClearSearch = () => {
     setSearchQuery("");
@@ -117,19 +121,35 @@ const ShopPage = () => {
   const isLoading = isFilteredLoading || isSearchLoading;
   const error = filteredError || searchError;
 
-  // useEffect(() => {
-  //   console.log("Filtered Data:", filteredData);
-  //   console.log("Search Data:", searchData);
-  //   console.log("Products:", products);
-  //   console.log("Displayed Products:", displayedProducts);
-  // }, [filteredData, searchData, products, displayedProducts]);
-
   return (
     <div className="min-h-screen dark:bg-black bg-gradient-to-br from-gray-100 via-white to-gray-50 py-16">
-      <div className="container mx-auto flex gap-6">
-        <div className="w-[300px] scrollbar-hidden dark:bg-gray-800 dark:text-white sticky ml-[-20px] me-[10px] top-16 h-[calc(100vh-4rem)] bg-white rounded-lg shadow-lg p-6 overflow-auto">
+      <div className="flex space-x-4 pl-4 pt-3 lg:hidden lg:ml-20 sticky top-[80px] z-50 bg-gray-100 lg:mb-10 mt-[-40px]">
+        {isSmallScreen && (
+          <div className="lg:hidden mb-4">
+            <button
+              onClick={toggleMobileMenu}
+              className="p-2 rounded-md bg-gray-200 dark:bg-gray-700"
+              aria-label="Toggle menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
+        )}
+        <button onClick={handleClearSearch} className="text-blue-500 mb-4">
+          Clear Search
+        </button>
+      </div>
+
+      <div className="container mx-auto flex flex-col lg:flex-row gap-6">
+        <div
+          className={`${
+            isSmallScreen ? (isMobileMenuOpen ? "block" : "hidden") : "block"
+          } w-full lg:w-[300px] lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 overflow-auto transition-all duration-300 ease-in-out`}
+        >
           <div className="mb-6">
-            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">Size</h3>
+            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">
+              Size
+            </h3>
             <div className="grid grid-cols-3 gap-4">
               {["XS", "S", "M", "L", "XL"].map((size) => (
                 <label key={size} className="flex items-center">
@@ -147,7 +167,9 @@ const ShopPage = () => {
             </div>
           </div>
           <div className="mb-6">
-            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">Color</h3>
+            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">
+              Color
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               {["white", "red", "blue", "black"].map((color) => (
                 <label key={color} className="flex items-center">
@@ -165,13 +187,15 @@ const ShopPage = () => {
             </div>
           </div>
           <div className="mb-6">
-            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">Price Range</h3>
+            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">
+              Price Range
+            </h3>
             <input
               type="range"
               min="0"
               max="5000"
               value={priceRange[1]}
-              onChange={(e) => setPriceRange([0, e.target.value])}
+              onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
               className="w-full"
             />
             <div className="mt-2 text-sm dark:text-white text-gray-600">
@@ -179,7 +203,9 @@ const ShopPage = () => {
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">Sort By</h3>
+            <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">
+              Sort By
+            </h3>
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
@@ -196,19 +222,21 @@ const ShopPage = () => {
             </select>
           </div>
         </div>
-        <div className="w-3/4">
+
+        <div className="w-full lg:w-3/4">
           {searchQuery && (
-            <h2 className="text-2xl font-bold mb-4">Search Results for "{searchQuery}"</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              Search Results for "{searchQuery}"
+            </h2>
           )}
-          <button onClick={handleClearSearch} className="text-blue-500 mb-4">
-            Clear Search
-          </button>
           <ErrorBoundary>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-[80px]">
               {isLoading ? (
                 <p>Loading...</p>
               ) : error ? (
-                <p className="text-red-500">Error loading products: {error.message || "Unknown error"}</p>
+                <p className="text-red-500">
+                  Error loading products: {error.message || "Unknown error"}
+                </p>
               ) : displayedProducts.length > 0 ? (
                 displayedProducts.map((product) => (
                   <ShoppingCard

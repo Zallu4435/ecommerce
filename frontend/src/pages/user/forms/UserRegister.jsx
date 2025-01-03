@@ -46,13 +46,13 @@ const UserRegister = () => {
 
   return (
     <div className="dark:bg-gray-900 bg-gray-50 flex items-center justify-center min-h-screen">
-      <div className="w-[90%] sm:w-full lg:w-[50%] my-20 dark:bg-gray-800 bg-white p-8 rounded-md shadow-lg">
+      <div className="w-[90%] sm:w-full lg:w-[50%] my-20 dark:bg-gray-800 bg-white md:p-8 p-4 rounded-md shadow-lg">
         <h1 className="text-2xl sm:text-xl md:text-2xl font-bold mb-6 dark:text-gray-100 text-gray-800 text-center">
           User Register
         </h1>
         <form onSubmit={handleSubmit(onsubmit)}>
           {/* Row 1: Username & Phone */}
-          <div className="flex flex-col sm:flex-col md:flex-row gap-4 mb-4">
+          <div className="flex flex-col sm:flex-col md:flex-row md:gap-4 md:mb-4">
             <InputContainer className="flex-1">
               <Label className="dark:text-gray-100 text-gray-800">
                 Username
@@ -98,7 +98,7 @@ const UserRegister = () => {
           </div>
 
           {/* Row 3: Password & Confirm Password */}
-          <div className="flex flex-col sm:flex-col md:flex-row gap-4 mb-6">
+          <div className="flex flex-col sm:flex-col md:flex-row gap-4 lg:mb-6 mb-2">
             <InputContainer className="flex-1">
               <Label className="dark:text-gray-100 text-gray-800">
                 Password
@@ -140,7 +140,7 @@ const UserRegister = () => {
         </form>
 
         {/* Link to Login */}
-        <p className="mt-4 text-center dark:text-gray-300 text-gray-600">
+        <p className="mt-4 text-center text-xs md:text-lg dark:text-gray-300 text-gray-600">
           Already have an account?{" "}
           <Link
             to="/login"

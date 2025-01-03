@@ -9,8 +9,8 @@ const {
   cancelOrder,
   getAllUsersOrders,
   getUserOrdersMoadl,
-  cancelIndividualOrder,
-  getAddressByOrderId
+  getAddressByOrderId,
+  returnOrder
 
 } = require('../controller/orderController');
 const { isAuthenticated } = require('../middleware/auth');
@@ -38,6 +38,12 @@ router.patch(
 router.patch(
   '/:orderId/cancel/:productId', 
   catchAsyncErrors(cancelOrder)
+); // Delete order
+
+
+router.patch(
+  '/:orderId/return/:productId', 
+  catchAsyncErrors(returnOrder)
 ); // Delete order
 
 // router.patch(

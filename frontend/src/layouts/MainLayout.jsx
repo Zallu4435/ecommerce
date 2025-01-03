@@ -45,7 +45,7 @@ const MainLayout = () => {
     <div>
       <Header />
       <Navbar />
-      <main>
+      <main className=''>
         <Routes>
           {routes.map(({ path, component: Component, isProtected }, index) => {
             if (isProtected) {

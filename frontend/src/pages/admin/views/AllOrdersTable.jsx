@@ -3,11 +3,14 @@ import { useGetOrdersQuery } from "../../../redux/apiSliceFeatures/addressPasswo
 import {
   useUpdateOrderStatusMutation,
   useCancelOrderMutation,
+  useReturnOrderMutation,
 } from "../../../redux/apiSliceFeatures/OrderApiSlice"; // RTK Query hooks
 import { ChevronDown, ArrowLeft, AlertCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import OrderDetailsModal from "../../../modal/user/OrderDetailsModal";
 import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
+import { useSearchUsersIndividualOrdersQuery } from "../../../redux/apiSliceFeatures/AdminApiSlice";
+import ReturnConfirmationModal from "../../../modal/user/OrderReturnModal";
 
 const statusColors = {
   Processing: "bg-yellow-200",
@@ -23,7 +26,14 @@ const IndividualOrdersOfUsers = () => {
     orderId: null,
     productId: null,
   });
+    const [orderToReturn, setOrderToReturn] = useState({ orderId: null, productId: null });
+  
   const [showModal, setShowModal] = useState(false);
+    const [showReturnModal, setShowReturnModal] = useState(false);
+  
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
 
   const location = useLocation();
   const { username } = location.state || {}; // Access the username from state
@@ -38,9 +48,31 @@ const IndividualOrdersOfUsers = () => {
     isLoading,
     refetch,
   } = useGetOrdersQuery({ page, limit });
+   const { data: searchData = {}, refetch: refetchSearch } = useSearchUsersIndividualOrdersQuery(debouncedSearch, {
+      skip: !debouncedSearch, // Skip API call if search is empty
+    });
+
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
   const [cancelOrder] = useCancelOrderMutation();
+    const [returnOrder] = useReturnOrderMutation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search); // Update debounced search after a delay
+    }, 500); // Delay in milliseconds
+
+    // Clean up timer
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  console.log(orders, 'orders')
+  console.log(searchData, 'searchData')
+
+  const displayOrders = !isLoading && !error && orders?.length > 0
+  ? orders
+  : searchData;  // Assuming `searchData` is your alternative data source
+
 
   const toggleOrderDetails = (order) => setSelectedOrder(order);
   const closeModal = () => setSelectedOrder(null);
@@ -77,6 +109,28 @@ const IndividualOrdersOfUsers = () => {
     }
   };
 
+
+  const handleReturnClick = (orderId, productId) => {
+    setOrderToReturn({ orderId, productId });
+    setShowReturnModal(true);
+  };
+
+  const handleConfirmReturn = async () => {
+    const { orderId, productId } = orderToReturn;
+    setShowReturnModal(false);
+
+    try {
+      await returnOrder({ orderId, productId }).unwrap();
+      refetch();
+    } catch (err) {
+      console.error('Error returning order:', err);
+      alert('Failed to return order');
+    }
+  };
+
+  console.log(displayOrders, 'displayOrders from the individual order')
+  console.log(searchData, 'searchData')
+
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white dark:bg-gray-800 mt-10 shadow-lg rounded-lg">
       <div className="mb-8 flex items-center justify-between">
@@ -91,6 +145,17 @@ const IndividualOrdersOfUsers = () => {
           <span>Back to Orders</span>
         </button>
       </div>
+
+      <div className="mb-4 sticky overflow-hidden top-0 z-10 py-4">
+        <input
+          type="text"
+          placeholder={`Search for Orders`}
+          className="w-full p-3 rounded-md border border-gray-600 text-gray-800 dark:text-white dark:bg-gray-600"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
       {isLoading && (
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-gray-100"></div>
@@ -162,6 +227,13 @@ const IndividualOrdersOfUsers = () => {
                     Cancel Order
                   </button>
                   <button
+                      className={`bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition ${order.Status !== 'Delivered' || order.Status === 'Returned' ? 'opacity-40 cursor-not-allowed filter' : ''}`}
+                      onClick={() => handleReturnClick(order._id, order.ProductId)}
+                      disabled={order.Status !== 'Delivered' || order.Status === 'Returned'}
+                    >
+                      Return Order
+                    </button>
+                  <button
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
                     onClick={() => toggleOrderDetails(order)}
                   >
@@ -182,6 +254,13 @@ const IndividualOrdersOfUsers = () => {
         onConfirm={handleConfirmCancel}
         orderId={orderToCancel.orderId}
         productId={orderToCancel.productId}
+      />
+            <ReturnConfirmationModal
+        show={showReturnModal}
+        onClose={() => setShowReturnModal(false)}
+        onConfirm={handleConfirmReturn}
+        orderId={orderToReturn.orderId}
+        productId={orderToReturn.productId}
       />
     </div>
   );

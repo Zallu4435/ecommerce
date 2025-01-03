@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetOrdersQuery } from '../../../redux/apiSliceFeatures/addressPasswordApiSlice';
-import { useCancelOrderMutation } from '../../../redux/apiSliceFeatures/OrderApiSlice';
+import { useCancelOrderMutation, useReturnOrderMutation } from '../../../redux/apiSliceFeatures/OrderApiSlice';
 import OrderDetailsModal from '../../../modal/user/OrderDetailsModal';
 import CancelConfirmationModal from '../../../modal/user/ConfirmOrderCancelModal';
+import ReturnConfirmationModal from '../../../modal/user/OrderReturnModal';
 
 const OrdersList = () => {
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState({ orderId: null, productId: null });
+  const [orderToReturn, setOrderToReturn] = useState({ orderId: null, productId: null });
   const [page, setPage] = useState(1);
   const limit = 10;
 
   // Fetch orders with pagination
   const { data, error, isLoading, refetch } = useGetOrdersQuery({ page, limit });
   const [cancelOrder] = useCancelOrderMutation();
+  const [returnOrder] = useReturnOrderMutation();
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const orders = data?.orders || [];
@@ -25,12 +29,17 @@ const OrdersList = () => {
 
   const handleCancelClick = (orderId, productId) => {
     setOrderToCancel({ orderId, productId });
-    setShowModal(true);
+    setShowCancelModal(true);
+  };
+
+  const handleReturnClick = (orderId, productId) => {
+    setOrderToReturn({ orderId, productId });
+    setShowReturnModal(true);
   };
 
   const handleConfirmCancel = async () => {
     const { orderId, productId } = orderToCancel;
-    setShowModal(false);
+    setShowCancelModal(false);
 
     try {
       await cancelOrder({ orderId, productId }).unwrap();
@@ -38,6 +47,19 @@ const OrdersList = () => {
     } catch (err) {
       console.error('Error canceling order:', err);
       alert('Failed to cancel order');
+    }
+  };
+
+  const handleConfirmReturn = async () => {
+    const { orderId, productId } = orderToReturn;
+    setShowReturnModal(false);
+
+    try {
+      await returnOrder({ orderId, productId }).unwrap();
+      refetch();
+    } catch (err) {
+      console.error('Error returning order:', err);
+      alert('Failed to return order');
     }
   };
 
@@ -86,11 +108,18 @@ const OrdersList = () => {
                       Track Order
                     </button>
                     <button
-                      className={`bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition ${order.Status === 'Delivered' || order.Status === 'Cancelled' ? 'opacity-40 cursor-not-allowed filter' : ''}`}
+                      className={`bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition ${order.Status === 'Delivered' || order.Status === 'Cancelled' || order.Status === 'Returned' ? 'opacity-40 cursor-not-allowed filter' : ''}`}
                       onClick={() => handleCancelClick(order._id, order.ProductId)}
-                      disabled={order.Status === 'Delivered' || order.Status === 'Cancelled'}
+                      disabled={order.Status === 'Delivered' || order.Status === 'Cancelled' || order.Status === 'Returned'}
                     >
                       Cancel Order
+                    </button>
+                    <button
+                      className={`bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition ${order.Status !== 'Delivered' || order.Status === 'Returned' ? 'opacity-40 cursor-not-allowed filter' : ''}`}
+                      onClick={() => handleReturnClick(order._id, order.ProductId)}
+                      disabled={order.Status !== 'Delivered' || order.Status === 'Returned'}
+                    >
+                      Return Order
                     </button>
                     <button
                       className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
@@ -126,14 +155,22 @@ const OrdersList = () => {
       </div>
       {selectedOrder && <OrderDetailsModal order={selectedOrder} onClose={closeModal} />}
       <CancelConfirmationModal
-        show={showModal}
-        onClose={() => setShowModal(false)}
+        show={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
         onConfirm={handleConfirmCancel}
         orderId={orderToCancel.orderId}
         productId={orderToCancel.productId}
+      />
+      <ReturnConfirmationModal
+        show={showReturnModal}
+        onClose={() => setShowReturnModal(false)}
+        onConfirm={handleConfirmReturn}
+        orderId={orderToReturn.orderId}
+        productId={orderToReturn.productId}
       />
     </div>
   );
 };
 
 export default OrdersList;
+

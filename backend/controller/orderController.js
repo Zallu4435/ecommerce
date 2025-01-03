@@ -579,6 +579,7 @@ exports.getAllUsersOrders = async (req, res) => {
         $group: {
           _id: "$UserId",
           username: { $first: "$userDetails.username" }, // Get the first (and only) user name from the joined details
+          email: { $first: "$userDetails.email" }, // Get the first (and only) user name from the joined details
           ordersCount: { $sum: 1 }, // Count number of orders per user
           totalAmount: { $sum: "$TotalAmount" }, // Sum of the total amount from all orders
           lastOrderDate: { $max: "$createdAt" }, // Find the last order date
@@ -589,6 +590,7 @@ exports.getAllUsersOrders = async (req, res) => {
       {
         $project: {
           username: 1,
+          email: 1,
           ordersCount: 1,
           totalAmount: 1,
           lastOrderDate: {
@@ -661,5 +663,117 @@ exports.getAddressByOrderId = async (req, res, next) => {
     return res
       .status(500)
       .json({ message: "Server error while fetching address" });
+  }
+};
+
+
+exports.returnOrder = async (req, res) => {
+
+  console.log("reached for return")
+  const { orderId, productId } = req.params;
+
+  console.log(orderId, productId, 'orderId, productId')
+
+  try {
+    // Find the order by its ID
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Check if the Items array exists and is valid
+    if (!Array.isArray(order.items)) {
+      return res
+        .status(400)
+        .json({ message: "Order items not found or invalid" });
+    }
+
+    // Find the index of the item with the specified productId
+    const itemIndex = order.items.findIndex(
+      (item) => item.ProductId.toString() === productId
+    );
+
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: "Item not found in the order" });
+    }
+
+    // Get the product details to update the quantity
+    const product = await Product.findById(order.items[itemIndex].ProductId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Increase the stock quantity of the product
+    product.stockQuantity += order.items[itemIndex].Quantity;
+    await product.save();
+
+    // Mark the specific item as 'Returned'
+    order.items[itemIndex].Status = "Returned";
+
+    // Calculate the refund amount based on the discounted price
+    let refundAmount =
+      order.items[itemIndex].Price * order.items[itemIndex].Quantity;
+
+    // Apply the coupon discount if available
+    if (order.items[itemIndex].CouponDiscount > 0) {
+      const discountedPrice =
+        order.items[itemIndex].Price -
+        (order.items[itemIndex].Price * order.items[itemIndex].CouponDiscount) /
+          100;
+      refundAmount = discountedPrice * order.items[itemIndex].Quantity;
+    }
+
+    // Process the payment and initiate the refund if needed
+    const paymentRecord = await Payment.findOne({ OrderId: orderId });
+    if (paymentRecord) {
+      if (
+        paymentRecord.method.toLowerCase() === "card" ||
+        paymentRecord.method.toLowerCase() === "razorpay"
+      ) {
+        // Handle card or Razorpay refund
+        const userWallet = await Wallet.findOne({
+          userId: paymentRecord.userId,
+        });
+        if (!userWallet) {
+          console.error(`Wallet not found for user ${paymentRecord.userId}`);
+          return res.status(404).json({ message: "User wallet not found" });
+        }
+
+        userWallet.balance += refundAmount;
+        await userWallet.save();
+
+        // Create a successful transaction record for debit
+        const transaction = new Transaction({
+          walletId: userWallet?._id,
+          userId: paymentRecord?.userId,
+          type: "Debit",
+          amount: refundAmount,
+          description: `Refund for returned item ${paymentRecord?.OrderId}`,
+          status: "Successful",
+        });
+        await transaction.save();
+      } else if (paymentRecord.method.toLowerCase() === "cod") {
+        console.log("No refund necessary for COD orders");
+      }
+
+      // Update the payment status
+      paymentRecord.refundAmount += refundAmount;
+      paymentRecord.refundStatus = "Refunded";
+      await paymentRecord.save();
+    } else {
+      console.log("No payment record found for this order");
+    }
+
+    // Save the updated order
+    const updatedOrder = await order.save();
+
+    // Respond to the client
+    res.status(200).json({
+      message: "Item returned and refunded successfully",
+      updatedOrder,
+    });
+  } catch (error) {
+    console.error("Error processing return:", error);
+    res.status(500).json({ message: "Failed to process return" });
   }
 };

@@ -11,7 +11,7 @@ const {
   getAllUsers,
   googleLogin,
   otpLogin, verifyEmailOtp,
-  refreshToken
+  refreshToken,
 } = require('../controller/userController');
 
 // User Routes
@@ -37,5 +37,7 @@ router.post('/otp-login', catchAsyncErrors(otpLogin));
 router.post('/verify-otp', catchAsyncErrors(verifyEmailOtp));
 
 router.get('/refresh-token', verifyRefreshToken, catchAsyncErrors(refreshToken))
+
+
 
 module.exports = router;

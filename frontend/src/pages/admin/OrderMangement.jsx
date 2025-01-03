@@ -1,15 +1,34 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AdminTable from '../../components/admin/AdminTable'
 import { useGetUsersOrdersQuery } from '../../redux/apiSliceFeatures/OrderApiSlice';
+import { useSearchAdminOrdersQuery } from '../../redux/apiSliceFeatures/AdminApiSlice';
 // import { useGetOrdersQuery } from '../../redux/apiSliceFeatures/OrderApiSlice';
 
 const OrderManagement = () => {
 
-  const [search, setSearch] = useState('');      
+  const [search, setSearch] = useState('');     
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+ 
 
-  const { data: ordersData =  [], isLoading, isError } = useGetUsersOrdersQuery();
+  const { data: allData =  [], isLoading, isError } = useGetUsersOrdersQuery();
+  const { data: searchData = {}, refetch: refetchSearch } = useSearchAdminOrdersQuery(debouncedSearch, {
+    skip: !debouncedSearch, // Skip API call if search is empty
+  });
 
-  // console.log(data, "data")
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search); // Update debounced search after a delay
+    }, 500); // Delay in milliseconds
+
+    // Clean up timer
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Data to pass to AdminTable
+  const dataToDisplay = debouncedSearch
+    ? searchData || [] // Use searchData.users if available
+    : allData || [];   // Use allData.users if available
+
 
   return (
       <div className="dark:bg-gray-900 py-2 h-screen fixed left-[420px] top-10 right-0 dark:text-white bg-orange-50 px-14">
@@ -17,14 +36,15 @@ const OrderManagement = () => {
             Order Management
           </h1>
 
-            <AdminTable 
-              type="orders" 
-              data={{ orders: ordersData }}
-              search={search} 
-              setSearch={setSearch} 
-              isLoading={isLoading}
-              isError={isError}
-            />
+          <AdminTable
+          type="orders"
+          data={dataToDisplay}
+          search={search}
+          setSearch={setSearch}
+          isLoading={isLoading}
+          isError={isError}
+          refetch={debouncedSearch ? refetchSearch : undefined}
+        />
 
       </div>    
   )

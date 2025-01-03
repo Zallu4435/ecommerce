@@ -19,23 +19,23 @@ const ContactUs = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center py-10">
-      <div className="w-full sm:w-3/4 lg:w-2/3 xl:w-[57%] bg-white dark:bg-gray-800 p-8 sm:p-10 rounded-xl shadow-xl">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center  md:py-10">
+      <div className="w-full sm:w-3/4 lg:w-2/3 xl:w-[57%] bg-white dark:bg-gray-800 md:p-8 p-5 sm:p-10 rounded-xl shadow-xl">
         
         {/* Header Section */}
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 dark:text-gray-100 mb-8">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 dark:text-gray-100 md:mb-8 mb-4 mt-5">
           Contact Us
         </h1>
 
         {/* Contact Info Section */}
         <div className="mb-8 text-center">
-          <p className="text-lg text-gray-700 dark:text-gray-300">
+          <p className="md:text-lg text-gray-700 dark:text-gray-300">
             We’d love to hear from you! Whether you have a question, suggestion, or just want to say hello, feel free to reach out.
           </p>
         </div>
 
         {/* Contact Form Section */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="md:space-y-6 space-y-2">
           {/* Name and Email Fields in a Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Name Field */}
@@ -85,7 +85,7 @@ const ContactUs = () => {
           <div className="text-center">
             <button
               type="submit"
-              className="w-full sm:w-auto py-3 px-6 bg-pink-500 text-white font-semibold rounded-md shadow-md hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-pink-700 dark:hover:bg-pink-600"
+              className="w-full sm:w-auto py-3 mt-2 md:mt-0 px-6 bg-pink-500 text-white font-semibold rounded-md shadow-md hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-pink-700 dark:hover:bg-pink-600"
             >
               Send Message
             </button>
@@ -93,16 +93,16 @@ const ContactUs = () => {
         </form>
 
         {/* Address Section */}
-        <div className="mt-10 text-center text-gray-700 dark:text-gray-300">
+        <div className="md:mt-10 mt-8 text-center text-gray-700 dark:text-gray-300">
           <h2 className="text-xl font-semibold mb-4">Our Office</h2>
-          <p className="text-lg">
+          <p className="md:text-lg">
             123 Fashion Street, <br />
             Style City, 45678
           </p>
-          <p className="mt-4 text-lg">
+          <p className="mt-4 md:text-lg">
             Email: <span className="font-semibold">contact@fashionstore.com</span>
           </p>
-          <p className="mt-2 text-lg">
+          <p className="mt-2 md:text-lg">
             Phone: <span className="font-semibold">+1 (800) 123-4567</span>
           </p>
         </div>

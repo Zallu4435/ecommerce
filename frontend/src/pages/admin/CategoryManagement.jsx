@@ -1,13 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminTable from "../../components/admin/AdminTable";
 import { useGetCategoriesQuery } from "../../redux/apiSliceFeatures/categoryApiSlice";
 import { useButtonHandlers } from "../../components/admin/ButtonHandlers";
+import { useSearchAdminCategoriesQuery } from "../../redux/apiSliceFeatures/AdminApiSlice";
 
 const CategoryManagement = () => {
   const [search, setSearch] = useState("");
-  const { handleCreate } = useButtonHandlers();
-  const { data = [], isLoading, isError, refetch } = useGetCategoriesQuery();
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  const { handleCreate } = useButtonHandlers();
+
+  const { data: allData = [], isLoading, isError, refetch } = useGetCategoriesQuery();
+  const { data: searchData = {}, refetch: refetchSearch } = useSearchAdminCategoriesQuery(debouncedSearch, {
+    skip: !debouncedSearch, // Skip API call if search is empty
+  });
+
+  // Debounce logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search); // Update debounced search after a delay
+    }, 500); // Delay in milliseconds
+
+    // Clean up timer
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Data to pass to AdminTable
+  const dataToDisplay = debouncedSearch
+    ? searchData || [] // Use searchData.users if available
+    : allData || [];   // Use allData.users if available
   return (
     <div className="flex h-screen dark:bg-black top-10 fixed left-[420px] right-0 dark:text-white">
       <div className="dark:bg-gray-900 w-full bg-orange-50 px-14">
@@ -25,12 +46,12 @@ const CategoryManagement = () => {
 
         <AdminTable
           type="categories"
-          data={data}
+          data={dataToDisplay}
           search={search}
           setSearch={setSearch}
           isLoading={isLoading}
           isError={isError}
-          refetch={refetch}
+          refetch={debouncedSearch ? refetchSearch : undefined}
         />
       </div>
     </div>

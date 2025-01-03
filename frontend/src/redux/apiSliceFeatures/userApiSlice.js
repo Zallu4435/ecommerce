@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from '../../middleware/authMiddleware';
-import { uploadImageToCloudinary } from '../../server'; // Import the upload function
+import { uploadImageToCloudinary } from '../../server'; 
 import { clearCredentials } from '../slice/userSlice';
 
 export const userApiSlice = createApi({

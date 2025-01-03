@@ -109,7 +109,7 @@ const Login = () => {
     switch (formNum) {
       case 1:
         return (
-          <form onSubmit={handleSubmit(onSubmit)} className="lg:space-y-6 space-y-3 ">
+          <form onSubmit={handleSubmit(onSubmit)} className="lg:space-y-6 space-y-3 md:mb-4 mb-3">
             <div className="relative">
               <input
                 type="email"
@@ -193,7 +193,7 @@ const Login = () => {
       case 2:
       case 3:
         return (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="md:space-y-6 space-y-3">
             <div className="relative">
               <input
                 type="email"
@@ -231,7 +231,7 @@ const Login = () => {
   };
 
   return (
-    <div className="dark:bg-gray-900 bg-gray-50 flex items-center justify-center min-h-screen p-6">
+    <div className="dark:bg-gray-900 bg-gray-50 flex mt-[-100px] md:mt-0 items-center justify-center min-h-screen lg:p-6">
       <div className="w-[90%] md:w-[60%] sm:w-full lg:w-[30%] dark:bg-gray-800 bg-white p-8 rounded-lg shadow-xl">
         <h2 className="text-3xl font-semibold text-center dark:text-gray-100 text-gray-800 mb-8">
           {formNum === 1
@@ -254,7 +254,7 @@ const Login = () => {
             />
             <div className="text-center mt-4">
               <p
-                className="text-lg text-green-500 font-bold dark:text-blue-400 cursor-pointer"
+                className="md:text-lg text-green-500 text-sm font-bold dark:text-blue-400 cursor-pointer"
                 onClick={() => {
                   setFormNum(2);
                   reset();
@@ -269,7 +269,7 @@ const Login = () => {
         {formNum !== 1 && !isLoading && (
           <div className="text-center mt-4">
             <p
-              className="text-blue-500 cursor-pointer hover:underline"
+              className="text-blue-500 text-sm md:text-lg cursor-pointer hover:underline"
               onClick={() => {
                 setFormNum(1);
                 reset();
@@ -282,7 +282,7 @@ const Login = () => {
 
         {!isLoading && (
           <>
-            <div className="text-center mt-4 dark:text-gray-300 text-black font-semibold">
+            <div className="text-center mt-4 text-xs md:text-lg dark:text-gray-300 text-black font-semibold">
               <p>
                 Don't have an account?{" "}
                 <Link
@@ -295,7 +295,7 @@ const Login = () => {
             </div>
 
             {formNum !== 3 && (
-              <div className="text-center mt-1 dark:text-gray-300 text-red-700 font-semibold">
+              <div className="text-center mt-1 text-xs md:text-lg dark:text-red-400 text-red-700 font-semibold">
                 <p>
                   Forgot your password?{" "}
                   <span

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import TransactionModal from '../../../modal/user/TransactionHistoryModal'; // Importing the modal component
 import { wallet } from '../../../assets/images';
 import { useGetTransactionsQuery, useUpdateWalletMutation } from '../../../redux/apiSliceFeatures/WalletApiSlice';
+import { toast } from 'react-toastify';
 
 const Wallet = () => {
   const [balance, setBalance] = useState(0); // Set initial balance to 0
@@ -41,7 +42,7 @@ const Wallet = () => {
 
     const scriptLoaded = await loadRazorpayScript();
     if (!scriptLoaded) {
-      alert('Failed to load Razorpay SDK. Please try again later.');
+      toast.error('Failed to load Razorpay SDK. Please try again later.');
       return;
     }
 
@@ -63,10 +64,10 @@ const Wallet = () => {
           if (result.success) {
             setBalance(result.wallet.balance); // Update balance from backend
             refetch(); // Refetch transactions
-            alert('Payment successful! Wallet updated.');
+            toast.success('Payment successful! Wallet updated.');
           }
         } catch (error) {
-          alert('Failed to update wallet. Please try again.');
+          toast.error('Failed to update wallet. Please try again.');
         }
       },
       prefill: {

@@ -1,15 +1,35 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AdminTable from '../../components/admin/AdminTable';
 import { useButtonHandlers } from '../../components/admin/ButtonHandlers';
 import { useGetAllCouponsQuery } from '../../redux/apiSliceFeatures/CouponApiSlice';
+import { useSearchAdminCouponsQuery } from '../../redux/apiSliceFeatures/AdminApiSlice';
 
 const CouponManagement = () => {
 
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const { handleCreate } = useButtonHandlers();
   
-  const { data = [], isLoading, isError } = useGetAllCouponsQuery();
-    const { handleCreate } = useButtonHandlers();
+  const { data:allData = [], isLoading, isError } = useGetAllCouponsQuery();
+    const { data: searchData = {}, refetch: refetchSearch } = useSearchAdminCouponsQuery(debouncedSearch, {
+      skip: !debouncedSearch, // Skip API call if search is empty
+    });
   
+    // Debounce logic
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setDebouncedSearch(search); // Update debounced search after a delay
+      }, 500); // Delay in milliseconds
+  
+      // Clean up timer
+      return () => clearTimeout(timer);
+    }, [search]);
+  
+    // Data to pass to AdminTable
+    const dataToDisplay = debouncedSearch
+      ? searchData || [] // Use searchData.users if available
+      : allData || [];   // Use allData.users if available
   
   return (
     <div className='dark:bg-black h-screen fixed left-[420px] top-10 right-0 flex'>
@@ -27,14 +47,15 @@ const CouponManagement = () => {
           </button>
         </div>
 
-        <AdminTable 
-        type="coupons" 
-        data={data} 
-        search={search} 
-        setSearch={setSearch} 
-        isError={isError}
-        isLoading={isLoading}
-      />
+        <AdminTable
+          type="coupons"
+          data={dataToDisplay}
+          search={search}
+          setSearch={setSearch}
+          isLoading={isLoading}
+          isError={isError}
+          refetch={debouncedSearch ? refetchSearch : undefined}
+        />
 
       </div>
     </div>

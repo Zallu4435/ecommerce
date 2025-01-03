@@ -574,3 +574,8 @@ exports.verifyEmailOtp = async (req, res, next) => {
     next(new ErrorHandler("OTP verification failed", 500));
   }
 };
+
+
+
+
+

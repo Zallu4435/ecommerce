@@ -48,6 +48,13 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
       query: (orderId) => `orders/${orderId}/address`, // Adjust the endpoint as per your backend
     }),
 
+    returnOrder: builder.mutation({
+      query: ({ orderId, productId }) => ({
+        url: `/orders/${orderId}/return/${productId}`,
+        method: 'PATCH',
+      }),
+    }),
+
   }),
 });
 
@@ -58,5 +65,6 @@ export const {
   useCancelOrderMutation,
   useCancelIndividualOrderMutation,
   useUpdateOrderStatusMutation,
-  useGetAddressByOrderIdQuery
+  useGetAddressByOrderIdQuery,
+  useReturnOrderMutation
 } = orderApiSlice;

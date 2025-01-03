@@ -122,7 +122,7 @@ const TableRow = ({ item, type }) => {
 
         {type === "orders" && (
           <>
-            <td className="px-6 py-4">{item.username}</td>
+            <td className="px-6 py-4">{item.email}</td>
             <td className="px-6 py-4 border border-gray-600">
               {item.ordersCount}
             </td>
@@ -259,7 +259,7 @@ export const config = {
   },
   orders: {
     headers: [
-      "Username",
+      "User Email",
       "Total Orders",
       "Total Amount",
       "Last Order Date",
