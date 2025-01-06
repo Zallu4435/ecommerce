@@ -58,13 +58,23 @@ export const adminApiSlice = createApi({
     }),
 
     searchUsers: builder.query({
-      query: (searchTerm) => `/users/search?query=${searchTerm}`,
+      query: (params) => {
+        const queryString = new URLSearchParams(params).toString();
+        return `/users/search?${queryString}`;
+      },
     }),
+    
+    
+    // searchAdminProducts: builder.query({
+    //   query: (searchTerm) => `/products/search?query=${searchTerm}`,
+    // }),
 
     searchAdminProducts: builder.query({
-      query: (searchTerm) => `/products/search?query=${searchTerm}`,
+      query: (params) => {
+        const queryString = new URLSearchParams(params).toString();
+        return `/products/search?${queryString}`;
+      },
     }),
-
     searchAdminOrders: builder.query({
       query: (searchTerm) => `/orders/search?query=${searchTerm}`,
     }),

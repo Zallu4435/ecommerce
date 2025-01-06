@@ -12,6 +12,7 @@ const OrdersSchema = new mongoose.Schema({
                 type: mongoose.Schema.Types.ObjectId, 
                 ref: 'products'
             },
+            //pro..name, image
             Quantity: { 
                 type: Number 
             },

@@ -8,20 +8,27 @@ export const salesApiSlice = createApi({
   endpoints: (builder) => ({
     // Get sales data with pagination and filters
     getSalesData: builder.query({
-      query: ({ page = 1, pageSize = 10, dateRange, orderStatusFilter }) => {
-        let queryString = `sales/getSalesData?page=${page}&pageSize=${pageSize}`;
-        if (dateRange) queryString += `&dateRange=${dateRange}`;
-        if (orderStatusFilter) queryString += `&orderStatusFilter=${orderStatusFilter}`;
-        return queryString;
-      },
-      providesTags: ['Sales'], // Provides 'Sales' cache tag
+      query: (params) => ({
+        url: 'sales/getSalesData',
+        method: 'GET',
+        params: params
+      }),
+      providesTags: ['Sales'],
+    }),
+    getSalesOverview: builder.query({
+      query: () => 'sales/getSalesOverview',
+      providesTags: ['Sales'],
+    }),
+    getTopSellingProducts: builder.query({
+      query: () => 'sales/getTopSellingProducts',
+      providesTags: ['Sales'],
     }),
 
     // Fetch sales overview (Total revenue, Total orders, etc.)
-    getSalesOverview: builder.query({
-      query: () => 'sales/getSalesOverview',
-      providesTags: ['Sales'], // Provides 'Sales' cache tag
-    }),
+    // getSalesOverview: builder.query({
+    //   query: () => 'sales/getSalesOverview',
+    //   providesTags: ['Sales'], // Provides 'Sales' cache tag
+    // }),
 
     // Fetch specific sale details by ID
     getSaleById: builder.query({
@@ -40,10 +47,10 @@ export const salesApiSlice = createApi({
     }),
 
     // Fetch top selling products (for sales analysis)
-    getTopSellingProducts: builder.query({
-      query: () => 'sales/getTopSellingProducts',
-      providesTags: ['Sales'], // Provides 'Sales' cache tag
-    }),
+    // getTopSellingProducts: builder.query({
+    //   query: () => 'sales/getTopSellingProducts',
+    //   providesTags: ['Sales'], // Provides 'Sales' cache tag
+    // }),
   }),
 });
 

@@ -25,10 +25,18 @@ export const userApiSlice = createApi({
     }),
 
     // Fetch ALL user details
+    // getUsers: builder.query({
+    //   query: () => 'users/getUsers',
+    //   providesTags: ['User', 'Avatar']
+    // }),
+
+
     getUsers: builder.query({
-      query: () => 'users/getUsers',
+      query: ({ page, limit = 5 }) => `users/getUsers?page=${page}&limit=${limit}`,
       providesTags: ['User', 'Avatar']
     }),
+
+    
 
     // Register user
     registerUser: builder.mutation({

@@ -63,7 +63,9 @@ const IndividualOrdersOfUsers = () => {
     }, 500); // Delay in milliseconds
 
     // Clean up timer
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    }
   }, [search]);
 
   console.log(orders, 'orders')
@@ -84,7 +86,7 @@ const IndividualOrdersOfUsers = () => {
         status: newStatus,
         itemsIds,
       }).unwrap();
-      refetch(); // Refetch orders after status update
+      await refetch();
     } catch (err) {
       console.error("Error updating order status:", err.message);
       alert("Failed to update order status. Please try again.");
@@ -132,7 +134,7 @@ const IndividualOrdersOfUsers = () => {
   console.log(searchData, 'searchData')
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white dark:bg-gray-800 mt-10 shadow-lg rounded-lg">
+    <div className="max-w-7xl mx-auto p-6 bg-orange-50 dark:bg-gray-800 mt-10 shadow-lg rounded-lg">
       <div className="mb-8 flex items-center justify-between">
         <h2 className="text-3xl font-semibold text-gray-800 dark:text-gray-100 font-playfair">
           <span className="text-indigo-600">{username}'s</span> Orders
@@ -341,4 +343,3 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
     </div>
   );
 };
-

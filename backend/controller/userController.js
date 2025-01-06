@@ -380,51 +380,112 @@ exports.updatePassword = async (req, res, next) => {
 //   }
 // };
 
+// exports.getAllUsers = async (req, res) => {
+//   try {
+//     // Get page, limit, and search from query params
+//     const { page = 1, limit = 10, search = '' } = req.query;
+
+//     const pageNumber = parseInt(page);
+//     const limitNumber = parseInt(limit);
+
+//     const skip = (pageNumber - 1) * limitNumber;
+
+//     // Search filter
+//     const searchFilter = search ? { username: { $regex: search, $options: 'i' } } : {};
+
+//     // Find users with pagination and search filter
+//     const users = await User.find(searchFilter)
+//       .select('id username avatar email role createdAt isBlocked')
+//       .skip(skip)
+//       .limit(limitNumber);
+
+//     // Get the total count of users for pagination metadata
+//     const totalUsers = await User.countDocuments(searchFilter);
+
+//     if (users.length === 0) {
+//       return res.status(404).json({ message: 'No users found' });
+//     }
+
+//     // Send paginated data
+//     res.status(200).json({
+//       success: true,
+//       users: users.map(user => ({
+//         id: user.id,
+//         name: user.username,
+//         email: user.email,
+//         role: user.role,
+//         joinDate: user.createdAt,
+//         isBlocked: user.isBlocked,
+//         avatar: user.avatar
+//       })),
+//       totalUsers,
+//       currentPage: pageNumber,
+//       totalPages: Math.ceil(totalUsers / limitNumber), // Calculate total pages
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
+
+
+
+
 exports.getAllUsers = async (req, res) => {
   try {
     // Get page, limit, and search from query params
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page, limit, search } = req.query; // Extract search from query params
 
-    const pageNumber = parseInt(page);
-    const limitNumber = parseInt(limit);
-
+    const pageNumber = parseInt(page) > 0 ? parseInt(page) : 1;
+    const limitNumber = parseInt(limit) > 0 ? parseInt(limit) : 10;
     const skip = (pageNumber - 1) * limitNumber;
 
     // Search filter
-    const searchFilter = search ? { username: { $regex: search, $options: 'i' } } : {};
+    const searchFilter = search
+      ? { username: { $regex: search, $options: 'i' } } // Case-insensitive search
+      : {};
 
     // Find users with pagination and search filter
     const users = await User.find(searchFilter)
       .select('id username avatar email role createdAt isBlocked')
+      .sort({ createdAt: -1 }) // Sort by newest first
       .skip(skip)
       .limit(limitNumber);
 
     // Get the total count of users for pagination metadata
     const totalUsers = await User.countDocuments(searchFilter);
 
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'No users found' });
+    // Check if there are any users in the database
+    if (!users || users.length === 0) {
+      return res.status(200).json({
+        success: true,
+        users: [],
+        totalUsers: 0,
+        currentPage: pageNumber,
+        totalPages: 0,
+        message: 'No users found', // Optional message
+      });
     }
 
     // Send paginated data
     res.status(200).json({
       success: true,
-      users: users.map(user => ({
+      users: users.map((user) => ({
         id: user.id,
         name: user.username,
         email: user.email,
         role: user.role,
         joinDate: user.createdAt,
         isBlocked: user.isBlocked,
-        avatar: user.avatar
+        avatar: user.avatar,
       })),
       totalUsers,
       currentPage: pageNumber,
-      totalPages: Math.ceil(totalUsers / limitNumber), // Calculate total pages
+      totalPages: Math.ceil(totalUsers / limitNumber),
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in getAllUsers:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 

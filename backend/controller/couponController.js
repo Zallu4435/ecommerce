@@ -2,64 +2,45 @@ const Coupon = require('../model/Coupon'); // Coupon model
 const ErrorHandler = require('../utils/ErrorHandler');
 const mongoose = require('mongoose');
 
-// Get all coupons (User and Admin)
-// exports.getCoupon = async (req, res, next) => {
-//   try {
-
-//     const coupon = await Coupon.findById(req.params.id);
-//     if (!coupon) {
-//       return next(new ErrorHandler("Coupon not found", 404));
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       coupon,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-
 
 exports.getCoupon = async (req, res, next) => {
   try {
     const coupon = await Coupon.aggregate([
       {
-        $match: { _id: new mongoose.Types.ObjectId(req.params.id) }, // Match the coupon by ID
+        $match: { _id: new mongoose.Types.ObjectId(req.params.id) },
       },
       {
-        $set: {
-          applicableUsers: {
+        $addFields: {
+          applicableUserIds: {
             $map: {
               input: "$applicableUsers",
               as: "userId",
-              in: { $toObjectId: "$$userId" }, // Convert string to ObjectId
+              in: { $toObjectId: "$$userId" },
             },
           },
-          applicableProducts: {
+          applicableProductIds: {
             $map: {
               input: "$applicableProducts",
               as: "productId",
-              in: { $toObjectId: "$$productId" }, // Convert string to ObjectId
+              in: { $toObjectId: "$$productId" },
             },
           },
         },
       },
       {
         $lookup: {
-          from: 'users', // Name of the User collection
-          localField: 'applicableUsers',
+          from: 'users',
+          localField: 'applicableUserIds',
           foreignField: '_id',
-          as: 'applicableUsers',
+          as: 'applicableUserDetails',
         },
       },
       {
         $lookup: {
-          from: 'products', // Name of the Product collection
-          localField: 'applicableProducts',
+          from: 'products',
+          localField: 'applicableProductIds',
           foreignField: '_id',
-          as: 'applicableProducts',
+          as: 'applicableProductDetails',
         },
       },
       {
@@ -73,16 +54,22 @@ exports.getCoupon = async (req, res, next) => {
           expiry: 1,
           applicableUsers: {
             $map: {
-              input: "$applicableUsers",
+              input: "$applicableUserDetails",
               as: "user",
-              in: "$$user.email", // Extract only email
+              in: {
+                id: "$$user._id",
+                email: "$$user.email"
+              },
             },
           },
           applicableProducts: {
             $map: {
-              input: "$applicableProducts",
+              input: "$applicableProductDetails",
               as: "product",
-              in: "$$product.productName", // Extract only productName
+              in: {
+                id: "$$product._id",
+                productName: "$$product.productName"
+              },
             },
           },
           usersTaken: 1,
@@ -92,13 +79,15 @@ exports.getCoupon = async (req, res, next) => {
       },
     ]);
 
+    console.log(coupon, "coupon");
+
     if (!coupon || coupon.length === 0) {
       return next(new ErrorHandler("Coupon not found", 404));
     }
 
     res.status(200).json({
       success: true,
-      coupon: coupon[0], // Aggregation returns an array; pick the first element
+      coupon: coupon[0],
     });
   } catch (error) {
     next(error);
@@ -118,8 +107,6 @@ exports.getAllCoupons = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 // Get single coupon details (User and Admin)
 exports.getCouponDetails = async (req, res, next) => {

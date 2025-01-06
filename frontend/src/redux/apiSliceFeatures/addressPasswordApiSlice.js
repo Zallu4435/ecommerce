@@ -57,12 +57,33 @@ export const addressPasswordApi = createApi({
       }),
     }),
 
+    // getOrders: builder.query({
+    //   query: ({ page , limit }) => ({
+    //     url: 'orders/getOrders',
+    //     params: { page, limit },
+    //   }),
+    // }),
     getOrders: builder.query({
-      query: ({ page , limit }) => ({
-        url: 'orders/getOrders',
-        params: { page, limit },
-      }),
+      query: ({ page = 1, limit = 10 }) => `orders/getOrders?page=${page}&limit=${limit}`,
+      serializeQueryArgs: ({ endpointName }) => endpointName,
+      merge: (currentCache, newItems) => {
+        if (currentCache) {
+          const newOrders = newItems.orders.filter(
+            newOrder => !currentCache.orders.some(existingOrder => existingOrder._id === newOrder._id)
+          );
+    
+          return {
+            ...currentCache,
+            orders: [...currentCache.orders, ...newOrders],  // Appending new unique orders
+          };
+        }
+        return newItems;
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg !== previousArg;  // Trigger a refetch when query params change
+      },
     }),
+    
 
     checkProductStock: builder.query({
       query: ({ productId, quantity }) => ({

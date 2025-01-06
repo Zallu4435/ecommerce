@@ -1,6 +1,7 @@
 import { toast } from 'react-toastify';
 
 export const handleAddToCart = async (_id, addToCart, refetchCart, setIsAdding) => {
+
   const productDetails = {
     productId: _id,
     quantity: 1,

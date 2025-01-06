@@ -4,7 +4,7 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Fetch all products
     getProducts: builder.query({
-      query: () => '/products/getProducts',
+      query: ({ page, limit = 5 }) => `/products/getProducts?page=${page}&limit=${limit}`,
       providesTags:['Products'],
     }),
  

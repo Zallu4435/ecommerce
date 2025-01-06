@@ -3,11 +3,63 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const Review = require('../model/Review');
 
 // Get all products (User and Admin)
+// exports.getAllProducts = async (req, res, next) => {
+//   try {
+//     const products = await Product.find(); // Get all products from the database
+
+//     // Send back the products array with desired fields
+//     res.status(200).json({
+//       success: true,
+//       products: products.map((product) => ({
+//         id: product._id,
+//         productName: product.productName,
+//         category: product.category,
+//         brand: product.brand,
+//         originalPrice: product.originalPrice,
+//         offerPrice: product.offerPrice,
+//       })),
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 exports.getAllProducts = async (req, res, next) => {
   try {
-    const products = await Product.find(); // Get all products from the database
+    // Get page, limit, and search from query params
+    const { page, limit, search } = req.query;
 
-    // Send back the products array with desired fields
+    const pageNumber = parseInt(page) > 0 ? parseInt(page) : 1;
+    const limitNumber = parseInt(limit) > 0 ? parseInt(limit) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Search filter
+    const searchFilter = search
+      ? { productName: { $regex: search, $options: 'i' } } // Case-insensitive search by product name
+      : {};
+
+    // Find products with pagination and search filter
+    const products = await Product.find(searchFilter)
+      .select('productName category brand originalPrice offerPrice image') // Select fields you want to return
+      .skip(skip)
+      .limit(limitNumber);
+
+    // Get the total count of products for pagination metadata
+    const totalProducts = await Product.countDocuments(searchFilter);
+
+    // Check if there are any products in the database
+    if (!products || products.length === 0) {
+      return res.status(200).json({
+        success: true,
+        products: [],
+        totalProducts: 0,
+        currentPage: pageNumber,
+        totalPages: 0,
+        message: 'No products found',
+      });
+    }
+
+    // Send paginated data
     res.status(200).json({
       success: true,
       products: products.map((product) => ({
@@ -17,12 +69,18 @@ exports.getAllProducts = async (req, res, next) => {
         brand: product.brand,
         originalPrice: product.originalPrice,
         offerPrice: product.offerPrice,
+        image: product.image, // Include image field if necessary
       })),
+      totalProducts,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalProducts / limitNumber),
     });
   } catch (error) {
-    next(error);
+    console.error('Error in getAllProducts:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 exports.getAllShopProducts = async (req, res, next) => {
   try {
@@ -138,30 +196,47 @@ exports.getRelatedProducts = async (req, res) => {
 
 exports.searchProducts = async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q) {
-      return res.status(400).json({ message: 'Search query is required' });
+    let { q } = req.query;
+
+    // Validate search query
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({ message: "Search query is required" });
     }
 
-    const products = await Product.find(
-      { $text: { $search: q } },
-      { score: { $meta: 'textScore' } }
-    )
-      .sort({ score: { $meta: 'textScore' } })
-      .limit(10);
+    // Remove special characters from the query
+    q = q.replace(/[^a-zA-Z0-9]/g, '').trim(); // Removes all non-alphanumeric characters
 
+    if (q.length === 0) {
+      return res.status(400).json({ message: "Search query is empty after removing special characters" });
+    }
+
+    // Use regex to match the query, including words with special characters
+    const regexQuery = { productName: { $regex: q.split('').join('.*'), $options: "i" } };
+
+    // Find products using the regex search
+    const products = await Product.find(regexQuery).limit(10);
+
+    // If no products found, try a fallback search
+    if (products.length === 0) {
+      const fallbackRegexQuery = { productName: { $regex: q, $options: "i" } };
+      const fallbackProducts = await Product.find(fallbackRegexQuery).limit(10);
+
+      // Return fallback results or an empty array if no matches found
+      return res.json(fallbackProducts);
+    }
+
+    // Respond with the results
     res.json(products);
   } catch (error) {
+    console.error("Error occurred:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
-
+   
 
 exports.getFilteredProducts = async (req, res) => {
   try {
-    console.log(req.query, 'Request Query');
-
-    const {
+    let {
       sizes,
       colors,
       minPrice,
@@ -172,6 +247,14 @@ exports.getFilteredProducts = async (req, res) => {
       category,
       brand
     } = req.query;
+
+    if(category.toLowerCase() === 'childrens') {
+      category = 'child'
+    }else  if(category.toLowerCase() === 'womens') {
+      category = 'women'
+    }else  if(category.toLowerCase() === 'mens') {
+      category = 'men'
+    }
 
     // Initialize the query object
     const query = {};

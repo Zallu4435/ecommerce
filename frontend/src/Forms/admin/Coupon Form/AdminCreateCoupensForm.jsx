@@ -1,35 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import {
   Input,
   InputContainer,
   Label,
-} from "../../components/user/StyledComponents/StyledComponents";
+} from "../../../components/user/StyledComponents/StyledComponents.js";
 import { toast } from "react-toastify";
-import { useAddEntityMutation } from "../../redux/apiSliceFeatures/crudApiSlice";
-import { useGetAllCouponsQuery } from "../../redux/apiSliceFeatures/CouponApiSlice";
-import { useGetUsersQuery } from "../../redux/apiSliceFeatures/userApiSlice";
-import { useGetProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
-import { couponSchema } from "../../validation/admin/CouponFormValidation";
-
+import { useAddEntityMutation } from "../../../redux/apiSliceFeatures/crudApiSlice";
+import { useGetAllCouponsQuery } from "../../../redux/apiSliceFeatures/CouponApiSlice";
+import { useGetUsersQuery } from "../../../redux/apiSliceFeatures/userApiSlice";
+import { useGetProductsQuery } from "../../../redux/apiSliceFeatures/productApiSlice";
+import { couponSchema } from "../../../validation/admin/CouponFormValidation";
+import UserModal from "./UserModal";
+import ProductModal from "./ProductModal";
 
 const AdminCouponCreateForm = () => {
   const navigate = useNavigate();
   const [addEntity] = useAddEntityMutation();
   const { refetch } = useGetAllCouponsQuery();
 
-  // Fetch users and products
-  const { data: users = [] } = useGetUsersQuery();
-  const { data: products = [] } = useGetProductsQuery();
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([]);
 
+  const [userPage, setUserPage] = useState(1);
+  const [productPage, setProductPage] = useState(1);
+  const [hasMoreUsers, setHasMoreUsers] = useState(true);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
+
+  const { data: users = [], isFetching: isUserFetching } = useGetUsersQuery({ page: userPage, limit: 20 });
+  const { data: products = [], isFetching: isProductFetching } = useGetProductsQuery({ page: productPage, limit: 20 });
   const {
     control,
     handleSubmit,
     formState: { errors },
-    setValue,
   } = useForm({
     resolver: zodResolver(couponSchema),
     defaultValues: {
@@ -44,13 +52,6 @@ const AdminCouponCreateForm = () => {
       applicableProducts: [],
     },
   });
-
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState([]);
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [userSearchQuery, setUserSearchQuery] = useState("");
-  const [productSearchQuery, setProductSearchQuery] = useState("");
 
   const onSubmit = async (formData) => {
     try {
@@ -107,6 +108,24 @@ const AdminCouponCreateForm = () => {
       prev.filter((product) => product.productId !== productId)
     );
   };
+
+  const loadMoreUsers = useCallback((page) => {
+    setUserPage(page);
+    // Here you would typically fetch more users
+    // For this example, we'll just simulate it by setting hasMoreUsers to false after the first load
+    if (page > 1) {
+      setHasMoreUsers(false);
+    }
+  }, []);
+
+  const loadMoreProducts = useCallback((page) => {
+    setProductPage(page);
+    // Here you would typically fetch more products
+    // For this example, we'll just simulate it by setting hasMoreProducts to false after the first load
+    if (page > 1) {
+      setHasMoreProducts(false);
+    }
+  }, []);
 
   return (
     <div className="dark:bg-black min-h-screen flex w-full mt-10 items-center justify-center">
@@ -254,147 +273,31 @@ const AdminCouponCreateForm = () => {
           </div>
         </form>
 
-        {showUserModal && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-2/4 max-h-[80vh] overflow-y-auto scrollbar-hidden shadow-2xl">
-              {/* Header with Close and Confirm buttons */}
-              <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 flex justify-between items-center mb-4 rounded-t-lg">
-                <h3 className="text-2xl font-bold text-gray-400 dark:text-gray-100">
-                  Select Users
-                </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowUserModal(false)}
-                    className="px-8 py-2 bg-red-400 text-white font-bold rounded-md hover:bg-red-500 transition duration-200"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => setShowUserModal(false)}
-                    className="px-8 py-2 bg-blue-500 font-bold text-white rounded-md hover:bg-blue-600 transition duration-200"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </div>
+        <UserModal
+          showModal={showUserModal}
+          setShowModal={setShowUserModal}
+          users={users?.users || []}
+          handleUserSelect={handleUserSelect}
+          selectedUsers={selectedUsers}
+          loadMoreUsers={loadMoreUsers}
+          hasMoreUsers={hasMoreUsers}
+          isUserFetching={isUserFetching}
+        />
 
-              {/* Search Bar */}
-              <div className="sticky top-16 bg-white dark:bg-gray-800 p-4 mb-4 rounded-t-lg">
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  value={userSearchQuery}
-                  onChange={(e) => setUserSearchQuery(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* User List */}
-              <div className="p-4 overflow-y-auto flex-grow">
-                <div className="space-y-2">
-                  {users?.users
-                    ?.filter((user) =>
-                      user.email
-                        .toLowerCase()
-                        .includes(userSearchQuery.toLowerCase())
-                    )
-                    .map((user) => (
-                      <div
-                        key={user.id}
-                        className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center rounded-md"
-                        onClick={() => handleUserSelect(user.id, user.email)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.some(
-                            (u) => u.userId === user.id
-                          )}
-                          onChange={() => {}}
-                          className="mr-2"
-                        />
-                        <span className="text-gray-800 dark:text-gray-100">
-                          {user.email}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showProductModal && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-2/4 max-h-[80vh] scrollbar-hidden overflow-y-auto shadow-2xl">
-              <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 flex justify-between items-center rounded-t-lg">
-                <h3 className="text-2xl font-bold text-gray-400 dark:text-gray-100">
-                  Select Products
-                </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowProductModal(false)}
-                    className="px-8 py-2 bg-red-400 font-bold text-white rounded-md hover:bg-red-500 transition duration-200"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => setShowProductModal(false)}
-                    className="px-8 py-2 bg-blue-500 font-bld text-white rounded-md hover:bg-blue-600 transition duration-200"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </div>
-
-              {/* Search Bar */}
-              <div className="sticky top-16 bg-white dark:bg-gray-800 p-4 rounded-t-lg">
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={productSearchQuery}
-                  onChange={(e) => setProductSearchQuery(e.target.value)}
-                  className="w-full p-2 mb-4 border border-gray-300 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="p-4 overflow-y-auto flex-grow">
-                <div className="space-y-2">
-                  {products?.products
-                    ?.filter((product) =>
-                      product.productName
-                        .toLowerCase()
-                        .includes(productSearchQuery.toLowerCase())
-                    )
-                    .map((product) => (
-                      <div
-                        key={product.id}
-                        className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center rounded-md"
-                        onClick={() =>
-                          handleProductSelect(product.id, product.productName)
-                        }
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedProducts.some(
-                            (p) => p.productId === product.id
-                          )}
-                          onChange={() => {}}
-                          className="mr-2"
-                        />
-                        <span className="text-gray-800 dark:text-gray-100">
-                          {product.productName}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+        <ProductModal
+          showModal={showProductModal}
+          setShowModal={setShowProductModal}
+          products={products?.products || []}
+          handleProductSelect={handleProductSelect}
+          selectedProducts={selectedProducts}
+          loadMoreProducts={loadMoreProducts}
+          hasMoreProducts={hasMoreProducts}
+          isProductFetching={isProductFetching}
+        />
       </div>
     </div>
   );
 };
 
 export default AdminCouponCreateForm;
+

@@ -6,7 +6,7 @@ import {
   useSearchProductsQuery,
 } from "../../redux/apiSliceFeatures/productApiSlice";
 import { ErrorBoundary } from "../../ErrorBoundary";
-import { Menu } from "lucide-react";
+import { Menu } from 'lucide-react';
 
 const ShopPage = () => {
   const location = useLocation();
@@ -16,7 +16,7 @@ const ShopPage = () => {
   const [selectedColors, setSelectedColors] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [cardsPerPage, setCardsPerPage] = useState(8);
+  const [cardsPerPage, setCardsPerPage] = useState(9);
   const [sortOption, setSortOption] = useState("popularity");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -55,8 +55,15 @@ const ShopPage = () => {
     isLoading: isSearchLoading,
   } = useSearchProductsQuery(searchQuery, { skip: !searchQuery });
 
-  console.log(searchData, "search");
-  const products = searchQuery ? searchData : filteredData?.products;
+  const dataList = searchQuery
+  ? searchData
+  : filteredData?.products
+  ? filteredData?.products
+  : [];
+
+  console.log(dataList, 'datalist')
+
+  const products = searchQuery ? searchData?.products : filteredData?.products;
   const totalPages = searchQuery
     ? Math.ceil((searchData?.totalItems || 0) / cardsPerPage)
     : filteredData?.totalPages || 1;
@@ -113,17 +120,12 @@ const ShopPage = () => {
     });
   };
 
-  const displayedProducts = (products || []).slice(
-    (currentPage - 1) * cardsPerPage,
-    currentPage * cardsPerPage
-  );
-
   const isLoading = isFilteredLoading || isSearchLoading;
   const error = filteredError || searchError;
 
   return (
-    <div className="min-h-screen dark:bg-black bg-gradient-to-br from-gray-100 via-white to-gray-50 py-16">
-      <div className="flex space-x-4 pl-4 pt-3 lg:hidden lg:ml-20 sticky top-[80px] z-50 bg-gray-100 lg:mb-10 mt-[-40px]">
+    <div className="min-h-screen dark:bg-black bg-gradient-to-br dark from-gray-100 via-white to-gray-50 py-16">
+      <div className="flex space-x-4 pl-4 pt-3 dark:bg-black lg:hidden lg:ml-20 sticky top-[80px] z-50 bg-gray-100 lg:mb-10 mt-[-40px]">
         {isSmallScreen && (
           <div className="lg:hidden mb-4">
             <button
@@ -144,7 +146,7 @@ const ShopPage = () => {
         <div
           className={`${
             isSmallScreen ? (isMobileMenuOpen ? "block" : "hidden") : "block"
-          } w-full lg:w-[300px] lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 overflow-auto transition-all duration-300 ease-in-out`}
+          } w-full lg:w-[300px] lg:sticky lg:top-16 lg:h-[calc(74vh-4rem)] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 overflow-auto transition-all duration-300 ease-in-out`}
         >
           <div className="mb-6">
             <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">
@@ -152,7 +154,7 @@ const ShopPage = () => {
             </h3>
             <div className="grid grid-cols-3 gap-4">
               {["XS", "S", "M", "L", "XL"].map((size) => (
-                <label key={size} className="flex items-center">
+                <label key={size} className="flex items-center dark:text-white">
                   <input
                     type="checkbox"
                     className="mr-2"
@@ -170,7 +172,7 @@ const ShopPage = () => {
             <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">
               Color
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 dark:text-white">
               {["white", "red", "blue", "black"].map((color) => (
                 <label key={color} className="flex items-center">
                   <input
@@ -229,7 +231,7 @@ const ShopPage = () => {
               Search Results for "{searchQuery}"
             </h2>
           )}
-          <ErrorBoundary>
+                 <ErrorBoundary>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-[80px]">
               {isLoading ? (
                 <p>Loading...</p>
@@ -237,8 +239,8 @@ const ShopPage = () => {
                 <p className="text-red-500">
                   Error loading products: {error.message || "Unknown error"}
                 </p>
-              ) : displayedProducts.length > 0 ? (
-                displayedProducts.map((product) => (
+              ) : dataList && dataList.length > 0 ? (
+                dataList.map((product) => (
                   <ShoppingCard
                     key={product._id || Math.random()}
                     _id={product._id || ""}

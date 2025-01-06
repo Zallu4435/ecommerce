@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useUpdateQuantityMutation } from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { useGetCartQuery, useUpdateQuantityMutation } from "../../../redux/apiSliceFeatures/CartApiSlice";
 import { toast } from "react-toastify";
 import { FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,8 @@ const TableRowForCartlist = ({ item, onRemove }) => {
   const [isOutOfStock, setIsOutOfStock] = useState(false);
   const navigate = useNavigate();
 
+    const { refetch } = useGetCartQuery();
+  
   const {
     productId,
     originalPrice,
@@ -39,6 +41,7 @@ const TableRowForCartlist = ({ item, onRemove }) => {
       } else {
         setQuantity(newQuantity);
         setIsOutOfStock(false);
+        await refetch();
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -77,7 +80,7 @@ const TableRowForCartlist = ({ item, onRemove }) => {
       <td className="px-6 py-4 border-b flex items-center gap-4">
         <img
           src={productImage}
-          className="h-[60px] rounded-lg cursor-pointer object-cover"
+          className="h-[60px] w-[60px] rounded-lg cursor-pointer object-cover"
           alt={productName}
           onClick={handleImageClick}
         />

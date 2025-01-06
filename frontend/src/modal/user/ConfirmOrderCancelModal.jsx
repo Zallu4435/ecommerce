@@ -18,7 +18,7 @@ const CancelConfirmationModal = ({ show, onClose, onConfirm, orderId }) => {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-40">
       <div className="bg-white p-8 rounded-lg shadow-2xl transform transition-all duration-300 ease-in-out scale-105">
         <div className="flex items-center mb-4">
           <FaExclamationTriangle className="text-red-500 text-5xl mr-3 animate-pulse" />

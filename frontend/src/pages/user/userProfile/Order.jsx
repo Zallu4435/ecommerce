@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetOrdersQuery } from '../../../redux/apiSliceFeatures/addressPasswordApiSlice';
 import { useCancelOrderMutation, useReturnOrderMutation } from '../../../redux/apiSliceFeatures/OrderApiSlice';
@@ -13,18 +13,34 @@ const OrdersList = () => {
   const [orderToCancel, setOrderToCancel] = useState({ orderId: null, productId: null });
   const [orderToReturn, setOrderToReturn] = useState({ orderId: null, productId: null });
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const limit = 10;
 
-  // Fetch orders with pagination
-  const { data, error, isLoading, refetch } = useGetOrdersQuery({ page, limit });
+  const { data, error, isLoading, isFetching, refetch: refetchOrders } = useGetOrdersQuery({ page, limit });
   const [cancelOrder] = useCancelOrderMutation();
   const [returnOrder] = useReturnOrderMutation();
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const orders = data?.orders || [];
-  const totalPages = data?.totalPages || 1;
 
-  if (isLoading) return <p>Loading orders...</p>;
+  const observer = useRef();
+  const lastOrderElementRef = useCallback(node => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoading, hasMore]);
+
+  useEffect(() => {
+    if (data) {
+      setHasMore(data.orders.length === limit);
+    }
+  }, [data, limit]);
+
   if (error) return <p>Error fetching orders: {error.message}</p>;
 
   const handleCancelClick = (orderId, productId) => {
@@ -43,7 +59,7 @@ const OrdersList = () => {
 
     try {
       await cancelOrder({ orderId, productId }).unwrap();
-      refetch();
+      await refetchOrders()
     } catch (err) {
       console.error('Error canceling order:', err);
       alert('Failed to cancel order');
@@ -56,7 +72,7 @@ const OrdersList = () => {
 
     try {
       await returnOrder({ orderId, productId }).unwrap();
-      refetch();
+      await refetchOrders()
     } catch (err) {
       console.error('Error returning order:', err);
       alert('Failed to return order');
@@ -74,13 +90,17 @@ const OrdersList = () => {
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
       <h2 className="text-3xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Your Orders</h2>
-      {orders.length === 0 ? (
+      {orders.length === 0 && !isLoading ? (
         <p className="text-center text-gray-600 dark:text-gray-400">You have no orders yet.</p>
       ) : (
         <div className="overflow-y-auto max-h-[500px] divide-y divide-gray-300 dark:divide-gray-600 scrollbar-hidden">
           <ul className="divide-y divide-gray-300 dark:divide-gray-600">
-            {orders.map((order) => (
-              <li key={order._id} className="p-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg">
+            {orders.map((order, index) => (
+              <li 
+                key={order._id} 
+                ref={index === orders.length - 1 ? lastOrderElementRef : null}
+                className="p-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <img
@@ -134,25 +154,11 @@ const OrdersList = () => {
           </ul>
         </div>
       )}
-      <div className="flex justify-center mt-4">
-        <button
-          className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          disabled={page === 1}
-        >
-          Previous
-        </button>
-        <span className="mx-4 text-gray-800 dark:text-gray-100">
-          Page {page} of {totalPages}
-        </span>
-        <button
-          className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={page === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      {isFetching && (
+        <div className="flex justify-center items-center mt-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+        </div>
+      )}
       {selectedOrder && <OrderDetailsModal order={selectedOrder} onClose={closeModal} />}
       <CancelConfirmationModal
         show={showCancelModal}
@@ -173,4 +179,7 @@ const OrdersList = () => {
 };
 
 export default OrdersList;
+
+
+
 

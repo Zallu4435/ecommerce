@@ -152,107 +152,255 @@ const moment = require('moment'); // Use moment.js or JavaScript Date methods to
 
 
 
+// exports.getOrders = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const pageSize = parseInt(req.query.pageSize) || 10; // Default pageSize to 10
+//     const skip = (page - 1) * pageSize;
+
+//     // Get the selected date range and custom dates from the query parameters
+//     const dateRange = req.query.dateRange || 'This Week'; // Default to 'This Week' if no dateRange is provided
+//     const customStartDate = req.query.customStartDate ? moment(req.query.customStartDate).startOf('day') : null;
+//     const customEndDate = req.query.customEndDate ? moment(req.query.customEndDate).endOf('day') : null;
+
+//     // Calculate the start and end date based on the date range
+// // Calculate the start and end date based on the date range
+// let startDate, endDate;
+// const today = moment().startOf('day'); // Start of today
+
+// console.log(dateRange, 'dateRange')
+// console.log(today, 'today today')
+
+// if (dateRange === 'Custom') {
+//   if (customStartDate && customStartDate.isValid() && customEndDate && customEndDate.isValid()) {
+//     startDate = customStartDate;
+//     endDate = customEndDate;
+//   } else {
+//     return res.status(400).json({ error: 'Invalid custom date range provided' });
+//   }
+// } else {
+//   switch (dateRange) {
+//     case 'Today':
+//       startDate = today;
+//       endDate = today.endOf('day');
+//       break;
+//     case 'This Week':
+//       startDate = moment().startOf('week');
+//       endDate = moment().endOf('week');
+//       break;
+//     case 'This Month':
+//       startDate = moment().startOf('month');
+//       endDate = moment().endOf('month');
+//       break;
+//     case 'This Year':
+//       startDate = moment().startOf('year');
+//       endDate = moment().endOf('year');
+//       break;
+//     default:
+//       startDate = today;
+//       endDate = today.endOf('day');
+//       break;
+//   }
+// }
+
+//     // Fetch orders with the date filter applied
+//     const orders = await Order.aggregate([
+//       { $match: { createdAt: { $gte: startDate.toDate(), $lte: endDate.toDate() } } }, // Filter orders by date range
+//       { $skip: skip }, // Skip documents for pagination
+//       { $limit: pageSize }, // Limit documents for pagination
+
+//       // Lookup customer details (replace 'users' with your customer collection name)
+//       {
+//         $lookup: {
+//           from: 'users',
+//           localField: 'UserId', // Match UserId in orders
+//           foreignField: '_id', // Match _id in users
+//           as: 'customerDetails',
+//         },
+//       },
+
+//       // Unwind the customerDetails array to simplify structure
+//       { $unwind: { path: '$customerDetails', preserveNullAndEmptyArrays: true } },
+
+//       // Project only the required fields
+//       {
+//         $project: {
+//           _id: 1, // Order ID
+//           customer: '$customerDetails.username', // Customer name (adjust field as needed)
+//           total: '$TotalAmount', // Total amount
+//           status: '$items.Status', // Order status
+//           quantity: {
+//             $sum: '$items.Quantity', // Calculate total quantity from items array
+//           },
+//         },
+//       },
+//     ]);
+
+//     console.log(orders, 'orders oredrs')
+
+//     // Fetch total orders count for pagination with date filter
+//     const totalOrders = await Order.countDocuments({
+//       createdAt: { $gte: startDate.toDate(), $lte: endDate.toDate() },
+//     });
+//     const totalPages = Math.ceil(totalOrders / pageSize);
+
+//     // Send response
+//     res.json({
+//       orders,
+//       totalOrders,
+//       totalPages,
+//       currentPage: page,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: 'Server Error' });
+//   }
+// };
+
+
+
 exports.getOrders = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10; // Default pageSize to 10
+    const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (page - 1) * pageSize;
+    const dateRange = req.query.dateRange || 'This Week';
+    const orderStatusFilter = req.query.orderStatusFilter;
 
-    // Get the selected date range and custom dates from the query parameters
-    const dateRange = req.query.dateRange || 'This Week'; // Default to 'This Week' if no dateRange is provided
-    const customStartDate = req.query.customStartDate ? moment(req.query.customStartDate).startOf('day') : null;
-    const customEndDate = req.query.customEndDate ? moment(req.query.customEndDate).endOf('day') : null;
+    // Get start and end dates
+    let startDate, endDate;
+    
+    if (dateRange === 'Custom') {
+      // Handle custom date range
+      const startDateStr = req.query.startDate;
+      const endDateStr = req.query.endDate;
+      
+      if (!startDateStr || !endDateStr) {
+        return res.status(400).json({ 
+          error: 'Start date and end date are required for custom range' 
+        });
+      }
 
-    // Calculate the start and end date based on the date range
-// Calculate the start and end date based on the date range
-let startDate, endDate;
-const today = moment().startOf('day'); // Start of today
+      startDate = moment(startDateStr).startOf('day');
+      endDate = moment(endDateStr).endOf('day');
 
-if (dateRange === 'Custom') {
-  if (customStartDate && customStartDate.isValid() && customEndDate && customEndDate.isValid()) {
-    startDate = customStartDate;
-    endDate = customEndDate;
-  } else {
-    return res.status(400).json({ error: 'Invalid custom date range provided' });
-  }
-} else {
-  switch (dateRange) {
-    case 'Today':
-      startDate = today;
-      endDate = today.endOf('day');
-      break;
-    case 'This Week':
-      startDate = moment().startOf('week');
-      endDate = moment().endOf('week');
-      break;
-    case 'This Month':
-      startDate = moment().startOf('month');
-      endDate = moment().endOf('month');
-      break;
-    case 'This Year':
-      startDate = moment().startOf('year');
-      endDate = moment().endOf('year');
-      break;
-    default:
-      startDate = today;
-      endDate = today.endOf('day');
-      break;
-  }
-}
+      if (!startDate.isValid() || !endDate.isValid()) {
+        return res.status(400).json({ 
+          error: 'Invalid date format' 
+        });
+      }
+    } else {
+      // Handle predefined ranges
+      switch (dateRange) {
+        case 'Today':
+          startDate = moment().startOf('day');
+          endDate = moment().endOf('day');
+          break;
+        case 'This Week':
+          startDate = moment().startOf('week');
+          endDate = moment().endOf('week');
+          break;
+        case 'This Month':
+          startDate = moment().startOf('month');
+          endDate = moment().endOf('month');
+          break;
+        case 'This Year':
+          startDate = moment().startOf('year');
+          endDate = moment().endOf('year');
+          break;
+        default:
+          startDate = moment().startOf('week');
+          endDate = moment().endOf('week');
+      }
+    }
 
-    // Fetch orders with the date filter applied
+    // Build match stage
+    const matchStage = {
+      $match: {
+        createdAt: {
+          $gte: startDate.toDate(),
+          $lte: endDate.toDate()
+        }
+      }
+    };
+
+    // Add status filter if provided
+    if (orderStatusFilter) {
+      matchStage.$match['items.Status'] = orderStatusFilter;
+    }
+
+    // Aggregate pipeline
     const orders = await Order.aggregate([
-      { $match: { createdAt: { $gte: startDate.toDate(), $lte: endDate.toDate() } } }, // Filter orders by date range
-      { $skip: skip }, // Skip documents for pagination
-      { $limit: pageSize }, // Limit documents for pagination
-
-      // Lookup customer details (replace 'users' with your customer collection name)
+      matchStage,
       {
         $lookup: {
           from: 'users',
-          localField: 'UserId', // Match UserId in orders
-          foreignField: '_id', // Match _id in users
+          localField: 'UserId',
+          foreignField: '_id',
           as: 'customerDetails',
         },
       },
-
-      // Unwind the customerDetails array to simplify structure
       { $unwind: { path: '$customerDetails', preserveNullAndEmptyArrays: true } },
-
-      // Project only the required fields
       {
         $project: {
-          _id: 1, // Order ID
-          customer: '$customerDetails.username', // Customer name (adjust field as needed)
-          total: '$TotalAmount', // Total amount
-          status: '$items.Status', // Order status
-          quantity: {
-            $sum: '$items.Quantity', // Calculate total quantity from items array
+          _id: 1,
+          customer: '$customerDetails.username',
+          total: '$TotalAmount',
+          status: {
+            $cond: {
+              if: { $isArray: "$items" },
+              then: { $arrayElemAt: ["$items.Status", 0] },
+              else: "Unknown"
+            }
           },
+          quantity: {
+            $cond: {
+              if: { $isArray: "$items" },
+              then: { $sum: "$items.Quantity" },
+              else: 0
+            }
+          },
+          createdAt: 1,
         },
       },
+      { $sort: { createdAt: -1 } },  // Sort by most recent
+      { $skip: skip },
+      { $limit: pageSize }
     ]);
 
-    // Fetch total orders count for pagination with date filter
-    const totalOrders = await Order.countDocuments({
-      createdAt: { $gte: startDate.toDate(), $lte: endDate.toDate() },
-    });
+    // Get total count for pagination
+    const totalOrders = await Order.countDocuments(matchStage.$match);
     const totalPages = Math.ceil(totalOrders / pageSize);
 
-    // Send response
+    // Return response
     res.json({
-      orders,
-      totalOrders,
-      totalPages,
-      currentPage: page,
+      success: true,
+      data: {
+        orders,
+        pagination: {
+          totalOrders,
+          totalPages,
+          currentPage: page,
+          pageSize
+        },
+        dateRange: {
+          start: startDate.format('YYYY-MM-DD'),
+          end: endDate.format('YYYY-MM-DD'),
+          type: dateRange
+        }
+      }
     });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server Error' });
+    console.error('Error in getOrders:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Server Error',
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
-
-
 
 exports.getSalesOverview = async (req, res) => {
   try {

@@ -1,11 +1,10 @@
-import { useState, useCallback, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaUser, FaShoppingCart } from "react-icons/fa";
 import { IoIosSearch } from "react-icons/io";
 import { FaHeart } from "react-icons/fa6";
 import { MdOutlineCompare } from "react-icons/md";
-import { logoLight } from "../../assets/images/index";
-import { logoDark } from "../../assets/images/index";
+import { logoLight, logoDark } from "../../assets/images/index";
 import { useSelector } from "react-redux";
 import { useSearchProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
 import debounce from "lodash/debounce";
@@ -18,6 +17,8 @@ const Header = () => {
   const avatar = useSelector((state) => state.user.avatar);
   const username = useSelector((state) => state.user.username);
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchRef = useRef(null);
 
   const { data: searchResults, isLoading } = useSearchProductsQuery(debouncedSearchTerm, {
     skip: debouncedSearchTerm.length < 3,
@@ -47,28 +48,61 @@ const Header = () => {
   }, [searchTerm, debouncedSearch]);
 
   useEffect(() => {
-    // Reset debouncedSearchTerm and searchResults when the search term is empty
     if (searchTerm === "") {
       setDebouncedSearchTerm("");
     }
   }, [searchTerm]);
 
+  useEffect(() => {
+    if (location.pathname === "/shop") {
+      const queryParams = new URLSearchParams();
+      if (searchTerm) {
+        queryParams.set("q", searchTerm);
+      } else {
+        queryParams.delete("q");
+      }
+      navigate(`/shop?${queryParams.toString()}`, { replace: true });
+    }
+  }, [searchTerm, navigate, location.pathname]);
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-  };
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchTerm.length >= 3) {
-      navigate(`/shop?q=${encodeURIComponent(searchTerm)}`);
-    }
+    setShowSearch(true);
   };
 
   const clearSearch = () => {
     setSearchTerm("");
     setDebouncedSearchTerm("");
+    setShowSearch(false);
     navigate("/shop");
   };
+
+  const handleOutsideClick = (e) => {
+    if (searchRef.current && !searchRef.current.contains(e.target)) {
+      setShowSearch(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowSearch(false);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const isShopPage = location.pathname === "/shop";
 
   return (
     <header className="dark:bg-gray-800 bg-gray-100 py-4 z-50 shadow-md">
@@ -89,55 +123,58 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex-grow max-w-xl mx-4 z-50 hidden md:block">
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <input
-              type="text"
-              placeholder="Search For Products"
-              className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 transition-all duration-300 dark:bg-gray-700 dark:text-gray-200"
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                ×
-              </button>
-            )}
-            <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
-            {isLoading && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
+        {/* Search Bar (Only on Shop Page) */}
+        {isShopPage && (
+          <div className="flex-grow max-w-xl mx-4 z-50 hidden md:block" ref={searchRef}>
+            <form className="relative">
+              <input
+                type="text"
+                placeholder="Search For Products"
+                className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 transition-all duration-300 dark:bg-gray-700 dark:text-gray-200"
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  ×
+                </button>
+              )}
+              <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
+              {isLoading && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
+                </div>
+              )}
+            </form>
+            {showSearch && debouncedSearchTerm && searchResults && searchResults.length > 0 && (
+              <div className="absolute z-10 w-[555px] mt-2 bg-white dark:bg-gray-700 rounded-md ml-[10px] shadow-lg">
+                {searchResults.slice(0, 5).map((product) => (
+                  <Link
+                    key={product._id}
+                    to={`/product/${product._id}`}
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    onClick={() => setShowSearch(false)}
+                  >
+                    {product.productName}
+                  </Link>
+                ))}
+                {searchResults.length > 5 && (
+                  <Link
+                    to={`/shop?q=${encodeURIComponent(searchTerm)}`}
+                    className="block px-4 py-2 text-center text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    onClick={() => setShowSearch(false)}
+                  >
+                    View all results
+                  </Link>
+                )}
               </div>
             )}
-          </form>
-          {debouncedSearchTerm && searchResults && searchResults.length > 0 && (
-            <div className="absolute z-10 w-[555px] mt-2 bg-white dark:bg-gray-700 rounded-md ml-[10px] shadow-lg">
-              {searchResults.slice(0, 5).map((product) => (
-            <Link
-            key={product._id}
-            to={`/product/${product._id}`}
-            className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
-          >
-            {product.productName}
-          </Link>
-          
-              ))}
-              {searchResults.length > 5 && (
-                <Link
-                to={`/shop?q=${encodeURIComponent(searchTerm)}`}
-                className="block px-4 py-2 text-center text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-600"
-                >
-                  View all results
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Navigation Links */}
         <nav className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
@@ -162,68 +199,7 @@ const Header = () => {
             </Link>
           ))}
         </nav>
-
-        {/* Mobile Search Toggle */}
-        <button
-          className="md:hidden p-2 text-gray-700 dark:text-gray-200 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-300"
-          onClick={() => setShowSearch(!showSearch)}
-        >
-          <IoIosSearch className="w-6 h-6" />
-        </button>
       </div>
-
-      {/* Mobile Search Bar */}
-      {showSearch && (
-        <div className="md:hidden px-6 py-4 bg-gray-100 dark:bg-gray-800">
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <input
-              type="text"
-              placeholder="Search For Products"
-              className="w-full py-3 pl-10 pr-4 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 transition-all duration-300 dark:bg-gray-700 dark:text-gray-200"
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                ×
-              </button>
-            )}
-            <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
-            {isLoading && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
-              </div>
-            )}
-          </form>
-          {debouncedSearchTerm && searchResults && searchResults.length > 0 && (
-            <div className="mt-2 bg-white dark:bg-gray-700 rounded-md shadow-lg">
-              {searchResults.slice(0, 5).map((product) => (
-             <Link
-             key={product._id}
-             to={`/product/${product._id}`}
-             className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
-           >
-             {product.productName}
-           </Link>
-           
-              ))}
-              {searchResults.length > 5 && (
-                <Link
-                to={`/shop?q=${encodeURIComponent(searchTerm)}`}
-                className="block px-4 py-2 text-center text-bl
-                e-500 hover:bg-gray-100 dark:hover:bg-gray-600"
-                >
-                  View all results
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </header>
   );
 };

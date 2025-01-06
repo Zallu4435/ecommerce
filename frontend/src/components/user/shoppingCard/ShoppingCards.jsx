@@ -23,6 +23,7 @@ import {
 } from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
 import { icons } from "./icons";
 import { handleAddToCart } from "./actionHandlers";
+import { useSelector } from "react-redux";
 
 const ShoppingCard = ({
   _id,
@@ -37,6 +38,8 @@ const ShoppingCard = ({
   const formattedOriginalPrice = parseFloat(offerPrice);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
 
   // console.log(formattedPrice, "offerPrice")
 
@@ -156,15 +159,19 @@ const ShoppingCard = ({
           onClick={() =>
             handleAddToCart(_id, addToCart, refetchCart, setIsAdding)
           }
-          disabled={isAdding}
+          disabled={!isAuthenticated || isAdding} // Disable if not authenticated or adding
           className={`w-full py-2 sm:py-3 flex justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${
-            isAdding
+            !isAuthenticated || isAdding
               ? "opacity-50 cursor-not-allowed"
               : "hover:bg-yellow-500 dark:hover:bg-yellow-600"
           }`}
         >
-          {isAdding ? "Adding to Cart..." : "Add to Cart"}
-          {!isAdding && <FaShoppingCart />}
+          {!isAuthenticated
+            ? "Sign in to Add to Cart" // Show this if not authenticated
+            : isAdding
+            ? "Adding to Cart..." // Show loading text
+            : "Add to Cart"}
+          {!isAuthenticated || isAdding ? null : <FaShoppingCart />}
         </button>
       </div>
     </div>

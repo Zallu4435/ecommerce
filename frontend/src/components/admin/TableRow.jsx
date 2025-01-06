@@ -3,7 +3,6 @@ import { useButtonHandlers } from "./ButtonHandlers";
 import DeleteConfirmationModal from "../../modal/admin/ConfirmDeleteModal";
 import { useState } from "react";
 import { defaultProfile } from "../../assets/images";
-// import OrdersModal from "../../modal/admin/OrderStatus";
 import { useNavigate } from "react-router-dom";
 import { useGetAllCouponsQuery } from "../../redux/apiSliceFeatures/CouponApiSlice";
 
@@ -36,10 +35,6 @@ const TableRow = ({ item, type }) => {
     await refetchCoupon();
     closeModal();
   };
-  // const handleUpdateClick = (id) => {
-  //   setUserId(id); // Set the userId to the state
-  //   setModalOpen(true); // Open the modal
-  // };
 
   const handleOrderView = (orderId, username) => {
     navigate(`view/orders/${orderId}`, {
@@ -147,7 +142,6 @@ const TableRow = ({ item, type }) => {
 
         {type === "coupons" && (
           <>
-          {console.log(item, 'from couppon table')}
             <td className="px-6 py-4 border border-gray-600">
               {item.couponCode || "N/A"}
             </td>
@@ -239,7 +233,7 @@ const TableRow = ({ item, type }) => {
         show={showModal}
         onClose={closeModal}
         onConfirm={handleConfirmDelete}
-        itemName={itemToDelete?.productName || itemToDelete?.categoryName}
+        itemName={itemToDelete?.productName || itemToDelete?.categoryName || itemToDelete?.couponCode}
       />
 
       {/* <OrdersModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} userId={userId} /> */}

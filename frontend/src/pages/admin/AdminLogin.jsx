@@ -4,12 +4,14 @@ import { useForm } from "react-hook-form";
 import { useLoginAdminMutation } from "../../redux/apiSliceFeatures/AdminApiSlice";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { selectCurrentAdmin, setAdminCredentials } from "../../redux/slice/adminSlice";
+import {
+  selectCurrentAdmin,
+  setAdminCredentials,
+} from "../../redux/slice/adminSlice";
 import { useNavigate } from "react-router-dom";
 
 const AdminLogin = () => {
-
-  const [loginAdmin] = useLoginAdminMutation()
+  const [loginAdmin] = useLoginAdminMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -25,21 +27,19 @@ const AdminLogin = () => {
   const onSubmit = async (data) => {
     try {
       const response = await loginAdmin(data).unwrap();
-
-      console.log(response, "response from admin backend");
-
-          dispatch(setAdminCredentials(response.admin, response.adminAccessToken));
-          console.log('successfulllllll')
-            navigate("/admin/dashboard");
+      dispatch(setAdminCredentials(response.admin, response.adminAccessToken));
+      navigate("/admin/dashboard");
     } catch (err) {
-            toast.error(err?.data?.message || "Login failed");
+      toast.error(err?.data?.message || "Login failed");
     }
   };
 
   return (
     <div className="min-h-screen dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="dark:bg-gray-800 bg-orange-50 p-8 rounded-lg shadow-xl w-full sm:max-w-md md:max-w-lg lg:max-w-xl">
-        <h2 className="text-3xl text-center text-gray-600 font-bold dark:text-white mb-8">Admin Login</h2>
+        <h2 className="text-3xl text-center text-gray-600 font-bold dark:text-white mb-8">
+          Admin Login
+        </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} method="POST">
           <div className="mb-6">
@@ -47,10 +47,14 @@ const AdminLogin = () => {
               type="email"
               placeholder="Enter your email"
               {...register("email")} // Register the field with react-hook-form
-              className={`w-full p-4 border ${errors.email ? 'border-red-500' : 'border-gray-600'} rounded-md dark:bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
+              className={`w-full p-4 border ${
+                errors.email ? "border-red-500" : "border-gray-600"
+              } rounded-md dark:bg-gray-700 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p> // Show error message
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p> // Show error message
             )}
           </div>
 
@@ -59,10 +63,14 @@ const AdminLogin = () => {
               type="password"
               placeholder="Enter your password"
               {...register("password")} // Register the password field
-              className={`w-full p-4 border ${errors.password ? 'border-red-500' : 'border-gray-600'} rounded-md dark:bg-gray-700 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
+              className={`w-full p-4 border ${
+                errors.password ? "border-red-500" : "border-gray-600"
+              } rounded-md dark:bg-gray-700 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
             />
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p> // Show error message
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p> // Show error message
             )}
           </div>
 

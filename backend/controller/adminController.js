@@ -207,43 +207,201 @@ exports.adminDashboard = async (req, res) => {
 
 
 
+// exports.searchUsers = async (req, res) => {
+//   const query = req.query.query;
+//   try {
+//     const users = await User.find({
+//       $or: [
+//         { name: { $regex: query, $options: 'i' } },
+//         { email: { $regex: query, $options: 'i' } },
+//       ],
+//     });
+//     res.status(200).json(users);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error fetching users', error });
+//   }
+// };
+
+
+
+
 exports.searchUsers = async (req, res) => {
-  const query = req.query.query;
+  // Extract query, page, and limit from the query parameters
+  const { search, page = 1, limit = 10 } = req.query;
+
+  console.log(req.query, 'user')
+
+  // Check if query is a valid string
+  if (!search || typeof search !== 'string') {
+    return res.status(400).json({ message: 'Search query is required and must be a string' });
+  }
+
+  // Parse page and limit as integers
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(limit, 10);
+
+  const skip = (pageNumber - 1) * limitNumber;
+
   try {
+    // Search query using regex
     const users = await User.find({
       $or: [
-        { name: { $regex: query, $options: 'i' } },
-        { email: { $regex: query, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ],
+    })
+      .skip(skip)  // Skip based on pagination
+      .limit(limitNumber);  // Limit the number of results per page
+
+    // Get the total count of users for pagination metadata
+    const totalUsers = await User.countDocuments({
+      $or: [
+        { username: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
       ],
     });
-    res.status(200).json(users);
+
+    // Return the results with pagination data
+    res.status(200).json({
+      success: true,
+      users,
+      totalUsers,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalUsers / limitNumber),
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users', error });
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
   }
 };
 
+
+
+
+// exports.searchProducts = async (req, res) => {
+//   const query = req.query.query; // Get the query parameter from the request
+//   try {
+//     // Search for products based on the query in either the name or category
+//     const products = await Product.find({
+//       $or: [
+//         { productName: { $regex: query, $options: 'i' } },   // Case-insensitive search for name
+//         { category: { $regex: query, $options: 'i' } }, // Case-insensitive search for category
+//       ],
+//     });
+
+//     // Return the matching products
+//     res.status(200).json(products);
+//   } catch (error) {
+//     // Return an error if something goes wrong
+//     res.status(500).json({ message: 'Error fetching products', error });
+//   }
+// };
+
+// exports.searchProducts = async (req, res) => {
+//   const { query, page = 1, limit = 10 } = req.query; // Get query, page, and limit from request
+
+//   // Check if query is a valid string
+//   if (!query || typeof query !== 'string') {
+//     return res.status(400).json({ message: 'Search query is required and must be a string' });
+//   }
+
+//   // Parse page and limit as integers
+//   const pageNumber = parseInt(page, 10);
+//   const limitNumber = parseInt(limit, 10);
+
+//   const skip = (pageNumber - 1) * limitNumber;
+
+//   try {
+//     // Search products using regex on product name and category
+//     const products = await Product.find({
+//       $or: [
+//         { productName: { $regex: query, $options: 'i' } }, // Case-insensitive search for name
+//         { category: { $regex: query, $options: 'i' } },    // Case-insensitive search for category
+//       ],
+//     })
+//       .skip(skip)    // Skip based on pagination
+//       .limit(limitNumber); // Limit the number of results per page
+
+//     // Get the total count of products for pagination metadata
+//     const totalProducts = await Product.countDocuments({
+//       $or: [
+//         { productName: { $regex: query, $options: 'i' } },
+//         { category: { $regex: query, $options: 'i' } },
+//       ],
+//     });
+
+//     // Return the results with pagination data
+//     res.status(200).json({
+//       success: true,
+//       products,
+//       totalProducts,
+//       currentPage: pageNumber,
+//       totalPages: Math.ceil(totalProducts / limitNumber),
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error fetching products', error: error.message });
+//   }
+// };
 
 
 
 exports.searchProducts = async (req, res) => {
-  const query = req.query.query; // Get the query parameter from the request
+  // Extract query, page, and limit from the query parameters
+  console.log(req.query, 'query')
+
+  const { search, page = 1, limit = 10 } = req.query;
+
+  console.log(search, 'search')
+
+  // Check if query is a valid string
+  if (!search || typeof search !== 'string') {
+    return res.status(400).json({ message: 'Search search is required and must be a string' });
+  }
+
+  // Parse page and limit as integers
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(limit, 10);
+
+  const skip = (pageNumber - 1) * limitNumber;
+
   try {
-    // Search for products based on the query in either the name or category
+    // Search products using regex for product name and category
     const products = await Product.find({
       $or: [
-        { productName: { $regex: query, $options: 'i' } },   // Case-insensitive search for name
-        { category: { $regex: query, $options: 'i' } }, // Case-insensitive search for category
+        { productName: { $regex: search, $options: 'i' } },  // Case-insensitive search for name
+        { category: { $regex: search, $options: 'i' } },     // Case-insensitive search for category
+      ],
+    })
+      .skip(skip)      // Skip based on pagination
+      .limit(limitNumber);  // Limit the number of results per page
+
+    // Get the total count of products for pagination metadata
+    const totalProducts = await Product.countDocuments({
+      $or: [
+        { productName: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
       ],
     });
 
-    // Return the matching products
-    res.status(200).json(products);
+    // Return the results with pagination data
+    res.status(200).json({
+      success: true,
+      products: products.map((product) => ({
+        id: product._id,
+        productName: product.productName,
+        category: product.category,
+        brand: product.brand,
+        originalPrice: product.originalPrice,
+        offerPrice: product.offerPrice,
+        image: product.image, // Include image field if necessary
+      })),
+      totalProducts,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalProducts / limitNumber),
+    });
   } catch (error) {
-    // Return an error if something goes wrong
-    res.status(500).json({ message: 'Error fetching products', error });
+    res.status(500).json({ message: 'Error fetching products', error: error.message });
   }
 };
-
 
 
 exports.searchOrders = async (req, res) => {
@@ -330,57 +488,110 @@ exports.searchCoupons = async (req, res) => {
 };
 
 
-const mongoose = require('mongoose'); // Import mongoose for ObjectId handling
+const mongoose = require('mongoose')
+
+
+
+// exports.searchIndividualOrders = async (req, res) => {
+//   const query = req.query.query; // Get the query parameter from the request
+//   console.log(typeof query, 'type'); // Log the type of the query to ensure it's a string
+
+//   // Log the query parameter to make sure it's what you expect
+//   console.log('Query parameter:', query);
+
+//   try {
+//     // Convert query to number (assuming it's a string of digits)
+//     const numericQuery = parseFloat(query);
+
+//     // Check if the query is a valid ObjectId or a number
+//     let matchCondition = {};
+//     if (new mongoose.Types.isValid(query)) { // Use mongoose.Types.isValid
+//       // If it's a valid ObjectId, use it as _id
+//       matchCondition = { _id:new mongoose.Types.ObjectId(query) };
+//     } else {
+//       // Otherwise, search by ProductId in items array
+//       matchCondition = {
+//         $or: [
+//           { "items.ProductId": numericQuery },  // Match ProductId inside items array
+//         ],
+//       };
+//     }
+
+//     // Aggregation pipeline to find orders based on the query
+//     const orders = await Orders.aggregate([
+//       {
+//         $match: matchCondition, // Match the condition for ProductId in items array or _id
+//       },
+//     ]);
+
+//     // Log the full orders array to check the results
+//     console.log('Orders found:', orders);
+
+//     // Return the matching orders to the frontend
+//     res.status(200).json(orders);
+//   } catch (error) {
+//     // Return an error if something goes wrong
+//     console.error('Error fetching orders:', error);
+//     res.status(500).json({ message: 'Error fetching orders', error });
+//   }
+// };
+
+// exports.searchIndividualOrders = async (req, res) => {
+//   try {
+//       const orderId = req.query.query;
+
+//       if (!orderId) {
+//           return res.status(400).json({ message: 'Missing query parameter' });
+//       }
+
+//       let query;
+
+//       if (mongoose.Types.ObjectId.isValid(orderId)) {
+//           query = { _id: new mongoose.Types.ObjectId(orderId) };
+//       } else if (!isNaN(orderId)) {
+//           const numericOrderId = parseInt(orderId);
+//           query = { _id: numericOrderId };
+//       } else {
+//           return res.status(400).json({ message: 'Invalid order ID format. Must be a valid ObjectId string or a Number string.' });
+//       }
+
+//       const order = await Orders.find(query);
+
+//       if (!order || order.length === 0) {
+//           return res.status(404).json({ message: 'Order not found' });
+//       }
+
+//       res.status(200).json(order);
+//   } catch (error) {
+//       console.error("Error finding order:", error);
+//       res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// };
+
 
 exports.searchIndividualOrders = async (req, res) => {
-  const query = req.query.query; // Get the query parameter from the request
-
-  // Log the query parameter to make sure it's what you expect
-  console.log('Query parameter:', query);
-
   try {
-    // Check if the query is a valid ObjectId
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(query);
-    let matchCondition = {};
+    const orderId = req.query.query; // Assuming the order ID is passed as a URL parameter
 
-    console.log('Is valid ObjectId:', isValidObjectId);
 
-    // If it's a valid ObjectId, search by _id; otherwise, search by orderId or other fields
-    if (isValidObjectId) {
-      // If valid ObjectId, search by _id
-      matchCondition = { _id: mongoose.Types.ObjectId(query) };
-    } else {
-      // If it's not an ObjectId, check if the query is numeric (orderId or any number-related field)
-      const numericQuery = !isNaN(query) ? parseFloat(query) : query;
+    // const result = await Orders.aggregate([
+    //   {
+    //     $match: {
+    //       "items._id": new mongoose.ObjectId(orderId)
+    //     }
+    //   },
+    // ])
 
-      // Log the query being treated as a number
-      console.log('Numeric query:', numericQuery);
+       const result = await Orders.findById(orderId)
 
-      // Match against orderId or other fields
-      matchCondition = {
-        $or: [
-          // Check for a match in string format if the query is not an ObjectId
-          { orderId: numericQuery.toString() },  // Search as string if orderId is stored as a string
-          { quantity: numericQuery }, // If you want to also search by quantity
-        ],
-      };
-    }
 
-    // Aggregation pipeline to find orders based on the query
-    const orders = await Orders.aggregate([
-      {
-        $match: matchCondition,
-      },
-    ]);
 
-    // Log the full orders array to check the results
-    console.log('Orders found:', orders);
 
-    // Return the matching orders to the frontend
-    res.status(200).json(orders);
+    console.log(result)
+      res.status(200).json(result);
+  
   } catch (error) {
-    // Return an error if something goes wrong
-    console.error('Error fetching orders:', error);
-    res.status(500).json({ message: 'Error fetching orders', error });
+    console.error('Error in getOrderById:', error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

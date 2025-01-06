@@ -7,12 +7,14 @@ import {
   useRemoveFromCartMutation,
 } from "../../redux/apiSliceFeatures/CartApiSlice";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import { useState, useEffect } from "react";
 
 const Cart = () => {
   const navigate = useNavigate();
-
+const [isOutOfStock, setIsOutOfStock] = useState(false)
   // Use RTK Query hook to fetch cart data
-  const { data: cartItems, error, isLoading } = useGetCartQuery();
+  const { data: cartItems = [], error, isLoading } = useGetCartQuery();
+
 
   // Use RTK Query hook to remove item from the cart
   const [removeFromCart] = useRemoveFromCartMutation();
@@ -27,7 +29,7 @@ const Cart = () => {
 
   const calculateSubtotal = () =>
     cartItems
-      ? cartItems.reduce(
+      ? cartItems?.reduce(
           (acc, item) => acc + item.originalPrice * item.quantity,
           0
         )
@@ -44,8 +46,16 @@ const Cart = () => {
 
   const subtotal = calculateSubtotal();
 
-  const isOutOfStock =
-    cartItems && cartItems.some((item) => item.stockQuantity <= 0);
+  useEffect(() => {
+    if (cartItems && cartItems.some((item) => item.stockQuantity <= item?.quantity)) {
+      setIsOutOfStock(true);
+    } else {
+      setIsOutOfStock(false);
+    }
+  }, [cartItems]);
+  
+
+
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -99,9 +109,9 @@ const Cart = () => {
           </div>
           <button
             onClick={handleCheckout}
-            disabled={isOutOfStock || isLoading}
+            disabled={isOutOfStock }
             className={`w-full py-3 ${
-              isOutOfStock || isLoading
+              isOutOfStock 
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 text-white hover:bg-blue-700 transition-all transform hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600"
             } rounded-md mt-5`}

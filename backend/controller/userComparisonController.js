@@ -176,7 +176,6 @@ exports.getComparisonList = async (req, res) => {
       },
     ]);
 
-    console.log(comparisonItems, 'comparisonItems');
     return res.status(200).json(comparisonItems);
   } catch (error) {
     console.error('Error fetching comparison items:', error);

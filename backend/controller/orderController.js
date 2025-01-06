@@ -669,7 +669,7 @@ exports.getAddressByOrderId = async (req, res, next) => {
 
 exports.returnOrder = async (req, res) => {
 
-  console.log("reached for return")
+  console.log("reached")
   const { orderId, productId } = req.params;
 
   console.log(orderId, productId, 'orderId, productId')

@@ -5,9 +5,6 @@ const ProductImage = ({ image, variantImages }) => {
   const [mainImage, setMainImage] = useState(image);
   const [variants, setVariants] = useState(variantImages || []);
 
-  console.log(mainImage, "Current Main Image");
-  console.log(variants, "Variant Images");
-
   const handleImageSwap = (index) => {
     const newMainImage = variants[index];
     const updatedVariants = [...variants];
