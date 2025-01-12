@@ -25,7 +25,6 @@ import OTPLoginModal from "../../../modal/user/OtpLoginModal";
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const otpToken = useSelector((state) => state.user.otpToken);
 
   const [loginUser] = useLoginUserMutation();
   const [googleLogin] = useGoogleLoginMutation();
@@ -57,7 +56,6 @@ const Login = () => {
       if (formNum === 1) {
         setLoadingText("Logging in...");
         const response = await loginUser(data).unwrap();
-        // console.log(response.user, "user response")
         dispatch(setCredentials(response.user, response.accessToken));
         navigate("/");
       } else if (formNum === 2 || formNum === 3) {
@@ -109,7 +107,10 @@ const Login = () => {
     switch (formNum) {
       case 1:
         return (
-          <form onSubmit={handleSubmit(onSubmit)} className="lg:space-y-6 space-y-3 md:mb-4 mb-3">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="lg:space-y-6 space-y-3 md:mb-4 mb-3"
+          >
             <div className="relative">
               <input
                 type="email"
@@ -193,7 +194,10 @@ const Login = () => {
       case 2:
       case 3:
         return (
-          <form onSubmit={handleSubmit(onSubmit)} className="md:space-y-6 space-y-3">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="md:space-y-6 space-y-3"
+          >
             <div className="relative">
               <input
                 type="email"

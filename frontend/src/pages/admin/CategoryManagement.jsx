@@ -6,29 +6,26 @@ import { useSearchAdminCategoriesQuery } from "../../redux/apiSliceFeatures/Admi
 
 const CategoryManagement = () => {
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const { handleCreate } = useButtonHandlers();
 
-  const { data: allData = [], isLoading, isError, refetch } = useGetCategoriesQuery();
-  const { data: searchData = {}, refetch: refetchSearch } = useSearchAdminCategoriesQuery(debouncedSearch, {
-    skip: !debouncedSearch, // Skip API call if search is empty
-  });
+  const { data: allData = [], isLoading, isError } = useGetCategoriesQuery();
+  const { data: searchData = {}, refetch: refetchSearch } =
+    useSearchAdminCategoriesQuery(debouncedSearch, {
+      skip: !debouncedSearch,
+    });
 
-  // Debounce logic
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search); // Update debounced search after a delay
-    }, 500); // Delay in milliseconds
+      setDebouncedSearch(search);
+    }, 500);
 
     // Clean up timer
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Data to pass to AdminTable
-  const dataToDisplay = debouncedSearch
-    ? searchData || [] // Use searchData.users if available
-    : allData || [];   // Use allData.users if available
+  const dataToDisplay = debouncedSearch ? searchData || [] : allData || [];
   return (
     <div className="flex h-screen dark:bg-black top-10 fixed left-[420px] right-0 dark:text-white">
       <div className="dark:bg-gray-900 w-full bg-orange-50 px-14">

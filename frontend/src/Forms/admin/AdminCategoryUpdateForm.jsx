@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUpdateEntityMutation } from "../../redux/apiSliceFeatures/crudApiSlice";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,32 +9,25 @@ import {
   useGetCategoryByIdQuery,
 } from "../../redux/apiSliceFeatures/categoryApiSlice";
 import { ArrowLeft } from "lucide-react";
-
-// Define validation schema using zod
-const schema = z.object({
-  categoryName: z.string().min(1, "Category name is required"),
-  categoryDescription: z.string().min(10, "Category description is required"),
-});
+import { categorySchema } from "../../validation/admin/categoryFormValidation";
 
 const AdminCategoryUpdateForm = () => {
-  const { id } = useParams(); // Get id from URL
+  const { id } = useParams();
   const navigate = useNavigate();
   const [updateEntity] = useUpdateEntityMutation();
   const { refetch } = useGetCategoriesQuery();
   const { data, error, isLoading } = useGetCategoryByIdQuery(id);
 
-  // Initialize react-hook-form with zod resolver for validation
   const {
     register,
     handleSubmit,
     setValue,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(categorySchema),
   });
 
   useEffect(() => {
-    // Populate the form with the fetched data once it's available
     if (data) {
       setValue("categoryName", data?.category?.categoryName);
       setValue("categoryDescription", data?.category?.categoryDescription);
@@ -45,11 +37,25 @@ const AdminCategoryUpdateForm = () => {
   const onSubmit = async (data, e) => {
     e.preventDefault();
 
-    await updateEntity({ entity: "category", data, id }).unwrap();
-    refetch();
-    toast.success("Category updated successfully");
+    try {
+      const response = await updateEntity({
+        entity: "category",
+        data,
+        id,
+      }).unwrap();
+      if (response?.error) {
+        toast.error(response.error.message);
+        return;
+      }
+      refetch();
+      toast.success("Category updated successfully");
 
-    navigate(-1);
+      navigate(-1);
+    } catch (error) {
+      toast.error(
+        error?.data?.message || "An error occurred while updating the category"
+      );
+    }
   };
 
   if (isLoading) {

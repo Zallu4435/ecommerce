@@ -1,36 +1,33 @@
-import { useEffect } from 'react';
-
+import { useEffect } from "react";
 
 const AddressModal = ({ isOpen, onClose, onSave, formData, handleChange }) => {
-
   useEffect(() => {
     if (isOpen) {
-        document.body.classList.add('modal-open');
+      document.body.classList.add("modal-open");
     } else {
-        document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
     }
 
     return () => {
-        document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
     };
-  }, [isOpen])
-
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const inputFields = [
-    { name: 'country', placeholder: 'Country' },
-    { name: 'state', placeholder: 'State' },
-    { name: 'city', placeholder: 'City' },
-    { name: 'zipCode', placeholder: 'Zip Code' },
-    { name: 'street', placeholder: 'Street Address' },
+    { name: "country", placeholder: "Country" },
+    { name: "state", placeholder: "State" },
+    { name: "city", placeholder: "City" },
+    { name: "zipCode", placeholder: "Zip Code" },
+    { name: "street", placeholder: "Street Address" },
   ];
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center p-4">
       <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-8 w-full max-w-xl">
         <h2 className="text-3xl font-bold mb-6 text-gray-600 dark:text-gray-300">
-          {formData.editing ? 'Edit Address' : 'Add Address'}
+          {formData.editing ? "Edit Address" : "Add Address"}
         </h2>
         <form
           onSubmit={(e) => {
@@ -63,7 +60,7 @@ const AddressModal = ({ isOpen, onClose, onSave, formData, handleChange }) => {
               type="submit"
               className="px-8 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-yellow-500"
             >
-              {formData.editing ? 'Save Changes' : 'Add Address'}
+              {formData.editing ? "Save Changes" : "Add Address"}
             </button>
           </div>
         </form>

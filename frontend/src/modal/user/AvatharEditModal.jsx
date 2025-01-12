@@ -1,17 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-const AvatarEditModal = ({ isOpen, currentAvatar, onAvatarChange, onClose, onSave }) => {
+const AvatarEditModal = ({
+  isOpen,
+  currentAvatar,
+  onAvatarChange,
+  onClose,
+  onSave,
+}) => {
   const [newAvatarPreview, setNewAvatarPreview] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
-      document.body.classList.add('modal-open');
+      document.body.classList.add("modal-open");
     } else {
-      document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
     }
 
     return () => {
-      document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
     };
   }, [isOpen]);
 
@@ -20,18 +26,17 @@ const AvatarEditModal = ({ isOpen, currentAvatar, onAvatarChange, onClose, onSav
     if (file) {
       const previewUrl = URL.createObjectURL(file);
       setNewAvatarPreview(previewUrl);
-      onAvatarChange(e); // Call the parent handler to update the avatar state
+      onAvatarChange(e);
     }
   };
 
-  if (!isOpen) return null; // Return nothing if the modal is not open
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-[90%] max-w-md shadow-lg">
         <h2 className="text-xl font-semibold mb-4">Edit Avatar</h2>
 
-        {/* Avatar Preview */}
         {newAvatarPreview ? (
           <img
             src={newAvatarPreview}
@@ -46,7 +51,6 @@ const AvatarEditModal = ({ isOpen, currentAvatar, onAvatarChange, onClose, onSav
           />
         )}
 
-        {/* File Input */}
         <input
           type="file"
           accept="image/*"
@@ -54,7 +58,6 @@ const AvatarEditModal = ({ isOpen, currentAvatar, onAvatarChange, onClose, onSav
           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-yellow-500 file:text-white hover:file:bg-yellow-600"
         />
 
-        {/* Action Buttons */}
         <div className="flex justify-end mt-4">
           <button
             onClick={onClose}

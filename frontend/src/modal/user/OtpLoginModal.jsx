@@ -101,7 +101,6 @@ const OTPLoginModal = ({ isOpen, change, onClose }) => {
   };
 
   const handleResendOTP = async () => {
-    // otp-login
     await otpLogin({
       email: forget_email,
     }).unwrap();
@@ -114,7 +113,6 @@ const OTPLoginModal = ({ isOpen, change, onClose }) => {
     dispatch(setEmailOtpToken(null));
     onClose();
   };
-
 
   if (!isOpen) return null;
 

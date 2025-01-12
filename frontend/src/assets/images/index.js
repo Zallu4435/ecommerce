@@ -1,4 +1,5 @@
 import logoLight from './logo.png'
+import logoDark from './darkLogo.png'
 import heroImg_1 from'./heroImg1.png'
 import heroImg_2 from './heroImg2.png'
 import heroImg_3 from './heroImg3.png'
@@ -29,7 +30,6 @@ import aboutUsImg from './aboutUs.jpg';
 import notFound from './404.jpg'
 import wallet from './wallet.jpg'
 import defaultProfile from './profile.jpg'
-import logoDark from './darkLogo.png'
 import card from './card.jpg'
 import razorpay from './razopay.png'
 

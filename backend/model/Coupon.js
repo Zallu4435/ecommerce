@@ -55,16 +55,14 @@ const couponSchema = new mongoose.Schema({
     default: [],
   },
 }, {
-  timestamps: true,  // Automatically adds createdAt and updatedAt at the document level
+  timestamps: true,  
 }
 );
 
-// Virtual field for expiry status
 couponSchema.virtual("isExpired").get(function () {
   return this.expiry < Date.now();
 });
 
-// Middleware to update the updatedAt field and check expiry
 couponSchema.pre("save", function (next) {
   if (this.expiry < Date.now()) {
     return next(new Error("Cannot save or update an expired coupon."));
@@ -73,7 +71,6 @@ couponSchema.pre("save", function (next) {
   next();
 });
 
-// Ensure virtual fields are included when converting document to JSON
 couponSchema.set('toJSON', { virtuals: true });
 couponSchema.set('toObject', { virtuals: true });
 

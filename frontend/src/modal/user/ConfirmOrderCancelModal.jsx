@@ -1,49 +1,48 @@
-import React, { useEffect } from 'react';
-import { FaExclamationTriangle } from 'react-icons/fa'; // Importing an icon
+import React from 'react';
 
-const CancelConfirmationModal = ({ show, onClose, onConfirm, orderId }) => {
-  useEffect(() => {
-    // Disable scrolling when the modal is open
-    if (show) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-    // Clean up by enabling scrolling when the component unmounts
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [show]);
-
+const ReturnConfirmationModal = ({ show, onClose, onConfirm, orderId, productId, reason, onReasonChange }) => {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-40">
-      <div className="bg-white p-8 rounded-lg shadow-2xl transform transition-all duration-300 ease-in-out scale-105">
-        <div className="flex items-center mb-4">
-          <FaExclamationTriangle className="text-red-500 text-5xl mr-3 animate-pulse" />
-          <h2 className="text-3xl font-bold text-gray-800 animate-fadeIn">
-            Cancel Order Confirmation
-          </h2>
-        </div>
-        <p className="text-gray-700 mb-6 text-lg">
-          Are you sure cancel the order with ID <strong>{orderId}</strong>?
-          <small className="block text-center text-red-500">
-            !! This action cannot be undone.
-          </small>
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-6 z-50 animate-fadeIn">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-lg w-full shadow-2xl transform transition-transform duration-300 scale-95 hover:scale-100">
+        <h2 className="text-3xl font-extrabold mb-6 text-gray-800 dark:text-gray-100">
+          Are You Sure You Want to Return the Order?
+        </h2>
+        <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
+          Please confirm if you would like to return your order. This action cannot be undone.
         </p>
-        <div className="flex justify-end gap-4">
+
+        <div className="mb-6">
+          <label className="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">
+            Reason for Return
+          </label>
+          <textarea
+            className="w-full px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 text-lg"
+            rows="4"
+            value={reason}
+            onChange={(e) => onReasonChange(e.target.value)}
+            placeholder="Why do you want to return the order?"
+            required
+          />
+        </div>
+
+        <div className="flex justify-between items-center gap-6 mt-6">
           <button
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none transition-all duration-200"
-            onClick={onConfirm}
-          >
-            Confirm
-          </button>
-          <button
-            className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none transition-all duration-200"
+            className="px-6 py-3 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 text-lg font-semibold"
             onClick={onClose}
           >
-            Cancel
+            No, Keep the Order
+          </button>
+
+          <button
+            className={`px-6 py-3 text-white rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 ${
+              reason.trim() ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-400 cursor-not-allowed'
+            }`}
+            onClick={onConfirm}
+            disabled={!reason.trim()}
+          >
+            Yes, Return Order
           </button>
         </div>
       </div>
@@ -51,4 +50,4 @@ const CancelConfirmationModal = ({ show, onClose, onConfirm, orderId }) => {
   );
 };
 
-export default CancelConfirmationModal;
+export default ReturnConfirmationModal;

@@ -1,6 +1,9 @@
 import React, { useState, useCallback } from "react";
-import { downloadSalesReportPDF, downloadSalesReportExcel } from "./DownloadUtils";
-import { Package, ShoppingCart, TrendingUp } from 'lucide-react';
+import {
+  downloadSalesReportPDF,
+  downloadSalesReportExcel,
+} from "./DownloadUtils";
+import { Package, ShoppingCart, TrendingUp } from "lucide-react";
 import {
   useGetSalesDataQuery,
   useGetSalesOverviewQuery,
@@ -21,7 +24,7 @@ const AdminSalesManagement = () => {
     };
 
     if (dateRange === "Custom" && customDates.start && customDates.end) {
-      params.dateRange = 'Custom';
+      params.dateRange = "Custom";
       params.startDate = customDates.start;
       params.endDate = customDates.end;
     } else {
@@ -56,7 +59,12 @@ const AdminSalesManagement = () => {
   };
 
   const handleDownloadExcel = () => {
-    downloadSalesReportExcel(salesOverview, recentOrders, topProducts);
+    downloadSalesReportExcel(
+      dateRange,
+      salesOverview,
+      recentOrders,
+      topProducts
+    );
   };
 
   const noOrders = recentOrders?.data?.orders?.length === 0;
@@ -87,7 +95,7 @@ const AdminSalesManagement = () => {
               customDates={customDates}
               setCustomDates={setCustomDates}
             />
-                  <button
+            <button
               onClick={handleDownloadPDF}
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
@@ -126,7 +134,9 @@ const AdminSalesManagement = () => {
             />
             <Card
               title="Average Order Value"
-              value={`₹${salesOverview?.averageOrderValue?.toLocaleString() || 0}`}
+              value={`₹${
+                salesOverview?.averageOrderValue?.toLocaleString() || 0
+              }`}
               icon={<Package />}
               bgColor="yellow"
               iconColor="yellow"
@@ -150,7 +160,8 @@ const AdminSalesManagement = () => {
                           className="text-lg col-span-5 font-semibold text-center text-red-600 dark:text-gray-300"
                           colSpan={5}
                         >
-                          No orders for {dateRange === "Today" ? "Today" : dateRange}
+                          No orders for{" "}
+                          {dateRange === "Today" ? "Today" : dateRange}
                         </td>
                       ),
                       Customer: "",

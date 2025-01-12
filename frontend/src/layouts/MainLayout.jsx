@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setScrolled } from "../redux/slice/scrollSlice";
@@ -39,13 +39,13 @@ const MainLayout = () => {
     return children;
   };
 
-  const shouldShowFooter = !['/login', '/signup'].includes(location.pathname);
+  const shouldShowFooter = !["/login", "/signup"].includes(location.pathname);
 
   return (
     <div>
       <Header />
       <Navbar />
-      <main className=''>
+      <main className="">
         <Routes>
           {routes.map(({ path, component: Component, isProtected }, index) => {
             if (isProtected) {
@@ -61,7 +61,7 @@ const MainLayout = () => {
                 />
               );
             }
-            if (path === '/login' || path === '/signup') {
+            if (path === "/login" || path === "/signup") {
               return (
                 <Route
                   key={index}

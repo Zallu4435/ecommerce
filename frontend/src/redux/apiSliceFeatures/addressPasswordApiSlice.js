@@ -1,58 +1,58 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { baseQueryWithReauth } from '../../middleware/authMiddleware';
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../../middleware/authMiddleware";
 
 export const addressPasswordApi = createApi({
-  reducerPath: 'addressPasswordApi',
+  reducerPath: "addressPasswordApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Addresses'], // Add tag type for cache invalidation
+  tagTypes: ["Addresses"],
   endpoints: (builder) => ({
     getAddresses: builder.query({
-      query: () => 'userProfile/addresses',
-      providesTags: ['Addresses'], // Attach the 'Addresses' tag to this query
+      query: () => "userProfile/addresses",
+      providesTags: ["Addresses"],
     }),
 
     addAddress: builder.mutation({
       query: (addressData) => ({
-        url: 'userProfile/address',
-        method: 'POST',
+        url: "userProfile/address",
+        method: "POST",
         body: addressData,
       }),
-      invalidatesTags: ['Addresses'], // Invalidate cache after adding
+      invalidatesTags: ["Addresses"],
     }),
 
     editAddress: builder.mutation({
       query: ({ id, updatedAddress }) => ({
-        url: `userProfile/address`, // Use URL parameter
-        method: 'PUT',
+        url: `userProfile/address`,
+        method: "PUT",
         body: updatedAddress,
       }),
-      invalidatesTags: ['Addresses'], // Invalidate cache after editing
+      invalidatesTags: ["Addresses"],
     }),
 
     removeAddress: builder.mutation({
       query: (id) => ({
-        url: `userProfile/address/${id}`, // Use URL parameter
-        method: 'DELETE',
+        url: `userProfile/address/${id}`,
+        method: "DELETE",
       }),
-      invalidatesTags: ['Addresses'], // Invalidate cache after removing
+      invalidatesTags: ["Addresses"],
     }),
 
     changePassword: builder.mutation({
       query: (passwordData) => ({
-        url: 'userProfile/change-password', // Endpoint for changing the password
-        method: 'PUT',
+        url: "userProfile/change-password",
+        method: "PUT",
         body: passwordData,
       }),
     }),
 
     checkoutAddress: builder.query({
-      query: () => '/userProfile/checkout-address',
+      query: () => "/userProfile/checkout-address",
     }),
 
     processPayment: builder.mutation({
       query: (paymentData) => ({
-        url: '/userProfile/process-payment', // The API endpoint for processing payments
-        method: 'POST',
+        url: "/userProfile/process-payment",
+        method: "POST",
         body: paymentData,
       }),
     }),
@@ -64,41 +64,43 @@ export const addressPasswordApi = createApi({
     //   }),
     // }),
     getOrders: builder.query({
-      query: ({ page = 1, limit = 10 }) => `orders/getOrders?page=${page}&limit=${limit}`,
+      query: ({ page = 1, limit = 10 }) =>
+        `orders/getOrders?page=${page}&limit=${limit}`,
       serializeQueryArgs: ({ endpointName }) => endpointName,
       merge: (currentCache, newItems) => {
         if (currentCache) {
           const newOrders = newItems.orders.filter(
-            newOrder => !currentCache.orders.some(existingOrder => existingOrder._id === newOrder._id)
+            (newOrder) =>
+              !currentCache.orders.some(
+                (existingOrder) => existingOrder._id === newOrder._id
+              )
           );
-    
+
           return {
             ...currentCache,
-            orders: [...currentCache.orders, ...newOrders],  // Appending new unique orders
+            orders: [...currentCache.orders, ...newOrders],
           };
         }
         return newItems;
       },
       forceRefetch({ currentArg, previousArg }) {
-        return currentArg !== previousArg;  // Trigger a refetch when query params change
+        return currentArg !== previousArg;
       },
+      providesTags: ["Order"],
     }),
-    
 
     checkProductStock: builder.query({
       query: ({ productId, quantity }) => ({
-        url: `/products/${productId}/stock`, // Adjust the endpoint path as necessary
-        params: { quantity }, // Pass the productId and quantity as params
+        url: `/products/${productId}/stock`,
+        params: { quantity },
       }),
     }),
 
     getCheckoutCoupons: builder.query({
-      query: (productId) => `/coupons/checkout-coupons/${productId}`
+      query: (productId) => `/coupons/checkout-coupons/${productId}`,
     }),
-
   }),
 });
-
 
 export const {
   useGetAddressesQuery,
@@ -110,5 +112,5 @@ export const {
   useProcessPaymentMutation,
   useGetOrdersQuery,
   useCheckProductStockQuery,
-  useGetCheckoutCouponsQuery
+  useGetCheckoutCouponsQuery,
 } = addressPasswordApi;

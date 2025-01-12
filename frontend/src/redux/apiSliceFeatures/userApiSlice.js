@@ -1,84 +1,71 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { baseQueryWithReauth } from '../../middleware/authMiddleware';
-import { uploadImageToCloudinary } from '../../server'; 
-import { clearCredentials } from '../slice/userSlice';
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../../middleware/authMiddleware";
+import { uploadImageToCloudinary } from "../../server";
+import { clearCredentials } from "../slice/userSlice";
 
 export const userApiSlice = createApi({
   reducerPath: "userApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['User', 'Avatar'],
+  tagTypes: ["User", "Avatar"],
   endpoints: (builder) => ({
-    // Fetch user details
     getUser: builder.query({
-      query: () => 'users/getUser',
-      providesTags: ['User', 'Avatar'],
-      
+      query: () => "users/getUser",
+      providesTags: ["User", "Avatar"],
     }),
 
     googleLogin: builder.mutation({
       query: (userData) => ({
-        url: 'users/google-login',
-        method: 'POST',
+        url: "users/google-login",
+        method: "POST",
         body: userData,
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ["User"],
     }),
-
-    // Fetch ALL user details
-    // getUsers: builder.query({
-    //   query: () => 'users/getUsers',
-    //   providesTags: ['User', 'Avatar']
-    // }),
-
 
     getUsers: builder.query({
-      query: ({ page, limit = 5 }) => `users/getUsers?page=${page}&limit=${limit}`,
-      providesTags: ['User', 'Avatar']
+      query: ({ page, limit = 5 }) =>
+        `users/getUsers?page=${page}&limit=${limit}`,
+      providesTags: ["User", "Avatar"],
     }),
 
-    
-
-    // Register user
     registerUser: builder.mutation({
       query: (userData) => ({
-        url: 'users/signup-user',
-        method: 'POST',
+        url: "users/signup-user",
+        method: "POST",
         body: userData,
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ["User"],
     }),
 
-    // Login user
     loginUser: builder.mutation({
-      query: credentials => ({
-        url: 'users/login-user',
-        method: 'POST',
-        body: { ...credentials }
-      })
+      query: (credentials) => ({
+        url: "users/login-user",
+        method: "POST",
+        body: { ...credentials },
+      }),
     }),
 
     refreshUser: builder.mutation({
       query: () => ({
-        url: 'users/refresh-token',
-        method: 'GET',
+        url: "users/refresh-token",
+        method: "GET",
       }),
     }),
 
-    // Activate user
     activateUser: builder.mutation({
       query: (activationData) => ({
-        url: 'users/activation/:token',
-        method: 'POST',
+        url: "users/activation/:token",
+        method: "POST",
         body: activationData,
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ["User"],
     }),
 
     otpLogin: builder.mutation({
       query: (credentials) => ({
         url: "users/otp-login",
         method: "POST",
-        body: credentials, // Send email or required login details
+        body: credentials,
       }),
       transformResponse: (response) => {
         return {
@@ -87,21 +74,20 @@ export const userApiSlice = createApi({
         };
       },
     }),
-    
-    
+
     otpVerify: builder.mutation({
       query: ({ token, otp }) => ({
         url: "users/verify-otp",
         method: "POST",
-        body: { token, otp }, // Send token and OTP for verification
+        body: { token, otp },
       }),
     }),
-    
+
     verifyResetPassword: builder.mutation({
       query: ({ token, otp }) => ({
         url: "users/verify-reset-password",
         method: "POST",
-        body: { token, otp }, // Send token and OTP for verification
+        body: { token, otp },
       }),
     }),
 
@@ -113,12 +99,11 @@ export const userApiSlice = createApi({
       }),
     }),
 
-    // Logout user
     logoutUser: builder.mutation({
       query: () => ({
-        url: 'users/logout',
-        method: 'POST',
-        credentials: 'include', // Ensure cookies are included in the request
+        url: "users/logout",
+        method: "POST",
+        credentials: "include",
       }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
@@ -130,67 +115,59 @@ export const userApiSlice = createApi({
       },
     }),
 
-    // Update user information
     updateUserInfo: builder.mutation({
       query: ({ updateData, oldEmail }) => ({
-        url: 'users/update-user-info',
-        method: 'PUT',
-        body: { ...updateData, oldEmail }, // Pass both updateData and oldEmail to the body
+        url: "users/update-user-info",
+        method: "PUT",
+        body: { ...updateData, oldEmail },
       }),
-      invalidatesTags: ['User'],
-    
-      // Optimistic update for immediate UI feedback
+      invalidatesTags: ["User"],
+
       async onQueryStarted(updateData, { dispatch, queryFulfilled }) {
-        const { oldEmail } = updateData;  // Destructure to get oldEmail from updateData
+        const { oldEmail } = updateData;
         const patchResult = dispatch(
-          userApiSlice.util.updateQueryData('getUser', undefined, (draft) => {
-            // Directly update the draft with new user data
+          userApiSlice.util.updateQueryData("getUser", undefined, (draft) => {
             if (draft.user) {
-              Object.assign(draft.user, updateData);  // Apply updateData to the draft
+              Object.assign(draft.user, updateData);
             }
           })
         );
         try {
           await queryFulfilled;
         } catch {
-          patchResult.undo(); // Undo optimistic update if query fails
+          patchResult.undo();
         }
       },
     }),
-    
 
-    // Update user avatar
     updateAvatar: builder.mutation({
       queryFn: async (formData, _queryApi, _extraOptions, baseQuery) => {
         try {
-          const avatarFile = formData.get('avatar');
+          const avatarFile = formData.get("avatar");
           if (avatarFile) {
-            // Upload the avatar to Cloudinary
             const avatarUrl = await uploadImageToCloudinary(avatarFile);
 
-            // Return the updated avatar URL
             return await baseQuery({
-              url: 'users/update-avatar',
-              method: 'PUT',
+              url: "users/update-avatar",
+              method: "PUT",
               body: { avatar: avatarUrl },
             });
           }
-          return { error: { status: 'CUSTOM_ERROR', data: 'No avatar file provided' } };
+          return {
+            error: { status: "CUSTOM_ERROR", data: "No avatar file provided" },
+          };
         } catch (error) {
-          return { error: { status: 'CUSTOM_ERROR', data: error.message } };
+          return { error: { status: "CUSTOM_ERROR", data: error.message } };
         }
       },
-      invalidatesTags: ['Avatar', 'User'],
+      invalidatesTags: ["Avatar", "User"],
 
-      // Optimistic update for immediate UI feedback
       async onQueryStarted(formData, { dispatch, queryFulfilled }) {
-        // Create a local URL for immediate preview
-        const avatarFile = formData.get('avatar');
+        const avatarFile = formData.get("avatar");
         const avatarPreviewUrl = URL.createObjectURL(avatarFile);
-        
+
         const patchResult = dispatch(
-          userApiSlice.util.updateQueryData('getUser', undefined, (draft) => {
-            // Update avatar URL in the draft
+          userApiSlice.util.updateQueryData("getUser", undefined, (draft) => {
             if (draft.user) {
               draft.user.avatar = avatarPreviewUrl;
             }
@@ -199,18 +176,15 @@ export const userApiSlice = createApi({
 
         try {
           const { data } = await queryFulfilled;
-          // Update with the server-returned avatar URL
           dispatch(
-            userApiSlice.util.updateQueryData('getUser', undefined, (draft) => {
+            userApiSlice.util.updateQueryData("getUser", undefined, (draft) => {
               if (draft.user) {
                 draft.user.avatar = data.avatarUrl;
-                // Revoke the temporary preview URL
                 URL.revokeObjectURL(avatarPreviewUrl);
               }
             })
           );
         } catch {
-          // If the upload fails, revert the optimistic update
           patchResult.undo();
           URL.revokeObjectURL(avatarPreviewUrl);
         }
@@ -219,7 +193,6 @@ export const userApiSlice = createApi({
   }),
 });
 
-// Export hooks for each API call
 export const {
   useGetUserQuery,
   useRegisterUserMutation,

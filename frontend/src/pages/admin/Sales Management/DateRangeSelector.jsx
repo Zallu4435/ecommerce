@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
-const DateRangeSelector = ({ dateRange, setDateRange, customDates, setCustomDates }) => {
+const DateRangeSelector = ({
+  dateRange,
+  setDateRange,
+  customDates,
+  setCustomDates,
+}) => {
   const [showCustomDates, setShowCustomDates] = useState(false);
-  const [tempCustomDates, setTempCustomDates] = useState({ start: '', end: '' });
+  const [tempCustomDates, setTempCustomDates] = useState({
+    start: "",
+    end: "",
+  });
 
   const handleDateRangeChange = (e) => {
     const newValue = e.target.value;
-    if (newValue === 'Custom') {
+    if (newValue === "Custom") {
       setShowCustomDates(true);
-      setTempCustomDates({ start: '', end: '' });
+      setTempCustomDates({ start: "", end: "" });
     } else {
       setShowCustomDates(false);
       setDateRange(newValue);
@@ -18,15 +26,15 @@ const DateRangeSelector = ({ dateRange, setDateRange, customDates, setCustomDate
 
   const handleCustomDateChange = (e) => {
     const { name, value } = e.target;
-    setTempCustomDates(prev => ({
+    setTempCustomDates((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleApplyCustomDates = () => {
     if (tempCustomDates.start && tempCustomDates.end) {
-      setDateRange('Custom');
+      setDateRange("Custom");
       setCustomDates(tempCustomDates);
       setShowCustomDates(false);
     }
@@ -34,8 +42,8 @@ const DateRangeSelector = ({ dateRange, setDateRange, customDates, setCustomDate
 
   const handleCancel = () => {
     setShowCustomDates(false);
-    setDateRange('This Week');
-    setTempCustomDates({ start: '', end: '' });
+    setDateRange("This Week");
+    setTempCustomDates({ start: "", end: "" });
   };
 
   return (
@@ -53,7 +61,10 @@ const DateRangeSelector = ({ dateRange, setDateRange, customDates, setCustomDate
             <option>This Year</option>
             <option>Custom</option>
           </select>
-          <div className="pointer-events-none absolute flex items-center right-2" style={{ top: "calc(50% - 8px)" }}>
+          <div
+            className="pointer-events-none absolute flex items-center right-2"
+            style={{ top: "calc(50% - 8px)" }}
+          >
             <ChevronDown className="h-4 w-4 text-gray-700 dark:text-gray-300" />
           </div>
         </div>

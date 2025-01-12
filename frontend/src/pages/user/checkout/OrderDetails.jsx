@@ -3,25 +3,17 @@ import { useLocation } from "react-router-dom";
 
 const OrderDetails = ({ onOrderChange, address }) => {
   const location = useLocation();
-
-  // Retrieve data passed via React Router
   const { cartItems, productId, total } = location.state || {};
-
-  // console.log(productId, "cartItems from cart")
-
-  // Ref to keep track of the previous order data to avoid unnecessary updates
   const prevOrderRef = useRef(null);
 
   useEffect(() => {
     const currentOrder = { cartItems, total, productId };
-
-    // Only call `onOrderChange` if the order data changes
     if (
       onOrderChange &&
       cartItems &&
       JSON.stringify(prevOrderRef.current) !== JSON.stringify(currentOrder)
     ) {
-      prevOrderRef.current = currentOrder; // Update the ref
+      prevOrderRef.current = currentOrder;
       onOrderChange(currentOrder);
     }
   }, [onOrderChange, cartItems, total, productId]);
@@ -36,9 +28,10 @@ const OrderDetails = ({ onOrderChange, address }) => {
 
   return (
     <>
-      {/* Order Details */}
       <div className="bg-white dark:bg-gray-900 p-6 shadow-md rounded-md">
-        <h2 className="text-xl dark:text-gray-200 text-gray-700 font-semibold mb-4">Order Items</h2>
+        <h2 className="text-xl dark:text-gray-200 text-gray-700 font-semibold mb-4">
+          Order Items
+        </h2>
         {cartItems.map((product) => (
           <div
             key={product.id}

@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const userSchema = new mongoose.Schema(
   {
@@ -25,14 +25,14 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     avatar: {
-      type: String
+      type: String,
     },
-    resetPasswordToken: String, // Token for password reset
-    resetPasswordExpire: Date,  // Expiration time for the token
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
     role: {
       type: String,
-      enum: ['user', 'admin'],
-      default: 'user', 
+      enum: ["user", "admin"],
+      default: "user",
     },
     isBlocked: {
       type: Boolean,
@@ -40,24 +40,23 @@ const userSchema = new mongoose.Schema(
     },
     googleId: {
       type: String,
-      unique: true, 
+      unique: true,
       sparse: true,
     },
     otp: {
       type: String,
-      default: null
+      default: null,
     },
     otpExpires: {
       type: Date,
-      default: null
-    }
+      default: null,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
-// Hash Password before saving to the database
 userSchema.pre("save", function (next) {
   if (!this.isModified("password") || !this.password) {
     return next();
@@ -66,83 +65,55 @@ userSchema.pre("save", function (next) {
   next();
 });
 
-
-// JWT Token generation
 userSchema.methods.getJwtToken = function () {
-  console.log("get jwt token ")
+  console.log("get jwt token ");
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_EXPIRES,
   });
 };
 
-
-// JWT Token generation for Admin
 userSchema.methods.generateAdminToken = function () {
-  return jwt.sign({ id: this._id, isAdmin: true }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+  return jwt.sign({ id: this._id, isAdmin: true }, process.env.JWT_SECRET_KEY, {
+    expiresIn: "1h",
+  });
 };
 
-
-// Compare Passwords
 userSchema.methods.comparePassword = async function (enteredPassword) {
-  console.log(this.password, 'entered passwoord')
-
   return await bcrypt.compare(enteredPassword, this.password);
-  
 };
 
-// Method to generate a reset password token
 userSchema.methods.getResetPasswordToken = function () {
-  // Generate reset token
   const resetToken = crypto.randomBytes(20).toString("hex");
 
-  // Hash the reset token and save it to the database
   this.resetPasswordToken = crypto
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
 
-  // Set the expiration time (1 hour)
-  this.resetPasswordExpire = Date.now() + 600000;  // 10 minutes in milliseconds
+  this.resetPasswordExpire = Date.now() + 600000;
 
   return resetToken;
 };
-
-
 
 function hashOTP(otp) {
   return crypto.createHash("sha256").update(otp.toString()).digest("hex");
 }
 
 userSchema.methods.generateOTP = function () {
-  const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digits
-  console.log('Generated OTP:', otp);
+  const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
   this.otp = hashOTP(otp);
-  this.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-  console.log('Stored hashed OTP:', this.otp);
-  console.log('OTP expiration:', this.otpExpires);
+  this.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
   return otp;
 };
 
 userSchema.methods.verifyOTP = function (enteredOTP) {
-  console.log('Verifying OTP:', enteredOTP);
-  console.log('Current time:', new Date());
-  console.log('OTP expiration:', this.otpExpires);
-
   const hashedEnteredOTP = hashOTP(enteredOTP);
-  console.log('Hashed entered OTP:', hashedEnteredOTP);
-  console.log('Stored hashed OTP:', this.otp);
-
   const isNotExpired = this.otpExpires > new Date();
   const isMatching = hashedEnteredOTP === this.otp;
-
-  console.log('OTP not expired:', isNotExpired);
-  console.log('OTP matches:', isMatching);
-
+  
   return isMatching && isNotExpired;
 };
-
 
 module.exports = mongoose.model("User", userSchema);

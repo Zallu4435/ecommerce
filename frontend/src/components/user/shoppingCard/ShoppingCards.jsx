@@ -62,7 +62,7 @@ const ShoppingCard = ({
           <img
             src={image}
             alt="Hover Test"
-            className="w-full absolute z-10 h-full object-cover transform hover:scale-105 transition-transform duration-300 cursor-pointer"
+            className="w-full absolute z-10 h-full object-cover transform hover:scale-105 transition-transform rounded-md duration-300 cursor-pointer"
             onClick={handleImageClick}
           />
         </div>

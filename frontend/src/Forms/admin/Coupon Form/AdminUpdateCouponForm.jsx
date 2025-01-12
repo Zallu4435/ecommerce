@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUpdateEntityMutation } from "../../../redux/apiSliceFeatures/crudApiSlice";
 import { useNavigate, useParams } from "react-router-dom";
@@ -11,7 +10,7 @@ import {
 } from "../../../redux/apiSliceFeatures/CouponApiSlice";
 import { useGetUsersQuery } from "../../../redux/apiSliceFeatures/userApiSlice";
 import { useGetProductsQuery } from "../../../redux/apiSliceFeatures/productApiSlice";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from "lucide-react";
 import {
   Input,
   InputContainer,
@@ -19,17 +18,8 @@ import {
 } from "../../../components/user/StyledComponents/StyledComponents";
 import UserModal from "./UserModal";
 import ProductModal from "./ProductModal";
-
-// Define validation schema using zod
-const couponSchema = z.object({
-  couponCode: z.string().min(1, "Coupon code is required"),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(10, "Description must be at least 10 characters long"),
-  discount: z.number().min(0).max(100, "Discount must be between 0 and 100"),
-  minAmount: z.number().min(0, "Minimum amount cannot be negative"),
-  maxAmount: z.number().min(0, "Maximum amount cannot be negative"),
-  expiry: z.string().min(1, "Expiry date is required"),
-});
+import { couponSchema } from "../../../validation/admin/CouponFormValidation";
+import { couponsFormsField } from "../../../config/validationConfig";
 
 const AdminCouponUpdateForm = () => {
   const { id } = useParams();
@@ -48,8 +38,12 @@ const AdminCouponUpdateForm = () => {
   const [hasMoreUsers, setHasMoreUsers] = useState(true);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
 
-  const { data: users = [], isFetching: isUserFetching } = useGetUsersQuery({ page: userPage, limit: 20 });
-  const { data: products = [], isFetching: isProductFetching } = useGetProductsQuery({ page: productPage, limit: 20 });
+  const { data: users = [], isFetching: isUserFetching } = useGetUsersQuery({
+    page: userPage,
+    limit: 20,
+  });
+  const { data: products = [], isFetching: isProductFetching } =
+    useGetProductsQuery({ page: productPage, limit: 20 });
 
   const {
     control,
@@ -74,12 +68,22 @@ const AdminCouponUpdateForm = () => {
       setValue("couponCode", couponData.coupon.couponCode);
       setValue("title", couponData.coupon.title);
       setValue("description", couponData.coupon.description);
-      setValue("discount", couponData.coupon.discount);
-      setValue("minAmount", couponData.coupon.minAmount);
-      setValue("maxAmount", couponData.coupon.maxAmount);
-      setValue("expiry", couponData.coupon.expiry.split('T')[0]);
-      setSelectedUsers(couponData.coupon.applicableUsers.map(user => ({ userId: user.id, username: user.email })));
-      setSelectedProducts(couponData.coupon.applicableProducts.map(product => ({ productId: product.id, productName: product.productName })));
+      setValue("discount", couponData.coupon.discount.toString());
+      setValue("minAmount", couponData.coupon.minAmount.toString());
+      setValue("maxAmount", couponData.coupon.maxAmount.toString());
+      setValue("expiry", couponData.coupon.expiry.split("T")[0]);
+      setSelectedUsers(
+        couponData.coupon.applicableUsers.map((user) => ({
+          userId: user.id,
+          username: user.email,
+        }))
+      );
+      setSelectedProducts(
+        couponData.coupon.applicableProducts.map((product) => ({
+          productId: product.id,
+          productName: product.productName,
+        }))
+      );
     }
   }, [couponData, setValue]);
 
@@ -87,13 +91,19 @@ const AdminCouponUpdateForm = () => {
     try {
       const dataToSubmit = {
         ...formData,
-        discount: parseFloat(formData.discount),
-        minAmount: parseFloat(formData.minAmount),
-        maxAmount: parseFloat(formData.maxAmount),
+        discount: Number(formData.discount),
+        minAmount: Number(formData.minAmount),
+        maxAmount: Number(formData.maxAmount),
         applicableUsers: selectedUsers.map((user) => user.userId),
-        applicableProducts: selectedProducts.map((product) => product.productId),
+        applicableProducts: selectedProducts.map(
+          (product) => product.productId
+        ),
       };
-      await updateEntity({ entity: "coupons", data: dataToSubmit, id }).unwrap();
+      await updateEntity({
+        entity: "coupons",
+        data: dataToSubmit,
+        id,
+      }).unwrap();
       await refetch();
       toast.success("Coupon updated successfully");
       navigate(-1);
@@ -116,7 +126,9 @@ const AdminCouponUpdateForm = () => {
 
   const handleProductSelect = (productId, productName) => {
     setSelectedProducts((prev) => {
-      const isSelected = prev.some((product) => product.productId === productId);
+      const isSelected = prev.some(
+        (product) => product.productId === productId
+      );
       if (isSelected) {
         return prev.filter((product) => product.productId !== productId);
       } else {
@@ -130,7 +142,9 @@ const AdminCouponUpdateForm = () => {
   };
 
   const handleProductRemove = (productId) => {
-    setSelectedProducts((prev) => prev.filter((product) => product.productId !== productId));
+    setSelectedProducts((prev) =>
+      prev.filter((product) => product.productId !== productId)
+    );
   };
 
   const loadMoreUsers = useCallback((page) => {
@@ -175,14 +189,7 @@ const AdminCouponUpdateForm = () => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-2 gap-6">
-            {[
-              { name: "couponCode", label: "Coupon Code", type: "text" },
-              { name: "title", label: "Coupon Title", type: "text" },
-              { name: "discount", label: "Discount Percentage", type: "number" },
-              { name: "minAmount", label: "Minimum Amount", type: "number" },
-              { name: "maxAmount", label: "Maximum Amount", type: "number" },
-              { name: "expiry", label: "Expiry Date", type: "date" },
-            ].map((field) => (
+            {couponsFormsField.map((field) => (
               <InputContainer key={field.name}>
                 <Label className="dark:text-white">{field.label} *</Label>
                 <Controller
@@ -324,4 +331,3 @@ const AdminCouponUpdateForm = () => {
 };
 
 export default AdminCouponUpdateForm;
-

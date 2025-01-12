@@ -1,20 +1,25 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { toast } from 'react-toastify';
-import { useResetPasswordMutation } from '../../../redux/apiSliceFeatures/userApiSlice';
-import { setEmailOtpToken, setResetPassword } from '../../../redux/slice/userSlice';
-import { useDispatch } from 'react-redux';
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "react-toastify";
+import { useResetPasswordMutation } from "../../../redux/apiSliceFeatures/userApiSlice";
+import {
+  setEmailOtpToken,
+  setResetPassword,
+} from "../../../redux/slice/userSlice";
+import { useDispatch } from "react-redux";
 
-const resetPasswordSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters long"),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const resetPasswordSchema = z
+  .object({
+    password: z.string().min(8, "Password must be at least 8 characters long"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -32,20 +37,21 @@ const ResetPassword = () => {
 
   const onSubmit = async (data) => {
     try {
-        const token = location.state?.token;
-        if (!token) {
-            toast.error("Reset token not found. Please try the password reset process again.");
-            navigate('/login');
-            return;
-        }
+      const token = location.state?.token;
+      if (!token) {
+        toast.error(
+          "Reset token not found. Please try the password reset process again."
+        );
+        navigate("/login");
+        return;
+      }
 
-        await resetPassword({ token, newPassword: data.password }).unwrap();
-        toast.success("Password reset successfully!");
-        dispatch(setEmailOtpToken(null));
-        dispatch(setResetPassword(null));
-        navigate('/login');
+      await resetPassword({ token, newPassword: data.password }).unwrap();
+      toast.success("Password reset successfully!");
+      dispatch(setEmailOtpToken(null));
+      dispatch(setResetPassword(null));
+      navigate("/login");
     } catch (err) {
-        console.log(err?.data.message, "errorroror")
       toast.error(err?.data?.message || "Failed to reset password");
     }
   };
@@ -58,11 +64,10 @@ const ResetPassword = () => {
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* New Password Input */}
           <div className="relative">
             <input
               type="password"
-              {...register('password')}
+              {...register("password")}
               className="w-full lg:p-4 p-3 md:p-4 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter new password"
             />
@@ -73,11 +78,10 @@ const ResetPassword = () => {
             )}
           </div>
 
-          {/* Confirm Password Input */}
           <div className="relative">
             <input
               type="password"
-              {...register('confirmPassword')}
+              {...register("confirmPassword")}
               className="w-full lg:p-4 p-3 md:p-4 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Confirm new password"
             />
@@ -88,7 +92,6 @@ const ResetPassword = () => {
             )}
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full p-3 font-semibold dark:bg-blue-600 bg-blue-500 text-white rounded-lg dark:hover:bg-blue-700 hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
@@ -97,12 +100,11 @@ const ResetPassword = () => {
           </button>
         </form>
 
-        {/* Back to Login */}
         <div className="text-center mt-6 dark:text-gray-300 text-black font-semibold">
           <p>
-            Remember your password?{' '}
+            Remember your password?{" "}
             <span
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
               className="text-blue-500 dark:text-blue-400 hover:underline cursor-pointer"
             >
               Back to Login
@@ -115,4 +117,3 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
-

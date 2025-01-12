@@ -1,32 +1,33 @@
-import { useEffect, useState } from 'react';
-import TransactionModal from '../../../modal/user/TransactionHistoryModal'; // Importing the modal component
-import { wallet } from '../../../assets/images';
-import { useGetTransactionsQuery, useUpdateWalletMutation } from '../../../redux/apiSliceFeatures/WalletApiSlice';
-import { toast } from 'react-toastify';
+import { useEffect, useState } from "react";
+import TransactionModal from "../../../modal/user/TransactionHistoryModal";
+import { wallet } from "../../../assets/images";
+import {
+  useGetTransactionsQuery,
+  useUpdateWalletMutation,
+} from "../../../redux/apiSliceFeatures/WalletApiSlice";
+import { toast } from "react-toastify";
 
 const Wallet = () => {
-  const [balance, setBalance] = useState(0); // Set initial balance to 0
-  const [amount, setAmount] = useState('');
+  const [balance, setBalance] = useState(0);
+  const [amount, setAmount] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // RTK Query hooks
   const { data: fetchedTransactions, refetch } = useGetTransactionsQuery();
   const [updateWallet] = useUpdateWalletMutation();
 
-  console.log(fetchedTransactions, 'fetchedTransactions');
-
-  // Fetch wallet details on mount
   useEffect(() => {
     if (fetchedTransactions) {
-      const initialBalance = fetchedTransactions.wallet ? fetchedTransactions.wallet.balance : 0;
+      const initialBalance = fetchedTransactions.wallet
+        ? fetchedTransactions.wallet.balance
+        : 0;
       setBalance(initialBalance);
     }
   }, [fetchedTransactions]);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -36,47 +37,48 @@ const Wallet = () => {
   const handleAddMoneyWithRazorpay = async () => {
     const value = parseFloat(amount);
     if (isNaN(value) || value <= 0) {
-      alert('Please enter a valid amount.');
+      alert("Please enter a valid amount.");
       return;
     }
 
     const scriptLoaded = await loadRazorpayScript();
     if (!scriptLoaded) {
-      toast.error('Failed to load Razorpay SDK. Please try again later.');
+      toast.error("Failed to load Razorpay SDK. Please try again later.");
       return;
     }
 
     const options = {
-      key: 'rzp_test_1rT7BxhvJixZp1', // Replace with Razorpay Test Key
-      amount: value * 100, // Amount in paise
-      currency: 'INR',
-      name: 'Test Wallet',
-      description: 'Wallet Recharge',
+      key: "rzp_test_1rT7BxhvJixZp1",
+      amount: value * 100,
+      currency: "INR",
+      name: "Test Wallet",
+      description: "Wallet Recharge",
       handler: async function (response) {
         const payload = {
           paymentId: response.razorpay_payment_id,
           amount: value,
-          type: 'Credit',
+          type: "Credit",
         };
 
         try {
-          const result = await updateWallet(payload).unwrap(); // Call backend to update wallet
+          const result = await updateWallet(payload).unwrap();
           if (result.success) {
-            setBalance(result.wallet.balance); // Update balance from backend
-            refetch(); // Refetch transactions
-            toast.success('Payment successful! Wallet updated.');
+            setBalance(result.wallet.balance);
+            refetch();
+            toast.success("Payment successful! Wallet updated.");
+            setAmount(""); 
           }
         } catch (error) {
-          toast.error('Failed to update wallet. Please try again.');
+          toast.error("Failed to update wallet. Please try again.");
         }
       },
       prefill: {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        contact: '9876543210',
+        name: "John Doe",
+        email: "john.doe@example.com",
+        contact: "9876543210",
       },
       theme: {
-        color: '#3399cc',
+        color: "#3399cc",
       },
     };
 
@@ -87,7 +89,9 @@ const Wallet = () => {
   return (
     <>
       <div className="bg-white dark:bg-gray-900 shadow-lg rounded-lg mx-auto w-full max-w-2xl p-10 space-y-6">
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-300 text-center mb-6">My Wallet</h1>
+        <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-300 text-center mb-6">
+          My Wallet
+        </h1>
 
         <div className="flex justify-center">
           <img
@@ -98,7 +102,9 @@ const Wallet = () => {
         </div>
 
         <div className="flex justify-center items-center space-x-2">
-          <p className="text-center text-gray-600 dark:text-gray-200 text-lg">Current Balance:</p>
+          <p className="text-center text-gray-600 dark:text-gray-200 text-lg">
+            Current Balance:
+          </p>
           <h2 className="text-lg font-semibold text-green-600 text-center">
             ₹{balance.toFixed(2)}
           </h2>
@@ -133,7 +139,7 @@ const Wallet = () => {
       {isModalOpen && (
         <TransactionModal
           isOpen={isModalOpen}
-          transactions={fetchedTransactions?.transactions || []} // Show fetched transactions
+          transactions={fetchedTransactions?.transactions || []}
           closeModal={() => setIsModalOpen(false)}
         />
       )}

@@ -1,58 +1,55 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { server } from '../../server'
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { server } from "../../server";
 
 export const crudApiSlice = createApi({
-  reducerPath: 'crudApi',
+  reducerPath: "crudApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${server}` }),
-  tagTypes: ['Entity'], // Generic tag for caching
+  tagTypes: ["Entity"],
   endpoints: (builder) => ({
-    // Generic Add
     addEntity: builder.mutation({
       query: ({ entity, data }) => ({
         url: `/${entity}/create`,
-        method: 'POST',
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: (result, error, { entity }) => [{ type: 'Entity', id: `${entity}-LIST` }],
+      invalidatesTags: (result, error, { entity }) => [
+        { type: "Entity", id: `${entity}-LIST` },
+      ],
     }),
 
-    // Generic Update
     updateEntity: builder.mutation({
       query: ({ entity, id, data }) => ({
         url: `/${entity}/update/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
       invalidatesTags: (result, error, { entity, id }) => [
-        { type: 'Entity', id },
-        { type: 'Entity', id: `${entity}-LIST` },
+        { type: "Entity", id },
+        { type: "Entity", id: `${entity}-LIST` },
       ],
     }),
 
-    // Generic Delete
     deleteEntity: builder.mutation({
       query: ({ entity, id }) => ({
         url: `/${entity}/delete/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
       invalidatesTags: (result, error, { entity, id }) => [
-        { type: 'Entity', id },
-        { type: 'Entity', id: `${entity}-LIST` },
+        { type: "Entity", id },
+        { type: "Entity", id: `${entity}-LIST` },
       ],
     }),
 
-    // Generic Ban
     banEntity: builder.mutation({
       query: ({ entity, id }) => ({
         url: `/${entity}/ban/${id}`,
-        method: 'PATCH',  // or 'POST' based on your backend
+        method: "PATCH",
       }),
       invalidatesTags: (result, error, { entity, id }) => [
-        { type: 'Entity', id },
-        { type: 'Entity', id: `${entity}-LIST` },
+        { type: "Entity", id },
+        { type: "Entity", id: `${entity}-LIST` },
       ],
     }),
-    
   }),
 });
 

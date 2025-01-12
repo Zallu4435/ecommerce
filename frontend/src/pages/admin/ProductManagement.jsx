@@ -1,47 +1,3 @@
-// import { useState } from "react";
-// import AdminTable from "../../components/admin/AdminTable";
-// import { useGetProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
-// import { useButtonHandlers } from "../../components/admin/ButtonHandlers";
-
-// const ProductManagement = () => {
-//   const [search, setSearch] = useState("");
-//   const { handleCreate } = useButtonHandlers();
-
-//   // Fetch product data using the API call
-//   const { data = [], isLoading, isError } = useGetProductsQuery();
-
-//   return (
-
-//       <div className="dark:bg-gray-900 fixed top-10 right-0 left-[420px] dark:text-white bg-orange-50 py-6 px-14">
-//         <div className="flex justify-between items-center">
-//           <h1 className="text-3xl font-bold text-gray-400">
-//             Product Management
-//           </h1>
-//           <button
-//             className="border-blue-600 border-4 hover:bg-white text-blue-500 font-bold h-[45px] py-1 px-4 rounded-md transition duration-200"
-//             onClick={() => handleCreate('products')}
-//           >
-//             Create New Product
-//           </button>
-//         </div>
-
-//         {/* Pass the fetched data and search state to AdminTable */}
-//         <div className="overflow-y-auto scrollbar-hidden">
-//           <AdminTable
-//             type="products"
-//             data={data}
-//             isLoading={isLoading}
-//             isError={isError}
-//             search={search}
-//             setSearch={setSearch}
-//           />
-//         </div>
-//       </div>
-//   );
-// };
-
-// export default ProductManagement;
-
 import { useEffect, useState } from "react";
 import AdminTable from "../../components/admin/AdminTable";
 import { useGetProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
@@ -53,36 +9,33 @@ const ProductManagement = () => {
   const { handleCreate } = useButtonHandlers();
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 10; // Items per page
+  const limit = 10;
 
-  // Fetch product data using the API call
   const {
     data: allData = [],
     isLoading,
     isError,
   } = useGetProductsQuery({ page: currentPage, limit });
 
-   const { data: searchData = {}, refetch: refetchSearch } = useSearchAdminProductsQuery(
-     { search: debouncedSearch, page: currentPage, limit },
-     {
-       skip: !debouncedSearch, // Skip API call if search is empty
-     }
-   );
-   
+  const { data: searchData = {}, refetch: refetchSearch } =
+    useSearchAdminProductsQuery(
+      { search: debouncedSearch, page: currentPage, limit },
+      {
+        skip: !debouncedSearch,
+      }
+    );
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search); // Update debounced search after a delay
-    }, 500); // Delay in milliseconds
+      setDebouncedSearch(search);
+    }, 500);
 
-    // Clean up timer
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Data to pass to AdminTable
   const dataToDisplay = debouncedSearch
-    ? searchData || [] // Use searchData.products if available
-    : allData?.products || []; // Use allData.products if available
+    ? searchData || []
+    : allData?.products || [];
 
   const totalProducts = debouncedSearch
     ? searchData?.totalProducts || 0
@@ -141,7 +94,6 @@ const ProductManagement = () => {
         </button>
       </div>
 
-      {/* Pass the fetched data and search state to AdminTable */}
       <div className="overflow-y-auto scrollbar-hidden">
         <AdminTable
           type="products"

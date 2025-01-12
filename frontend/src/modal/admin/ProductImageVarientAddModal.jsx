@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Camera, X, Upload, PencilIcon } from 'lucide-react';
+import { Camera, X, Upload, PencilIcon } from "lucide-react";
 import ImageCropper from "../ImageCropperModal";
 import ReactDOM from "react-dom";
 
@@ -9,20 +9,22 @@ const ProductImageVariantAddModal = ({
   onImageUpload,
   initialImages = [null, null, null],
 }) => {
-  const [imageFiles, setImageFiles] = useState(initialImages.map(file => 
-    file ? { url: file.url, isExisting: true } : null
-  ));
+  const [imageFiles, setImageFiles] = useState(
+    initialImages.map((file) =>
+      file ? { url: file.url, isExisting: true } : null
+    )
+  );
   const [previews, setPreviews] = useState(new Array(3).fill(null));
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(null);
   const [imageToCrop, setImageToCrop] = useState(null);
 
-  console.log(initialImages)
+  console.log(initialImages);
   useEffect(() => {
     const newPreviews = imageFiles.map((file) => {
       if (file instanceof File) {
         return URL.createObjectURL(file);
-      } else if (file && typeof file.url === 'string') {
+      } else if (file && typeof file.url === "string") {
         return file.url;
       } else if (file && file.file instanceof File) {
         return URL.createObjectURL(file.file);
@@ -31,14 +33,13 @@ const ProductImageVariantAddModal = ({
     });
     setPreviews(newPreviews);
 
-    return () => newPreviews.forEach((preview) => {
-      if (preview && typeof preview !== 'string') {
-        URL.revokeObjectURL(preview);
-      }
-    });
+    return () =>
+      newPreviews.forEach((preview) => {
+        if (preview && typeof preview !== "string") {
+          URL.revokeObjectURL(preview);
+        }
+      });
   }, [imageFiles]);
-
-  
 
   const updateAvatar = (croppedImage) => {
     const byteString = atob(croppedImage.split(",")[1]);
@@ -63,19 +64,17 @@ const ProductImageVariantAddModal = ({
     if (file) {
       const updatedFiles = [...imageFiles];
       updatedFiles[index] = { file, isExisting: false };
-  
-      // Set image preview immediately
+
       const newPreviews = [...previews];
       newPreviews[index] = URL.createObjectURL(file);
       setPreviews(newPreviews);
-  
+
       setImageFiles(updatedFiles);
     }
   };
-  
 
   const handleSubmit = () => {
-    const filesToUpload = imageFiles.map(fileObj => 
+    const filesToUpload = imageFiles.map((fileObj) =>
       fileObj ? (fileObj.isExisting ? fileObj.url : fileObj.file) : null
     );
     onImageUpload(filesToUpload);
@@ -95,7 +94,11 @@ const ProductImageVariantAddModal = ({
   };
 
   const handleClose = () => {
-    setImageFiles(initialImages.map(file => file ? { url: file.url, isExisting: true } : null));
+    setImageFiles(
+      initialImages.map((file) =>
+        file ? { url: file.url, isExisting: true } : null
+      )
+    );
     setPreviews(new Array(3).fill(null));
     onClose();
   };
@@ -193,4 +196,3 @@ const ProductImageVariantAddModal = ({
 };
 
 export default ProductImageVariantAddModal;
-

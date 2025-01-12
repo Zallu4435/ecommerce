@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
-import EditProfileModal from '../../../modal/user/EditProfileModal';
-import Avatar from './Avatar';
-import { useGetUserQuery } from '../../../redux/apiSliceFeatures/userApiSlice';
-import LoadingSpinner from '../../../components/LoadingSpinner';
-import { defaultProfile } from '../../../assets/images';
+import { useState, useEffect } from "react";
+import EditProfileModal from "../../../modal/user/EditProfileModal";
+import Avatar from "./Avatar";
+import { useGetUserQuery } from "../../../redux/apiSliceFeatures/userApiSlice";
+import LoadingSpinner from "../../../components/LoadingSpinner";
+import { defaultProfile } from "../../../assets/images";
 
 function UserProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data, isLoading, isError, error, refetch } = useGetUserQuery();
 
-  const [userAvatar, setUserAvatar] = useState('');
-  const [userUsername, setUserUsername] = useState('');
+  const [userAvatar, setUserAvatar] = useState("");
+  const [userUsername, setUserUsername] = useState("");
 
   useEffect(() => {
     if (data?.user) {
@@ -21,40 +21,40 @@ function UserProfile() {
 
   if (isLoading) return <LoadingSpinner />;
 
-  if (isError) return <div>Error: {error?.message || 'Failed to fetch data'}</div>;
+  if (isError)
+    return <div>Error: {error?.message || "Failed to fetch data"}</div>;
 
   const userInfo = [
-    { label: 'Username', value: data.user?.username || 'N/A' },
-    { label: 'Nickname', value: data.user?.nickname || 'N/A' },
-    { label: 'Email', value: data.user?.email || 'N/A' },
-    { label: 'Phone Number', value: data.user?.phone || 'N/A' },
-    { label: 'Gender', value: data.user?.gender || 'N/A' },
-    { label: 'Shipping Address', value: data.user?.address || 'N/A' },
+    { label: "Username", value: data.user?.username || "N/A" },
+    { label: "Nickname", value: data.user?.nickname || "N/A" },
+    { label: "Email", value: data.user?.email || "N/A" },
+    { label: "Phone Number", value: data.user?.phone || "N/A" },
+    { label: "Gender", value: data.user?.gender || "N/A" },
+    { label: "Shipping Address", value: data.user?.address || "N/A" },
   ];
 
-  console.log(data?.user._id, "data data data ")
+  console.log(data?.user._id, "data data data ");
 
   return (
     <div className="flex-1 dark:bg-gray-800 shadow-md rounded-lg p-6 ml-6">
-      {/* Header Section */}
       <Avatar
         avatar={userAvatar || defaultProfile}
         username={userUsername}
         onAvatarUpdate={refetch}
         id={data?.user._id}
       />
-      
-      {/* Profile Details */}
+
       <div className="space-y-4">
         {userInfo.map((item, index) => (
           <div key={index} className="flex justify-between">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">{item.label}</span>
+            <span className="font-semibold text-gray-700 dark:text-gray-300">
+              {item.label}
+            </span>
             <span>{item.value}</span>
           </div>
         ))}
       </div>
 
-      {/* Edit Button */}
       <div className="mt-4">
         <button
           onClick={() => setIsModalOpen(!isModalOpen)}
@@ -64,7 +64,6 @@ function UserProfile() {
         </button>
       </div>
 
-      {/* Edit Profile Modal */}
       <EditProfileModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

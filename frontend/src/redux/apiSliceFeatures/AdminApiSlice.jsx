@@ -1,18 +1,16 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { adminBaseQueryWithReauth } from "../../middleware/authMiddleware";
 import { clearAdminCredentials } from "../slice/adminSlice";
-import { useSearchProductsQuery } from "./productApiSlice";
 
 export const adminApiSlice = createApi({
-  reducerPath: "adminApi", // Corrected name
-  baseQuery: adminBaseQueryWithReauth, // Changed from adminBaseQuery to baseQuery
-  tagTypes: ["User", "Avatar"], // Tags for caching and invalidation
+  reducerPath: "adminApi",
+  baseQuery: adminBaseQueryWithReauth,
+  tagTypes: ["User", "Avatar"],
   endpoints: (builder) => ({
-    // Block user mutation
     blockUser: builder.mutation({
       query: (userId) => ({
-        url: `/block-user/${userId}`, // Assuming you need a user ID in the URL
-        method: "POST", // Assuming the request method is POST
+        url: `/block-user/${userId}`,
+        method: "POST",
       }),
     }),
 
@@ -32,7 +30,7 @@ export const adminApiSlice = createApi({
       query: () => ({
         url: "/logout",
         method: "POST",
-        credentials: "include", // Ensure cookies are included in the request
+        credentials: "include",
       }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
@@ -43,12 +41,11 @@ export const adminApiSlice = createApi({
         }
       },
     }),
-    // Admin login mutation
     loginAdmin: builder.mutation({
       query: (credentials) => ({
-        url: "/login-admin", // The admin login route
-        method: "POST", // POST request
-        body: credentials, // Passing the email and password in the request body
+        url: "/login-admin",
+        method: "POST",
+        body: credentials,
       }),
     }),
 
@@ -63,8 +60,7 @@ export const adminApiSlice = createApi({
         return `/users/search?${queryString}`;
       },
     }),
-    
-    
+
     // searchAdminProducts: builder.query({
     //   query: (searchTerm) => `/products/search?query=${searchTerm}`,
     // }),
@@ -79,7 +75,6 @@ export const adminApiSlice = createApi({
       query: (searchTerm) => `/orders/search?query=${searchTerm}`,
     }),
 
-    
     searchAdminCategories: builder.query({
       query: (searchTerm) => `/categories/search?query=${searchTerm}`,
     }),
@@ -89,9 +84,9 @@ export const adminApiSlice = createApi({
     }),
 
     searchUsersIndividualOrders: builder.query({
-      query: (searchTerm) => `/orders/search-individual-order?query=${searchTerm}`,
+      query: (searchTerm) =>
+        `/orders/search-individual-order?query=${searchTerm}`,
     }),
-
   }),
 });
 
@@ -108,4 +103,4 @@ export const {
   useSearchAdminOrdersQuery,
   useSearchAdminCouponsQuery,
   useSearchUsersIndividualOrdersQuery,
-} = adminApiSlice; // Correct export for loginAdmin
+} = adminApiSlice; 

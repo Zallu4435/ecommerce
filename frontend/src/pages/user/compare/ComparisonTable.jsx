@@ -1,4 +1,3 @@
-import React from "react";
 import { FaRegStar, FaStar, FaStarHalfAlt } from "react-icons/fa";
 
 const ComparisonTable = ({ compareItem }) => {

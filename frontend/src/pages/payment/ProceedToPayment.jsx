@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useProcessPaymentMutation } from "../../redux/apiSliceFeatures/addressPasswordApiSlice";
@@ -9,9 +9,6 @@ const ProceedToPaymentPage = () => {
   const navigate = useNavigate();
   const { address, order, payment, coupon } = location.state || {};
   const [loading, setLoading] = useState(false);
-
-  // console.log(order, 'order')
-
   const [processPayment, { isLoading: isPaymentProcessing }] =
     useProcessPaymentMutation();
 
@@ -36,9 +33,9 @@ const ProceedToPaymentPage = () => {
   const simulateCardPayment = () => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const isSuccessful = Math.random() < 0.9; // 90% success rate
+        const isSuccessful = Math.random() < 0.9;
         resolve(isSuccessful);
-      }, 2000); // Simulate a 2-second processing time
+      }, 2000);
     });
   };
 
@@ -55,20 +52,17 @@ const ProceedToPaymentPage = () => {
             return;
           }
 
-          // Dummy Razorpay Options
           const options = {
-            key: "rzp_test_1rT7BxhvJixZp1", // Replace with Razorpay Test Key ID
-            amount: (coupon ? discountedPrice : order.total) * 100, // Amount in paise
+            key: "rzp_test_1rT7BxhvJixZp1",
+            amount: (coupon ? discountedPrice : order.total) * 100,
             currency: "INR",
             name: "Test Business",
             description: "Test Transaction",
-            image: "https://example.com/logo.png", // Dummy logo URL
+            image: "https://example.com/logo.png",
             handler: async function (response) {
-              console.log("Payment successful!", response);
               toast.success("Payment successful!");
 
               try {
-                // Prepare data for backend request
                 const paymentData = {
                   address,
                   order,
@@ -77,13 +71,11 @@ const ProceedToPaymentPage = () => {
                     paymentMethod: "razorpay",
                     onlinePaymentMethod: "razorpay",
                   },
-                  productId: null, // Assuming it's a cart order, pass productId if it's single product
-                  quantity: null, // For cart-based order, quantity is handled
+                  productId: null,
+                  quantity: null,
                 };
 
-                // Call the RTK query mutation to process the payment
                 const data = await processPayment(paymentData).unwrap();
-                console.log("Order placed successfully:", data);
 
                 navigate("/payment-success", {
                   state: { paymentId: data.paymentId, orderId: data.orderId },
@@ -116,7 +108,6 @@ const ProceedToPaymentPage = () => {
           if (isSuccessful) {
             toast.success("Card payment successful!");
 
-            // Prepare data for backend request
             const paymentData = {
               address,
               order,
@@ -129,9 +120,7 @@ const ProceedToPaymentPage = () => {
               quantity: null,
             };
 
-            // Call the RTK query mutation to process the payment
             const data = await processPayment(paymentData).unwrap();
-            console.log("Order placed successfully:", data);
 
             navigate("/payment-success", {
               state: { paymentId: data.paymentId, orderId: data.orderId },
@@ -146,7 +135,6 @@ const ProceedToPaymentPage = () => {
         toast.info("Cash on Delivery selected. Confirming order...");
         setTimeout(async () => {
           try {
-            // Prepare data for backend request
             const paymentData = {
               address,
               order,
@@ -159,9 +147,7 @@ const ProceedToPaymentPage = () => {
               quantity: null,
             };
 
-            // Call the RTK query mutation to process the payment
             const data = await processPayment(paymentData).unwrap();
-            // console.log('Order placed successfully:', data);
 
             navigate("/payment-success", {
               state: { paymentId: data.paymentId, orderId: data.orderId },
@@ -184,7 +170,6 @@ const ProceedToPaymentPage = () => {
     }
   };
 
-  // Calculate the offer price (total - discount)
   const discountedPrice = coupon
     ? order.total - order.total * (coupon.discount / 100)
     : order.total;
@@ -205,7 +190,6 @@ const ProceedToPaymentPage = () => {
           </button>
         </div>
 
-        {/* Address Section */}
         <div className="mb-6 p-4 border border-gray-300 dark:border-gray-700 rounded-md">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Shipping Address
@@ -219,7 +203,6 @@ const ProceedToPaymentPage = () => {
           </div>
         </div>
 
-        {/* Order Summary */}
         <div className="mb-6 p-4 border border-gray-300 dark:border-gray-700 rounded-md">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Order Summary
@@ -250,7 +233,6 @@ const ProceedToPaymentPage = () => {
           </div>
         </div>
 
-        {/* Payment Section */}
         <div className="mb-6 p-4 border border-gray-300 dark:border-gray-700 rounded-md">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Payment Method

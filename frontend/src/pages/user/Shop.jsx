@@ -6,7 +6,7 @@ import {
   useSearchProductsQuery,
 } from "../../redux/apiSliceFeatures/productApiSlice";
 import { ErrorBoundary } from "../../ErrorBoundary";
-import { Menu } from 'lucide-react';
+import { Menu } from "lucide-react";
 
 const ShopPage = () => {
   const location = useLocation();
@@ -34,7 +34,6 @@ const ShopPage = () => {
     data: filteredData,
     error: filteredError,
     isLoading: isFilteredLoading,
-    refetch,
   } = useGetFilteredProductsQuery(
     {
       sizes: selectedSizes,
@@ -56,12 +55,12 @@ const ShopPage = () => {
   } = useSearchProductsQuery(searchQuery, { skip: !searchQuery });
 
   const dataList = searchQuery
-  ? searchData
-  : filteredData?.products
-  ? filteredData?.products
-  : [];
+    ? searchData
+    : filteredData?.products
+    ? filteredData?.products
+    : [];
 
-  console.log(dataList, 'datalist')
+  console.log(dataList, "datalist");
 
   const products = searchQuery ? searchData?.products : filteredData?.products;
   const totalPages = searchQuery
@@ -231,7 +230,7 @@ const ShopPage = () => {
               Search Results for "{searchQuery}"
             </h2>
           )}
-                 <ErrorBoundary>
+          <ErrorBoundary>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:gap-[80px]">
               {isLoading ? (
                 <p>Loading...</p>

@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { notFound as notFoundImage } from "../../assets/images";
 
@@ -47,21 +46,13 @@ const NotFound = ({ notFound }) => {
 
   return (
     <div className={containerClasses}>
-      {/* 404 Image */}
       <img src={notFoundImage} alt="404" className={imageClasses} />
-
-      {/* Heading */}
       <h1 className={headingClasses}>Oops! Page Not Found</h1>
-
-      {/* Description */}
       <p className={descriptionClasses}>
         The page you are looking for doesn’t exist or has been moved.
       </p>
 
-      <Link
-        to={linkDestination} // Dynamically set the 'to' value
-        className={buttonClasses}
-      >
+      <Link to={linkDestination} className={buttonClasses}>
         {notFound === 2 ? "Go to Dashboard" : "Go to Homepage"}
       </Link>
     </div>

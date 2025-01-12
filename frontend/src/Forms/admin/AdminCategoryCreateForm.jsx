@@ -1,46 +1,45 @@
-import React from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { useAddEntityMutation } from "../../redux/apiSliceFeatures/crudApiSlice";
 import { useGetCategoriesQuery } from "../../redux/apiSliceFeatures/categoryApiSlice";
 import { ArrowLeft } from "lucide-react";
-
-// Define validation schema using zod
-const schema = z.object({
-  categoryName: z.string().min(1, "Category name is required"),
-  categoryDescription: z.string().min(10, "Category description is required"),
-});
+import { toast } from "react-toastify";
+import { categorySchema } from "../../validation/admin/categoryFormValidation";
 
 const AdminCategoryCreateForm = () => {
   const navigate = useNavigate();
   const [addEntity] = useAddEntityMutation();
   const { refetch: refetchCategory } = useGetCategoriesQuery();
 
-  // Initialize react-hook-form with zod resolver for validation
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(categorySchema),
   });
 
   const onSubmit = async (data, e) => {
     e.preventDefault();
-
-    await addEntity({ entity: "category", data }).unwrap();
-    refetchCategory();
-
-    console.log("Final data sent to backend:", data);
-    navigate(-1);
+    try {
+      await addEntity({ entity: "category", data }).unwrap();
+      refetchCategory();
+      navigate(-1);
+    } catch (error) {
+      console.error("Error occurred while adding category:", error);
+      toast.error(
+        error?.data?.message || "An error occurred while adding the category"
+      );
+    }
   };
 
   return (
     <div className="dark:bg-gray-900 bg-orange-50 min-h-screen px-6 lg:px-10 mt-10 py-10 text-gray-700 dark:text-white">
       <div className="flex justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-400 ml-10">Create New Category</h1>
+        <h1 className="text-3xl font-bold text-gray-400 ml-10">
+          Create New Category
+        </h1>
         <button
           onClick={() => navigate(-1)}
           className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
@@ -50,9 +49,13 @@ const AdminCategoryCreateForm = () => {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} method="POST" className="space-y-6">
-      <div className="mb-6 mx-10">
-      <label className="font-bold text-xl block mb-2">Category Name</label>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        method="POST"
+        className="space-y-6"
+      >
+        <div className="mb-6 mx-10">
+          <label className="font-bold text-xl block mb-2">Category Name</label>
           <input
             type="text"
             placeholder="Enter Category Name"
@@ -62,12 +65,16 @@ const AdminCategoryCreateForm = () => {
             }`}
           />
           {errors.categoryName && (
-            <p className="text-red-500 text-sm mt-1">{errors.categoryName.message}</p>
+            <p className="text-red-500 text-sm mt-1">
+              {errors.categoryName.message}
+            </p>
           )}
         </div>
-        
+
         <div className="mb-6 mx-10">
-          <label className="font-bold text-lg block mb-2">Category Description</label>
+          <label className="font-bold text-lg block mb-2">
+            Category Description
+          </label>
           <textarea
             placeholder="Write your category description here"
             {...register("categoryDescription")}

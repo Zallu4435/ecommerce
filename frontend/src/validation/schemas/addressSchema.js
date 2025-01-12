@@ -12,7 +12,7 @@ export const addressSchema = z.object({
     .regex(/^[0-9]+$/, "Pincode must contain only digits"),
   house: z.string().min(5, "Address is required").max(100, "Address cannot exceed 100 characters"),
   street: z.string().min(5, "Area/Street is required").max(100, "Street name cannot exceed 100 characters"),
-  landmark: z.string().max(50, "Landmark cannot exceed 50 characters"), // Optional with a length limit
+  landmark: z.string().max(50, "Landmark cannot exceed 50 characters"), 
   city: z.string().min(3, "City is required").max(50, "City name cannot exceed 50 characters"),
   state: z.string().min(2, "State is required").max(50, "State name cannot exceed 50 characters"),
 });

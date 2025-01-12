@@ -1,17 +1,17 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const cartSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',  // Reference to User model, assuming the cart is linked to a user
+      ref: "User",
       required: true,
     },
     items: [
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product',  // Reference to Product model
+          ref: "Product",
           required: true,
         },
         quantity: {
@@ -19,11 +19,11 @@ const cartSchema = new mongoose.Schema(
           required: true,
           default: 1,
         },
-        color: {  // Make sure the color field exists
+        color: {
           type: String,
           required: true,
         },
-        size: {  // Make sure the size field exists
+        size: {
           type: String,
           required: true,
         },
@@ -39,13 +39,12 @@ const cartSchema = new mongoose.Schema(
     ],
   },
   {
-    timestamps: true,  // Automatically adds createdAt and updatedAt
+    timestamps: true,
   }
 );
 
-// Update `updatedAt` only if the item is modified
-cartSchema.pre('save', function (next) {
-  if (this.isModified('items')) {
+cartSchema.pre("save", function (next) {
+  if (this.isModified("items")) {
     this.items.forEach((item) => {
       item.updatedAt = Date.now();
     });
@@ -53,4 +52,4 @@ cartSchema.pre('save', function (next) {
   next();
 });
 
-module.exports = mongoose.model('Cart', cartSchema);
+module.exports = mongoose.model("Cart", cartSchema);

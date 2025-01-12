@@ -1,7 +1,7 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const adminSlice = createSlice({
-  name: 'admin',
+  name: "admin",
   initialState: {
     admin: null,
     adminToken: null,
@@ -22,11 +22,9 @@ const adminSlice = createSlice({
   },
 });
 
-
-
-export const { setAdminCredentials, clearAdminCredentials } = adminSlice.actions;
+export const { setAdminCredentials, clearAdminCredentials } =
+  adminSlice.actions;
 export default adminSlice.reducer;
 
 export const selectCurrentAdmin = (state) => state.admin.admin;
 export const selectCurrentAdminToken = (state) => state.admin.adminToken;
-

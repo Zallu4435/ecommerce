@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { card, razorpay } from '../../../assets/images/index'
+import { card, razorpay } from "../../../assets/images/index";
 
 const PaymentMethod = ({ onPaymentMethodChange }) => {
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -26,7 +26,7 @@ const PaymentMethod = ({ onPaymentMethodChange }) => {
   const handlePaymentMethodChange = (e) => {
     const { value } = e.target;
     setPaymentMethod(value);
-    setOnlinePaymentMethod(""); // Reset online payment method when switching
+    setOnlinePaymentMethod("");
     onPaymentMethodChange?.({
       paymentMethod: value,
       onlinePaymentMethod: "",
@@ -43,7 +43,9 @@ const PaymentMethod = ({ onPaymentMethodChange }) => {
 
   return (
     <div className="bg-white dark:bg-gray-700 p-6 shadow-md rounded-md w-[440px]">
-      <h2 className="text-xl dark:text-gray-200 text-gray-700 font-semibold mb-4">Payment Method</h2>
+      <h2 className="text-xl dark:text-gray-200 text-gray-700 font-semibold mb-4">
+        Payment Method
+      </h2>
       {paymentMethods.map((method) => (
         <div className="flex items-center mb-2" key={method.value}>
           <input

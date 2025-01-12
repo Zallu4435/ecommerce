@@ -1,46 +1,31 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const catchAsyncErrors = require('../middleware/catchAsyncError')
-const { 
-  getAllProducts, 
-  getProductDetails, 
-  createProduct, 
-  updateProduct, 
-  deleteProduct ,
+const catchAsyncErrors = require("../middleware/catchAsyncError");
+const {
+  getAllProducts,
+  getProductDetails,
+  createProduct,
+  updateProduct,
+  deleteProduct,
   getPopularProducts,
   getAllShopProducts,
   getRelatedProducts,
   getFilteredProducts,
-  searchProducts
-} = require('../controller/productController');
+  searchProducts,
+} = require("../controller/productController");
 
+router.get("/getProducts", catchAsyncErrors(getAllProducts));
+router.get("/getShopProducts", catchAsyncErrors(getAllShopProducts));
+router.get("/getProduct/:id", catchAsyncErrors(getProductDetails));
 
-// User and Admin
-router.get('/getProducts', catchAsyncErrors(getAllProducts)); // Get all products
-router.get('/getShopProducts', catchAsyncErrors(getAllShopProducts)); // Get all products
-router.get('/getProduct/:id', catchAsyncErrors(getProductDetails)); // Get product details
-router.get('/relatedProduct', catchAsyncErrors(getRelatedProducts)); // Get all products
+router.get("/relatedProduct", catchAsyncErrors(getRelatedProducts));
 router.get("/filter", catchAsyncErrors(getFilteredProducts));
 router.get("/search", catchAsyncErrors(searchProducts));
+router.get("/get-popular-prducts", catchAsyncErrors(getPopularProducts));
 
-router.get('/get-popular-prducts', catchAsyncErrors(getPopularProducts));
-// Admin only (with authentication check)
-router.post(
-  '/create', 
-  catchAsyncErrors(createProduct)
-); // Create product
+router.post("/create", catchAsyncErrors(createProduct));
+router.put("/update/:id", catchAsyncErrors(updateProduct));
+router.delete("/delete/:id", catchAsyncErrors(deleteProduct));
 
-router.post(
-  '/update/:id', 
-  catchAsyncErrors(updateProduct)
-); // Update product
-
-router.delete( 
-  '/delete/:id', 
-  catchAsyncErrors(deleteProduct)
-); // Delete product
-
-
-console.log(createProduct)
 
 module.exports = router;

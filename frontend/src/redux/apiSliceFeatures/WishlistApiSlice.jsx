@@ -6,7 +6,6 @@ export const wishlistApiSlice = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ["Wishlist"],
   endpoints: (builder) => ({
-    // Mutation to add product to wishlist
     addToWishlist: builder.mutation({
       query: (productId) => ({
         url: "/user-wishlist/wishlist",
@@ -16,7 +15,6 @@ export const wishlistApiSlice = createApi({
       invalidatesTags: ["Wishlist"],
     }),
 
-    // Mutation to remove product from wishlist
     removeFromWishlist: builder.mutation({
       query: (productId) => ({
         url: `/user-wishlist/wishlist/${productId}`,
@@ -26,7 +24,6 @@ export const wishlistApiSlice = createApi({
       invalidatesTags: ["Wishlist"],
     }),
 
-    // Fetch wishlist data
     getWishlist: builder.query({
       query: () => "/user-wishlist/wishlist",
       providesTags: ["Wishlist"],

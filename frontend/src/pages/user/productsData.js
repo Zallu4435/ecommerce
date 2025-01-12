@@ -6,8 +6,8 @@ export const productsData = [
       originalPrice: 499.99,
       image: "/images/smartphone.jpg",
       category: "electronics",
-      size: "M",  // Size filter
-      color: "Black",  // Color filter
+      size: "M", 
+      color: "Black", 
     },
     {
       id: 2,
@@ -16,8 +16,8 @@ export const productsData = [
       originalPrice: 39.99,
       image: "/images/tshirt.jpg",
       category: "clothing",
-      size: "L",  // Size filter
-      color: "Red",  // Color filter
+      size: "L", 
+      color: "Red", 
     },
     {
       id: 3,
@@ -26,8 +26,8 @@ export const productsData = [
       originalPrice: 999.99,
       image: "/images/laptop.jpg",
       category: "electronics",
-      size: "S",  // Size filter
-      color: "Silver",  // Color filter
+      size: "S", 
+      color: "Silver", 
     },
     {
       id: 4,
@@ -36,10 +36,9 @@ export const productsData = [
       originalPrice: 99.99,
       image: "/images/jacket.jpg",
       category: "clothing",
-      size: "M",  // Size filter
-      color: "Black",  // Color filter
+      size: "M", 
+      color: "Black", 
     },
-    // More products...
   ];
   
 

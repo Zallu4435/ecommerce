@@ -1,17 +1,17 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const comparisonSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     items: [
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product',
+          ref: "Product",
           required: true,
         },
         createdAt: {
@@ -26,16 +26,15 @@ const comparisonSchema = new mongoose.Schema(
     ],
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt at the root level
+    timestamps: true,
   }
 );
 
-// Pre-save hook to update the updatedAt field for each item
-comparisonSchema.pre('save', function (next) {
+comparisonSchema.pre("save", function (next) {
   this.items.forEach((item) => {
     item.updatedAt = Date.now();
   });
   next();
 });
 
-module.exports = mongoose.model('Comparison', comparisonSchema);
+module.exports = mongoose.model("Comparison", comparisonSchema);

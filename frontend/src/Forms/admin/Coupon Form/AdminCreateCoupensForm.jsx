@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from 'lucide-react';
@@ -111,8 +111,6 @@ const AdminCouponCreateForm = () => {
 
   const loadMoreUsers = useCallback((page) => {
     setUserPage(page);
-    // Here you would typically fetch more users
-    // For this example, we'll just simulate it by setting hasMoreUsers to false after the first load
     if (page > 1) {
       setHasMoreUsers(false);
     }
@@ -120,8 +118,6 @@ const AdminCouponCreateForm = () => {
 
   const loadMoreProducts = useCallback((page) => {
     setProductPage(page);
-    // Here you would typically fetch more products
-    // For this example, we'll just simulate it by setting hasMoreProducts to false after the first load
     if (page > 1) {
       setHasMoreProducts(false);
     }

@@ -4,10 +4,7 @@ import { useForm } from "react-hook-form";
 import { useLoginAdminMutation } from "../../redux/apiSliceFeatures/AdminApiSlice";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import {
-  selectCurrentAdmin,
-  setAdminCredentials,
-} from "../../redux/slice/adminSlice";
+import { setAdminCredentials } from "../../redux/slice/adminSlice";
 import { useNavigate } from "react-router-dom";
 
 const AdminLogin = () => {
@@ -20,10 +17,9 @@ const AdminLogin = () => {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(adminLoginSchema), // Apply zod validation
+    resolver: zodResolver(adminLoginSchema),
   });
 
-  // Form submit handler
   const onSubmit = async (data) => {
     try {
       const response = await loginAdmin(data).unwrap();
@@ -46,7 +42,7 @@ const AdminLogin = () => {
             <input
               type="email"
               placeholder="Enter your email"
-              {...register("email")} // Register the field with react-hook-form
+              {...register("email")}
               className={`w-full p-4 border ${
                 errors.email ? "border-red-500" : "border-gray-600"
               } rounded-md dark:bg-gray-700 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
@@ -54,7 +50,7 @@ const AdminLogin = () => {
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.email.message}
-              </p> // Show error message
+              </p>
             )}
           </div>
 
@@ -62,7 +58,7 @@ const AdminLogin = () => {
             <input
               type="password"
               placeholder="Enter your password"
-              {...register("password")} // Register the password field
+              {...register("password")}
               className={`w-full p-4 border ${
                 errors.password ? "border-red-500" : "border-gray-600"
               } rounded-md dark:bg-gray-700 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
@@ -70,7 +66,7 @@ const AdminLogin = () => {
             {errors.password && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.password.message}
-              </p> // Show error message
+              </p>
             )}
           </div>
 

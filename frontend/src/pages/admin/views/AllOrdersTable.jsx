@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useGetOrdersQuery } from "../../../redux/apiSliceFeatures/addressPasswordApiSlice"; // RTK Query hook for fetching orders
+import { useGetOrdersQuery } from "../../../redux/apiSliceFeatures/addressPasswordApiSlice";
 import {
   useUpdateOrderStatusMutation,
   useCancelOrderMutation,
   useReturnOrderMutation,
-} from "../../../redux/apiSliceFeatures/OrderApiSlice"; // RTK Query hooks
+} from "../../../redux/apiSliceFeatures/OrderApiSlice";
 import { ChevronDown, ArrowLeft, AlertCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import OrderDetailsModal from "../../../modal/user/OrderDetailsModal";
-import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
 import { useSearchUsersIndividualOrdersQuery } from "../../../redux/apiSliceFeatures/AdminApiSlice";
+import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
 import ReturnConfirmationModal from "../../../modal/user/OrderReturnModal";
 
 const statusColors = {
@@ -17,7 +17,7 @@ const statusColors = {
   Shipped: "bg-blue-200",
   "Out for Delivery": "bg-orange-200",
   Delivered: "bg-green-200",
-  Cancelled: "bg-red-200"
+  Cancelled: "bg-red-200",
 };
 
 const IndividualOrdersOfUsers = () => {
@@ -26,19 +26,20 @@ const IndividualOrdersOfUsers = () => {
     orderId: null,
     productId: null,
   });
-    const [orderToReturn, setOrderToReturn] = useState({ orderId: null, productId: null });
-  
-  const [showModal, setShowModal] = useState(false);
-    const [showReturnModal, setShowReturnModal] = useState(false);
-  
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [orderToReturn, setOrderToReturn] = useState({
+    orderId: null,
+    productId: null,
+  });
 
+  const [showModal, setShowModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const location = useLocation();
-  const { username } = location.state || {}; // Access the username from state
+  const { username } = location.state || {};
 
-  // Define page and limit (default values or passed props)
   const page = 1;
   const limit = 10;
 
@@ -48,33 +49,28 @@ const IndividualOrdersOfUsers = () => {
     isLoading,
     refetch,
   } = useGetOrdersQuery({ page, limit });
-   const { data: searchData = {}, refetch: refetchSearch } = useSearchUsersIndividualOrdersQuery(debouncedSearch, {
-      skip: !debouncedSearch, // Skip API call if search is empty
+  const { data: searchData = {}, refetch: refetchSearch } =
+    useSearchUsersIndividualOrdersQuery(debouncedSearch, {
+      skip: !debouncedSearch,
     });
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
   const [cancelOrder] = useCancelOrderMutation();
-    const [returnOrder] = useReturnOrderMutation();
+  const [returnOrder] = useReturnOrderMutation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search); // Update debounced search after a delay
-    }, 500); // Delay in milliseconds
+      setDebouncedSearch(search);
+    }, 500);
 
-    // Clean up timer
     return () => {
       clearTimeout(timer);
-    }
+    };
   }, [search]);
 
-  console.log(orders, 'orders')
-  console.log(searchData, 'searchData')
-
-  const displayOrders = !isLoading && !error && orders?.length > 0
-  ? orders
-  : searchData;  // Assuming `searchData` is your alternative data source
-
+  const displayOrders =
+    !isLoading && !error && orders?.length > 0 ? orders : searchData;
 
   const toggleOrderDetails = (order) => setSelectedOrder(order);
   const closeModal = () => setSelectedOrder(null);
@@ -104,13 +100,12 @@ const IndividualOrdersOfUsers = () => {
 
     try {
       await cancelOrder({ orderId, productId }).unwrap();
-      refetch(); // Refetch orders after cancellation
+      refetch();
     } catch (err) {
       console.error("Error canceling order:", err.message);
       alert("Failed to cancel order. Please try again.");
     }
   };
-
 
   const handleReturnClick = (orderId, productId) => {
     setOrderToReturn({ orderId, productId });
@@ -125,13 +120,10 @@ const IndividualOrdersOfUsers = () => {
       await returnOrder({ orderId, productId }).unwrap();
       refetch();
     } catch (err) {
-      console.error('Error returning order:', err);
-      alert('Failed to return order');
+      console.error("Error returning order:", err);
+      alert("Failed to return order");
     }
   };
-
-  console.log(displayOrders, 'displayOrders from the individual order')
-  console.log(searchData, 'searchData')
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-orange-50 dark:bg-gray-800 mt-10 shadow-lg rounded-lg">
@@ -229,12 +221,22 @@ const IndividualOrdersOfUsers = () => {
                     Cancel Order
                   </button>
                   <button
-                      className={`bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition ${order.Status !== 'Delivered' || order.Status === 'Returned' ? 'opacity-40 cursor-not-allowed filter' : ''}`}
-                      onClick={() => handleReturnClick(order._id, order.ProductId)}
-                      disabled={order.Status !== 'Delivered' || order.Status === 'Returned'}
-                    >
-                      Return Order
-                    </button>
+                    className={`bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition ${
+                      order.Status !== "Delivered" ||
+                      order.Status === "Returned"
+                        ? "opacity-40 cursor-not-allowed filter"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      handleReturnClick(order._id, order.ProductId)
+                    }
+                    disabled={
+                      order.Status !== "Delivered" ||
+                      order.Status === "Returned"
+                    }
+                  >
+                    Return Order
+                  </button>
                   <button
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
                     onClick={() => toggleOrderDetails(order)}
@@ -251,26 +253,28 @@ const IndividualOrdersOfUsers = () => {
         <OrderDetailsModal order={selectedOrder} onClose={closeModal} />
       )}
       <CancelConfirmationModal
-        show={showModal}
-        onClose={() => setShowModal(false)}
+        show={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
         onConfirm={handleConfirmCancel}
         orderId={orderToCancel.orderId}
         productId={orderToCancel.productId}
+        reason={orderToCancel.reason}
+        onReasonChange={handleCancelReasonChange}
       />
-            <ReturnConfirmationModal
+      <ReturnConfirmationModal
         show={showReturnModal}
         onClose={() => setShowReturnModal(false)}
         onConfirm={handleConfirmReturn}
         orderId={orderToReturn.orderId}
         productId={orderToReturn.productId}
+        reason={orderToReturn.reason}
+        onReasonChange={handleReturnReasonChange}
       />
     </div>
   );
 };
 
 export default IndividualOrdersOfUsers;
-
-
 
 const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -307,7 +311,9 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className={`flex items-center justify-between w-full px-4 py-2 text-md font-bold text-white ${statusColors[currentStatus]} rounded-md ${
+        className={`flex items-center justify-between w-full px-4 py-2 text-md font-bold text-white ${
+          statusColors[currentStatus]
+        } rounded-md ${
           disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-opacity-80"
         } focus:outline-none`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -315,7 +321,9 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
       >
         {currentStatus}
         <ChevronDown
-          className={`ml-2 h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`ml-2 h-5 w-5 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </button>
       {isOpen && !disabled && (

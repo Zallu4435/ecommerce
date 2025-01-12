@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useUserDetailsQuery } from "../../../redux/apiSliceFeatures/AdminApiSlice";
 import { ArrowLeft } from "lucide-react";
@@ -8,26 +8,19 @@ const ViewUserDetails = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const closeModal = () => setSelectedOrder(null);
   const toggleOrderDetails = (order) => setSelectedOrder(order);
-
   const navigate = useNavigate();
   const { id } = useParams();
-  console.log(id, "from the view user");
 
-  // Fetching user details, orders, and addresses from API
   const {
     data: userDetails,
     error: userError,
     isLoading: userLoading,
   } = useUserDetailsQuery(id);
-  console.log(userDetails, "userDetails");
 
   const user = userDetails?.user;
   const address = userDetails?.addresses;
   const orders = userDetails?.orders;
 
-  console.log(user, address, orders, "fromth");
-
-  // Loading states for user details and orders
   if (userLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -36,7 +29,6 @@ const ViewUserDetails = () => {
     );
   }
 
-  // Error handling
   if (userError) {
     return (
       <div className="flex justify-center items-center min-h-screen text-red-500">
@@ -45,7 +37,6 @@ const ViewUserDetails = () => {
     );
   }
 
-  // User details
   const userInfo = [
     { label: "Name", value: user.username },
     { label: "Email", value: user.email },
@@ -64,7 +55,6 @@ const ViewUserDetails = () => {
           <span>Back to Products</span>
         </button>
 
-        {/* User Profile Section */}
         <div className="mb-8">
           <h2 className="text-4xl font-bold text-red-400 dark:text-red-400 mb-4">
             User Profile
@@ -84,7 +74,6 @@ const ViewUserDetails = () => {
           </ul>
         </div>
 
-        {/* User Addresses Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-red-400 dark:text-red-400 mb-4">
             User Addresses
@@ -119,7 +108,6 @@ const ViewUserDetails = () => {
           </div>
         </div>
 
-        {/* User Orders Section */}
         <div>
           <h2 className="text-3xl font-bold text-red-400 dark:text-red-400 mb-4">
             Order History

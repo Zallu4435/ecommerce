@@ -1,9 +1,5 @@
 import * as z from 'zod';
 
-// Image validation schema
-
-
-// Product validation schema
 export const productValidationSchema = z.object({
   productName: z.string().min(3, { message: "Product name must be at least 3 characters" }),
   image: z.string().url({ message: "Invalid image URL" }),
@@ -19,4 +15,3 @@ export const productValidationSchema = z.object({
 
 });
 
-// Validation 

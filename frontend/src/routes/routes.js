@@ -1,4 +1,3 @@
-// routes.js
 import Home from "../pages/user/Home.jsx";
 import Cart from "../pages/user/Cart.jsx";
 import Compare from "../pages/user/compare/Compare.jsx";
@@ -17,7 +16,7 @@ import PaymentSuccess from "../pages/user/PaymentSuccess.jsx";
 import ProceedToPaymentPage from '../pages/payment/ProceedToPayment.jsx'
 import TrackOrder from '../pages/user/userProfile/TrackOrder.jsx'
 
-// admin routes
+// Admin Routes
 import UserManagement from '../pages/admin/UserManagement.jsx'
 import CategoryManagement from '../pages/admin/CategoryManagement.jsx'
 import OrderManagement from '../pages/admin/OrderMangement.jsx'
@@ -28,7 +27,6 @@ import AdminUpdateCouponForm from '../Forms/admin/Coupon Form/AdminUpdateCouponF
 import ProductManagement from '../pages/admin/ProductManagement.jsx'
 import AdminProductCreateForm from '../Forms/admin/AdminProductCreateForm.jsx'
 import AdminProductUpdateForm from '../Forms/admin/AdminProductUpdateForm.jsx'
-// import OrderDetails from '../Forms/admin/OrderViewPage.jsx'
 import AdminUsersForm from '../Forms/admin/AdminUsersForm.jsx'
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx'
 import ViewProductDetails from "../pages/admin/views/ViewProductDetails.jsx";
@@ -73,7 +71,6 @@ export const adminRoutes = [
   { path: "/couponManagement/create/coupons", component: AdminCreateCouponForm },
   { path: "/productManagement/create/products", component: AdminProductCreateForm },
   { path: "/productManagement/update/products/:id", component: AdminProductUpdateForm },
-  // { path: "/orderManagement/view/orders", component: OrderDetails },
   { path: "/userManagement/update/users/:id", component: AdminUsersForm },
   { path: "/productManagement/view/products/:id", component: ViewProductDetails },
   { path: "/userManagement/view/users/:id", component: ViewUserDetails },

@@ -1,5 +1,3 @@
-// src/components/Cart.js
-
 import ProductTableForCartlist from "../../components/user/ProductTable/ProductTableForCartlist";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,17 +9,13 @@ import { useState, useEffect } from "react";
 
 const Cart = () => {
   const navigate = useNavigate();
-const [isOutOfStock, setIsOutOfStock] = useState(false)
-  // Use RTK Query hook to fetch cart data
+  const [isOutOfStock, setIsOutOfStock] = useState(false);
   const { data: cartItems = [], error, isLoading } = useGetCartQuery();
-
-
-  // Use RTK Query hook to remove item from the cart
   const [removeFromCart] = useRemoveFromCartMutation();
 
   const handleRemove = async (id) => {
     try {
-      await removeFromCart(id); // Call the mutation to remove item from the cart
+      await removeFromCart(id);
     } catch (err) {
       console.error("Failed to remove item:", err);
     }
@@ -35,8 +29,8 @@ const [isOutOfStock, setIsOutOfStock] = useState(false)
         )
       : 0;
 
-  const calculateTax = (subtotal) => (subtotal * 0.08).toFixed(2); // Example: 8% tax
-  const shippingCost = 15.0; // Flat shipping cost
+  const calculateTax = (subtotal) => (subtotal * 0.08).toFixed(2);
+  const shippingCost = 15.0;
   const calculateTotal = (subtotal) =>
     (
       parseFloat(subtotal) +
@@ -47,15 +41,15 @@ const [isOutOfStock, setIsOutOfStock] = useState(false)
   const subtotal = calculateSubtotal();
 
   useEffect(() => {
-    if (cartItems && cartItems.some((item) => item.stockQuantity <= item?.quantity)) {
+    if (
+      cartItems &&
+      cartItems.some((item) => item.stockQuantity <= item?.quantity)
+    ) {
       setIsOutOfStock(true);
     } else {
       setIsOutOfStock(false);
     }
   }, [cartItems]);
-  
-
-
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -67,16 +61,15 @@ const [isOutOfStock, setIsOutOfStock] = useState(false)
 
   const handleCheckout = () => {
     if (isOutOfStock) {
-      return; // Prevent checkout if out of stock
+      return;
     }
-    const total = calculateTotal(subtotal); // Calculate the total
-    navigate("/checkout", { state: { cartItems, total } }); // Pass cart items and total
+    const total = calculateTotal(subtotal);
+    navigate("/checkout", { state: { cartItems, total } });
   };
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
       <div className="grid grid-cols-1 lg:grid-cols-11 gap-6 p-6">
-        {/* Product List */}
         <div className="col-span-1 lg:col-span-8">
           <ProductTableForCartlist
             type="cart"
@@ -85,7 +78,6 @@ const [isOutOfStock, setIsOutOfStock] = useState(false)
           />
         </div>
 
-        {/* Cart Total */}
         <div className="p-8 bg-white h-[540px] dark:bg-gray-800 rounded-lg shadow-xl lg:mt-10 md:w-[350px] w-[300px] lg:col-span-3 mx-auto lg:mx-0 mt-6">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
             Cart Total
@@ -109,9 +101,9 @@ const [isOutOfStock, setIsOutOfStock] = useState(false)
           </div>
           <button
             onClick={handleCheckout}
-            disabled={isOutOfStock }
+            disabled={isOutOfStock}
             className={`w-full py-3 ${
-              isOutOfStock 
+              isOutOfStock
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 text-white hover:bg-blue-700 transition-all transform hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600"
             } rounded-md mt-5`}

@@ -14,27 +14,29 @@ const {
   refreshToken,
 } = require('../controller/userController');
 
-// User Routes
+router.get('/getUser', isAuthenticated, catchAsyncErrors(getUser));
+
 router.post('/signup-user', catchAsyncErrors(signupUser));
 router.post('/activation/:activation_token', catchAsyncErrors(activateAccount));
 router.post('/login-user', catchAsyncErrors(loginUser));
-router.get('/getUser', isAuthenticated, catchAsyncErrors(getUser));
 router.post('/logout', catchAsyncErrors(logoutUser));
+
 router.put('/update-user-info', isAuthenticated, catchAsyncErrors(updateUserInfo));
 router.put('/update-avatar', isAuthenticated, catchAsyncErrors(updateAvatar));
 
 
-// Password Routes
 router.post('/reset-password', catchAsyncErrors(resetPassword));
 router.post('/verify-reset-password', catchAsyncErrors(verifyResetPassword))
-// router.put('/reset-password/:token', catchAsyncErrors(resetPassword));
 router.put('/update-password', isAuthenticated, catchAsyncErrors(updatePassword));
+
 
 router.get('/getUsers', catchAsyncErrors(getAllUsers));
 router.post('/google-login', catchAsyncErrors(googleLogin));
 
+
 router.post('/otp-login', catchAsyncErrors(otpLogin));
 router.post('/verify-otp', catchAsyncErrors(verifyEmailOtp));
+
 
 router.get('/refresh-token', verifyRefreshToken, catchAsyncErrors(refreshToken))
 

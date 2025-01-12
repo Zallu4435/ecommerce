@@ -1,24 +1,23 @@
-import { combineReducers } from '@reduxjs/toolkit';
-import userReducer from '../slice/userSlice';
-import defaultReducer from './combineReducers';
-import { userApiSlice } from '../apiSliceFeatures/userApiSlice';
-import { adminApiSlice } from '../apiSliceFeatures/AdminApiSlice'
-import adminReducer from '../slice/adminSlice'
-import { addressPasswordApi } from '../apiSliceFeatures/addressPasswordApiSlice'
-import { crudApiSlice } from '../apiSliceFeatures/crudApiSlice';
-import { productApiSlice } from '../apiSliceFeatures/productApiSlice';
-import { cartApi } from '../apiSliceFeatures/CartApiSlice'
-import { wishlistApiSlice } from '../apiSliceFeatures/WishlistApiSlice';
-import { comparisonApiSlice } from '../apiSliceFeatures/ComparisonApiSlice'
-import { salesApiSlice } from '../apiSliceFeatures/SalesApiSlice';
-import { walletApiSlice } from '../apiSliceFeatures/WalletApiSlice';
-import { reviewApi } from '../apiSliceFeatures/ReviewApiSlice';
+import { combineReducers } from "@reduxjs/toolkit";
+import userReducer from "../slice/userSlice";
+import defaultReducer from "./combineReducers";
+import { userApiSlice } from "../apiSliceFeatures/userApiSlice";
+import { adminApiSlice } from "../apiSliceFeatures/AdminApiSlice";
+import adminReducer from "../slice/adminSlice";
+import { addressPasswordApi } from "../apiSliceFeatures/addressPasswordApiSlice";
+import { crudApiSlice } from "../apiSliceFeatures/crudApiSlice";
+import { productApiSlice } from "../apiSliceFeatures/productApiSlice";
+import { cartApi } from "../apiSliceFeatures/CartApiSlice";
+import { wishlistApiSlice } from "../apiSliceFeatures/WishlistApiSlice";
+import { comparisonApiSlice } from "../apiSliceFeatures/ComparisonApiSlice";
+import { salesApiSlice } from "../apiSliceFeatures/SalesApiSlice";
+import { walletApiSlice } from "../apiSliceFeatures/WalletApiSlice";
+import { reviewApi } from "../apiSliceFeatures/ReviewApiSlice";
 
-// Combine all reducers
 const rootReducer = combineReducers({
   user: userReducer,
   admin: adminReducer,
-  userApi: userApiSlice.reducer, 
+  userApi: userApiSlice.reducer,
   adminApi: adminApiSlice.reducer,
   crudApi: crudApiSlice.reducer,
   addressPasswordApi: addressPasswordApi.reducer,
@@ -29,11 +28,9 @@ const rootReducer = combineReducers({
   comparisonApi: comparisonApiSlice.reducer,
   walletApi: walletApiSlice.reducer,
   reviewApi: reviewApi.reducer,
-  root: defaultReducer
+  root: defaultReducer,
 });
 
-
-// middleware
 export const apiMiddleware = [
   userApiSlice.middleware,
   adminApiSlice.middleware,
@@ -46,7 +43,6 @@ export const apiMiddleware = [
   salesApiSlice.middleware,
   walletApiSlice.middleware,
   reviewApi.middleware,
-  ];
+];
 
-
-  export default rootReducer;
+export default rootReducer;

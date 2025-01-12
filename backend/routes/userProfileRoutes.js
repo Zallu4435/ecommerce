@@ -11,20 +11,27 @@ const {
   checkoutAddress,
   processPayment,
   checkProductStock,
-  getFilteredProducts
 } = require("../controller/userProfileController");
-
-
 
 router.post("/address", isAuthenticated, catchAsyncErrors(addAddress));
 router.put("/address", isAuthenticated, catchAsyncErrors(editAddress));
 router.delete("/address/:id", isAuthenticated, catchAsyncErrors(removeAddress));
 router.get("/addresses", isAuthenticated, catchAsyncErrors(getAddress));
-router.put("/change-password", isAuthenticated, catchAsyncErrors(changePassword));
-router.get('/checkout-address', isAuthenticated, catchAsyncErrors(checkoutAddress));
-router.post('/process-payment', isAuthenticated, catchAsyncErrors(processPayment))
+router.put(
+  "/change-password",
+  isAuthenticated,
+  catchAsyncErrors(changePassword)
+);
+router.get(
+  "/checkout-address",
+  isAuthenticated,
+  catchAsyncErrors(checkoutAddress)
+);
+router.post(
+  "/process-payment",
+  isAuthenticated,
+  catchAsyncErrors(processPayment)
+);
 router.get("/products/:productId/stock", catchAsyncErrors(checkProductStock));
-
-
 
 module.exports = router;

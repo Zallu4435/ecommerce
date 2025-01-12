@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const Table = ({ data, columns, title }) => (
   <div className="bg-yellow-50 dark:bg-gray-800 rounded-lg shadow mb-8">
@@ -24,7 +24,10 @@ const Table = ({ data, columns, title }) => (
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {data?.map((row, index) => (
-              <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <tr
+                key={index}
+                className="hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
                 {Object.values(row).map((cell, idx) => (
                   <td
                     key={idx}
@@ -43,4 +46,3 @@ const Table = ({ data, columns, title }) => (
 );
 
 export default Table;
-

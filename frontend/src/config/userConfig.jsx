@@ -1,9 +1,9 @@
 import TableRowForCartlist from "../components/user/ProductTable/TableRowForCartList";
-import TableRow from '../components/user/ProductTable/ProductTable'
+import TableRow from "../components/user/ProductTable/ProductTable";
 
 export const config1 = {
   cart: {
-    headers: ['Remove', 'Product Name', 'Price', 'Stock', 'Action'],
+    headers: ["Remove", "Product Name", "Price", "Stock", "Action"],
     rowRenderer: (item, onRemoveFromCart, onUpdateQuantity) => (
       <TableRow
         key={item.id}
@@ -15,10 +15,9 @@ export const config1 = {
   },
 };
 
-// config.js
 export const config2 = {
   cart: {
-    headers: ['Remove', 'Product Name', 'Price', 'Quantity', 'Subtotal'],
+    headers: ["Remove", "Product Name", "Price", "Quantity", "Subtotal"],
     rowRenderer: (item, onRemoveFromCart, onUpdateQuantity) => (
       <TableRowForCartlist
         key={item.id}
@@ -29,5 +28,3 @@ export const config2 = {
     ),
   },
 };
-
-

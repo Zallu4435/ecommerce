@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useUpdateUserInfoMutation } from '../../redux/apiSliceFeatures/userApiSlice';
-import { toast } from 'react-toastify'
+import { useEffect, useState } from "react";
+import { useUpdateUserInfoMutation } from "../../redux/apiSliceFeatures/userApiSlice";
+import { toast } from "react-toastify";
 
 function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
   const [updateUserInfo] = useUpdateUserInfoMutation();
@@ -12,8 +12,8 @@ function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
     gender: "",
     ...userInfo,
   });
-  const oldEmail = userInfo.email
-  console.log(oldEmail, "kokokokkkok")
+  const oldEmail = userInfo.email;
+  console.log(oldEmail, "kokokokkkok");
 
   useEffect(() => {
     if (isOpen) {
@@ -41,8 +41,8 @@ function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
       await updateUserInfo({ updateData: formData, oldEmail }).unwrap();
       onClose();
     } catch (error) {
-      toast.error(error?.data?.message)
-      console.error('Failed to update user info', error);
+      toast.error(error?.data?.message);
+      console.error("Failed to update user info", error);
     }
   };
   const getInputType = (key) => {
@@ -58,28 +58,38 @@ function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
   return (
     <div className="fixed inset-0 z-50 bg-black backdrop-blur-sm bg-opacity-50 flex justify-center items-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-8 w-full max-w-3xl">
-        <h2 className="text-3xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Edit Profile</h2>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Email Field */}
+        <h2 className="text-3xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
+          Edit Profile
+        </h2>
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        >
           {Object.entries(formData)
-            .filter(([key]) => allowedFields.includes(key.toLowerCase())) 
-            .map(([key, value]) => ( 
+            .filter(([key]) => allowedFields.includes(key.toLowerCase()))
+            .map(([key, value]) => (
               <div key={key} className="flex flex-col">
-                <label htmlFor={key} className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  htmlFor={key}
+                  className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   {key.charAt(0).toUpperCase() + key.slice(1)}
-              </label>
-              <input
-                type={getInputType(key)}
-                id={key}
-                name={key}
-                value={value}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700 dark:text-white dark:focus:ring-pink-500"
-              />
-            </div>
-          ))}
+                </label>
+                <input
+                  type={getInputType(key)}
+                  id={key}
+                  name={key}
+                  value={value}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700 dark:text-white dark:focus:ring-pink-500"
+                />
+              </div>
+            ))}
           <div className="col-span-full">
-            <label htmlFor="email" className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="email"
+              className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Email Address
             </label>
             <input

@@ -1,6 +1,6 @@
 import React from "react";
 import { FaRegStar, FaStar, FaStarHalfAlt } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 
 const ProductGrid = ({
   compareItem,
@@ -8,7 +8,6 @@ const ProductGrid = ({
   handleRemoveProduct,
   isAdding,
 }) => {
-
   const navigate = useNavigate();
   const handleImageClick = (productId) => navigate(`/product/${productId}`);
 
