@@ -61,10 +61,6 @@ export const adminApiSlice = createApi({
       },
     }),
 
-    // searchAdminProducts: builder.query({
-    //   query: (searchTerm) => `/products/search?query=${searchTerm}`,
-    // }),
-
     searchAdminProducts: builder.query({
       query: (params) => {
         const queryString = new URLSearchParams(params).toString();
@@ -87,6 +83,8 @@ export const adminApiSlice = createApi({
       query: (searchTerm) =>
         `/orders/search-individual-order?query=${searchTerm}`,
     }),
+
+    
   }),
 });
 

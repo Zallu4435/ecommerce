@@ -392,7 +392,6 @@ exports.checkoutCoupons = async (req, res) => {
       "couponCode title description discount minAmount maxAmount expiry"
     );
 
-    console.log(availableCoupons, "available coupons");
     return res.status(200).json(availableCoupons);
   } catch (error) {
     console.error("Error fetching coupons:", error);

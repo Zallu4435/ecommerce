@@ -4,15 +4,15 @@ const catchAsyncErrors = require("../middleware/catchAsyncError");
 const {
   getOrders,
   getSalesOverview,
-  getSaleById,
-  updateSaleStatus,
   getTopSellingProducts,
+  getTopSellingBrands,
+  getTopSellingCategories
 } = require("../controller/salesController");
 
 router.get("/getSalesData", catchAsyncErrors(getOrders));
 router.get("/getSalesOverview", catchAsyncErrors(getSalesOverview));
-router.get("/getSaleById/:id", catchAsyncErrors(getSaleById));
 router.get("/getTopSellingProducts", catchAsyncErrors(getTopSellingProducts));
-router.patch("/updateSaleStatus", catchAsyncErrors(updateSaleStatus));
+router.get("/getTopSellingBrands", catchAsyncErrors(getTopSellingBrands));
+router.get("/getTopSellingCategories", catchAsyncErrors(getTopSellingCategories));
 
 module.exports = router;

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import ShoppingCard from './shoppingCard/ShoppingCards'; // Adjust the path if necessary
+import ShoppingCard from './shoppingCard/ShoppingCards';
 import { useGetPopularProductsQuery } from '../../redux/apiSliceFeatures/productApiSlice';
+import LoadingSpinner from '../../components/LoadingSpinner'
 
 export const CardContainer = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [cardsPerPage, setCardsPerPage] = useState(8);
   
   const { data: popular_Products = [], error, isLoading } = useGetPopularProductsQuery();
-console.log(popular_Products, 'popularproducts ')
 
   useEffect(() => {
     const handleResize = () => {
@@ -22,26 +22,24 @@ console.log(popular_Products, 'popularproducts ')
       }
     };
 
-    handleResize(); // Set initial value
-    window.addEventListener('resize', handleResize); // Listen for resize events
+    handleResize(); 
+    window.addEventListener('resize', handleResize); 
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const totalPages = Math.ceil(popular_Products.length / cardsPerPage);
 
-  // Calculate the indices of the cards to display on the current page
   const startIndex = (currentPage - 1) * cardsPerPage;
   const endIndex = startIndex + cardsPerPage;
 
-  // Function to handle page change
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return < LoadingSpinner />;
   if (error) return <div>Error loading products!</div>;
 
   return (

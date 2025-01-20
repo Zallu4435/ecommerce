@@ -33,8 +33,6 @@ function UserProfile() {
     { label: "Shipping Address", value: data.user?.address || "N/A" },
   ];
 
-  console.log(data?.user._id, "data data data ");
-
   return (
     <div className="flex-1 dark:bg-gray-800 shadow-md rounded-lg p-6 ml-6">
       <Avatar

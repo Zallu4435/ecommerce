@@ -123,8 +123,8 @@ const ShopPage = () => {
   const error = filteredError || searchError;
 
   return (
-    <div className="min-h-screen dark:bg-black bg-gradient-to-br dark from-gray-100 via-white to-gray-50 py-16">
-      <div className="flex space-x-4 pl-4 pt-3 dark:bg-black lg:hidden lg:ml-20 sticky top-[80px] z-50 bg-gray-100 lg:mb-10 mt-[-40px]">
+    <div className="min-h-screen dark:bg-gray-900 py-16">
+      <div className="flex space-x-4 pl-4 pt-3 lg:hidden lg:ml-20 sticky top-[80px] z-50 lg:mb-10 mt-[-40px]">
         {isSmallScreen && (
           <div className="lg:hidden mb-4">
             <button
@@ -210,7 +210,7 @@ const ShopPage = () => {
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
-              className="w-full border rounded-lg px-4 py-2 text-gray-700 focus:ring-2 focus:ring-blue-500"
+              className="w-full border rounded-lg px-4 py-2 text-gray-700 dark:text-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
             >
               <option value="popularity">Popularity</option>
               <option value="priceLowToHigh">Price: Low to High</option>

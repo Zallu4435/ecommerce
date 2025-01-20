@@ -7,6 +7,7 @@ import {
   useRemoveAddressMutation,
 } from "../../../redux/apiSliceFeatures/addressPasswordApiSlice";
 import AddressModal from "../../../modal/user/AddressModal";
+import { toast } from 'react-toastify'
 
 const AddressPage = () => {
   const { data: addresses, isLoading, isError } = useGetAddressesQuery();
@@ -37,8 +38,10 @@ const AddressPage = () => {
     }
     try {
       await addAddress(formData).unwrap();
+      toast.success('address addeded successfully')
       setIsModalOpen(false);
     } catch (error) {
+      toast.error(error?.data?.message || 'Failed to add address')
       console.error("Failed to add address:", error);
     }
   };
@@ -67,6 +70,7 @@ const AddressPage = () => {
         editing: false,
       });
     } catch (error) {
+      toast.error(error?.data?.message || 'Failed to edit')
       console.error("Failed to update address:", error);
     }
   };

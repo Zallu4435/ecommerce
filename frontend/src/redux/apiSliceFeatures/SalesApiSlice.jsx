@@ -24,6 +24,14 @@ export const salesApiSlice = createApi({
       providesTags: ["Sales"],
     }),
 
+    getTopSellingCategories: builder.query({
+      query: () => "sales/getTopSellingCategories",
+    }),
+
+    getTopSellingBrands: builder.query({
+      query: () => "sales/getTopSellingBrands",
+    }),
+
     getSaleById: builder.query({
       query: (id) => `sales/getSaleById/${id}`,
       providesTags: ["Sales"],
@@ -46,4 +54,6 @@ export const {
   useGetSaleByIdQuery,
   useUpdateSaleStatusMutation,
   useGetTopSellingProductsQuery,
+  useGetTopSellingBrandsQuery,
+  useGetTopSellingCategoriesQuery
 } = salesApiSlice;

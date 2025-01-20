@@ -15,6 +15,7 @@ const AddToCart = ({
   sizeOption,
   originalPrice,
   productImage,
+  offerPrice,
   productName,
   stockQuantity, // This is the passed prop
 }) => {
@@ -27,7 +28,7 @@ const AddToCart = ({
   const navigate = useNavigate();
   const MAX_QUANTITY = 7;
 
-  const subTotal = quantity * originalPrice;
+  const subTotal = quantity * offerPrice;
   const taxAmount = subTotal * TAX_RATE;
   const totalPrice = subTotal + taxAmount + SHIPPING_COST;
 
@@ -45,7 +46,6 @@ const AddToCart = ({
 
   const handleAddToCart = async () => {
     setIsLoading(true);
-    // Check if the stock is available for the selected quantity
     if (quantity > stockQuantity) {
       toast.error("Sorry, not enough stock available.");
       setIsLoading(false);
@@ -75,11 +75,11 @@ const AddToCart = ({
     const productDetails = {
       productImage,
       quantity,
-      originalPrice,
+      offerPrice,
       productName,
     };
 
-    const total = totalPrice; // This is the final price with tax and shipping
+    const total = totalPrice; 
 
     // Navigate to the checkout page with the product details and total
     navigate("/checkout", {
@@ -95,7 +95,7 @@ const AddToCart = ({
         </h2>
         <div className="flex justify-between">
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
-            Price: ₹{originalPrice}
+            Price: ₹{offerPrice}
           </p>
           <p
             className={`text-sm font-bold mb-4 ${

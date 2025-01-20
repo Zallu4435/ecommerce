@@ -28,7 +28,7 @@ import ProductManagement from '../pages/admin/ProductManagement.jsx'
 import AdminProductCreateForm from '../Forms/admin/AdminProductCreateForm.jsx'
 import AdminProductUpdateForm from '../Forms/admin/AdminProductUpdateForm.jsx'
 import AdminUsersForm from '../Forms/admin/AdminUsersForm.jsx'
-import AdminDashboard from '../pages/admin/AdminDashboard.jsx'
+import AdminDashboard from '../pages/admin/Admin Dashboard/AdminDashboard.jsx'
 import ViewProductDetails from "../pages/admin/views/ViewProductDetails.jsx";
 import ViewUserDetails from "../pages/admin/views/ViewUserDetails.jsx";
 import AdminCategoryUpdateForm from '../Forms/admin/AdminCategoryUpdateForm.jsx'

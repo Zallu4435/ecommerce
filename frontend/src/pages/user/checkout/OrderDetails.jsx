@@ -47,7 +47,7 @@ const OrderDetails = ({ onOrderChange, address }) => {
             </div>
             <div>
               <span>
-                {product.quantity} x ₹ {product.originalPrice.toFixed(2)}
+                {product.quantity} x ₹ {product.offerPrice.toFixed(2)}
               </span>
             </div>
           </div>

@@ -1,8 +1,6 @@
-import React from "react";
 import TableRow from "./TableRow";
 
 const ProductTable = ({ type, data, onRemove }) => {
-  console.log(data, "data from  wishlist table ");
   return (
     <div className="flex flex-col items-center justify-center m-4 md:m-10 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 md:p-6">
       {/* Heading */}

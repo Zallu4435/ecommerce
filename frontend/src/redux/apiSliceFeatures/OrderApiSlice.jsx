@@ -14,6 +14,7 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
 
     fetchUserOrders: builder.query({
       query: (userId) => `/orders/user-order-modal?userId=${userId}`,
+      providesTags: ["Order"],
     }),
 
     cancelOrder: builder.mutation({
@@ -25,21 +26,13 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
       }),
     }),
 
-    // cancelIndividualOrder: builder.mutation({
-    //   query: ({ orderId, productId }) => ({
-    //     url: `orders/orders/${orderId}/cancel/${productId}`,
-    //     method: 'PATCH',
-    //   }),
-    //   invalidatesTags:['Order']
-    // }),
-
     updateOrderStatus: builder.mutation({
       query: (orders) => ({
         url: "/orders/update-bulk",
         method: "PATCH",
         body: orders,
+        invalidatesTags: ["Order"],
       }),
-      invalidatesTags: ["Order"],
     }),
     getAddressByOrderId: builder.query({
       query: (orderId) => `orders/${orderId}/address`,

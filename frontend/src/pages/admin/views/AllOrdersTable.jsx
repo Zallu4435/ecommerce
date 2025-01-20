@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGetOrdersQuery } from "../../../redux/apiSliceFeatures/addressPasswordApiSlice";
 import {
   useUpdateOrderStatusMutation,
@@ -21,18 +21,19 @@ const statusColors = {
 };
 
 const IndividualOrdersOfUsers = () => {
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderToCancel, setOrderToCancel] = useState({
     orderId: null,
     productId: null,
+    reason: "",
   });
   const [orderToReturn, setOrderToReturn] = useState({
     orderId: null,
     productId: null,
+    reason: "",
   });
-
-  const [showModal, setShowModal] = useState(false);
-  const [showReturnModal, setShowReturnModal] = useState(false);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -44,15 +45,19 @@ const IndividualOrdersOfUsers = () => {
   const limit = 10;
 
   const {
-    data: orders = [],
-    error,
-    isLoading,
+    data: ordersData = { orders: [] },
+    error: ordersError,
+    isLoading: ordersLoading,
     refetch,
   } = useGetOrdersQuery({ page, limit });
-  const { data: searchData = {}, refetch: refetchSearch } =
-    useSearchUsersIndividualOrdersQuery(debouncedSearch, {
-      skip: !debouncedSearch,
-    });
+
+  const {
+    data: searchData = { orders: [] },
+    isLoading: isSearchLoading,
+    error: searchError,
+  } = useSearchUsersIndividualOrdersQuery(debouncedSearch, {
+    skip: !debouncedSearch,
+  });
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
   const [cancelOrder] = useCancelOrderMutation();
@@ -64,16 +69,13 @@ const IndividualOrdersOfUsers = () => {
       setDebouncedSearch(search);
     }, 500);
 
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [search]);
 
-  const displayOrders =
-    !isLoading && !error && orders?.length > 0 ? orders : searchData;
-
-  const toggleOrderDetails = (order) => setSelectedOrder(order);
-  const closeModal = () => setSelectedOrder(null);
+  const displayOrders = debouncedSearch ? searchData?.orders : ordersData.orders;
+  console.log('object')
+  const isLoading = ordersLoading || (debouncedSearch && isSearchLoading);
+  const error = ordersError || (debouncedSearch && searchError);
 
   const handleStatusChange = async (orderId, newStatus, itemsIds) => {
     try {
@@ -90,35 +92,31 @@ const IndividualOrdersOfUsers = () => {
   };
 
   const handleCancelClick = (orderId, productId) => {
-    setOrderToCancel({ orderId, productId });
-    setShowModal(true);
-  };
-
-  const handleConfirmCancel = async () => {
-    const { orderId, productId } = orderToCancel;
-    setShowModal(false);
-
-    try {
-      await cancelOrder({ orderId, productId }).unwrap();
-      refetch();
-    } catch (err) {
-      console.error("Error canceling order:", err.message);
-      alert("Failed to cancel order. Please try again.");
-    }
+    setOrderToCancel({ orderId, productId, reason: "" });
+    setShowCancelModal(true);
   };
 
   const handleReturnClick = (orderId, productId) => {
-    setOrderToReturn({ orderId, productId });
+    setOrderToReturn({ orderId, productId, reason: "" });
     setShowReturnModal(true);
   };
 
-  const handleConfirmReturn = async () => {
-    const { orderId, productId } = orderToReturn;
-    setShowReturnModal(false);
-
+  const handleConfirmCancel = async () => {
     try {
-      await returnOrder({ orderId, productId }).unwrap();
-      refetch();
+      await cancelOrder(orderToCancel).unwrap();
+      setShowCancelModal(false);
+      await refetch();
+    } catch (err) {
+      console.error("Error canceling order:", err);
+      alert("Failed to cancel order");
+    }
+  };
+
+  const handleConfirmReturn = async () => {
+    try {
+      await returnOrder(orderToReturn).unwrap();
+      setShowReturnModal(false);
+      await refetch();
     } catch (err) {
       console.error("Error returning order:", err);
       alert("Failed to return order");
@@ -143,7 +141,7 @@ const IndividualOrdersOfUsers = () => {
       <div className="mb-4 sticky overflow-hidden top-0 z-10 py-4">
         <input
           type="text"
-          placeholder={`Search for Orders`}
+          placeholder="Search for Orders"
           className="w-full p-3 rounded-md border border-gray-600 text-gray-800 dark:text-white dark:bg-gray-600"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -155,19 +153,21 @@ const IndividualOrdersOfUsers = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-gray-100"></div>
         </div>
       )}
+
       {error && (
         <div className="flex items-center justify-center text-red-500 dark:text-red-400">
           <AlertCircle className="mr-2" />
           <p>Error fetching orders: {error.message}</p>
         </div>
       )}
-      {!isLoading && !error && orders?.length === 0 ? (
+
+      {!isLoading && !error && (!displayOrders || displayOrders.length === 0) ? (
         <p className="text-center text-gray-600 dark:text-gray-400">
-          You have no orders yet.
+          No orders found.
         </p>
       ) : (
         <ul className="space-y-4 max-h-[540px] scrollbar-hidden overflow-y-auto">
-          {orders?.orders?.map((order) => (
+          {displayOrders?.map((order) => (
             <li
               key={order._id}
               className="p-6 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition ease-in-out shadow-md"
@@ -200,13 +200,15 @@ const IndividualOrdersOfUsers = () => {
                     }
                     disabled={
                       order.Status === "Delivered" ||
-                      order.Status === "Cancelled"
+                      order.Status === "Cancelled" ||
+                      order.Status === "Returned"
                     }
                   />
                   <button
                     className={`bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition ${
                       order.Status === "Delivered" ||
-                      order.Status === "Cancelled"
+                      order.Status === "Cancelled" ||
+                      order.Status === "Returned"
                         ? "opacity-40 cursor-not-allowed"
                         : ""
                     }`}
@@ -215,7 +217,8 @@ const IndividualOrdersOfUsers = () => {
                     }
                     disabled={
                       order.Status === "Delivered" ||
-                      order.Status === "Cancelled"
+                      order.Status === "Cancelled" ||
+                      order.Status === "Returned"
                     }
                   >
                     Cancel Order
@@ -239,7 +242,7 @@ const IndividualOrdersOfUsers = () => {
                   </button>
                   <button
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-                    onClick={() => toggleOrderDetails(order)}
+                    onClick={() => setSelectedOrder(order)}
                   >
                     View Items
                   </button>
@@ -249,9 +252,14 @@ const IndividualOrdersOfUsers = () => {
           ))}
         </ul>
       )}
+
       {selectedOrder && (
-        <OrderDetailsModal order={selectedOrder} onClose={closeModal} />
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
       )}
+
       <CancelConfirmationModal
         show={showCancelModal}
         onClose={() => setShowCancelModal(false)}
@@ -259,8 +267,11 @@ const IndividualOrdersOfUsers = () => {
         orderId={orderToCancel.orderId}
         productId={orderToCancel.productId}
         reason={orderToCancel.reason}
-        onReasonChange={handleCancelReasonChange}
+        onReasonChange={(reason) =>
+          setOrderToCancel((prev) => ({ ...prev, reason }))
+        }
       />
+
       <ReturnConfirmationModal
         show={showReturnModal}
         onClose={() => setShowReturnModal(false)}
@@ -268,13 +279,13 @@ const IndividualOrdersOfUsers = () => {
         orderId={orderToReturn.orderId}
         productId={orderToReturn.productId}
         reason={orderToReturn.reason}
-        onReasonChange={handleReturnReasonChange}
+        onReasonChange={(reason) =>
+          setOrderToReturn((prev) => ({ ...prev, reason }))
+        }
       />
     </div>
   );
 };
-
-export default IndividualOrdersOfUsers;
 
 const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -286,6 +297,7 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
     "Out for Delivery",
     "Delivered",
     "Cancelled",
+    "Failed"
   ];
 
   useEffect(() => {
@@ -311,10 +323,10 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className={`flex items-center justify-between w-full px-4 py-2 text-md font-bold text-white ${
+        className={`flex items-center justify-between w-full px-4 py-2 text-md font-bold dark:text-white ${
           statusColors[currentStatus]
         } rounded-md ${
-          disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-opacity-80"
+          disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-opacity-80"
         } focus:outline-none`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
@@ -339,7 +351,7 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
                   status === currentStatus
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-700 hover:bg-gray-200"
-                } block px-4 py-2 text-sm`}
+                } block px-4 py-2 text-sm w-full text-left`}
                 onClick={() => handleStatusClick(status)}
               >
                 {status}
@@ -351,3 +363,5 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
     </div>
   );
 };
+
+export default IndividualOrdersOfUsers;

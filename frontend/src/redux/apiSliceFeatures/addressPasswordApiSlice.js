@@ -56,13 +56,7 @@ export const addressPasswordApi = createApi({
         body: paymentData,
       }),
     }),
-
-    // getOrders: builder.query({
-    //   query: ({ page , limit }) => ({
-    //     url: 'orders/getOrders',
-    //     params: { page, limit },
-    //   }),
-    // }),
+    
     getOrders: builder.query({
       query: ({ page = 1, limit = 10 }) =>
         `orders/getOrders?page=${page}&limit=${limit}`,

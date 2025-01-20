@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify'
 import ShippingAddress from "../forms/ShippingAddress";
 import OrderDetails from "./OrderDetails";
 import PaymentMethod from "./PaymentMethod";
@@ -33,17 +34,25 @@ const CheckoutPage = () => {
 
   const handleProceedToPayment = () => {
     if (!address) {
-      alert("Please select a shipping address.");
+      toast.info("Please select a shipping address.");
       return;
     }
     if (!order) {
-      alert("Please add items to your order.");
+      toast.info("Please add items to your order.");
       return;
     }
+    console.log(order, 'order from the chdeckout')
+
     if (!payment.paymentMethod) {
-      alert("Please select a payment method.");
+      toast.info("Please select a payment method.");
+      return;
+    } 
+
+    if (payment.paymentMethod == 'cod' && order?.total > 2500) {
+      toast.info('COD is not available for order greater than 2500')
       return;
     }
+
     navigate("/proceed-to-payment", {
       state: { address, order, payment, coupon },
     });
@@ -63,7 +72,7 @@ const CheckoutPage = () => {
         <button
           onClick={handleProceedToPayment}
           className="w-full bg-indigo-500 text-white py-3 rounded-md hover:bg-indigo-600 transition duration-300"
-          disabled={!address || !order || !payment.paymentMethod}
+          // disabled={!address || !order || !payment.paymentMethod}
         >
           Proceed to Payment
         </button>

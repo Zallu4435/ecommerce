@@ -120,47 +120,91 @@ exports.getUserDetails = async (req, res) => {
 exports.adminDashboard = async (req, res) => {
   try {
     const { type, year, month, week } = req.query;
-    const now = new Date();
     let startDate, endDate;
 
-    if (type === "yearly") {
-      startDate = new Date(year, 0, 1);
-      endDate = new Date(year, 11, 31);
-    } else if (type === "monthly") {
-      startDate = new Date(year, month - 1, 1);
-      endDate = new Date(year, month, 0);
-    } else if (type === "weekly") {
-      const firstDayOfWeek = new Date(
-        now.setDate(now.getDate() - now.getDay())
-      );
-      firstDayOfWeek.setHours(0, 0, 0, 0);
-      startDate = firstDayOfWeek;
+    const numericYear = parseInt(year);
+    const numericMonth = parseInt(month);
+    const numericWeek = parseInt(week);
 
-      const lastDayOfWeek = new Date(firstDayOfWeek);
-      lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
-      lastDayOfWeek.setHours(23, 59, 59, 999);
-      endDate = lastDayOfWeek;
+    const getWeekDates = (year, month, weekNum) => {
+      const firstDayOfMonth = new Date(year, month - 1, 1);
+
+      const startDate = new Date(firstDayOfMonth);
+      startDate.setDate(1 + (weekNum - 1) * 7);
+
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+
+      const lastDayOfMonth = new Date(year, month, 0);
+      if (endDate > lastDayOfMonth) {
+        endDate.setTime(lastDayOfMonth.getTime());
+      }
+
+      endDate.setHours(23, 59, 59, 999);
+
+      return { startDate, endDate };
+    };
+
+    if (type === "yearly") {
+      startDate = new Date(numericYear, 0, 1);
+      endDate = new Date(numericYear, 11, 31, 23, 59, 59, 999);
+    } else if (type === "monthly") {
+      startDate = new Date(numericYear, numericMonth - 1, 1);
+      endDate = new Date(numericYear, numericMonth, 0, 23, 59, 59, 999);
+    } else if (type === "weekly") {
+      const weekDates = getWeekDates(numericYear, numericMonth, numericWeek);
+      startDate = weekDates.startDate;
+      endDate = weekDates.endDate;
     }
 
     const orders = await Orders.aggregate([
-      { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
       {
         $unwind: "$items",
       },
       {
         $group: {
-          _id: null,
-          totalRevenue: { $sum: "$items.Price" },
-          totalOrders: { $sum: 1 },
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          dailyRevenue: { $sum: "$items.Price" },
+          orderCount: { $sum: 1 },
         },
+      },
+      {
+        $sort: { _id: 1 },
       },
     ]);
 
-    const totalRevenue = orders.length > 0 ? orders[0].totalRevenue : 0;
-    const totalOrders = orders.length > 0 ? orders[0].totalOrders : 0;
+    const getDatesInRange = (start, end) => {
+      const dates = [];
+      const current = new Date(start);
 
+      while (current <= end) {
+        dates.push(new Date(current).toISOString().split("T")[0]);
+        current.setDate(current.getDate() + 1);
+      }
+
+      return dates;
+    };
+
+    const allDates = getDatesInRange(startDate, endDate);
+    const dailyData = allDates.map((date) => {
+      const dayData = orders.find((order) => order._id === date);
+      return {
+        date,
+        revenue: dayData ? dayData.dailyRevenue : 0,
+        orders: dayData ? dayData.orderCount : 0,
+      };
+    });
+
+    const totalRevenue = orders.reduce((sum, day) => sum + day.dailyRevenue, 0);
+    const totalOrders = orders.reduce((sum, day) => sum + day.orderCount, 0);
     const totalUsers = await User.countDocuments();
-
     const totalProducts = await Product.countDocuments();
 
     res.json({
@@ -168,10 +212,15 @@ exports.adminDashboard = async (req, res) => {
       totalOrders,
       totalUsers,
       totalProducts,
+      dailyData,
+      dateRange: {
+        startDate,
+        endDate,
+      },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("Controller Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
@@ -357,15 +406,72 @@ exports.searchCoupons = async (req, res) => {
   }
 };
 
+// exports.searchIndividualOrders = async (req, res) => {
+//   try {
+//     const orderId = req.query.query;
+
+//     const result = await Orders.findById(orderId);
+
+//     res.status(200).json(result);
+//   } catch (error) {
+//     console.error("Error in getOrderById:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+const mongoose = require("mongoose"); // Ensure this is included at the top if not already
+
+
 exports.searchIndividualOrders = async (req, res) => {
   try {
     const orderId = req.query.query;
 
-    const result = await Orders.findById(orderId);
+    // Find the order by its ID
+    const order = await Orders.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
 
-    res.status(200).json(result);
+    // Extract product IDs from the order items
+    const productIds = order?.items?.map((elem) =>
+      new mongoose.Types.ObjectId(elem.ProductId)
+    );
+
+    // Fetch product details including images
+    const products = await Product.find(
+      { _id: { $in: productIds } },
+      { _id: 1, image: 1, productName: 1, originalPrice: 1, offerPrice: 1 } // Select necessary fields
+    );
+
+    // Combine and format order and product details
+    const formattedOrderData = order.items.map((item) => {
+      const matchingProduct = products.find(
+        (product) => product._id.toString() === item.ProductId.toString()
+      );
+
+      return {
+        _id: order._id, // Order ID
+        UserId: order.UserId,
+        TotalAmount: order.TotalAmount,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+        Status: item.Status,
+        ProductId: item.ProductId,
+        Price: matchingProduct?.originalPrice || null,
+        Quantity: item.Quantity,
+        ProductName: matchingProduct?.productName || null,
+        ProductImage: matchingProduct?.image || null,
+        offerPrice: matchingProduct?.offerPrice || null,
+        itemsIds: item._id, 
+      };
+    });
+
+    console.log(order?.items?.filter(elem => elem?.Status), 'ststua ')
+    console.log(formattedOrderData, 'formattedOrderData')
+
+    res.status(200).json({ orders: formattedOrderData });
   } catch (error) {
-    console.error("Error in getOrderById:", error);
+    console.error("Error in searchIndividualOrders:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

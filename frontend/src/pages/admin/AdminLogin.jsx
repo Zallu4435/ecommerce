@@ -45,7 +45,7 @@ const AdminLogin = () => {
               {...register("email")}
               className={`w-full p-4 border ${
                 errors.email ? "border-red-500" : "border-gray-600"
-              } rounded-md dark:bg-gray-700 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
+              } rounded-md dark:bg-gray-700 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
             />
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">
@@ -61,7 +61,7 @@ const AdminLogin = () => {
               {...register("password")}
               className={`w-full p-4 border ${
                 errors.password ? "border-red-500" : "border-gray-600"
-              } rounded-md dark:bg-gray-700 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
+              } rounded-md dark:bg-gray-700 dark:text-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
             />
             {errors.password && (
               <p className="text-red-500 text-sm mt-1">

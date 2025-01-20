@@ -47,7 +47,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
           Order Details
         </h2>
 
-        <div className="mb-6 p-4 rounded-lg shadow-lg border-2 border-indigo-500 bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-300 dark:to-indigo-400">
+        <div className="mb-6 p-4 rounded-lg shadow-lg border-2 border-indigo-500 ">
           <h3 className="text-xl font-semibold mb-4 text-indigo-700 dark:text-indigo-700">
             Order Information
           </h3>
@@ -64,7 +64,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
         </div>
 
         {address && (
-          <div className="mb-6 p-4 rounded-lg shadow-lg border-2 border-green-500 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-300 dark:to-green-400">
+          <div className="mb-6 p-4 rounded-lg shadow-lg border-2 border-green-500">
             <h3 className="text-xl font-semibold mb-4 text-green-700 dark:text-green-700">
               Shipping Address
             </h3>
@@ -86,7 +86,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
           </div>
         )}
 
-        <div className="mb-6 p-4 rounded-lg shadow-lg border-2 border-purple-500 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-300 dark:to-purple-400">
+        <div className="mb-6 p-4 rounded-lg shadow-lg border-2 border-purple-500">
           <h3 className="text-xl font-semibold mb-4 text-purple-700 dark:text-purple-700">
             Product Information
           </h3>

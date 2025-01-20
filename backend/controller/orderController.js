@@ -279,8 +279,7 @@ exports.cancelOrder = async (req, res) => {
     if (order?.CouponDiscount > 0) {
       const discountedPrice =
         order.items[itemIndex].Price -
-        (order.items[itemIndex].Price * order.items[itemIndex].CouponDiscount) /
-          100;
+        (order.items[itemIndex].Price - order.CouponDiscount);
       refundAmount = discountedPrice * order.items[itemIndex].Quantity;
     }
 

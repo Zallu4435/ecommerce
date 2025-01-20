@@ -46,6 +46,7 @@ const ProductDetails = () => {
     category,
     averageRating,
     totalReviews,
+    offerPrice
   } = productDetails.product || {};
 
   if (isLoading) {
@@ -78,6 +79,7 @@ const ProductDetails = () => {
                 colorOption={colorOption}
                 sizeOption={sizeOption}
                 originalPrice={originalPrice}
+                offerPrice={offerPrice}
               />
               <AddToWishlist productId={_id} />
             </div>
@@ -87,6 +89,7 @@ const ProductDetails = () => {
             className="mt-8"
             productName={productName}
             originalPrice={originalPrice}
+            offerPrice={offerPrice}
             description={description}
             totalReviews={totalReviews}
             averageRating={averageRating}

@@ -24,7 +24,7 @@ const ReturnConfirmationModal = ({ show, onClose, onConfirm, orderId, productId,
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center backdrop-blur-sm justify-center p-6 z-50 animate-fadeIn">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-lg w-full shadow-2xl transform transition-transform duration-300 scale-95 hover:scale-100">
-        <h2 className="text-3xl font-extrabold mb-6 text-gray-800 dark:text-gray-100">
+        <h2 className="text-3xl font-extrabold mb-6 text-yellow-500 dark:text-gray-100">
           Are You Sure You Want to Return the Order?
         </h2>
         <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">

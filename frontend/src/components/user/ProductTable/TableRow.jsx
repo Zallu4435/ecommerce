@@ -17,10 +17,10 @@ const TableRow = ({ item, onRemove }) => {
     productId,
   } = item;
 
-  const { refetch: refetchCart } = useGetCartQuery(); // Refetch cart data
+  const { refetch: refetchCart } = useGetCartQuery(); 
   const [addToCart] = useAddToCartMutation();
 
-  const [isAdding, setIsAdding] = useState(false); // Loading state
+  const [isAdding, setIsAdding] = useState(false); 
   const navigate = useNavigate()
 
   const handleAddToCart = async () => {
@@ -30,14 +30,14 @@ const TableRow = ({ item, onRemove }) => {
     };
 
     try {
-      setIsAdding(true); // Set loading state
+      setIsAdding(true); 
       await addToCart(productDetails);
       await refetchCart();
       toast.success("Item added to cart!");
     } catch (error) {
       toast.error(error.message || "Failed to add item to cart.");
     } finally {
-      setIsAdding(false); // Reset loading state
+      setIsAdding(false); 
     }
   };
 

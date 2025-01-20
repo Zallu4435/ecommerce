@@ -106,8 +106,6 @@ const ProceedToPaymentPage = () => {
           toast.info("Processing card payment...");
           const isSuccessful = await simulateCardPayment();
           if (isSuccessful) {
-            toast.success("Card payment successful!");
-
             const paymentData = {
               address,
               order,
@@ -121,7 +119,6 @@ const ProceedToPaymentPage = () => {
             };
 
             const data = await processPayment(paymentData).unwrap();
-
             navigate("/payment-success", {
               state: { paymentId: data.paymentId, orderId: data.orderId },
             });
@@ -164,7 +161,7 @@ const ProceedToPaymentPage = () => {
       }
     } catch (error) {
       console.error("An error occurred:", error?.message || error);
-      toast.error("An unexpected error occurred. Please try again later.");
+      toast.error(error?.data?.message, "An unexpected error occurred. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -217,7 +214,7 @@ const ProceedToPaymentPage = () => {
                   {item.productName}
                 </span>
                 <span className="text-gray-700 dark:text-gray-300">
-                  {item.quantity} x ₹{item.originalPrice.toFixed(2)}
+                  {item.quantity} x ₹{item.offerPrice.toFixed(2)}
                 </span>
               </div>
             ))}

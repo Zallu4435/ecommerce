@@ -1,5 +1,4 @@
 const Order = require("../model/Orders");
-const Product = require("../model/Products");
 const moment = require("moment");
 
 exports.getOrders = async (req, res) => {
@@ -167,82 +166,129 @@ exports.getSalesOverview = async (req, res) => {
   }
 };
 
-exports.getSaleById = async (req, res) => {
-  try {
-    const saleId = req.params.id;
-    const saleDetails = await Order.findById(saleId);
-    if (!saleDetails) {
-      return res.status(404).json({ error: "Sale not found" });
-    }
-
-    res.json(saleDetails);
-  } catch (err) {
-    res.status(500).json({ error: "Server Error" });
-  }
-};
-
-exports.updateSaleStatus = async (req, res) => {
-  try {
-    const { saleId, newStatus } = req.body; // Assuming you send saleId and status to update
-
-    const updatedSale = await Order.findByIdAndUpdate(
-      saleId,
-      { status: newStatus }, // Update sale status
-      { new: true }
-    );
-
-    if (!updatedSale) {
-      return res.status(404).json({ error: "Sale not found" });
-    }
-
-    res.json(updatedSale);
-  } catch (err) {
-    res.status(500).json({ error: "Server Error" });
-  }
-};
-
-// Fetch top-selling products (sales analysis)
 exports.getTopSellingProducts = async (req, res) => {
   try {
     const topProducts = await Order.aggregate([
-      // Unwind the items array to process each product in an order separately
       { $unwind: "$items" },
-
-      // Lookup product details from the products collection
       {
         $lookup: {
-          from: "products", // The name of the products collection
-          localField: "items.ProductId", // Match the ProductId in items
-          foreignField: "_id", // Match with the _id field in the products collection
+          from: "products",
+          localField: "items.ProductId",
+          foreignField: "_id",
           as: "productDetails",
         },
       },
-
-      // Unwind the productDetails array to simplify the structure
       { $unwind: "$productDetails" },
-
-      // Group by product name and sum the quantities sold
       {
         $group: {
-          _id: "$productDetails.productName", // Group by product name
-          totalSold: { $sum: "$items.Quantity" }, // Sum up the quantities
+          _id: "$productDetails.productName",
+          totalSold: { $sum: "$items.Quantity" },
           totalRevenue: {
-            $sum: { $multiply: ["$items.Quantity", "$productDetails.price"] },
-          }, // Calculate total revenue
+            $sum: {
+              $multiply: ["$items.Quantity", "$productDetails.offerPrice"],
+            },
+          },
         },
       },
-
-      // Sort by totalSold in descending order
       { $sort: { totalSold: -1 } },
-
-      // Limit to top 5 products
       { $limit: 5 },
     ]);
 
-    console.log(topProducts, "topProducts");
     res.json(topProducts);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server Error" });
+  }
+};
+
+exports.getTopSellingCategories = async (req, res) => {
+  try {
+    const topCategories = await Order.aggregate([
+      { $unwind: "$items" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.ProductId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+
+      { $unwind: "$productDetails" },
+      {
+        $group: {
+          _id: "$productDetails.category",
+          totalItemsSold: { $sum: "$items.Quantity" },
+          totalRevenue: {
+            $sum: {
+              $multiply: ["$items.Quantity", "$productDetails.offerPrice"],
+            },
+          },
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+      { $limit: 5 },
+      {
+        $project: {
+          _id: 0,
+          categoryName: "$_id",
+          totalItemsSold: 1,
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
+    if (topCategories.length > 0) {
+      res.status(200).json(topCategories);
+    } else {
+      res.status(404).json({ message: "No categories found." });
+    }
+  } catch (error) {
+    console.error("Error fetching top-selling categories:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+exports.getTopSellingBrands = async (req, res) => {
+  try {
+    const topBrands = await Order.aggregate([
+      { $unwind: "$items" },
+
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.ProductId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $group: {
+          _id: "$productDetails.brand",
+          totalItemsSold: { $sum: "$items.Quantity" },
+          totalRevenue: {
+            $sum: {
+              $multiply: ["$items.Quantity", "$productDetails.offerPrice"],
+            },
+          },
+        },
+      },
+      { $sort: { totalItemsSold: -1 } },
+      { $limit: 5 },
+      {
+        $project: {
+          _id: 0,
+          brandName: "$_id",
+          totalItemsSold: 1,
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json(topBrands);
+  } catch (error) {
+    console.error("Error fetching top-selling brands:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };

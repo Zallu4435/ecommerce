@@ -69,7 +69,7 @@ const Navbar = () => {
     <nav
       className={`${
         scrolled ? "fixed top-0 left-0 right-0" : "relative"
-      } bg-gray-800 dark:bg-gray-50 dark:text-gray-900 text-white p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between z-40`}
+      } bg-gray-800 dark:bg-gray-50 dark:text-gray-900 text-white p-2 pb-0 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between z-40`}
     >
       <div className="flex items-center justify-between w-full md:hidden mb-4">
         {/* Hamburger Menu */}

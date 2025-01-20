@@ -8,7 +8,6 @@ import {
   FaRegStar,
   FaStarHalfAlt,
 } from "react-icons/fa";
-import { roundedImg_1 } from "../../../assets/images";
 import {
   useAddToCartMutation,
   useGetCartQuery,
@@ -41,8 +40,6 @@ const ShoppingCard = ({
 
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
 
-  // console.log(formattedPrice, "offerPrice")
-
   const navigate = useNavigate();
   const { refetch: refetchCart } = useGetCartQuery();
   const [addToCart] = useAddToCartMutation();
@@ -56,8 +53,8 @@ const ShoppingCard = ({
   const handleImageClick = () => navigate(`/product/${_id}`);
 
   return (
-    <div className="m-3 border rounded-lg text-lg shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] overflow-hidden w-full max-w-sm sm:w-[300px] md:w-[350px] lg:w-[420px] p-4 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-      <div className="relative flex justify-center py-6 px-12 sm:py-8 items-center bg-gray-100 dark:bg-gray-700">
+    <div className="m-3 border rounded-lg text-lg shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] overflow-hidden w-full max-w-sm sm:w-[300px] md:w-[350px] lg:w-[420px] p-4 border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+      <div className="relative flex justify-center py-6 px-12 sm:py-8 items-center">
         <div className="relative w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] overflow:hidden">
           <img
             src={image}
@@ -69,10 +66,10 @@ const ShoppingCard = ({
 
         <div className="absolute top-2 left-0 right-0 bottom-0 flex justify-between p-2 mt-2">
           <div className="flex flex-col space-y-2 sm:space-y-4">
-            <div className="bg-white dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
+            <div className="bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
               -29%
             </div>
-            <div className="bg-white dark:bg-gray-600 text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200 rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
+            <div className="bg-gray-100 dark:bg-gray-600 text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200 rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
               HOT
             </div>
           </div>
@@ -80,7 +77,7 @@ const ShoppingCard = ({
           <div className="relative group">
             <div
               onClick={handleDropdownToggle}
-              className={`bg-white dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-2xl sm:text-4xl ${
+              className={`bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-2xl sm:text-4xl ${
                 showDropdown ? "rounded-t-full sm:pt-4" : "rounded-full sm:pt-1"
               } w-12 h-12 sm:w-[60px] sm:h-16 flex items-center pb-1 sm:pb-4  justify-center cursor-pointer`}
             >
@@ -123,13 +120,10 @@ const ShoppingCard = ({
         <div className="flex mt-2">
           {Array.from({ length: 5 }, (_, index) => {
             if (index + 1 <= Math.floor(averageRating)) {
-              // Full star
               return <FaStar key={index} className="text-yellow-400" />;
             } else if (index < averageRating && averageRating % 1 !== 0) {
-              // Half star
               return <FaStarHalfAlt key={index} className="text-yellow-400" />;
             } else {
-              // Empty star
               return <FaRegStar key={index} className="text-gray-300" />;
             }
           })}
@@ -159,7 +153,7 @@ const ShoppingCard = ({
           onClick={() =>
             handleAddToCart(_id, addToCart, refetchCart, setIsAdding)
           }
-          disabled={!isAuthenticated || isAdding} // Disable if not authenticated or adding
+          disabled={!isAuthenticated || isAdding} 
           className={`w-full py-2 sm:py-3 flex justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${
             !isAuthenticated || isAdding
               ? "opacity-50 cursor-not-allowed"
@@ -167,9 +161,9 @@ const ShoppingCard = ({
           }`}
         >
           {!isAuthenticated
-            ? "Sign in to Add to Cart" // Show this if not authenticated
+            ? "Sign in to Add to Cart" 
             : isAdding
-            ? "Adding to Cart..." // Show loading text
+            ? "Adding to Cart..."
             : "Add to Cart"}
           {!isAuthenticated || isAdding ? null : <FaShoppingCart />}
         </button>

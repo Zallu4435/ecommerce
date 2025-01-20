@@ -11,7 +11,8 @@ const Transaction = require("../model/WalletTransaction");
 
 exports.getAddress = async (req, res) => {
   try {
-    const addresses = await Address.find().sort({
+    const userId = req.user;
+    const addresses = await Address.find({ userId: userId }).sort({
       createdAt: -1,
       updatedAt: -1,
     });
@@ -150,46 +151,19 @@ exports.checkoutAddress = async (req, res) => {
   try {
     const userId = req.user;
 
-    const addressWithUserDetails = await Address.aggregate([
-      {
-        $match: {
-          userId: userId,
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          as: "userDetails",
-        },
-      },
-      {
-        $unwind: "$userDetails",
-      },
-      {
-        $project: {
-          _id: 1,
-          country: 1,
-          state: 1,
-          city: 1,
-          zipCode: 1,
-          street: 1,
-          username: "$userDetails.username",
-          phone: "$userDetails.phone",
-        },
-      },
-    ]);
+    const addressWithUserDetails = await Address.find({ userId: userId });
+
+    if (!addressWithUserDetails) {
+      return res.status(404).json({ message: "Address not found" });
+    }
 
     res.status(200).json(addressWithUserDetails);
   } catch (error) {
     console.error("Error fetching address and user details:", error);
-    res
-      .status(500)
-      .json({
-        message: "Failed to fetch address and user details",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Failed to fetch address and user details",
+      error: error.message,
+    });
   }
 };
 
@@ -302,6 +276,7 @@ const handleAddress = async (address, userId) => {
   } else {
     const newAddressRecord = new Address({ userId, ...address });
     const savedAddress = await newAddressRecord.save();
+    console.log(object);
     return savedAddress._id;
   }
 };
@@ -364,6 +339,9 @@ const createPaymentRecord = async (
       transactionId = transaction._id;
       paymentStatus = "Successful";
     } else {
+      const ba = await Order.findById({ _id: orderId });
+      ba?.items?.map((val) => (val.Status = "Failed"));
+      await ba.save();
       throw new Error("Insufficient balance in the wallet.");
     }
   } else if (paymentMethod === "razorpay") {
@@ -435,11 +413,8 @@ exports.processPayment = async (req, res) => {
     });
   } catch (error) {
     console.error("Error processing order:", error);
-    res
-      .status(500)
-      .json({
-        message:
-          error.message || "An error occurred while processing the order.",
-      });
+    res.status(500).json({
+      message: error.message || "An error occurred while processing the order.",
+    });
   }
 };

@@ -1,28 +1,49 @@
-import React from 'react';
+import { useEffect } from "react";
 
-const ReturnConfirmationModal = ({ show, onClose, onConfirm, orderId, productId, reason, onReasonChange }) => {
+const CancelConfirmationModal = ({
+  show,
+  onClose,
+  onConfirm,
+  orderId,
+  productId,
+  reason,
+  onReasonChange,
+}) => {
+
+  useEffect(() => {
+    if (show) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [show]);
+
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-6 z-50 animate-fadeIn">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center backdrop-blur-sm justify-center p-6 z-50 animate-fadeIn">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-lg w-full shadow-2xl transform transition-transform duration-300 scale-95 hover:scale-100">
-        <h2 className="text-3xl font-extrabold mb-6 text-gray-800 dark:text-gray-100">
-          Are You Sure You Want to Return the Order?
+        <h2 className="text-3xl font-extrabold mb-6 text-red-800 dark:text-gray-100">
+          Are You Sure You Want to Cancel the Order?
         </h2>
         <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-          Please confirm if you would like to return your order. This action cannot be undone.
+          Please confirm if you would like to cancel your order. This action
+          cannot be undone.
         </p>
 
         <div className="mb-6">
           <label className="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Reason for Return
+            Reason for Cancellation
           </label>
           <textarea
             className="w-full px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 text-lg"
             rows="4"
             value={reason}
             onChange={(e) => onReasonChange(e.target.value)}
-            placeholder="Why do you want to return the order?"
+            placeholder="Why do you want to cancel the order?"
             required
           />
         </div>
@@ -37,12 +58,14 @@ const ReturnConfirmationModal = ({ show, onClose, onConfirm, orderId, productId,
 
           <button
             className={`px-6 py-3 text-white rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 ${
-              reason.trim() ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-400 cursor-not-allowed'
+              reason.trim()
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-gray-400 cursor-not-allowed"
             }`}
             onClick={onConfirm}
             disabled={!reason.trim()}
           >
-            Yes, Return Order
+            Yes, Cancel Order
           </button>
         </div>
       </div>
@@ -50,4 +73,4 @@ const ReturnConfirmationModal = ({ show, onClose, onConfirm, orderId, productId,
   );
 };
 
-export default ReturnConfirmationModal;
+export default CancelConfirmationModal;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetOrdersQuery } from "../../../redux/apiSliceFeatures/addressPasswordApiSlice";
 import {
@@ -8,6 +8,8 @@ import {
 import OrderDetailsModal from "../../../modal/user/OrderDetailsModal";
 import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
 import ReturnConfirmationModal from "../../../modal/user/OrderReturnModal";
+import { FaEye, FaMapMarkerAlt } from "react-icons/fa";
+import { InvoiceDownloadIcon } from "../../admin/Sales Management/DownloadUtils";
 
 const OrdersList = () => {
   const navigate = useNavigate();
@@ -37,8 +39,11 @@ const OrdersList = () => {
   const [cancelOrder] = useCancelOrderMutation();
   const [returnOrder] = useReturnOrderMutation();
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orders , setOrders] = useState([])
 
-  const orders = data?.orders || [];
+  useEffect(() => {
+    setOrders(data?.orders|| []);
+  },[orders,refetchOrders, data?.orders, navigate])
 
   const observer = useRef();
   const lastOrderElementRef = useCallback(
@@ -100,7 +105,6 @@ const OrdersList = () => {
 
     try {
       await returnOrder({ orderId, productId, reason }).unwrap();
-      await refetchOrders();
     } catch (err) {
       console.error("Error returning order:", err);
       alert("Failed to return order");
@@ -165,20 +169,11 @@ const OrdersList = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-                      onClick={() =>
-                        navigate(`/track-order/${order._id}`, {
-                          state: { order },
-                        })
-                      }
-                    >
-                      Track Order
-                    </button>
-                    <button
                       className={`bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition ${
                         order.Status === "Delivered" ||
                         order.Status === "Cancelled" ||
-                        order.Status === "Returned"
+                        order.Status === "Returned"  ||
+                        order.Status === 'Failed'
                           ? "opacity-40 cursor-not-allowed filter"
                           : ""
                       }`}
@@ -188,7 +183,8 @@ const OrdersList = () => {
                       disabled={
                         order.Status === "Delivered" ||
                         order.Status === "Cancelled" ||
-                        order.Status === "Returned"
+                        order.Status === "Returned"  ||
+                        order.Status === 'Failed'
                       }
                     >
                       Cancel Order
@@ -205,17 +201,30 @@ const OrdersList = () => {
                       }
                       disabled={
                         order.Status !== "Delivered" ||
-                        order.Status === "Returned"
+                        order.Status === "Returned"  
                       }
                     >
                       Return Order
                     </button>
                     <button
-                      className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
+                      className="bg-gray-500 p-3 rounded-full hover:bg-gray-600 transition"
                       onClick={() => toggleOrderDetails(order)}
+                      title="View Items"
                     >
-                      View Items
+                      <FaEye className="text-white text-2xl" />
                     </button>
+                    <div
+                      className="bg-blue-100 p-3 rounded-full hover:bg-blue-200 transition transform hover:scale-110 cursor-pointer"
+                      onClick={() =>
+                        navigate(`/track-order/${order._id}`, {
+                          state: { order },
+                        })
+                      }
+                      title="Track Order"
+                    >
+                      <FaMapMarkerAlt className="text-blue-500 text-2xl" />
+                    </div>
+                    <InvoiceDownloadIcon order={order} />
                   </div>
                 </div>
               </li>

@@ -2,6 +2,9 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import * as XLSX from "xlsx";
 
+import { useGetAddressByOrderIdQuery } from "../../../redux/apiSliceFeatures/OrderApiSlice";
+import { FaFilePdf } from "react-icons/fa";
+
 export const downloadSalesReportPDF = (
   dateRange,
   salesOverview,
@@ -111,4 +114,109 @@ export const downloadSalesReportExcel = (
   XLSX.utils.book_append_sheet(workbook, productsSheet, "Top Products");
 
   XLSX.writeFile(workbook, "sales_report.xlsx");
+};
+
+
+const generateInvoicePDF = (order, address) => {
+  if (!order || !address) {
+    console.error("Unable to generate invoice. Address or order details missing.");
+    return;
+  }
+
+  const doc = new jsPDF();
+
+  // Invoice Header
+  doc.setFontSize(18);
+  doc.text("Invoice", 14, 22);
+
+  // Add Order Details
+  doc.setFontSize(12);
+  doc.text(`Order ID: ${order._id}`, 14, 30);
+  doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 36);
+  doc.text(`Status: ${order.Status}`, 14, 42);
+
+  // Add Customer's Address
+  doc.setFontSize(14);
+  doc.text("Shipping Address", 14, 50);
+  doc.setFontSize(12);
+  doc.autoTable({
+    startY: 55,
+    head: [["Field", "Details"]],
+    body: [
+      ["Country", address?.country || "N/A"],
+      ["State", address?.state || "N/A"],
+      ["Street", address?.street || "N/A"],
+      ["City", address?.city || "N/A"],
+      ["Zip Code", address?.zipCode || "N/A"],
+    ],
+  });
+
+  // Add Product Details
+  doc.setFontSize(14);
+  doc.text("Order Details", 14, doc.lastAutoTable.finalY + 10);
+  doc.autoTable({
+    startY: doc.lastAutoTable.finalY + 15,
+    head: [["Product Name", "Quantity", "Price", "Total Amount"]],
+    body: [
+      [
+        order.ProductName,
+        order.Quantity,
+        `₹${order.Price.toLocaleString()}`,
+        `₹${order.TotalAmount.toLocaleString()}`,
+      ],
+    ],
+  });
+
+  // Add Total Amount
+  const finalY = doc.lastAutoTable.finalY;
+  doc.setFontSize(14);
+  doc.text("Total Amount", 14, finalY + 10);
+  doc.setFontSize(12);
+  doc.text(`Subtotal: ₹${order.Price.toLocaleString()}`, 14, finalY + 20);
+  doc.text(`Offer Price: ₹${order.offerPrice.toLocaleString()}`, 14, finalY + 26);
+  doc.text(`Total Amount: ₹${order.TotalAmount.toLocaleString()}`, 14, finalY + 32);
+
+  // Footer
+  doc.setFontSize(10);
+  doc.text("Thank you for your purchase!", 14, finalY + 45);
+
+  // Save PDF
+  doc.save(`invoice_${order._id}.pdf`);
+};
+
+export const InvoiceDownloadIcon = ({ order }) => {
+  const {
+    data: address,
+    isLoading,
+    isError,
+  } = useGetAddressByOrderIdQuery(order?._id, {
+    skip: !order?._id,
+  });
+
+  const handleDownloadClick = () => {
+    if (isLoading) {
+      console.log("Loading address data...");
+      return;
+    }
+
+    if (isError) {
+      console.error("Error fetching address data");
+      return;
+    }
+
+    if (address) {
+      generateInvoicePDF(order, address);
+    }
+  };
+
+  return (
+    <FaFilePdf
+      onClick={handleDownloadClick}
+      className={`text-red-600 hover:text-red-800 cursor-pointer text-5xl ${
+        isLoading ? 'opacity-50' : ''
+      }`}
+      title={isLoading ? "Loading..." : "Download PDF"}
+      style={{ cursor: isLoading ? 'not-allowed' : 'pointer' }}
+    />
+  );
 };
