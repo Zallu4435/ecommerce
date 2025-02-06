@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.modal-open {
+  overflow: hidden;
+}
+
+
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-overlay {
+  backdrop-filter: blur(5px); 
+  background-color: rgba(0, 0, 0, 0.5); 
+}
+
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hidden {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;     
+}
+
+.google-button {
+  width: 100% !important;
+}
+
+body.light {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+body.dark {
+  background-color: #121212; 
+  color: #ffffff; 
+}
+
+
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
