@@ -1,4 +1,5 @@
 import { useState } from "react";
+  import { FiEye, FiEyeOff } from "react-icons/fi";
 import {
   Input,
   InputContainer,
@@ -14,6 +15,8 @@ import SignupSuccessModal from "../../../modal/user/SignUpModal";
 
 const UserRegister = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerUser] = useRegisterUserMutation();
   const [backendErr, setBackendErr] = useState("");
 
@@ -114,12 +117,26 @@ const UserRegister = () => {
               <Label className="dark:text-gray-100 text-gray-800">
                 Password
               </Label>
-              <Input
-                type="password"
-                {...register("password")}
-                placeholder="Enter password"
-                className="w-full p-3 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  {...register("password")}
+                  placeholder="Enter password"
+                  className="w-full p-3 pr-10 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <FiEyeOff className="w-5 h-5" />
+                  ) : (
+                    <FiEye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-red-500">{errors.password.message}</p>
               )}
@@ -128,12 +145,26 @@ const UserRegister = () => {
               <Label className="dark:text-gray-100 text-gray-800">
                 Confirm Password
               </Label>
-              <Input
-                type="password"
-                {...register("confirmPassword")}
-                placeholder="Confirm password"
-                className="w-full p-3 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
-              />
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  {...register("confirmPassword")}
+                  placeholder="Confirm password"
+                  className="w-full p-3 pr-10 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 focus:outline-none"
+                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                >
+                  {showConfirmPassword ? (
+                    <FiEyeOff className="w-5 h-5" />
+                  ) : (
+                    <FiEye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="text-red-500">{errors.confirmPassword.message}</p>
               )}

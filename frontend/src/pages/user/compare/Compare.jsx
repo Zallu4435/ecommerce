@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   useGetComparisonListQuery,
   useRemoveFromComparisonMutation,
@@ -66,18 +67,64 @@ const Compare = () => {
     }
   };
 
+  const isEmpty = !compareItem || compareItem.length === 0;
+
   return (
     <div className="p-6 bg-gray-50 my-10 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-center text-gray-600 dark:text-gray-200 mb-8">
-        Product Comparison
-      </h1>
-      <ComparisonCard
-        compareItem={compareItem}
-        handleAddToCart={handleAddToCart}
-        handleRemoveProduct={handleRemoveProduct}
-        isAdding={isAdding}
-      />
-      <ComparisonTable compareItem={compareItem} />
+      {!isEmpty && (
+        <h1 className="text-3xl font-bold text-center text-gray-600 dark:text-gray-200 mb-8">
+          Product Comparison
+        </h1>
+      )}
+
+      {isEmpty ? (
+        <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-24 px-6">
+          <div className="w-20 h-20 rounded-full bg-purple-50 dark:bg-gray-700 flex items-center justify-center shadow-inner">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-10 h-10 text-purple-600 dark:text-purple-400"
+            >
+              <path d="M3.75 6.75A1.5 1.5 0 015.25 5.25h13.5a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V6.75zm3 1.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H6.75zM6 12a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H6.75A.75.75 0 016 12zm.75 3.75a.75.75 0 000 1.5h7.5a.75.75 0 000-1.5h-7.5z" />
+            </svg>
+          </div>
+          <h2 className="mt-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">
+            Your comparison list is empty
+          </h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-md text-center">
+            Compare features and prices side by side. Add products to start comparing.
+          </p>
+          <div className="mt-6">
+            <Link
+              to="/shop"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-all transform hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600"
+            >
+              Browse products
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          <ComparisonCard
+            compareItem={compareItem}
+            handleAddToCart={handleAddToCart}
+            handleRemoveProduct={handleRemoveProduct}
+            isAdding={isAdding}
+          />
+          <ComparisonTable compareItem={compareItem} />
+        </>
+      )}
     </div>
   );
 };

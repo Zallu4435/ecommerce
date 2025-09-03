@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 const ProductImage = ({ image, variantImages }) => {
   const [mainImage, setMainImage] = useState(image);
   const [variants, setVariants] = useState(variantImages || []);
+
+  useEffect(() => {
+    setMainImage(image);
+  }, [image]);
+
+  useEffect(() => {
+    setVariants(variantImages || []);
+  }, [variantImages]);
 
   const handleImageSwap = (index) => {
     const newMainImage = variants[index];

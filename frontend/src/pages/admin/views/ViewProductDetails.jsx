@@ -42,7 +42,7 @@ const ViewProductDetails = () => {
     );
   }
 
-  const allImages = [product.image, ...product.variantImages];
+  const allImages = [product.image, ...(product.variantImages || [])];
 
   const productDetails = [
     { label: "Category", value: product.category },
@@ -61,7 +61,7 @@ const ViewProductDetails = () => {
         </>
       ),
     },
-    { label: "Stock", value: `${product.stock} items available` },
+    { label: "Stock", value: `${product.stockQuantity} items available` },
     { label: "Available Sizes", value: product.sizeOption.join(", ") },
     { label: "Available Colors", value: product.colorOption.join(", ") },
   ];

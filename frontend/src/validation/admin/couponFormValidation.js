@@ -10,10 +10,19 @@ const couponSchema = z.object({
   couponCode: z.string().min(1, "Coupon code is required"),
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters long"),
-  discount: numberString.transform(val => Number(val)),
+  discount: numberString
+    .transform(val => Number(val))
+    .refine((n) => n > 0 && n <= 100, {
+      message: "Discount must be between 1 and 100",
+    }),
   minAmount: numberString.transform(val => Number(val)),
   maxAmount: numberString.transform(val => Number(val)),
-  expiry: z.string().min(1, "Expiry date is required"),
+  expiry: z.string().min(1, "Expiry date is required").refine((val) => {
+    const d = new Date(val);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return d instanceof Date && !isNaN(d) && d > today;
+  }, { message: "Expiry must be a future date" }),
 }).refine(data => Number(data.minAmount) <= Number(data.maxAmount), {
   message: "Minimum amount must be less than or equal to maximum amount",
   path: ["maxAmount"],

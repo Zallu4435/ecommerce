@@ -22,7 +22,6 @@ const TrackOrder = () => {
   const { refetch } = useGetOrdersQuery()
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation()
-  // const [updateWallet] = useUpdateWalletMutation()
 
   if (!order) {
     return <div className="text-center mt-20 text-xl font-semibold">Order not found!</div>
@@ -101,15 +100,7 @@ const TrackOrder = () => {
       name: "Test Wallet",
       description: "Wallet Recharge",
       handler: async (response) => {
-        // const payload = {
-        //   paymentId: response.razorpay_payment_id,
-        //   amount: value,
-        //   type: "Credit",
-        // }
-
         try {
-          // const result = await updateWallet(payload).unwrap()
-          // if (result.success) {
             try {
               await updateOrderStatus({
                 orderId: order?._id,

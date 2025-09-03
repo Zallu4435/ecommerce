@@ -56,3 +56,14 @@ body.dark {
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+
+/* Ensure react-slick lays out slides horizontally */
+.slick-slider .slick-track {
+  display: flex !important;
+}
+.slick-slide {
+  height: auto;
+}
+.slick-slide > div {
+  height: 100%;
+}

@@ -23,21 +23,32 @@ const Table = ({ data, columns, title }) => (
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {data?.map((row, index) => (
-              <tr
-                key={index}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                {Object.values(row).map((cell, idx) => (
-                  <td
-                    key={idx}
-                    className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100"
-                  >
-                    {cell}
-                  </td>
-                ))}
+            {Array.isArray(data) && data.length > 0 ? (
+              data.map((row, index) => (
+                <tr
+                  key={index}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  {Object.values(row).map((cell, idx) => (
+                    <td
+                      key={idx}
+                      className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100"
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  No data available
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

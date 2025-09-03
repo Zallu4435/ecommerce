@@ -6,6 +6,7 @@ import { FaHeart } from "react-icons/fa6";
 import { MdOutlineCompare } from "react-icons/md";
 import { logoLight, logoDark, defaultProfile } from "../../assets/images/index";
 import { useSelector } from "react-redux";
+import { useGetUserQuery } from "../../redux/apiSliceFeatures/userApiSlice";
 import { useSearchProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
 import debounce from "lodash/debounce";
 import LoadingSpinner from "../LoadingSpinner";
@@ -17,6 +18,10 @@ const Header = () => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
   const avatar = useSelector((state) => state.user.avatar);
   const username = useSelector((state) => state.user.username);
+  // Live user info from RTK Query; invalidated by profile updates
+  const { data: userData } = useGetUserQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const searchRef = useRef(null);
@@ -28,17 +33,27 @@ const Header = () => {
     }
   );
 
+  const resolvedAvatar = userData?.user?.avatar || avatar || defaultProfile;
+  const resolvedUsername = userData?.user?.username || username;
+
   const links = [
-    {
-      to: isAuthenticated ? "/profile" : "/login",
-      Icon: isAuthenticated && avatar ? null : FaUser,
-      avatar: isAuthenticated && avatar ? (avatar || defaultProfile) : null,
-      label: isAuthenticated && username ? username : "Profile",
-    },
+    isAuthenticated
+      ? {
+          to: "/profile",
+          Icon: null,
+          avatar: resolvedAvatar,
+          label: resolvedUsername ? resolvedUsername : "Profile",
+        }
+      : {
+          to: "/login",
+          Icon: FaUser,
+          avatar: null,
+          label: "Profile",
+        },
     { to: "/wishlist", Icon: FaHeart, label: "Wishlist" },
     { to: "/compare", Icon: MdOutlineCompare, label: "Compare" },
     { to: "/cart", Icon: FaShoppingCart, label: "Cart" },
-  ];
+  ]
 
   const debouncedSearch = useCallback(
     debounce((term) => {
@@ -60,14 +75,14 @@ const Header = () => {
   useEffect(() => {
     if (location.pathname === "/shop") {
       const queryParams = new URLSearchParams();
-      if (searchTerm) {
-        queryParams.set("q", searchTerm);
+      if (debouncedSearchTerm) {
+        queryParams.set("q", debouncedSearchTerm);
       } else {
         queryParams.delete("q");
       }
       navigate(`/shop?${queryParams.toString()}`, { replace: true });
     }
-  }, [searchTerm, navigate, location.pathname]);
+  }, [debouncedSearchTerm, navigate, location.pathname]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -151,32 +166,37 @@ const Header = () => {
               <IoIosSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
               {isLoading && <LoadingSpinner />}
             </form>
-            {showSearch &&
-              debouncedSearchTerm &&
-              searchResults &&
-              searchResults.length > 0 && (
-                <div className="absolute z-10 w-[555px] mt-2 bg-white dark:bg-gray-700 rounded-md ml-[10px] shadow-lg">
-                  {searchResults.slice(0, 5).map((product) => (
-                    <Link
-                      key={product._id}
-                      to={`/product/${product._id}`}
-                      className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
-                      onClick={() => setShowSearch(false)}
-                    >
-                      {product.productName}
-                    </Link>
-                  ))}
-                  {searchResults.length > 5 && (
-                    <Link
-                      to={`/shop?q=${encodeURIComponent(searchTerm)}`}
-                      className="block px-4 py-2 text-center text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-600"
-                      onClick={() => setShowSearch(false)}
-                    >
-                      View all results
-                    </Link>
-                  )}
-                </div>
-              )}
+            {showSearch && debouncedSearchTerm && (
+              <div className="absolute z-10 w-[555px] mt-2 bg-white dark:bg-gray-700 rounded-md ml-[10px] shadow-lg">
+                {isLoading ? (
+                  <div className="px-4 py-3 text-gray-500 dark:text-gray-300">Searching...</div>
+                ) : searchResults && searchResults.length > 0 ? (
+                  <>
+                    {searchResults.slice(0, 5).map((product) => (
+                      <Link
+                        key={product._id}
+                        to={`/product/${product._id}`}
+                        className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        onClick={() => setShowSearch(false)}
+                      >
+                        {product.productName}
+                      </Link>
+                    ))}
+                    {searchResults.length > 5 && (
+                      <Link
+                        to={`/shop?q=${encodeURIComponent(searchTerm)}`}
+                        className="block px-4 py-2 text-center text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        onClick={() => setShowSearch(false)}
+                      >
+                        View all results
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  <div className="px-4 py-3 text-gray-500 dark:text-gray-300">No products found.</div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -187,15 +207,19 @@ const Header = () => {
               to={link.to}
               className="flex flex-col items-center group p-2 sm:p-3"
             >
-              {link.avatar ? (
+              {link.Icon ? (
+                <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300" />
+              ) : link.avatar ? (
                 <img
                   src={link.avatar}
                   alt="User Avatar"
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-300 dark:border-gray-600"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = defaultProfile;
+                  }}
                 />
-              ) : (
-                <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300" />
-              )}
+              ) : null}
               <span className="hidden sm:block text-xs text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300 mt-1">
                 {link.label}
               </span>

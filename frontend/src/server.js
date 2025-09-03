@@ -1,9 +1,10 @@
 export const server = `${import.meta.env.VITE_SERVER_URL}/api`;
 
-export const uploadImageToCloudinary = async (file) => {
+export const uploadImageToCloudinary = async (file, folder = (import.meta.env.VITE_CLOUDINARY_FOLDER || "ecommerce")) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "first_time_using_cloudinary");
+  formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "first_time_using_cloudinary");
+  formData.append("folder", folder);
 
   try {
     const response = await fetch(
@@ -19,7 +20,18 @@ export const uploadImageToCloudinary = async (file) => {
     }
 
     const data = await response.json();
-    return data.secure_url;
+    return {
+      secureUrl: data.secure_url,
+      publicId: data.public_id,
+      folder: data.folder,
+      width: data.width,
+      height: data.height,
+      format: data.format,
+      bytes: data.bytes,
+      createdAt: data.created_at,
+      assetId: data.asset_id,
+      version: data.version,
+    };
   } catch (error) {
     console.error("Error uploading file to Cloudinary:", error);
     throw error;

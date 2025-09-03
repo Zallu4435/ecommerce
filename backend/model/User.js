@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    status: {
+      type: String,
+      enum: ["pending", "active"],
+      default: "pending",
+    },
     googleId: {
       type: String,
       unique: true,

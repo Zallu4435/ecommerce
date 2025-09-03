@@ -7,20 +7,20 @@ const ProductImageVariantAddModal = ({
   isOpen,
   onClose,
   onImageUpload,
-  // initialImages = [null, null, null],
   initialImages 
 }) => {
-  // const [imageFiles, setImageFiles] = useState(
-  //   initialImages.map((file) =>
-  //     file ? { url: file.url, isExisting: true } : null
-  //   )
-  // );
-
   const [imageFiles, setImageFiles] = useState([null, null, null]);
 
-  useEffect(() => { 
-    setImageFiles(initialImages?.map((file) => file ? { url: file.url, isExisting: true } : null))
-  }, [isOpen, initialImages])
+  useEffect(() => {
+    const safeInitial = Array.isArray(initialImages)
+      ? initialImages
+      : [null, null, null];
+    setImageFiles(
+      safeInitial.map((file) =>
+        file ? { url: file.url, isExisting: true } : null
+      )
+    );
+  }, [isOpen, initialImages]);
 
   const [previews, setPreviews] = useState(new Array(3).fill(null));
   const [modalOpen, setModalOpen] = useState(false);
@@ -101,8 +101,11 @@ const ProductImageVariantAddModal = ({
   };
 
   const handleClose = () => {
+    const safeInitial = Array.isArray(initialImages)
+      ? initialImages
+      : [null, null, null];
     setImageFiles(
-      initialImages.map((file) =>
+      safeInitial.map((file) =>
         file ? { url: file.url, isExisting: true } : null
       )
     );

@@ -241,24 +241,46 @@ exports.searchUsers = async (req, res) => {
 
   try {
     const users = await User.find({
-      $or: [
-        { username: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+      $and: [
+        { role: { $ne: "admin" } },
+        {
+          $or: [
+            { username: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        },
       ],
     })
       .skip(skip)
       .limit(limitNumber);
 
     const totalUsers = await User.countDocuments({
-      $or: [
-        { username: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+      $and: [
+        { role: { $ne: "admin" } },
+        {
+          $or: [
+            { username: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        },
       ],
     });
 
+    const formattedUsers = users.map((user) => ({
+      id: user._id,
+      name: user.username,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar,
+      role: user.role,
+      isBlocked: user.isBlocked,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }));
+
     res.status(200).json({
       success: true,
-      users,
+      users: formattedUsers,
       totalUsers,
       currentPage: pageNumber,
       totalPages: Math.ceil(totalUsers / limitNumber),

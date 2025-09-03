@@ -6,7 +6,7 @@ const couponSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-    maxlength: 50
+    maxlength: 50,
   },
   title: {
     type: String,

@@ -29,6 +29,11 @@ export const userProfileApi = createApi({
       invalidatesTags: ["Addresses"],
     }),
 
+    getAddressById: builder.query({
+      query: (id) => `userProfile/address/${id}`,
+      providesTags: ["Addresses"],
+    }),
+
     removeAddress: builder.mutation({
       query: (id) => ({
         url: `userProfile/address/${id}`,
@@ -102,6 +107,7 @@ export const {
   useGetAddressesQuery,
   useAddAddressMutation,
   useEditAddressMutation,
+  useGetAddressByIdQuery,
   useRemoveAddressMutation,
   useChangePasswordMutation,
   useCheckoutAddressQuery,

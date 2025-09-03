@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetCouponQuery } from "../../../redux/apiSliceFeatures/CouponApiSlice";
 import { ArrowLeft } from "lucide-react";
@@ -5,9 +6,15 @@ import LoadingSpinner from "../../../components/LoadingSpinner";
 
 const ViewCouponDetails = () => {
   const { id } = useParams();
-  const { data, isLoading, isError } = useGetCouponQuery(id);
+  const { data, isLoading, isError, refetch } = useGetCouponQuery(id);
   const coupon = data?.coupon;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (id) {
+      refetch();
+    }
+  }, [id, refetch]);
 
   const isExpired = () => {
     const currentDate = new Date(); 

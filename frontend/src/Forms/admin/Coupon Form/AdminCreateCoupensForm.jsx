@@ -10,7 +10,6 @@ import {
 } from "../../../components/user/StyledComponents/StyledComponents.js";
 import { toast } from "react-toastify";
 import { useAddEntityMutation } from "../../../redux/apiSliceFeatures/crudApiSlice";
-import { useGetAllCouponsQuery } from "../../../redux/apiSliceFeatures/CouponApiSlice";
 import { useGetUsersQuery } from "../../../redux/apiSliceFeatures/userApiSlice";
 import { useGetProductsQuery } from "../../../redux/apiSliceFeatures/productApiSlice";
 import couponSchema from "../../../validation/admin/couponFormValidation.js";
@@ -20,7 +19,6 @@ import ProductModal from "./ProductModal";
 const AdminCouponCreateForm = () => {
   const navigate = useNavigate();
   const [addEntity] = useAddEntityMutation();
-  const { refetch } = useGetAllCouponsQuery();
 
   const [showUserModal, setShowUserModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
@@ -55,6 +53,13 @@ const AdminCouponCreateForm = () => {
 
   const onSubmit = async (formData) => {
     try {
+      const selectedDate = new Date(formData.expiry);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (!(selectedDate instanceof Date) || isNaN(selectedDate) || selectedDate <= today) {
+        toast.error("Expiry must be a future date");
+        return;
+      }
       const dataToSubmit = {
         ...formData,
         discount: parseFloat(formData.discount),
@@ -66,7 +71,6 @@ const AdminCouponCreateForm = () => {
         ),
       };
       await addEntity({ entity: "coupons", data: dataToSubmit }).unwrap();
-      await refetch();
       toast.success("Coupon created successfully");
       navigate(-1);
     } catch (err) {
@@ -165,6 +169,7 @@ const AdminCouponCreateForm = () => {
                       type={field.type}
                       value={value}
                       onChange={onChange}
+                      {...(field.name === "expiry" ? { min: new Date().toISOString().split("T")[0] } : {})}
                       className="w-full dark:text-white dark:bg-gray-800"
                     />
                   )}

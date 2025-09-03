@@ -31,6 +31,25 @@ const TransactionSchema = new mongoose.Schema(
       enum: ["Pending", "Successful", "Failed"],
       default: "Pending",
     },
+    // New fields for comprehensive tracking
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      required: false, // Optional for wallet recharges
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["razorpay", "wallet", "cod", "card"],
+      required: false,
+    },
+    razorpayPaymentId: {
+      type: String,
+      required: false,
+    },
+    razorpayOrderId: {
+      type: String,
+      required: false,
+    },
     createdAt: {
       type: Date,
       default: Date.now, 
@@ -41,8 +60,9 @@ const TransactionSchema = new mongoose.Schema(
   }
 );
 
-
 TransactionSchema.index({ walletId: 1, userId: 1, createdAt: -1 });
+TransactionSchema.index({ orderId: 1 });
+TransactionSchema.index({ razorpayPaymentId: 1 });
 
 module.exports = mongoose.model("Transaction", TransactionSchema);
 

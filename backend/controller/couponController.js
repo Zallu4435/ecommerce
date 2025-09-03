@@ -123,17 +123,40 @@ exports.getAllCoupons = async (req, res, next) => {
     const limitNumber = parseInt(limit) > 0 ? parseInt(limit) : 10;
     const skip = (pageNumber - 1) * limitNumber;
 
-    const coupons = await Coupon.find()
+    const searchFilter = search
+      ? {
+          $or: [
+            { couponCode: { $regex: search, $options: "i" } },
+            { title: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const coupons = await Coupon.find(searchFilter)
       .sort({ updatedAt: -1 })
       .skip(skip)
-      .limit(limitNumber);
+      .limit(limitNumber)
+      .select("_id couponCode title discount expiry updatedAt createdAt");
 
-    const totalCoupons = await Coupon.countDocuments();
+    const totalCoupons = await Coupon.countDocuments(searchFilter);
+
+    const formatted = coupons.map((c) => ({
+      id: c._id,
+      couponCode: c.couponCode,
+      title: c.title,
+      discount: c.discount,
+      expiry: c.expiry,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    }));
 
     res.status(200).json({
       success: true,
-      coupons,
+      coupons: formatted,
       totalCoupons,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalCoupons / limitNumber),
     });
   } catch (error) {
     next(error);
@@ -174,9 +197,10 @@ exports.createCoupon = async (req, res, next) => {
     if (
       !req.body.discount ||
       isNaN(req.body.discount) ||
-      req.body.discount <= 0
+      Number(req.body.discount) <= 0 ||
+      Number(req.body.discount) > 100
     ) {
-      return next(new ErrorHandler("Discount must be a positive number", 400));
+      return next(new ErrorHandler("Discount must be between 1 and 100", 400));
     }
 
     if (
@@ -204,7 +228,15 @@ exports.createCoupon = async (req, res, next) => {
       );
     }
 
-    const coupon = await Coupon.create(req.body);
+    let coupon;
+    try {
+      coupon = await Coupon.create({ ...req.body, couponCode: couponCodeNormalized });
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return next(new ErrorHandler("A coupon with this code already exists", 400));
+      }
+      throw err;
+    }
 
     res.status(201).json({
       success: true,
@@ -249,18 +281,26 @@ exports.updateCoupon = async (req, res, next) => {
       );
     }
 
-    const updatedCoupon = await Coupon.findByIdAndUpdate(
-      req.params.id,
-      {
-        ...req.body,
-        couponCode: req.body.couponCode.trim(),
-      },
-      {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
+    let updatedCoupon;
+    try {
+      updatedCoupon = await Coupon.findByIdAndUpdate(
+        req.params.id,
+        {
+          ...req.body,
+          couponCode: req.body.couponCode.trim(),
+        },
+        {
+          new: true,
+          runValidators: true,
+          useFindAndModify: false,
+        }
+      );
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return next(new ErrorHandler("A coupon with this code already exists", 400));
       }
-    );
+      throw err;
+    }
 
     if (!updatedCoupon) {
       return next(new ErrorHandler("Failed to update the coupon", 500));
@@ -297,16 +337,13 @@ exports.getActiveCoupons = async (req, res, next) => {
   try {
     const currentDate = new Date();
 
-    const activeCoupons = await Coupon.find({ Expiry: { $gt: currentDate } });
+    const activeCoupons = await Coupon.find({ expiry: { $gt: currentDate } }).select(
+      "couponCode title description discount minAmount maxAmount expiry"
+    );
 
     res.status(200).json({
       success: true,
-      activeCoupons: activeCoupons.map((coupon) => ({
-        id: coupon._id,
-        couponCode: coupon.CoupenCode,
-        discount: coupon.Discount,
-        expiry: coupon.Expiry,
-      })),
+      activeCoupons,
     });
   } catch (error) {
     next(error);
@@ -320,8 +357,8 @@ exports.getCouponStatistics = async (req, res, next) => {
         $group: {
           _id: null,
           totalCoupons: { $sum: 1 },
-          averageDiscount: { $avg: "$Discount" },
-          maxDiscount: { $max: "$Discount" },
+          averageDiscount: { $avg: "$discount" },
+          maxDiscount: { $max: "$discount" },
         },
       },
     ]);
@@ -343,24 +380,24 @@ exports.validateCoupon = async (req, res, next) => {
       return next(new ErrorHandler("Coupon code is required", 400));
     }
 
-    const coupon = await Coupon.findOne({ CoupenCode: couponCode });
+    const coupon = await Coupon.findOne({ couponCode });
 
     if (!coupon) {
       return next(new ErrorHandler("Invalid coupon code", 404));
     }
 
     const currentDate = new Date();
-    if (currentDate > coupon.Expiry) {
+    if (currentDate > coupon.expiry) {
       return next(new ErrorHandler("Coupon has expired", 400));
     }
 
     res.status(200).json({
       success: true,
       message: "Coupon is valid",
-      discount: coupon.Discount,
-      expiry: coupon.Expiry,
-      maxDiscount: coupon.MaxDiscount,
-      minPurchase: coupon.MinPurchase,
+      discount: coupon.discount,
+      expiry: coupon.expiry,
+      maxDiscount: coupon.maxAmount,
+      minPurchase: coupon.minAmount,
     });
   } catch (error) {
     next(error);

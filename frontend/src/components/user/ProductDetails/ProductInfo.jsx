@@ -8,6 +8,12 @@ const ProductInfo = ({
   averageRating,
   totalReviews,
   offerPrice,
+  category,
+  brand,
+  returnPolicy,
+  sizeOption = [],
+  colorOption = [],
+  stockQuantity,
 }) => {
   return (
     <div className="mt-4 sm:mt-6 md:mt-8 p-4 sm:p-5 md:p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
@@ -56,22 +62,34 @@ const ProductInfo = ({
 
       {/* Specifications */}
       <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">
-        Specifications
+        Product Details
       </h2>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-gray-700 dark:text-gray-300">
           <tbody>
             <tr className="border-b">
-              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Material</td>
-              <td className="py-2 text-sm sm:text-base">Premium Alloy</td>
+              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Category</td>
+              <td className="py-2 text-sm sm:text-base">{category || "-"}</td>
             </tr>
             <tr className="border-b">
-              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Dimensions</td>
-              <td className="py-2 text-sm sm:text-base">15x10x5 inches</td>
+              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Brand</td>
+              <td className="py-2 text-sm sm:text-base">{brand || "-"}</td>
+            </tr>
+            <tr className="border-b">
+              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Return Policy</td>
+              <td className="py-2 text-sm sm:text-base">{returnPolicy || "-"}</td>
+            </tr>
+            <tr className="border-b">
+              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Available Sizes</td>
+              <td className="py-2 text-sm sm:text-base">{sizeOption.length ? sizeOption.join(", ") : "-"}</td>
+            </tr>
+            <tr className="border-b">
+              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Available Colors</td>
+              <td className="py-2 text-sm sm:text-base">{colorOption.length ? colorOption.join(", ") : "-"}</td>
             </tr>
             <tr>
-              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Warranty</td>
-              <td className="py-2 text-sm sm:text-base">1 Year</td>
+              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Stock</td>
+              <td className="py-2 text-sm sm:text-base">{typeof stockQuantity === 'number' ? stockQuantity : '-'}</td>
             </tr>
           </tbody>
         </table>

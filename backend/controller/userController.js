@@ -1,14 +1,15 @@
 const User = require("../model/User");
 const ErrorHandler = require("../utils/ErrorHandler");
 const jwt = require("jsonwebtoken");
-const { sendMail, sendOTPEmail } = require("../utils/sendMail");
+const { sendMail, sendOTPEmail, templates } = require("../utils/sendMail");
 const { sendToken } = require("../utils/jwtToken");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const createActivationToken = (user) => {
+  const expires = process.env.JWT_ACTIVATION_EXPIRES || "30m";
   return jwt.sign(user, process.env.JWT_ACTIVATION_SECRET, {
-    expiresIn: "5m",
+    expiresIn: expires,
   });
 };
 
@@ -21,7 +22,7 @@ const createActivationOtp = (email) => {
 
 exports.activateAccount = async (req, res, next) => {
   try {
-    const { token } = req.body;
+    const token = req.params.activation_token || req.body.token;
 
     const decoded = jwt.verify(token, process.env.JWT_ACTIVATION_SECRET);
 
@@ -32,11 +33,11 @@ exports.activateAccount = async (req, res, next) => {
       );
     }
 
-    if (user.isActive) {
+    if (user.status === "active") {
       return next(new ErrorHandler("Account is already activated", 400));
     }
 
-    user.isActive = true;
+    user.status = "active";
     await user.save();
 
     sendToken(user, 200, res);
@@ -52,7 +53,27 @@ exports.signupUser = async (req, res, next) => {
   try {
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return next(new ErrorHandler("User already exists.", 400));
+      if (userExists.status === "active") {
+        return next(new ErrorHandler("User already exists.", 400));
+      }
+      if (userExists.status === "pending") {
+        const createdAt = userExists.createdAt || new Date();
+        const expiry = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const now = new Date();
+
+        if (now >= expiry) {
+          await User.deleteOne({ _id: userExists._id });
+        } else {
+          const remainingMs = expiry.getTime() - now.getTime();
+          const remainingDays = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+          return next(
+            new ErrorHandler(
+              `You already signed up. Check your email to activate or wait ${remainingDays} day(s) to sign up again`,
+              400
+            )
+          );
+        }
+      }
     }
 
     const newUser = new User({
@@ -60,17 +81,25 @@ exports.signupUser = async (req, res, next) => {
       email,
       password,
       phone,
-      isActive: false,
+      status: "pending",
     });
     await newUser.save();
 
     const activationToken = createActivationToken({ id: newUser._id });
     const activationUrl = `${process.env.ORIGIN}/activation/${activationToken}`;
 
+    const html = templates.baseEmailTemplate({
+      title: "Activate your account",
+      bodyHtml: `<p>Hello ${newUser.username || ''},</p><p>Click the button below to activate your account.</p>`,
+      ctaLabel: "Activate Account",
+      ctaUrl: activationUrl,
+    });
+
     await sendMail({
       email: newUser.email,
       subject: "Activate your account",
-      message: `Hello ${newUser.username}, Please click on the link to activate your account: ${activationUrl}`,
+      message: `Activate link: ${activationUrl}`,
+      html,
     });
 
     res.status(201).json({
@@ -78,7 +107,7 @@ exports.signupUser = async (req, res, next) => {
       message: `Please check your email: ${newUser.email} to activate your account.`,
     });
   } catch (err) {
-    if (newUser) {
+    if (typeof newUser !== 'undefined' && newUser && newUser._id) {
       await User.deleteOne({ _id: newUser._id });
     }
     return next(new ErrorHandler(err.message, 500));
@@ -107,6 +136,7 @@ exports.googleLogin = async (req, res, next) => {
       email,
       username: name,
       avatar: picture,
+      status: "active",
     });
   }
 
@@ -129,6 +159,9 @@ exports.loginUser = async (req, res, next) => {
   if (user.isBlocked) {
     return next(new ErrorHandler("User banned! Can't login"));
   }
+  if (user.status !== "active") {
+    return next(new ErrorHandler("Please activate your account from email", 403));
+  }
   const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
     return next(
@@ -149,16 +182,32 @@ exports.otpLogin = async (req, res, next) => {
   try {
     let user = await User.findOne({ email });
     if (!user) {
-      user = new User({ email });
+      return next(new ErrorHandler("No account found with this email", 404));
+    }
+
+    if (user.isBlocked) {
+      return next(new ErrorHandler("User banned! Can't login"));
+    }
+
+    if (user.status !== "active") {
+      return next(new ErrorHandler("Please activate your account from email", 403));
     }
 
     const otp = user.generateOTP();
     await user.save();
 
+    const otpExpiryText = process.env.OTP_EXPIRATION || "10m";
+    const html = templates.baseEmailTemplate({
+      title: "Your verification code",
+      bodyHtml: `<p>Use the code below to continue. It expires in ${otpExpiryText}.</p>
+                 <div style=\"font-size:28px;font-weight:700;letter-spacing:3px;margin:12px 0;\">${otp}</div>`
+    });
+
     await sendOTPEmail({
       email: user.email,
-      subject: "Activate your account",
-      message: `Your otp is ${otp}`,
+      subject: "Your verification code",
+      message: `Your verification code is ${otp}. It expires in ${otpExpiryText}.`,
+      html,
     });
 
     const token = jwt.sign({ email }, process.env.OTP_SECRET, {
@@ -167,7 +216,6 @@ exports.otpLogin = async (req, res, next) => {
 
     res.status(200).json({ message: "OTP sent successfully", token });
   } catch (error) {
-    console.error("Error during OTP login:", error);
     next(new ErrorHandler("OTP Login failed", 500));
   }
 };
@@ -362,12 +410,14 @@ exports.getAllUsers = async (req, res) => {
     const limitNumber = parseInt(limit) > 0 ? parseInt(limit) : 10;
     const skip = (pageNumber - 1) * limitNumber;
 
+    const baseFilter = { role: { $ne: "admin" } };
+
     const searchFilter = search
-      ? { username: { $regex: search, $options: "i" } }
-      : {};
+      ? { $and: [baseFilter, { username: { $regex: search, $options: "i" } }] }
+      : baseFilter;
 
     const users = await User.find(searchFilter)
-      .select("id username avatar email role createdAt isBlocked")
+      .select("id username avatar email role createdAt isBlocked status")
       .sort({ updatedAt: -1, createdAt: -1 })
       .skip(skip)
       .limit(limitNumber);
@@ -395,6 +445,7 @@ exports.getAllUsers = async (req, res) => {
         joinDate: user.createdAt,
         isBlocked: user.isBlocked,
         avatar: user.avatar,
+        status: user.status,
       })),
       totalUsers,
       currentPage: pageNumber,
@@ -408,7 +459,7 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getUser = async (req, res, next) => {
   const user = await User.findById(req.user).select(
-    "username nickname phone email gender address avatar"
+    "username nickname phone email gender address avatar status"
   );
   if (!user) {
     return next(new ErrorHandler("User doesn't exist!", 400));

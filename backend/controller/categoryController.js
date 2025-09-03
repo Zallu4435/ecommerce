@@ -36,19 +36,18 @@ exports.createCategory = async (req, res) => {
   try {
     const { categoryName, categoryDescription, categoryOffer } = req.body;
 
-    if (!categoryName || !categoryDescription) {
-      return res
-        .status(400)
-        .json({ message: "Category name and description are required" });
+    if (!categoryName || categoryName.trim() === "") {
+      return res.status(400).json({ message: "Category name is required" });
+    }
+    if (!categoryDescription || categoryDescription.trim() === "") {
+      return res.status(400).json({ message: "Category description is required" });
     }
 
     if (
       categoryOffer !== undefined &&
-      (categoryOffer < 0 || categoryOffer > 100)
+      (isNaN(Number(categoryOffer)) || Number(categoryOffer) < 0 || Number(categoryOffer) > 100)
     ) {
-      return res
-        .status(400)
-        .json({ message: "Category offer must be between 0 and 100" });
+      return res.status(400).json({ message: "Category offer must be between 0 and 100" });
     }
 
     const existingCategory = await Category.findOne({
@@ -65,7 +64,14 @@ exports.createCategory = async (req, res) => {
       categoryOffer,
     });
 
-    await newCategory.save();
+    try {
+      await newCategory.save();
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return res.status(400).json({ message: "Category already exists" });
+      }
+      throw err;
+    }
 
     res.status(201).json({
       message: "Category created successfully",
@@ -94,14 +100,32 @@ exports.updateCategory = async (req, res, next) => {
       return next(new ErrorHandler("Category name already exists", 400));
     }
 
-    category = await Category.findByIdAndUpdate(
-      req.params.id,
-      { ...req.body, categoryName: normalizedCategoryName },
-      {
-        new: true,
-        runValidators: true,
+    // Validate optional fields if present
+    if (req.body.categoryDescription !== undefined && req.body.categoryDescription.trim() === "") {
+      return next(new ErrorHandler("Category description cannot be empty", 400));
+    }
+    if (req.body.categoryOffer !== undefined) {
+      const offer = Number(req.body.categoryOffer);
+      if (isNaN(offer) || offer < 0 || offer > 100) {
+        return next(new ErrorHandler("Category offer must be between 0 and 100", 400));
       }
-    );
+    }
+
+    try {
+      category = await Category.findByIdAndUpdate(
+        req.params.id,
+        { ...req.body, categoryName: normalizedCategoryName },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return next(new ErrorHandler("Category name already exists", 400));
+      }
+      throw err;
+    }
 
     res.status(200).json({
       success: true,

@@ -57,6 +57,27 @@ exports.getAddress = async (req, res) => {
   }
 };
 
+exports.getAddressById = async (req, res, next) => {
+  try {
+    const userId = req.user;
+    const { id } = req.params;
+
+    if (!id) {
+      return next(new ErrorHandler("Address id is required", 400));
+    }
+
+    const address = await Address.findOne({ _id: id, userId });
+    if (!address) {
+      return next(new ErrorHandler("Address not found", 404));
+    }
+
+    return res.status(200).json(address);
+  } catch (error) {
+    console.error("Error fetching address by id:", error);
+    return next(new ErrorHandler("Failed to fetch address", 500));
+  }
+};
+
 exports.addAddress = async (req, res, next) => {
   try {
     const userId = req.user;
@@ -277,7 +298,13 @@ const handleCartOrder = async (userId, cartItems) => {
       Status: "Order Placed",
     });
   }
-  return items;
+  return { items, cart };
+};
+
+const removeItemsFromCart = async (cart, cartItems) => {
+  const cartItemIds = cartItems.map(item => item.cartItemId);
+  cart.items = cart.items.filter(item => !cartItemIds.includes(item._id.toString()));
+  await cart.save();
 };
 
 const validateAndApplyCoupon = async (couponCode, userId) => {
@@ -348,11 +375,7 @@ const createPaymentRecord = async (
   if (paymentMethod === "card") {
     const wallet = await Wallet.findOne({ userId });
 
-    if (!wallet) {
-      throw new Error("User does not have a wallet.");
-    }
-
-    if (wallet.balance >= totalAmount) {
+    if (wallet && wallet.balance >= totalAmount) {
       wallet.balance -= totalAmount;
       await wallet.save();
 
@@ -369,14 +392,20 @@ const createPaymentRecord = async (
       transactionId = transaction._id;
       paymentStatus = "Successful";
     } else {
-      const ba = await Order.findById({ _id: orderId });
-      ba?.items?.map((val) => (val.Status = "Failed"));
-      await ba.save();
-      throw new Error("Insufficient balance in the wallet.");
+      const existingOrder = await Order.findById(orderId);
+      if (existingOrder?.items?.length) {
+        existingOrder.items = existingOrder.items.map((item) => ({
+          ...item.toObject?.() || item,
+          Status: "Failed",
+        }));
+        await existingOrder.save();
+      }
+      paymentStatus = "Failed";
+      transactionId = null;
     }
   } else if (paymentMethod === "razorpay") {
-    paymentStatus = "Successful";
-    transactionId = razorpayTransactionId;
+    paymentStatus = "Pending"; // Razorpay payment is handled separately
+    transactionId = null; // Transaction ID will be set after verification
   } else if (paymentMethod === "cod") {
     paymentStatus = "Pending";
   } else {
@@ -401,11 +430,16 @@ exports.processPayment = async (req, res) => {
     const userId = req.user;
 
     let items = [];
+    let cart = null;
+    let isCartOrder = false;
 
     if (order?.productId) {
       items.push(await handleSingleProductOrder(order?.productId, 1));
     } else if (order && order.cartItems && order.cartItems.length > 0) {
-      items = await handleCartOrder(userId, order.cartItems);
+      const cartResult = await handleCartOrder(userId, order.cartItems);
+      items = cartResult.items;
+      cart = cartResult.cart;
+      isCartOrder = true;
     } else {
       return res
         .status(400)
@@ -436,15 +470,100 @@ exports.processPayment = async (req, res) => {
       totalAmount
     );
 
+    if (isCartOrder && cart) {
+      await removeItemsFromCart(cart, order.cartItems);
+    }
+
     res.status(200).json({
       message: "Order placed successfully",
       orderId: savedOrder._id,
       paymentId: paymentRecord._id,
+      paymentStatus: paymentRecord.status,
     });
   } catch (error) {
     console.error("Error processing order:", error);
     res.status(500).json({
       message: error.message || "An error occurred while processing the order.",
+    });
+  }
+};
+
+exports.verifyRazorpayPayment = async (req, res) => {
+  try {
+    const { 
+      razorpay_payment_id, 
+      razorpay_order_id, 
+      razorpay_signature,
+      orderId,
+      amount 
+    } = req.body;
+    
+    const userId = req.user;
+
+    // Verify the payment signature
+    const crypto = require('crypto');
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpay_order_id + '|' + razorpay_payment_id)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid payment signature' 
+      });
+    }
+
+    // Find the existing order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Order not found' 
+      });
+    }
+
+    // Update payment record with Razorpay details
+    const paymentRecord = await Payment.findOne({ OrderId: orderId });
+    if (paymentRecord) {
+      paymentRecord.status = 'Successful';
+      paymentRecord.razorpayPaymentId = razorpay_payment_id;
+      paymentRecord.razorpayOrderId = razorpay_order_id;
+      paymentRecord.paymentDate = new Date();
+      await paymentRecord.save();
+    }
+
+    // Create transaction record
+    const wallet = await Wallet.findOne({ userId });
+    if (wallet) {
+      const transaction = new Transaction({
+        walletId: wallet._id,
+        userId,
+        type: "Credit",
+        amount: amount,
+        description: `Razorpay payment for order ${orderId}`,
+        status: "Successful",
+        orderId: orderId,
+        paymentMethod: "razorpay",
+        razorpayPaymentId: razorpay_payment_id,
+        razorpayOrderId: razorpay_order_id,
+      });
+      await transaction.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment verified successfully',
+      paymentId: razorpay_payment_id,
+      orderId: orderId
+    });
+
+  } catch (error) {
+    console.error('Error verifying Razorpay payment:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify payment',
+      error: error.message
     });
   }
 };

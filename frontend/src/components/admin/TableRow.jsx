@@ -4,7 +4,6 @@ import DeleteConfirmationModal from "../../modal/admin/ConfirmDeleteModal";
 import { useState } from "react";
 import { defaultProfile } from "../../assets/images";
 import { useNavigate } from "react-router-dom";
-import { useGetAllCouponsQuery } from "../../redux/apiSliceFeatures/CouponApiSlice";
 
 const TableRow = ({ item, type }) => {
   const { handleBan, handleDelete, handleUpdate, handleView } =
@@ -12,7 +11,6 @@ const TableRow = ({ item, type }) => {
   const [showModal, setShowModal] = useState(false); 
   const [itemToDelete, setItemToDelete] = useState(null); 
   const navigate = useNavigate();
-  const { refetch: refetchCoupon } = useGetAllCouponsQuery();
 
   const openModal = (item) => {
     setItemToDelete(item);
@@ -29,7 +27,6 @@ const TableRow = ({ item, type }) => {
       itemToDelete.id ? itemToDelete.id : itemToDelete._id,
       type === "categories" ? "category" : type
     );
-    await refetchCoupon();
     closeModal();
   };
 
@@ -164,7 +161,7 @@ const TableRow = ({ item, type }) => {
                 borderColor="#16a34a"
                 textColor="#16a34a"
                 hoverColor="white"
-                onClick={() => handleUpdate(item._id, "coupons")}
+                onClick={() => handleUpdate(item.id, "coupons")}
               >
                 Update
               </Button>
@@ -237,7 +234,6 @@ const TableRow = ({ item, type }) => {
   );
 };
 
-// Define table configurations based on the type
 export const config = {
   users: {
     headers: ["Username", "Email", "Role", "Join Date", "Actions"],

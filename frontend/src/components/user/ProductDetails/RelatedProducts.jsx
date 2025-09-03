@@ -52,6 +52,19 @@ const RelatedProduct = ({ category }) => {
     return <div>Error fetching products.</div>;
   }
 
+  if (!relatedProduct || relatedProduct.length === 0) {
+    return (
+      <div className="relative mx-5 lg:mx-12">
+        <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
+          Related Products
+        </h2>
+        <div className="text-center py-10 text-gray-600 dark:text-gray-300">
+          No related products available.
+        </div>
+      </div>
+    );
+  }
+
   const nextSlide = () => {
     if (currentIndex + productsPerPage < relatedProduct.length) {
       setCurrentIndex(currentIndex + productsPerPage);

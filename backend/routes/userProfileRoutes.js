@@ -7,12 +7,14 @@ const {
   editAddress,
   removeAddress,
   getAddress,
+  getAddressById,
   changePassword,
   checkoutAddress,
   processPayment,
   checkProductStock,
   contact,
-  primaryAddress
+  primaryAddress,
+  verifyRazorpayPayment
 } = require("../controller/userProfileController");
 
 router.post('/contact', catchAsyncErrors(contact))
@@ -21,6 +23,7 @@ router.post("/address", isAuthenticated, catchAsyncErrors(addAddress));
 router.put("/address", isAuthenticated, catchAsyncErrors(editAddress));
 router.delete("/address/:id", isAuthenticated, catchAsyncErrors(removeAddress));
 router.get("/addresses", isAuthenticated, catchAsyncErrors(getAddress));
+router.get("/address/:id", isAuthenticated, catchAsyncErrors(getAddressById));
 router.put(
   "/change-password",
   isAuthenticated,
@@ -37,6 +40,11 @@ router.post(
   "/process-payment",
   isAuthenticated,
   catchAsyncErrors(processPayment)
+);
+router.post(
+  "/verify-razorpay-payment",
+  isAuthenticated,
+  catchAsyncErrors(verifyRazorpayPayment)
 );
 router.get("/products/:productId/stock", catchAsyncErrors(checkProductStock));
 

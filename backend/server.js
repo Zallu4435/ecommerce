@@ -1,5 +1,6 @@
 const app = require("./app");
 const connectDatabase = require("./db/database");
+const { scheduleUserCleanup } = require("./utils/cleanup");
 require("events").EventEmitter.defaultMaxListeners = 20;
 
 // Handling uncaught Exception
@@ -22,6 +23,7 @@ connectDatabase();
 const port = process.env.PORT || 5000;
 const server = app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
+  scheduleUserCleanup();
 });
 
 // Unhandled promise

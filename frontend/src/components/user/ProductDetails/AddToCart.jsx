@@ -21,8 +21,8 @@ const AddToCart = ({
   stockQuantity,
 }) => {
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState(sizeOption[0] || "M");
-  const [selectedColor, setSelectedColor] = useState(colorOption[0] || "Red");
+  const [selectedSize, setSelectedSize] = useState((sizeOption && sizeOption[0]) || "");
+  const [selectedColor, setSelectedColor] = useState((colorOption && colorOption[0]) || "");
   const [isLoading, setIsLoading] = useState(false);
   const { refetch: refetchCart } = useGetCartQuery();
   const [addToCart] = useAddToCartMutation();
@@ -41,20 +41,20 @@ const AddToCart = ({
     const sizeParam = params.get("size");
     const colorParam = params.get("color");
 
-    if (sizeParam && sizeOption.includes(sizeParam)) {
+    if (sizeParam && sizeOption?.includes(sizeParam)) {
       setSelectedSize(sizeParam);
     }
-    if (colorParam && colorOption.includes(colorParam)) {
+    if (colorParam && colorOption?.includes(colorParam)) {
       setSelectedColor(colorParam);
     }
 
     const savedSize = localStorage.getItem(`${productId}_size`);
     const savedColor = localStorage.getItem(`${productId}_color`);
 
-    if (savedSize && sizeOption.includes(savedSize)) {
+    if (savedSize && sizeOption?.includes(savedSize)) {
       setSelectedSize(savedSize);
     }
-    if (savedColor && colorOption.includes(savedColor)) {
+    if (savedColor && colorOption?.includes(savedColor)) {
       setSelectedColor(savedColor);
     }
   }, [location.search, productId, sizeOption, colorOption]);
@@ -189,34 +189,42 @@ const AddToCart = ({
             <label className="text-gray-700 dark:text-gray-300 mr-2 w-20">
               Size:
             </label>
-            <select
-              value={selectedSize}
-              onChange={handleSizeChange}
-              className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 w-full transition-colors duration-200"
-            >
-              {sizeOption.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
+            {sizeOption && sizeOption.length > 0 ? (
+              <select
+                value={selectedSize}
+                onChange={handleSizeChange}
+                className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 w-full transition-colors duration-200"
+              >
+                {sizeOption.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-gray-500 dark:text-gray-400">No sizes</span>
+            )}
           </div>
 
           <div className="flex items-center">
             <label className="text-gray-700 dark:text-gray-300 mr-2 w-20">
               Color:
             </label>
-            <select
-              value={selectedColor}
-              onChange={handleColorChange}
-              className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 w-full transition-colors duration-200"
-            >
-              {colorOption.map((color) => (
-                <option key={color} value={color}>
-                  {color}
-                </option>
-              ))}
-            </select>
+            {colorOption && colorOption.length > 0 ? (
+              <select
+                value={selectedColor}
+                onChange={handleColorChange}
+                className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 w/full transition-colors duration-200"
+              >
+                {colorOption.map((color) => (
+                  <option key={color} value={color}>
+                    {color}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-gray-500 dark:text-gray-400">No colors</span>
+            )}
           </div>
         </div>
 
@@ -265,12 +273,12 @@ const AddToCart = ({
 
         <button
           className={`w-full px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-all duration-300 transform hover:scale-105 ${
-            stockQuantity <= 0 || !isAuthenticated || isLoading
+            stockQuantity <= 0 || !isAuthenticated || isLoading || !selectedSize || !selectedColor
               ? "opacity-50 cursor-not-allowed"
               : ""
           }`}
           onClick={handleAddToCart}
-          disabled={!isAuthenticated || isLoading || stockQuantity <= 0}
+          disabled={!isAuthenticated || isLoading || stockQuantity <= 0 || !selectedSize || !selectedColor}
         >
           {isAuthenticated ? "Add to Cart" : "SignIn to Add to Cart"}
         </button>

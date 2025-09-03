@@ -3,14 +3,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLoginAdminMutation } from "../../redux/apiSliceFeatures/AdminApiSlice";
 import { toast } from "react-toastify";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setAdminCredentials } from "../../redux/slice/adminSlice";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const AdminLogin = () => {
   const [loginAdmin] = useLoginAdminMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isUserAuthenticated = useSelector((state) => state.user.isAuthenticated);
+  const [backendErr, setBackendErr] = useState("");
 
   const {
     register,
@@ -26,9 +29,19 @@ const AdminLogin = () => {
       dispatch(setAdminCredentials(response.admin, response.adminAccessToken));
       navigate("/admin/dashboard");
     } catch (err) {
-      toast.error(err?.data?.message || "Login failed");
+      const message = err?.data?.message || "Login failed";
+      toast.error(message);
+      setBackendErr(message);
+      setTimeout(() => setBackendErr(""), 5000);
     }
   };
+
+  useEffect(() => {
+    if (isUserAuthenticated) {
+      toast.error("Access denied. User accounts cannot log in to admin.");
+      navigate("/", { replace: true });
+    }
+  }, [isUserAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen dark:bg-gray-900 flex bg-orange-50 items-center justify-center p-4">
@@ -38,6 +51,9 @@ const AdminLogin = () => {
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} method="POST">
+          {backendErr && (
+            <p className="text-red-500 font-bold text-sm mb-4">{backendErr}</p>
+          )}
           <div className="mb-6">
             <input
               type="email"

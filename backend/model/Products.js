@@ -4,6 +4,9 @@ const ProductsSchema = new mongoose.Schema(
   {
     productName: {
       type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
     createdBy: {
       type: String,
@@ -38,6 +41,9 @@ const ProductsSchema = new mongoose.Schema(
       },
     ],
     image: {
+      type: String,
+    },
+    imagePublicId: {
       type: String,
     },
     sizeOption: [

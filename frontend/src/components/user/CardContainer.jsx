@@ -49,32 +49,40 @@ export const CardContainer = () => {
   return (
     <div className="flex flex-col items-center shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] p-6 rounded-lg space-y-6 overflow-x-hidden">
       {/* Grid container for products */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-        {popular_Products.slice(startIndex, endIndex).map((products, index) => (
-          <ShoppingCard key={index} {...products} />
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6 w-full">
+        {popular_Products && popular_Products.length > 0 ? (
+          popular_Products.slice(startIndex, endIndex).map((products, index) => (
+            <ShoppingCard key={index} {...products} />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-10 text-gray-600 dark:text-gray-300">
+            No products available.
+          </div>
+        )}
       </div>
 
       {/* Pagination controls */}
-      <div className="flex justify-center space-x-4 mt-6">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-        >
-          Previous
-        </button>
-        <span className="font-semibold text-gray-800 dark:text-gray-200">
-          {currentPage} / {totalPages}
-        </span>
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-        >
-          Next
-        </button>
-      </div>
+      {popular_Products && popular_Products.length > 0 && (
+        <div className="flex justify-center space-x-4 mt-6">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+          >
+            Previous
+          </button>
+          <span className="font-semibold text-gray-800 dark:text-gray-200">
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

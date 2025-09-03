@@ -48,7 +48,7 @@ const Wallet = () => {
     }
 
     const options = {
-      key: "rzp_test_1rT7BxhvJixZp1",
+      key: import.meta.env.VITE_RAZORPAY_KEY,
       amount: value * 100,
       currency: "INR",
       name: "Test Wallet",

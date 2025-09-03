@@ -94,15 +94,17 @@ const AdminProductUpdateForm = () => {
 
     try {
       if (formData.image instanceof File) {
-        const mainImageUrl = await uploadImageToCloudinary(formData.image);
-        formData.image = mainImageUrl;
+        const mainImage = await uploadImageToCloudinary(formData.image);
+        formData.image = mainImage.secureUrl;
+        formData.imagePublicId = mainImage.publicId;
       }
 
       if (imageFiles.length > 0) {
         const variantImageUrls = await Promise.all(
           imageFiles.map(async (fileObj) => {
             if (fileObj && !fileObj.isExisting) {
-              return await uploadImageToCloudinary(fileObj.file);
+              const uploaded = await uploadImageToCloudinary(fileObj.file);
+              return uploaded.secureUrl;
             }
             return fileObj?.url || null;
           })

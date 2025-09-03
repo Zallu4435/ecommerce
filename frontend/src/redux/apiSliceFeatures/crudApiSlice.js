@@ -4,7 +4,7 @@ import { server } from "../../server";
 export const crudApiSlice = createApi({
   reducerPath: "crudApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${server}` }),
-  tagTypes: ["Entity"],
+  tagTypes: ["Entity", "Coupon"],
   endpoints: (builder) => ({
     addEntity: builder.mutation({
       query: ({ entity, data }) => ({
@@ -12,9 +12,17 @@ export const crudApiSlice = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: (result, error, { entity }) => [
-        { type: "Entity", id: `${entity}-LIST` },
-      ],
+      invalidatesTags: (result, error, { entity }) => {
+        const baseInvalidations = [{ type: "Entity", id: `${entity}-LIST` }];
+        if (entity === "coupons") {
+          return [
+            ...baseInvalidations,
+            { type: "Coupon", id: "LIST" },
+            { type: "Coupon", id: "active-coupons" },
+          ];
+        }
+        return baseInvalidations;
+      },
     }),
 
     updateEntity: builder.mutation({
@@ -23,10 +31,13 @@ export const crudApiSlice = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: (result, error, { entity, id }) => [
-        { type: "Entity", id },
-        { type: "Entity", id: `${entity}-LIST` },
-      ],
+      invalidatesTags: (result, error, { entity, id }) => {
+        const baseInvalidations = [
+          { type: "Entity", id },
+          { type: "Entity", id: `${entity}-LIST` },
+        ];
+        return baseInvalidations;
+      },
     }),
 
     deleteEntity: builder.mutation({
@@ -34,10 +45,20 @@ export const crudApiSlice = createApi({
         url: `/${entity}/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, { entity, id }) => [
-        { type: "Entity", id },
-        { type: "Entity", id: `${entity}-LIST` },
-      ],
+      invalidatesTags: (result, error, { entity, id }) => {
+        const baseInvalidations = [
+          { type: "Entity", id },
+          { type: "Entity", id: `${entity}-LIST` },
+        ];
+        if (entity === "coupons") {
+          return [
+            ...baseInvalidations,
+            { type: "Coupon", id: "LIST" },
+            { type: "Coupon", id: "active-coupons" },
+          ];
+        }
+        return baseInvalidations;
+      },
     }),
 
     banEntity: builder.mutation({
@@ -45,10 +66,20 @@ export const crudApiSlice = createApi({
         url: `/${entity}/ban/${id}`,
         method: "PATCH",
       }),
-      invalidatesTags: (result, error, { entity, id }) => [
-        { type: "Entity", id },
-        { type: "Entity", id: `${entity}-LIST` },
-      ],
+      invalidatesTags: (result, error, { entity, id }) => {
+        const baseInvalidations = [
+          { type: "Entity", id },
+          { type: "Entity", id: `${entity}-LIST` },
+        ];
+        if (entity === "coupons") {
+          return [
+            ...baseInvalidations,
+            { type: "Coupon", id: "LIST" },
+            { type: "Coupon", id: "active-coupons" },
+          ];
+        }
+        return baseInvalidations;
+      },
     }),
   }),
 });

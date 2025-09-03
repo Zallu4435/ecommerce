@@ -43,6 +43,8 @@ const ProductDetails = () => {
     sizeOption,
     stockQuantity,
     category,
+    brand,
+    returnPolicy,
     averageRating,
     totalReviews,
     offerPrice
@@ -66,19 +68,19 @@ const ProductDetails = () => {
         <div className="mt-6 max-w-7xl mx-auto p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.5)] rounded-lg">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
             <div className="lg:col-span-2">
-              <ProductImage image={image} variantImages={variantImages} />
+              <ProductImage image={image} variantImages={variantImages || []} />
             </div>
 
             <div className="lg:col-span-1 space-y-4">
               <AddToCart
                 productId={_id}
-                stockQuantity={stockQuantity}
+                stockQuantity={stockQuantity ?? 0}
                 productImage={image}
                 productName={productName}
-                colorOption={colorOption}
-                sizeOption={sizeOption}
-                originalPrice={originalPrice}
-                offerPrice={offerPrice}
+                colorOption={colorOption || []}
+                sizeOption={sizeOption || []}
+                originalPrice={originalPrice ?? 0}
+                offerPrice={offerPrice ?? originalPrice ?? 0}
               />
               <AddToWishlist productId={_id} />
             </div>
@@ -87,11 +89,17 @@ const ProductDetails = () => {
           <ProductInfo
             className="mt-8"
             productName={productName}
-            originalPrice={originalPrice}
-            offerPrice={offerPrice}
+            originalPrice={originalPrice ?? 0}
+            offerPrice={offerPrice ?? originalPrice ?? 0}
             description={description}
-            totalReviews={totalReviews}
-            averageRating={averageRating}
+            totalReviews={totalReviews ?? 0}
+            averageRating={averageRating ?? 0}
+            category={category || ""}
+            brand={brand || ""}
+            returnPolicy={returnPolicy || ""}
+            sizeOption={(sizeOption || [])}
+            colorOption={(colorOption || [])}
+            stockQuantity={stockQuantity ?? 0}
           />
 
           <AddReview className="mt-8" productId={_id} />

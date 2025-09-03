@@ -1,18 +1,42 @@
 import * as z from "zod";
 
+const namePattern = /^[A-Za-z][A-Za-z\s.'-]*$/;
+const noEmoji = /^(?!.*([\uD83C-\uDBFF\uDC00-\uDFFF]|[\u2600-\u27BF])).*$/;
 
 export const addressSchema = z.object({
-  username: z.string().min(1, "Full name is required").max(50, "Full name cannot exceed 50 characters"),
+  username: z.string()
+    .trim()
+    .min(1, "Full name is required")
+    .max(50, "Full name cannot exceed 50 characters")
+    .regex(namePattern, 'Use letters, spaces, apostrophes, periods, and hyphens only')
+    .regex(noEmoji, 'Name cannot include emojis'),
   phone: z.string()
-    .min(10, "Phone number must be at least 10 characters")
-    .max(15, "Phone number is too long")
-    .regex(/^[0-9]+$/, "Phone number must contain only digits"),
+    .trim()
+    .regex(/^\+?[0-9]{10,15}$/, 'Enter a valid phone number'),
   zipCode: z.string()
-    .length(6, "Pincode must be exactly 6 digits")
-    .regex(/^[0-9]+$/, "Pincode must contain only digits"),
-  house: z.string().min(5, "Address is required").max(100, "Address cannot exceed 100 characters"),
-  street: z.string().min(5, "Area/Street is required").max(100, "Street name cannot exceed 100 characters"),
-  landmark: z.string().max(50, "Landmark cannot exceed 50 characters"), 
-  city: z.string().min(3, "City is required").max(50, "City name cannot exceed 50 characters"),
-  state: z.string().min(2, "State is required").max(50, "State name cannot exceed 50 characters"),
+    .trim()
+    .regex(/^[0-9]{4,10}$/i, 'Enter a valid postal code'),
+  house: z.string()
+    .trim()
+    .min(5, "Address is required")
+    .max(100, "Address cannot exceed 100 characters"),
+  street: z.string()
+    .trim()
+    .min(3, "Area/Street is required")
+    .max(100, "Street name cannot exceed 100 characters"),
+  landmark: z.string()
+    .trim()
+    .max(50, "Landmark cannot exceed 50 characters")
+    .optional()
+    .or(z.literal('')),
+  city: z.string()
+    .trim()
+    .min(2, "City is required")
+    .max(50, "City name cannot exceed 50 characters")
+    .regex(/^[A-Za-z][A-Za-z\s.'-]*$/, 'Use letters and separators only'),
+  state: z.string()
+    .trim()
+    .min(2, "State is required")
+    .max(50, "State name cannot exceed 50 characters")
+    .regex(/^[A-Za-z][A-Za-z\s.'-]*$/, 'Use letters and separators only'),
 });

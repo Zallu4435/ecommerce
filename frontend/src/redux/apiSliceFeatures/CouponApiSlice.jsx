@@ -3,13 +3,26 @@ import { crudApiSlice } from "./crudApiSlice";
 export const couponApiSlice = crudApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAllCoupons: builder.query({
-      query: ({ page, limit = 5 }) => `/coupons/getCoupons?page=${page}&limit=${limit}`,
-      providesTags: ["Coupon"],
+      query: (args = {}) => {
+        const { page = 1, limit = 5, search } = args || {};
+        const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+        return `/coupons/getCoupons?page=${page}&limit=${limit}${searchParam}`;
+      },
+      providesTags: (result) => {
+        const base = [{ type: "Coupon", id: "LIST" }];
+        if (!result?.coupons) return base;
+        return [
+          ...base,
+          ...result.coupons.map((c) => ({ type: "Coupon", id: c._id || c.id })),
+        ];
+      },
     }),
 
     getCoupon: builder.query({
       query: (id) => `/coupons/coupon/${id}`,
-      providesTags: (result, error, id) => [{ type: "Coupon", id }],
+      providesTags: (result, error, id) => [
+        { type: "Coupon", id },
+      ],
     }),
 
     // Fetch active coupons

@@ -1,44 +1,46 @@
+import { lazy } from "react";
 import Home from "../pages/user/Home.jsx";
-import Cart from "../pages/user/Cart.jsx";
-import Compare from "../pages/user/compare/Compare.jsx";
-import Wishlist from "../pages/user/Whishlist.jsx";
-import UserProfileLayout from "../layouts/UserProfileLayout.jsx";
-import UserLogin from "../pages/user/forms/UserLogin.jsx";
-import UserRegister from "../pages/user/forms/UserRegister.jsx";
-import ProductDetails from "../pages/user/ProductDetails.jsx";
-import ContactUs from "../pages/user/ContactUs.jsx";
 import AboutUs from "../pages/user/AboutUs.jsx";
 import ShopPage from "../pages/user/Shop.jsx";
-import ActivationPage from "../pages/user/ActivationPage.jsx";
-import NotFound from "../pages/user/NotFound.jsx";
-import CheckoutPage from "../pages/user/checkout/Checkout.jsx";
-import PaymentSuccess from "../pages/user/PaymentSuccess.jsx";
-import ProceedToPaymentPage from '../pages/payment/ProceedToPayment.jsx'
-import TrackOrder from '../pages/user/userProfile/TrackOrder.jsx'
 
-// Admin Routes
-import UserManagement from '../pages/admin/UserManagement.jsx'
-import CategoryManagement from '../pages/admin/CategoryManagement.jsx'
-import OrderManagement from '../pages/admin/OrderMangement.jsx'
-import SalesManagement from '../pages/admin/Sales Management/SalesManagement.jsx'
-import CouponManagement from '../pages/admin/CouponManagement.jsx'
-import AdminCreateCouponForm from '../Forms/admin/Coupon Form/AdminCreateCoupensForm.jsx'
-import AdminUpdateCouponForm from '../Forms/admin/Coupon Form/AdminUpdateCouponForm.jsx'
-import ProductManagement from '../pages/admin/ProductManagement.jsx'
-import AdminProductCreateForm from '../Forms/admin/AdminProductCreateForm.jsx'
-import AdminProductUpdateForm from '../Forms/admin/AdminProductUpdateForm.jsx'
-import AdminUsersForm from '../Forms/admin/AdminUsersForm.jsx'
-import AdminDashboard from '../pages/admin/Admin Dashboard/AdminDashboard.jsx'
-import ViewProductDetails from "../pages/admin/views/ViewProductDetails.jsx";
-import ViewUserDetails from "../pages/admin/views/ViewUserDetails.jsx";
-import AdminCategoryUpdateForm from '../Forms/admin/AdminCategoryUpdateForm.jsx'
-import AdminCategoryCreateForm from '../Forms/admin/AdminCategoryCreateForm.jsx'
-import ProductImageVarientAddModal from '../modal/admin/ProductImageVarientAddModal.jsx'
-import ViewOrderDetails from '../pages/admin/views/AllOrdersTable.jsx'
-import ViewCouponDetails from '../pages/admin/views/ViewCouponDetails.jsx'
-import HelpComponent from '../pages/admin/HelpComponent.jsx'
-import CurrencyConverter from '../pages/admin/Admin Settings/CurrencyConverter.jsx'
-import TermsAndConditions from '../pages/admin/Admin Settings/Terms&Condition.jsx'
+const Cart = lazy(() => import("../pages/user/Cart.jsx"));
+const Compare = lazy(() => import("../pages/user/compare/Compare.jsx"));
+const Wishlist = lazy(() => import("../pages/user/Whishlist.jsx"));
+const UserProfileLayout = lazy(() => import("../layouts/UserProfileLayout.jsx"));
+const UserLogin = lazy(() => import("../pages/user/forms/UserLogin.jsx"));
+const UserRegister = lazy(() => import("../pages/user/forms/UserRegister.jsx"));
+const ProductDetails = lazy(() => import("../pages/user/ProductDetails.jsx"));
+const ContactUs = lazy(() => import("../pages/user/ContactUs.jsx"));
+const ActivationPage = lazy(() => import("../pages/user/ActivationPage.jsx"));
+const NotFound = lazy(() => import("../pages/user/NotFound.jsx"));
+const CheckoutPage = lazy(() => import("../pages/user/checkout/Checkout.jsx"));
+const PaymentSuccess = lazy(() => import("../pages/user/PaymentSuccess.jsx"));
+const ProceedToPaymentPage = lazy(() => import("../pages/payment/ProceedToPayment.jsx"));
+const TrackOrder = lazy(() => import("../pages/user/userProfile/TrackOrder.jsx"));
+
+// Admin Routes (lazy)
+const UserManagement = lazy(() => import('../pages/admin/UserManagement.jsx'))
+const CategoryManagement = lazy(() => import('../pages/admin/CategoryManagement.jsx'))
+const OrderManagement = lazy(() => import('../pages/admin/OrderMangement.jsx'))
+const SalesManagement = lazy(() => import('../pages/admin/Sales Management/SalesManagement.jsx'))
+const CouponManagement = lazy(() => import('../pages/admin/CouponManagement.jsx'))
+const AdminCreateCouponForm = lazy(() => import('../Forms/admin/Coupon Form/AdminCreateCoupensForm.jsx'))
+const AdminUpdateCouponForm = lazy(() => import('../Forms/admin/Coupon Form/AdminUpdateCouponForm.jsx'))
+const ProductManagement = lazy(() => import('../pages/admin/ProductManagement.jsx'))
+const AdminProductCreateForm = lazy(() => import('../Forms/admin/AdminProductCreateForm.jsx'))
+const AdminProductUpdateForm = lazy(() => import('../Forms/admin/AdminProductUpdateForm.jsx'))
+const AdminUsersForm = lazy(() => import('../Forms/admin/AdminUsersForm.jsx'))
+const AdminDashboard = lazy(() => import('../pages/admin/Admin Dashboard/AdminDashboard.jsx'))
+const ViewProductDetails = lazy(() => import("../pages/admin/views/ViewProductDetails.jsx"));
+const ViewUserDetails = lazy(() => import("../pages/admin/views/ViewUserDetails.jsx"));
+const AdminCategoryUpdateForm = lazy(() => import('../Forms/admin/AdminCategoryUpdateForm.jsx'))
+const AdminCategoryCreateForm = lazy(() => import('../Forms/admin/AdminCategoryCreateForm.jsx'))
+const ProductImageVarientAddModal = lazy(() => import('../modal/admin/ProductImageVarientAddModal.jsx'))
+const ViewOrderDetails = lazy(() => import('../pages/admin/views/AllOrdersTable.jsx'))
+const ViewCouponDetails = lazy(() => import('../pages/admin/views/ViewCouponDetails.jsx'))
+const HelpComponent = lazy(() => import('../pages/admin/HelpComponent.jsx'))
+const CurrencyConverter = lazy(() => import('../pages/admin/Admin Settings/CurrencyConverter.jsx'))
+const TermsAndConditions = lazy(() => import('../pages/admin/Admin Settings/Terms&Condition.jsx'))
 
 export const routes = [
   { path: "/", component: Home, isProtected: false },

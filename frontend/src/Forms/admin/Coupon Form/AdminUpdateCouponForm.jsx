@@ -4,10 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useUpdateEntityMutation } from "../../../redux/apiSliceFeatures/crudApiSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  useGetAllCouponsQuery,
-  useGetCouponQuery,
-} from "../../../redux/apiSliceFeatures/CouponApiSlice";
+import { useGetCouponQuery, useGetAllCouponsQuery } from "../../../redux/apiSliceFeatures/CouponApiSlice";
 import { useGetUsersQuery } from "../../../redux/apiSliceFeatures/userApiSlice";
 import { useGetProductsQuery } from "../../../redux/apiSliceFeatures/productApiSlice";
 import { ArrowLeft } from "lucide-react";
@@ -26,8 +23,8 @@ const AdminCouponUpdateForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [updateEntity] = useUpdateEntityMutation();
-  const { refetch } = useGetAllCouponsQuery();
-  const { data: couponData, error, isLoading } = useGetCouponQuery(id);
+  const { data: couponData, error, isLoading, refetch } = useGetCouponQuery(id);
+  const { refetch: refetchCoupons } = useGetAllCouponsQuery({ page: 1, limit: 10 });
 
   const [showUserModal, setShowUserModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
@@ -63,6 +60,12 @@ const AdminCouponUpdateForm = () => {
       expiry: "",
     },
   });
+
+  useEffect(() => {
+    if (id) {
+      refetch();
+    }
+  }, [id, refetch]);
 
   useEffect(() => {
     if (couponData) {
@@ -105,7 +108,7 @@ const AdminCouponUpdateForm = () => {
         data: dataToSubmit,
         id,
       }).unwrap();
-      await refetch();
+      await refetchCoupons();
       toast.success("Coupon updated successfully");
       navigate(-1);
     } catch (err) {

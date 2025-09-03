@@ -1,8 +1,10 @@
 import { Outlet, Route, Routes, Navigate } from "react-router-dom";
+import { Suspense } from "react";
 import { adminRoutes } from "../routes/routes";
 import AdminSidebar from "../components/admin/AdminSidebar";
 import { useSelector } from "react-redux";
 import Breadcrumb from "../components/Breadcrumb";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const ProtectedRoute = ({ children }) => {
   const isAdminAuthenticated = useSelector(
@@ -22,6 +24,7 @@ const AdminLayout = () => {
       <main className="flex-1 ml-[420px] ">
         <Breadcrumb />
 
+        <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route
             path="/"
@@ -52,6 +55,7 @@ const AdminLayout = () => {
             )}
           </Route>
         </Routes>
+        </Suspense>
       </main>
     </div>
   );

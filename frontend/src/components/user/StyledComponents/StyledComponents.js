@@ -79,14 +79,10 @@ export const SizeOption = styled.div`
 
 export const Label = styled.label`
   font-size: 18px;
-  color: black;
+  color: inherit;
   margin-bottom: 5px;
   display: block;
   font-weight: 700;
-
-  @media (prefers-color-scheme: dark) {
-    color: white; /* Change to white in dark mode */
-  }
 `;
 
 export const InputContainer = styled.div`

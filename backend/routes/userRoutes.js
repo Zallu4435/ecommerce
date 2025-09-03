@@ -17,7 +17,7 @@ const {
 router.get('/getUser', isAuthenticated, catchAsyncErrors(getUser));
 
 router.post('/signup-user', catchAsyncErrors(signupUser));
-router.post('/activation/:activation_token', catchAsyncErrors(activateAccount));
+router.get('/activation/:activation_token', catchAsyncErrors(activateAccount));
 router.post('/login-user', catchAsyncErrors(loginUser));
 router.post('/logout', catchAsyncErrors(logoutUser));
 

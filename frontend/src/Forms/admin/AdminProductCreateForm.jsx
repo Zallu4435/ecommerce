@@ -55,16 +55,17 @@ const AdminProductUpdateForm = () => {
 
     try {
       if (data.image) {
-        const mainImageUrl = await uploadImageToCloudinary(data.image);
-        data.image = mainImageUrl;
+        const mainImage = await uploadImageToCloudinary(data.image);
+        data.image = mainImage.secureUrl;
+        data.imagePublicId = mainImage.publicId;
       }
 
       if (imageFiles && imageFiles.length > 0) {
         const variantImageUrls = await Promise.all(
           imageFiles.map(async (file) => {
             if (file) {
-              const uploadedUrl = await uploadImageToCloudinary(file);
-              return uploadedUrl;
+              const uploaded = await uploadImageToCloudinary(file);
+              return uploaded.secureUrl;
             }
             return null;
           })
@@ -120,7 +121,7 @@ const AdminProductUpdateForm = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             <InputContainer>
-              <Label className="dark:text-white">Product Name *</Label>
+              <Label className="text-gray-700 dark:text-white">Product Name *</Label>
               <Controller
                 name="productName"
                 control={control}
@@ -141,7 +142,7 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
 
             <InputContainer>
-              <Label className="dark:text-white">Image URL</Label>
+              <Label className="text-gray-700 dark:text-white">Image URL</Label>
               <Controller
                 name="image"
                 control={control}
@@ -160,7 +161,7 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
 
             <InputContainer>
-              <Label className="dark:text-white">Category *</Label>
+              <Label className="text-gray-700 dark:text-white">Category *</Label>
               <Controller
                 name="category"
                 control={control}
@@ -186,7 +187,7 @@ const AdminProductUpdateForm = () => {
 
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <InputContainer className="md:flex-[7]">
-              <Label className="dark:text-white">Description *</Label>
+              <Label className="text-gray-700 dark:text-white">Description *</Label>
               <Controller
                 name="description"
                 control={control}
@@ -207,11 +208,11 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
 
             <div className="md:flex-[3]">
-              <Label className="dark:text-white">Available Sizes</Label>
+              <Label className="text-gray-700 dark:text-white">Available Sizes</Label>
               <CheckboxContainer>
                 {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
                   <SizeOption key={size}>
-                    <Label className="dark:text-white">{size}</Label>
+                    <Label className="text-gray-700 dark:text-white">{size}</Label>
                     <input
                       type="checkbox"
                       id={`size-${size}`}
@@ -231,7 +232,7 @@ const AdminProductUpdateForm = () => {
 
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             <InputContainer>
-              <Label className="dark:text-white">Brand Name *</Label>
+              <Label className="text-gray-700 dark:text-white">Brand Name *</Label>
               <Controller
                 name="brand"
                 control={control}
@@ -252,7 +253,7 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
 
             <InputContainer>
-              <Label className="dark:text-white">Original Price *</Label>
+              <Label className="text-gray-700 dark:text-white">Original Price *</Label>
               <Controller
                 name="originalPrice"
                 control={control}
@@ -274,7 +275,7 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
 
             <InputContainer>
-              <Label className="dark:text-white">Offer Price *</Label>
+              <Label className="text-gray-700 dark:text-white">Offer Price *</Label>
               <Controller
                 name="offerPrice"
                 control={control}
@@ -298,7 +299,7 @@ const AdminProductUpdateForm = () => {
 
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             <InputContainer>
-              <Label className="dark:text-white">Stock Quantity *</Label>
+              <Label className="text-gray-700 dark:text-white">Stock Quantity *</Label>
               <Controller
                 name="stockQuantity"
                 control={control}
@@ -320,7 +321,7 @@ const AdminProductUpdateForm = () => {
             </InputContainer>
 
             <InputContainer>
-              <Label className="dark:text-white">Return Policy *</Label>
+              <Label className="text-gray-700 dark:text-white">Return Policy *</Label>
               <Controller
                 name="returnPolicy"
                 control={control}
@@ -340,11 +341,11 @@ const AdminProductUpdateForm = () => {
               )}
             </InputContainer>
             <div className="md:flex-[3] ml-10">
-              <Label className="dark:text-white">Available Sizes</Label>
+              <Label className="text-gray-700 dark:text-white">Available Sizes</Label>
               <CheckboxContainer>
                 {["white", "black", "red", "green", "yellow", "blue"].map(
                   (color) => (
-                    <colorOption
+                    <div
                       key={color}
                       className="flex gap-2 items-center"
                     >
@@ -355,8 +356,8 @@ const AdminProductUpdateForm = () => {
                         onChange={() => toggleColorSelection(color)}
                         className="h-5 w-5"
                       />
-                      <Label className="dark:text-white">{color}</Label>
-                    </colorOption>
+                      <Label className="text-gray-700 dark:text-white">{color}</Label>
+                    </div>
                   )
                 )}
               </CheckboxContainer>

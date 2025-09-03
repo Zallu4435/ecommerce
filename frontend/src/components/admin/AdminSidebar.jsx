@@ -1,6 +1,7 @@
 import { IoIosArrowForward } from "react-icons/io";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { SettingsTheme } from "../../context/SettingsTheme";
+import { defaultProfile } from "../../assets/images/index";
 import { useSelector } from "react-redux";
 import { useLogoutAdminMutation } from "../../redux/apiSliceFeatures/AdminApiSlice";
 import {
@@ -17,6 +18,7 @@ import {
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const admin = useSelector((state) => state.admin.admin);
   const [logoutAdmin] = useLogoutAdminMutation();
 
@@ -74,77 +76,85 @@ const AdminSidebar = () => {
 
   return (
     <>
-      <div className="w-full fixed h-screen overflow-auto lg:w-[400px] scrollbar-hidden dark:bg-gray-900 bg-orange-50 p-4">
-        <div className="flex items-center mb-6">
-          <img
-            src={admin?.avatar || "https://via.placeholder.com/50"}
-            alt="Profile"
-            className="w-12 h-12 rounded-full"
-          />
-          <div className="ml-4 dark:text-white text-bl">
-            <span className="block text-sm font-bold">PRODUCT MANAGER</span>
-            <p className="text-sm">
-              {admin?.username.toUpperCase() || "Zallu"}
-            </p>
+      <div className="w-full fixed h-screen overflow-auto lg:w-[400px] scrollbar-hidden dark:bg-gray-900 bg-orange-50 p-4 flex flex-col">
+        <div>
+          <div className="flex items-center mb-6">
+            <img
+              src={admin?.avatar || defaultProfile}
+              alt="Profile"
+              className="w-12 h-12 rounded-full"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = defaultProfile;
+              }}
+            />
+            <div className="ml-4 dark:text-white text-bl">
+              <span className="block text-sm font-bold">PRODUCT MANAGER</span>
+              <p className="text-sm">
+                {admin?.username ? admin.username.toUpperCase() : "Admin"}
+              </p>
+            </div>
+            <SettingsTheme />
           </div>
 
-          <SettingsTheme />
-        </div>
+          <hr className="my-4 border-gray-700" />
 
-        <hr className="my-4 border-gray-700" />
-
-        <ul className="space-y-3">
-          {menuItems.map((item) => (
-            <li key={item.name}>
-              <Link
-                to={item.path}
-                className="flex items-center justify-between px-4 py-2 dark:hover:bg-gray-800 hover:bg-slate-100 rounded-md text-lg dark:text-gray-300 dark:hover:text-red-300 hover:text-red-600"
-              >
-                <span className="flex items-center space-x-2">
-                  <span className="text-xl">{item.icon}</span>
-                  <span>{item.name}</span>
-                </span>
-                <IoIosArrowForward className="text-lg" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        <hr className="my-4 border-gray-700" />
-
-        <div className="relative px-6 py-4 mb-16 group">
-          <div className="flex items-center cursor-pointer">
-            <span className="text-xl text-gray-300">⚙️</span>
-            <span className="ml-4 text-lg font-semibold dark:text-gray-300 text-gray-400">
-              Settings
-            </span>
-          </div>
-
-          <div className="absolute left-[135px] mt-2 w-48 bg-white rounded-md shadow-lg z-10 opacity-0 group-hover:opacity-100 group-hover:block transition-all duration-300">
-            <ul className="space-y-3">
-              {links.map((item) => (
+          <ul className="space-y-4 mb-8">
+            {menuItems.map((item) => {
+              const isActive = location.pathname.startsWith(item.path);
+              return (
                 <li key={item.name}>
                   <Link
                     to={item.path}
-                    className="flex items-center justify-between px-4 py-2 dark:hover:bg-gray-800 hover:bg-slate-100 rounded-md text-lg dark:text-gray-300 dark:hover:text-red-300 hover:text-red-600"
+                    className={`flex items-center justify-between px-4 py-2 rounded-md text-lg transition-colors ${
+                      isActive
+                        ? "bg-slate-200 dark:bg-gray-800 text-red-600 dark:text-red-300"
+                        : "dark:text-gray-300 dark:hover:text-red-300 hover:text-red-600 dark:hover:bg-gray-800 hover:bg-slate-100"
+                    }`}
                   >
-                    <span className="flex items-center space-x-3">
-                      {" "}
-                      <span className="text-sm text-gray-600 dark:hover:text-gray-50">{item.name}</span>
+                    <span className="flex items-center space-x-2">
+                      <span className="text-xl">{item.icon}</span>
+                      <span>{item.name}</span>
                     </span>
                     <IoIosArrowForward className="text-lg" />
                   </Link>
                 </li>
-              ))}
-            </ul>
-          </div>
+              );
+            })}
+          </ul>
+
+          <hr className="my-4 border-gray-700" />
         </div>
 
-        <div className="flex-col 2xl:mt-0 md:mt-52 xl:mt-52 sm:mt-0">
-          <div
-            className="flex items-center mb-4 cursor-pointer"
-            onClick={handleHelp}
-          >
+        {/* Bottom section: settings, help, logout */}
+        <div className="mt-auto flex flex-col gap-2">
+          <div className="relative px-5 py-4 group">
+            <div className="flex items-center cursor-pointer">
+              <span className="text-xl text-gray-300">⚙️</span>
+              <span className="ml-4 text-lg font-semibold dark:text-gray-300 text-gray-400">
+                Settings
+              </span>
+            </div>
+            <div className="absolute left-[135px] mt-2 w-48 bg-white rounded-md shadow-lg z-10 opacity-0 group-hover:opacity-100 group-hover:block transition-all duration-300">
+              <ul className="space-y-3">
+                {links.map((item) => (
+                  <li key={item.name}>
+                    <Link
+                      to={item.path}
+                      className="flex items-center justify-between px-4 py-2 dark:hover:bg-gray-800 hover:bg-slate-100 rounded-md text-lg dark:text-gray-300 dark:hover:text-red-300 hover:text-red-600"
+                    >
+                      <span className="flex items-center space-x-3">
+                        <span className="text-sm text-gray-600 dark:hover:text-gray-50">{item.name}</span>
+                      </span>
+                      <IoIosArrowForward className="text-lg" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex items-center mb-2 cursor-pointer px-6" onClick={handleHelp}>
             <span className="text-xl text-blue-400">
               <FaQuestionCircle />
             </span>
@@ -153,14 +163,11 @@ const AdminSidebar = () => {
             </span>
           </div>
 
-          <div className="flex items-center mb-4">
+          <div className="flex items-center cursor-pointer px-6" onClick={handleLogout}>
             <span className="text-xl text-red-400">
               <FaSignOutAlt />
             </span>
-            <span
-              onClick={handleLogout}
-              className="ml-4 text-lg font-semibold text-red-300 cursor-pointer"
-            >
+            <span className="ml-4 text-lg font-semibold text-red-300">
               Logout Account
             </span>
           </div>

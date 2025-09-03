@@ -26,12 +26,39 @@ const PaymentSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Order',
             required: true 
+        },
+        // Enhanced fields for Razorpay tracking
+        razorpayPaymentId: {
+            type: String,
+            required: false,
+        },
+        razorpayOrderId: {
+            type: String,
+            required: false,
+        },
+        refundAmount: {
+            type: Number,
+            default: 0,
+        },
+        refundStatus: {
+            type: String,
+            enum: ['None', 'Partial', 'Full', 'Refunded'],
+            default: 'None',
+        },
+        paymentDate: {
+            type: Date,
+            default: Date.now,
         }
     },
     {
         timestamps: true,
     }
 );
+
+// Index for better query performance
+PaymentSchema.index({ userId: 1, OrderId: 1 });
+PaymentSchema.index({ razorpayPaymentId: 1 });
+PaymentSchema.index({ status: 1 });
 
 const Payment = mongoose.model('Payment', PaymentSchema);
 

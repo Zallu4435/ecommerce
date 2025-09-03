@@ -5,6 +5,7 @@ import {
   useEditAddressMutation,
   useRemoveAddressMutation,
   useSetPrimaryAddressMutation,
+  useGetAddressByIdQuery,
 } from "../../../redux/apiSliceFeatures/userProfileApi";
 import AddressModal from "../../../modal/user/AddressModal";
 import { toast } from 'react-toastify'
@@ -18,29 +19,27 @@ const AddressPage = () => {
   const [setPrimaryAddress] = useSetPrimaryAddressMutation();
 
   const [formData, setFormData] = useState({
-    country: "",
-    state: "",
-    city: "",
-    zip: "",
+    username: "",
+    phone: "",
+    zipCode: "",
+    house: "",
     street: "",
+    landmark: "",
+    city: "",
+    state: "",
     isPrimary: false,
     editing: false,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddAddress = async () => {
+  const handleAddAddress = async (validated) => {
     if (addresses.length >= 7) {
       alert("You can only add up to 7 addresses.");
       return;
     }
     try {
-      await addAddress(formData).unwrap();
+      await addAddress(validated).unwrap();
       toast.success('Address added successfully')
       setIsModalOpen(false);
     } catch (error) {
@@ -49,15 +48,22 @@ const AddressPage = () => {
     }
   };
 
-  const handleEditAddress = (index, address) => {
+  const handleEditAddress = async (index, address) => {
     setEditingIndex(index);
-    setFormData({ ...address, editing: true });
+    try {
+      const id = address._id || address.id;
+      const res = await fetch(`/userProfile/address/${id}`, { credentials: 'include' });
+      const full = await res.json();
+      setFormData({ ...(full || address), editing: true });
+    } catch (e) {
+      setFormData({ ...address, editing: true });
+    }
     setIsModalOpen(true);
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = async (validated) => {
     try {
-      const updatedAddress = { ...formData };
+      const updatedAddress = { ...validated };
       await editAddress({
         id: addresses[editingIndex].id,
         updatedAddress,
@@ -65,11 +71,14 @@ const AddressPage = () => {
       setIsModalOpen(false);
       setEditingIndex(null);
       setFormData({
-        country: "",
-        state: "",
-        city: "",
-        zip: "",
+        username: "",
+        phone: "",
+        zipCode: "",
+        house: "",
         street: "",
+        landmark: "",
+        city: "",
+        state: "",
         isPrimary: false,
         editing: false,
       });
@@ -101,11 +110,14 @@ const AddressPage = () => {
 
   const handleOpenModal = () => {
     setFormData({
-      country: "",
-      state: "",
-      city: "",
-      zip: "",
+      username: "",
+      phone: "",
+      zipCode: "",
+      house: "",
       street: "",
+      landmark: "",
+      city: "",
+      state: "",
       isPrimary: false,
       editing: false,
     });
@@ -143,7 +155,7 @@ const AddressPage = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-gray-900 dark:text-gray-100">
-                        {`${address.country}, ${address.state}, ${address.city}, ${address.zip}, ${address.street}`}
+                        {`${address.country}, ${address.state}, ${address.city}, ${address.zipCode ?? address.zip}, ${address.street}`}
                       </p>
                       {address.isPrimary && (
                         <span className="text-sm text-indigo-600 dark:text-indigo-400 mt-1">
@@ -192,7 +204,6 @@ const AddressPage = () => {
         onClose={() => setIsModalOpen(false)}
         onSave={editingIndex !== null ? handleSaveEdit : handleAddAddress}
         formData={formData}
-        handleChange={handleChange}
       />
     </div>
   );

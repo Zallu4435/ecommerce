@@ -58,14 +58,14 @@ const FashionBrandSlider = () => {
   };
 
   const brands = [
-    { image: brandImg_1, link: "https://www.brand1.com", alt: "Brand 1" },
-    { image: brandImg_2, link: "https://www.brand2.com", alt: "Brand 2" },
-    { image: brandImg_3, link: "https://www.brand3.com", alt: "Brand 3" },
-    { image: brandImg_4, link: "https://www.brand4.com", alt: "Brand 4" },
-    { image: brandImg_5, link: "https://www.brand5.com", alt: "Brand 5" },
-    { image: brandImg_6, link: "https://www.brand6.com", alt: "Brand 6" },
-    { image: brandImg_7, link: "https://www.brand7.com", alt: "Brand 7" },
-    { image: brandImg_8, link: "https://www.brand8.com", alt: "Brand 8" },
+    { image: brandImg_1, alt: "Brand 1" },
+    { image: brandImg_2, alt: "Brand 2" },
+    { image: brandImg_3, alt: "Brand 3" },
+    { image: brandImg_4, alt: "Brand 4" },
+    { image: brandImg_5, alt: "Brand 5" },
+    { image: brandImg_6, alt: "Brand 6" },
+    { image: brandImg_7, alt: "Brand 7" },
+    { image: brandImg_8, alt: "Brand 8" },
   ];
 
   return (
@@ -94,13 +94,14 @@ const FashionBrandSlider = () => {
             key={index}
             className="flex justify-center items-center mx-4 sm:mx-6 md:mx-8 lg:mx-10 my-4"
           >
-            <a href={brand.link} target="_blank" rel="noopener noreferrer">
+            <div role="img" aria-label={brand.alt} className="select-none">
               <img
                 src={brand.image}
                 alt={brand.alt}
-                className="w-20 sm:w-24 md:w-28 lg:w-32 h-auto object-contain p-4 transition-transform duration-300 hover:scale-110"
+                className="w-20 sm:w-24 md:w-28 lg:w-32 h-auto object-contain p-4 transition-transform duration-300 hover:scale-110 cursor-default"
+                draggable={false}
               />
-            </a>
+            </div>
           </div>
         ))}
       </Slider>

@@ -2,32 +2,12 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { changePasswordSchema } from "../../../validation/schemas/changePasswordSchema";
 import { useChangePasswordMutation } from "../../../redux/apiSliceFeatures/userProfileApi";
 import { toast } from "react-toastify";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
-const passwordSchema = z
-  .object({
-    currentPassword: z
-      .string()
-      .min(1, { message: "Current password is required" }),
-    newPassword: z
-      .string()
-      .min(6, { message: "New password must be at least 6 characters long" })
-      .regex(/[A-Za-z]/, {
-        message: "New password must contain at least one letter",
-      })
-      .regex(/[0-9]/, {
-        message: "New password must contain at least one number",
-      }),
-    confirmPassword: z
-      .string()
-      .min(1, { message: "Please confirm your new password" }),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "New password and confirm password must match",
-    path: ["confirmPassword"],
-  });
+const passwordSchema = changePasswordSchema;
 
 const ChangePassword = () => {
   const [formData, setFormData] = useState({

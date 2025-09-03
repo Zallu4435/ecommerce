@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { GoogleLogin } from "@react-oauth/google";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -105,7 +106,14 @@ const Login = () => {
       setShowOtpModal(true);
       toast.success("OTP sent to your email!");
     } catch (error) {
-      toast.error(error?.data?.message || "Failed to send OTP");
+      if (error?.data?.message) {
+        setBackendErr(error.data.message);
+      } else {
+        setBackendErr("Failed to send OTP");
+      }
+      setTimeout(() => {
+        setBackendErr(null);
+      }, 5000);
     }
   };
 
@@ -153,42 +161,12 @@ const Login = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3.98 8.223a9.998 9.998 0 0116.04 0M2.455 12C3.732 14.637 7.29 19 12 19s8.268-4.363 9.545-7m-1.866-2.605A10 10 0 012.455 12m11.403-2.222a3 3 0 11-4.854 3.444m4.854-3.444a3.002 3.002 0 00-4.854 0"
-                    />
-                  </svg>
+                  <FiEyeOff className="w-5 h-5" />
                 ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.458 12C3.732 8.935 7.295 6 12 6s8.268 2.935 9.542 6c-1.274 3.065-4.837 6-9.542 6S3.732 15.065 2.458 12z"
-                    />
-                  </svg>
+                  <FiEye className="w-5 h-5" />
                 )}
               </button>
               {errors.password && (
@@ -215,6 +193,11 @@ const Login = () => {
             className="md:space-y-6 space-y-3"
           >
             <div className="relative">
+              {backendErr && (
+                <p className="text-red-400 font-bold text-sm mb-3 mt-[-5px]">
+                  {backendErr}
+                </p>
+              )}
               <input
                 type="email"
                 {...register("email")}

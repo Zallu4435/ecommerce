@@ -1,6 +1,17 @@
 const Product = require("../model/Products");
 const ErrorHandler = require("../utils/ErrorHandler");
 const Review = require("../model/Review");
+const cloudinary = require("cloudinary").v2;
+
+// Configure Cloudinary from environment variables if present
+if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+}
 
 exports.getAllProducts = async (req, res, next) => {
   try {
@@ -289,13 +300,28 @@ exports.getFilteredProducts = async (req, res) => {
 
 exports.createProduct = async (req, res, next) => {
   try {
-    const { productName } = req.body;
+    const { productName, originalPrice, offerPrice, stockQuantity, category, image, imagePublicId } = req.body;
 
     if (!productName || productName.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Product name is required.",
-      });
+      return res.status(400).json({ success: false, message: "Product name is required" });
+    }
+    if (!category || String(category).trim() === "") {
+      return res.status(400).json({ success: false, message: "Category is required" });
+    }
+    if (!image || String(image).trim() === "") {
+      return res.status(400).json({ success: false, message: "Image is required" });
+    }
+    if (originalPrice === undefined || isNaN(Number(originalPrice)) || Number(originalPrice) <= 0) {
+      return res.status(400).json({ success: false, message: "Original price must be a positive number" });
+    }
+    if (offerPrice === undefined || isNaN(Number(offerPrice)) || Number(offerPrice) <= 0) {
+      return res.status(400).json({ success: false, message: "Offer price must be a positive number" });
+    }
+    if (Number(offerPrice) > Number(originalPrice)) {
+      return res.status(400).json({ success: false, message: "Offer price cannot be greater than original price" });
+    }
+    if (stockQuantity === undefined || isNaN(Number(stockQuantity)) || Number(stockQuantity) < 0) {
+      return res.status(400).json({ success: false, message: "Stock quantity must be a non-negative integer" });
     }
 
     const normalizedProductName = productName.trim().toLowerCase();
@@ -311,10 +337,20 @@ exports.createProduct = async (req, res, next) => {
       });
     }
 
-    const product = await Product.create({
-      ...req.body,
-      productName: normalizedProductName,
-    });
+    let product;
+    try {
+      product = await Product.create({
+        ...req.body,
+        image,
+        imagePublicId,
+        productName: normalizedProductName,
+      });
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return res.status(400).json({ success: false, message: "A product with the same name already exists" });
+      }
+      throw err;
+    }
 
     res.status(201).json({
       success: true,
@@ -328,7 +364,7 @@ exports.createProduct = async (req, res, next) => {
 exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { productName } = req.body;
+    const { productName, originalPrice, offerPrice, stockQuantity, category, image, imagePublicId } = req.body;
 
     const normalizedProductName = productName.trim().toLowerCase();
 
@@ -350,15 +386,57 @@ exports.updateProduct = async (req, res, next) => {
       });
     }
 
-    product = await Product.findByIdAndUpdate(
-      id,
-      { ...req.body, productName: normalizedProductName },
-      {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
+    // Validate optional fields if provided
+    if (category !== undefined && String(category).trim() === "") {
+      return res.status(400).json({ success: false, message: "Category cannot be empty" });
+    }
+    if (image !== undefined && String(image).trim() === "") {
+      return res.status(400).json({ success: false, message: "Image cannot be empty" });
+    }
+    if (originalPrice !== undefined) {
+      if (isNaN(Number(originalPrice)) || Number(originalPrice) <= 0) {
+        return res.status(400).json({ success: false, message: "Original price must be a positive number" });
       }
-    );
+    }
+    if (offerPrice !== undefined) {
+      if (isNaN(Number(offerPrice)) || Number(offerPrice) <= 0) {
+        return res.status(400).json({ success: false, message: "Offer price must be a positive number" });
+      }
+    }
+    if (offerPrice !== undefined && (originalPrice !== undefined ? Number(offerPrice) > Number(originalPrice) : Number(offerPrice) > Number(product.originalPrice))) {
+      return res.status(400).json({ success: false, message: "Offer price cannot be greater than original price" });
+    }
+    if (stockQuantity !== undefined && (isNaN(Number(stockQuantity)) || Number(stockQuantity) < 0)) {
+      return res.status(400).json({ success: false, message: "Stock quantity must be a non-negative integer" });
+    }
+
+    try {
+      // If a new image is provided and different from the existing one, delete the old image from Cloudinary
+      const isImageChanging = image !== undefined && image !== product.image;
+      if (isImageChanging && product.imagePublicId) {
+        try {
+          await cloudinary.uploader.destroy(product.imagePublicId);
+        } catch (clErr) {
+          // Log and continue; failure to delete should not block the update
+          console.error("Cloudinary destroy failed:", clErr?.message || clErr);
+        }
+      }
+
+      product = await Product.findByIdAndUpdate(
+        id,
+        { ...req.body, image, imagePublicId, productName: normalizedProductName },
+        {
+          new: true,
+          runValidators: true,
+          useFindAndModify: false,
+        }
+      );
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return res.status(400).json({ success: false, message: "A product with the same name already exists" });
+      }
+      throw err;
+    }
 
     res.status(200).json({
       success: true,
@@ -375,6 +453,15 @@ exports.deleteProduct = async (req, res, next) => {
 
     if (!product) {
       return next(new ErrorHandler("Product not found", 404));
+    }
+
+    // Attempt to delete image from Cloudinary first
+    if (product.imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(product.imagePublicId);
+      } catch (clErr) {
+        console.error("Cloudinary destroy failed:", clErr?.message || clErr);
+      }
     }
 
     await product.deleteOne();

@@ -583,6 +583,8 @@ exports.returnOrder = async (req, res) => {
           amount: refundAmount,
           description: `Refund for returned item ${paymentRecord?.OrderId}`,
           status: "Successful",
+          orderId: orderId,
+          paymentMethod: paymentRecord.method.toLowerCase(),
         });
         await transaction.save();
       }

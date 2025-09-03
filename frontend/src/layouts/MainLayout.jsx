@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setScrolled } from "../redux/slice/scrollSlice";
@@ -6,6 +6,7 @@ import Header from "../components/user/Header";
 import Navbar from "../components/user/Navbar";
 import Footer from "../components/user/Footer";
 import { routes } from "../routes/routes";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const MainLayout = () => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
@@ -46,6 +47,7 @@ const MainLayout = () => {
       <Header />
       <Navbar />
       <main className="">
+        <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           {routes.map(({ path, component: Component, isProtected }, index) => {
             if (isProtected) {
@@ -77,6 +79,7 @@ const MainLayout = () => {
             return <Route key={index} path={path} element={<Component />} />;
           })}
         </Routes>
+        </Suspense>
       </main>
       {shouldShowFooter && <Footer />}
     </div>

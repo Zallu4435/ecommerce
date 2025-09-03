@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const routes = require("./routes/index");
 const cors = require("cors");
 require("dotenv").config({
-  path: "./config/.env",
+  path: require("path").resolve(__dirname, "config/.env"),
 });     
 
 app.use(express.json());
@@ -19,12 +19,6 @@ app.use(
 );
 app.use("/", express.static("uploads"));
 app.use(bodyParser.urlencoded({ extended: true }));
-
-if (process.env.NODE_ENV !== "PRODUCTION") {
-  require("dotenv").config({
-    path: "backend/config/.env",
-  });
-}
 
 app.use("/api", routes);
 app.use(ErrorHandler);

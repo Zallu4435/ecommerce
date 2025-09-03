@@ -23,8 +23,11 @@ export const userApiSlice = createApi({
     }),
 
     getUsers: builder.query({
-      query: ({ page, limit = 5 }) =>
-        `users/getUsers?page=${page}&limit=${limit}`,
+      query: (args = {}) => {
+        const { page = 1, limit = 5, search } = args || {};
+        const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+        return `users/getUsers?page=${page}&limit=${limit}${searchParam}`;
+      },
       providesTags: ["User", "Avatar"],
     }),
 
@@ -53,10 +56,9 @@ export const userApiSlice = createApi({
     }),
 
     activateUser: builder.mutation({
-      query: (activationData) => ({
-        url: "users/activation/:token",
-        method: "POST",
-        body: activationData,
+      query: (token) => ({
+        url: `users/activation/${token}`,
+        method: "GET",
       }),
       invalidatesTags: ["User"],
     }),
@@ -145,12 +147,12 @@ export const userApiSlice = createApi({
         try {
           const avatarFile = formData.get("avatar");
           if (avatarFile) {
-            const avatarUrl = await uploadImageToCloudinary(avatarFile);
+            const uploaded = await uploadImageToCloudinary(avatarFile);
 
             return await baseQuery({
               url: "users/update-avatar",
               method: "PUT",
-              body: { avatar: avatarUrl },
+              body: { avatar: uploaded.secureUrl, avatarPublicId: uploaded.publicId },
             });
           }
           return {
