@@ -17,7 +17,7 @@ const {
 } = require("../controller/adminController");
 const { verifyAdminRefreshToken } = require("../middleware/auth");
 
-router.post("/ban/:id", banUser);
+router.patch("/ban/:id", banUser);
 router.post("/login-admin", catchAsyncErrors(loginAdmin));
 router.post("/logout", catchAsyncErrors(logoutAdmin));
 router.get(

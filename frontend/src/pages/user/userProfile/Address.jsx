@@ -35,7 +35,7 @@ const AddressPage = () => {
 
   const handleAddAddress = async (validated) => {
     if (addresses.length >= 7) {
-      alert("You can only add up to 7 addresses.");
+      toast.warning("You can only add up to 7 addresses.");
       return;
     }
     try {

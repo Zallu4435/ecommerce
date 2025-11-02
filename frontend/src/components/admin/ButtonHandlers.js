@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   useDeleteEntityMutation,
   useBanEntityMutation,
@@ -18,7 +19,7 @@ export const useButtonHandlers = () => {
       navigate(`update/${type}/${id}`);
     } catch (error) {
       console.error("Update failed:", error);
-      alert("Failed to update. Please try again.");
+      toast.error("Failed to update. Please try again.");
     }
   };
 
@@ -28,9 +29,10 @@ export const useButtonHandlers = () => {
       if (type === "category") {
         refetchCategory();
       }
+      toast.success("Deleted successfully!");
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("Failed to delete. Please try again.");
+      toast.error(error?.data?.message || "Failed to delete. Please try again.");
     }
   };
 
@@ -39,7 +41,7 @@ export const useButtonHandlers = () => {
       navigate(`create/${type}`);
     } catch (error) {
       console.error("Create failed:", error);
-      alert("Failed to create. Please try again.");
+      toast.error("Failed to create. Please try again.");
     }
   };
 
@@ -47,9 +49,10 @@ export const useButtonHandlers = () => {
     try {
       await banEntity({ entity: type, id }).unwrap();
       refetch();
+      toast.success("User status updated successfully!");
     } catch (error) {
       console.error("Ban failed:", error);
-      alert("Failed to ban. Please try again.");
+      toast.error(error?.data?.message || "Failed to update user status. Please try again.");
     }
   };
 
@@ -58,7 +61,7 @@ export const useButtonHandlers = () => {
       navigate(`view/${type}/${id}`);
     } catch (error) {
       console.error("view failed:", error);
-      alert("Failed to ban. Please try again.");
+      toast.error("Failed to view details. Please try again.");
     }
   };
 

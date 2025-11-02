@@ -101,6 +101,7 @@ const UserSidebar = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
+                end
                 onClick={closeSidebar}
                 className={({ isActive }) =>
                   `flex items-center text-lg gap-4 px-4 py-2 rounded-md transition duration-300 ${

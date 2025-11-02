@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-const numberString = z
-  .string()
-  .refine((val) => !isNaN(Number(val)) && val.trim() !== '', {
+const numberField = z
+  .union([z.string(), z.number()])
+  .transform((val) => typeof val === 'string' ? Number(val) : val)
+  .refine((val) => !isNaN(val), {
     message: "Must be a valid number",
   });
 
@@ -10,13 +11,12 @@ const couponSchema = z.object({
   couponCode: z.string().min(1, "Coupon code is required"),
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters long"),
-  discount: numberString
-    .transform(val => Number(val))
+  discount: numberField
     .refine((n) => n > 0 && n <= 100, {
       message: "Discount must be between 1 and 100",
     }),
-  minAmount: numberString.transform(val => Number(val)),
-  maxAmount: numberString.transform(val => Number(val)),
+  minAmount: numberField,
+  maxAmount: numberField,
   expiry: z.string().min(1, "Expiry date is required").refine((val) => {
     const d = new Date(val);
     const today = new Date();

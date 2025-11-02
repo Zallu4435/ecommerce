@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +10,7 @@ import { categorySchema } from "../../validation/admin/categoryFormValidation";
 
 const AdminCategoryCreateForm = () => {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [addEntity] = useAddEntityMutation();
   const { refetch: refetchCategory } = useGetCategoriesQuery();
 
@@ -22,15 +24,19 @@ const AdminCategoryCreateForm = () => {
 
   const onSubmit = async (data, e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       await addEntity({ entity: "category", data }).unwrap();
       refetchCategory();
+      toast.success("Category created successfully!");
       navigate(-1);
     } catch (error) {
       console.error("Error occurred while adding category:", error);
       toast.error(
         error?.data?.message || "An error occurred while adding the category"
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -116,9 +122,10 @@ const AdminCategoryCreateForm = () => {
         <div className="mx-10">
           <button
             type="submit"
-            className="py-3 w-full  mt-4 text-lg font-bold dark:bg-blue-600 bg-orange-500 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isSubmitting}
+            className="py-3 w-full  mt-4 text-lg font-bold dark:bg-blue-600 bg-orange-500 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create
+            {isSubmitting ? "Creating..." : "Create"}
           </button>
         </div>
       </form>

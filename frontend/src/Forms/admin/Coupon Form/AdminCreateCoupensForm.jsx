@@ -19,6 +19,7 @@ import ProductModal from "./ProductModal";
 const AdminCouponCreateForm = () => {
   const navigate = useNavigate();
   const [addEntity] = useAddEntityMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showUserModal, setShowUserModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
@@ -52,6 +53,7 @@ const AdminCouponCreateForm = () => {
   });
 
   const onSubmit = async (formData) => {
+    setIsSubmitting(true);
     try {
       const selectedDate = new Date(formData.expiry);
       const today = new Date();
@@ -76,6 +78,8 @@ const AdminCouponCreateForm = () => {
     } catch (err) {
       console.error("Error during form submission:", err);
       toast.error(err?.data?.message || "An error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -267,9 +271,10 @@ const AdminCouponCreateForm = () => {
           <div className="flex justify-end gap-4 mt-4">
             <button
               type="submit"
-              className="px-6 py-3 text-md w-full font-bold bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              disabled={isSubmitting}
+              className="px-6 py-3 text-md w-full font-bold bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Coupon
+              {isSubmitting ? "Creating Coupon..." : "Create Coupon"}
             </button>
           </div>
         </form>

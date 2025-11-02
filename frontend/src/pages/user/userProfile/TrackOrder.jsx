@@ -83,7 +83,7 @@ const TrackOrder = () => {
   const handleAddPayment = async () => {
     const value = Number.parseFloat(razorpayAmount)
     if (isNaN(value) || value <= 0) {
-      alert("Please enter a valid amount.")
+      toast.warning("Please enter a valid amount.")
       return
     }
 

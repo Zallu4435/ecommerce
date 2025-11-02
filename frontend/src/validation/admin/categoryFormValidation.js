@@ -10,9 +10,9 @@ export const categorySchema = z.object({
     .min(10, "Category description is required")
     .refine((value) => value.trim().length > 0, "Category description cannot be just spaces"),
     categoryOffer: z
-    .string() // Accept as a string from the input field
-    .refine((val) => !isNaN(Number(val)), "Category offer must be a valid number") // Check if it's a number
-    .transform((val) => Number(val)) // Convert to a number
+    .union([z.string(), z.number()]) // Accept both string and number
+    .transform((val) => typeof val === 'string' ? Number(val) : val) // Convert string to number
+    .refine((val) => !isNaN(val), "Category offer must be a valid number")
     .refine((val) => val >= 0, "Category offer must be at least 0")
     .refine((val) => val <= 100, "Category offer cannot exceed 100")
     .optional(),

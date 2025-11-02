@@ -163,8 +163,17 @@ const ViewUserDetails = () => {
           )}
         </div>
 
-        {selectedOrder && (
-          <OrderDetailsModal order={selectedOrder} onClose={closeModal} />
+        {selectedOrder && selectedOrder.items && selectedOrder.items.length > 0 && (
+          <OrderDetailsModal 
+            order={{
+              ...selectedOrder.items[0],
+              TotalAmount: selectedOrder.TotalAmount,
+              createdAt: selectedOrder.createdAt,
+              _id: selectedOrder._id
+            }} 
+            onClose={closeModal} 
+            isAdmin={true}
+          />
         )}
       </div>
     </div>

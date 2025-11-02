@@ -25,6 +25,7 @@ const AdminCouponUpdateForm = () => {
   const [updateEntity] = useUpdateEntityMutation();
   const { data: couponData, error, isLoading, refetch } = useGetCouponQuery(id);
   const { refetch: refetchCoupons } = useGetAllCouponsQuery({ page: 1, limit: 10 });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showUserModal, setShowUserModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
@@ -92,6 +93,7 @@ const AdminCouponUpdateForm = () => {
   }, [couponData, setValue]);
 
   const onSubmit = async (formData) => {
+    setIsSubmitting(true);
     try {
       const dataToSubmit = {
         ...formData,
@@ -114,6 +116,8 @@ const AdminCouponUpdateForm = () => {
     } catch (err) {
       console.error("Error during form submission:", err);
       toast.error(err?.data?.message || "An error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -301,9 +305,10 @@ const AdminCouponUpdateForm = () => {
           <div className="flex justify-end gap-4 mt-4">
             <button
               type="submit"
-              className="px-6 py-3 text-md w-full font-bold bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              disabled={isSubmitting}
+              className="px-6 py-3 text-md w-full font-bold bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Update Coupon
+              {isSubmitting ? "Updating Coupon..." : "Update Coupon"}
             </button>
           </div>
         </form>

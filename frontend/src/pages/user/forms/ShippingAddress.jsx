@@ -80,6 +80,18 @@ const ShippingAddress = ({ onAddressSelect }) => {
     setShowModal(false);
   };
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal]);
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -99,24 +111,34 @@ const ShippingAddress = ({ onAddressSelect }) => {
       {isEditing ? (
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {["username", "phone", "zipCode", "house", "street", "landmark", "city", "state"].map(
-              (field) => (
-                <div key={field}>
+            {[
+              { name: "username", placeholder: "Enter full name" },
+              { name: "phone", placeholder: "Enter phone number" },
+              { name: "zipCode", placeholder: "Enter zip code" },
+              { name: "house", placeholder: "Enter house/apartment" },
+              { name: "street", placeholder: "Enter street" },
+              { name: "landmark", placeholder: "Enter landmark (optional)" },
+              { name: "city", placeholder: "Enter city" },
+              { name: "state", placeholder: "Enter state" }
+            ].map(
+              ({ name, placeholder }) => (
+                <div key={name}>
                   <label className="block text-sm font-medium dark:text-gray-200 text-gray-700 mb-2">
-                    {field.charAt(0).toUpperCase() + field.slice(1)}
+                    {name.charAt(0).toUpperCase() + name.slice(1)}
                   </label>
                   <Controller
-                    name={field}
+                    name={name}
                     control={control}
                     render={({ field }) => (
                       <input
                         {...field}
+                        placeholder={placeholder}
                         className="w-full p-3 dark:bg-gray-300 text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     )}
                   />
-                  {errors[field] && (
-                    <p className="text-red-500 text-sm">{errors[field]?.message}</p>
+                  {errors[name] && (
+                    <p className="text-red-500 text-sm">{errors[name]?.message}</p>
                   )}
                 </div>
               )
@@ -185,7 +207,7 @@ const ShippingAddress = ({ onAddressSelect }) => {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-lg w-full shadow-lg relative">
             <button
               className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-red-500"
@@ -196,12 +218,14 @@ const ShippingAddress = ({ onAddressSelect }) => {
             <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
               Select an Address:
             </h3>
-            <ul className="list-disc pl-5 space-y-2">
+            <ul className="space-y-3">
               {addresses.map((address, index) => (
                 <li
                   key={index}
-                  className={`cursor-pointer hover:underline text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md p-2 transition duration-200 ${
-                    index === selectedAddressIndex ? "bg-blue-100 dark:bg-blue-700" : ""
+                  className={`cursor-pointer rounded-md p-3 transition duration-200 border ${
+                    index === selectedAddressIndex 
+                      ? "bg-blue-500 dark:bg-blue-600 border-blue-600 dark:border-blue-700 text-white" 
+                      : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
                   }`}
                 >
                   <button
@@ -209,7 +233,15 @@ const ShippingAddress = ({ onAddressSelect }) => {
                     onClick={() => handleSelectAddress(index)}
                     className="text-left w-full"
                   >
-                    {`${address.username}, ${address.street}, ${address.city}`}
+                    <div className="font-semibold">{address.username || address.name || 'No Name'}</div>
+                    <div className="text-sm">
+                      {address.house && `${address.house}, `}
+                      {address.street || address.address || 'No Street'}
+                    </div>
+                    <div className="text-sm">
+                      {address.city || 'No City'}, {address.state || 'No State'} - {address.zipCode || address.zip || 'No Zip'}
+                    </div>
+                    {address.phone && <div className="text-sm">Phone: {address.phone}</div>}
                   </button>
                 </li>
               ))}

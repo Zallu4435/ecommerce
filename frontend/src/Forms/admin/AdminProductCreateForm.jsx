@@ -23,6 +23,7 @@ const AdminProductUpdateForm = () => {
   const [images, setImages] = useState([null, null, null]);
   const [imageFiles, setImageFiles] = useState([null, null, null]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [addEntity] = useAddEntityMutation();
 
   const {
@@ -46,12 +47,13 @@ const AdminProductUpdateForm = () => {
       setValue("variantImages", uploadedFiles);
       setIsModalOpen(false);
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message || "Failed to upload images");
     }
   };
 
   const onSubmit = async (data, e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       if (data.image) {
@@ -75,10 +77,13 @@ const AdminProductUpdateForm = () => {
       }
 
       await addEntity({ entity: "products", data }).unwrap();
+      toast.success("Product added successfully!");
       navigate(-1);
     } catch (err) {
       console.error("Error during form submission:", err);
       toast.error(err?.data?.message || "An error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -399,11 +404,11 @@ const AdminProductUpdateForm = () => {
           <div>
             <button
               type="submit"
-              disabled={imageFiles.length === 0}
-              className="w-full dark:bg-blue-600 bg-orange-500 text-white px-6 py-3 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 flex items-center justify-center"
+              disabled={imageFiles.length === 0 || isSubmitting}
+              className="w-full dark:bg-blue-600 bg-orange-500 text-white px-6 py-3 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Upload className="mr-2" />
-              Add Product
+              {isSubmitting ? "Adding Product..." : "Add Product"}
             </button>
           </div>
         </form>

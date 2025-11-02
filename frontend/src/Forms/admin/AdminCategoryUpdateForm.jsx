@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUpdateEntityMutation } from "../../redux/apiSliceFeatures/crudApiSlice";
@@ -15,6 +15,7 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 const AdminCategoryUpdateForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [updateEntity] = useUpdateEntityMutation();
   const { refetch } = useGetCategoriesQuery();
   const { data, error, isLoading } = useGetCategoryByIdQuery(id);
@@ -38,6 +39,7 @@ const AdminCategoryUpdateForm = () => {
 
   const onSubmit = async (data, e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const response = await updateEntity({
@@ -57,6 +59,8 @@ const AdminCategoryUpdateForm = () => {
       toast.error(
         error?.data?.message || "An error occurred while updating the category"
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -148,9 +152,10 @@ const AdminCategoryUpdateForm = () => {
         <div className="mx-10">
           <button
             type="submit"
-            className="py-3 w-full  mt-4 text-lg font-bold dark:bg-blue-600 bg-orange-500 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isSubmitting}
+            className="py-3 w-full  mt-4 text-lg font-bold dark:bg-blue-600 bg-orange-500 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Update
+            {isSubmitting ? "Updating..." : "Update"}
           </button>
         </div>
       </form>

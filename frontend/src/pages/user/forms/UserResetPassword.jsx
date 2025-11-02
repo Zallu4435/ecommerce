@@ -24,8 +24,9 @@ const resetPasswordSchema = z
 const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [resetPassword] = useResetPasswordMutation();
+  const [resetPassword, { isLoading }] = useResetPasswordMutation();
   const dispatch = useDispatch();
+  const [backendErr, setBackendErr] = useState("");
 
   const {
     register,
@@ -36,13 +37,14 @@ const ResetPassword = () => {
   });
 
   const onSubmit = async (data) => {
+    setBackendErr(""); // Clear previous errors
     try {
       const token = location.state?.token;
       if (!token) {
-        toast.error(
-          "Reset token not found. Please try the password reset process again."
-        );
-        navigate("/login");
+        setBackendErr("Reset token not found. Please try the password reset process again.");
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
         return;
       }
 
@@ -52,7 +54,12 @@ const ResetPassword = () => {
       dispatch(setResetPassword(null));
       navigate("/login");
     } catch (err) {
-      toast.error(err?.data?.message || "Failed to reset password");
+      const errorMessage = err?.data?.message || "Failed to reset password";
+      setBackendErr(errorMessage);
+      toast.error(errorMessage);
+      setTimeout(() => {
+        setBackendErr("");
+      }, 5000);
     }
   };
 
@@ -62,6 +69,12 @@ const ResetPassword = () => {
         <h2 className="text-3xl font-semibold text-center dark:text-gray-100 text-gray-800 mb-8">
           Reset Password
         </h2>
+
+        {backendErr && (
+          <p className="text-red-400 font-bold text-sm mb-4 text-center">
+            {backendErr}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="relative">
@@ -94,9 +107,10 @@ const ResetPassword = () => {
 
           <button
             type="submit"
-            className="w-full p-3 font-semibold dark:bg-blue-600 bg-blue-500 text-white rounded-lg dark:hover:bg-blue-700 hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            disabled={isLoading}
+            className="w-full p-3 font-semibold dark:bg-blue-600 bg-blue-500 text-white rounded-lg dark:hover:bg-blue-700 hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Reset Password
+            {isLoading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
 

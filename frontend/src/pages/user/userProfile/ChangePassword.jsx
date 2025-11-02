@@ -53,9 +53,9 @@ const ChangePassword = () => {
   };
 
   const inputFields = [
-    { id: "currentPassword", label: "Current Password", type: "password" },
-    { id: "newPassword", label: "New Password", type: "password" },
-    { id: "confirmPassword", label: "Confirm New Password", type: "password" },
+    { id: "currentPassword", label: "Current Password", type: "password", placeholder: "Enter your current password" },
+    { id: "newPassword", label: "New Password", type: "password", placeholder: "Enter your new password" },
+    { id: "confirmPassword", label: "Confirm New Password", type: "password", placeholder: "Confirm your new password" },
   ];
 
   return (
@@ -73,7 +73,7 @@ const ChangePassword = () => {
         </p>
       )}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {inputFields.map(({ id, label, type }) => (
+        {inputFields.map(({ id, label, type, placeholder }) => (
           <div key={id} className="relative">
             <label
               htmlFor={id}
@@ -86,6 +86,7 @@ const ChangePassword = () => {
                 type={showPassword[id] ? "text" : "password"}
                 id={id}
                 name={id}
+                placeholder={placeholder}
                 {...register(id)}
                 className={`w-full px-3 sm:px-4 py-3 sm:py-4 border-2 sm:border-4 border-gray-300 dark:text-white dark:bg-gray-800 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 ${
                   errors[id] ? "border-red-500" : ""
@@ -112,7 +113,7 @@ const ChangePassword = () => {
         ))}
         <button
           type="submit"
-          className="w-full font-bold text-base sm:text-lg bg-indigo-500 text-white py-3 sm:py-4 rounded-md hover:bg-indigo-600 transition duration-300 mt-6"
+          className="w-full font-bold text-base sm:text-lg bg-indigo-500 text-white py-3 sm:py-4 rounded-md hover:bg-indigo-600 transition duration-300 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={isLoading}
         >
           {isLoading ? "Changing..." : "Change Password"}

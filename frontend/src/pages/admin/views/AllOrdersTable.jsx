@@ -7,6 +7,7 @@ import {
 } from "../../../redux/apiSliceFeatures/OrderApiSlice";
 import { ChevronDown, ArrowLeft, AlertCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import OrderDetailsModal from "../../../modal/user/OrderDetailsModal";
 import { useSearchUsersIndividualOrdersQuery } from "../../../redux/apiSliceFeatures/AdminApiSlice";
 import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
@@ -86,9 +87,10 @@ const IndividualOrdersOfUsers = () => {
         itemsIds,
       }).unwrap();
       await refetch();
+      toast.success("Order status updated successfully!");
     } catch (err) {
       console.error("Error updating order status:", err.message);
-      alert("Failed to update order status. Please try again.");
+      toast.error(err?.data?.message || "Failed to update order status. Please try again.");
     }
   };
 
@@ -107,9 +109,10 @@ const IndividualOrdersOfUsers = () => {
       await cancelOrder(orderToCancel).unwrap();
       setShowCancelModal(false);
       await refetch();
+      toast.success("Order cancelled successfully!");
     } catch (err) {
       console.error("Error canceling order:", err);
-      alert("Failed to cancel order");
+      toast.error(err?.data?.message || "Failed to cancel order");
     }
   };
 
@@ -118,9 +121,10 @@ const IndividualOrdersOfUsers = () => {
       await returnOrder(orderToReturn).unwrap();
       setShowReturnModal(false);
       await refetch();
+      toast.success("Order return request submitted successfully!");
     } catch (err) {
       console.error("Error returning order:", err);
-      alert("Failed to return order");
+      toast.error(err?.data?.message || "Failed to return order");
     }
   };
 

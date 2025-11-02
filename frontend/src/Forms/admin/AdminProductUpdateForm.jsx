@@ -25,6 +25,7 @@ const AdminProductUpdateForm = () => {
   const { id } = useParams();
   const [imageFiles, setImageFiles] = useState([null, null, null]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [updateEntity] = useUpdateEntityMutation();
 
   const { data, error, isLoading } = useGetProductByIdQuery(id);
@@ -85,12 +86,13 @@ const AdminProductUpdateForm = () => {
       setValue("variantImages", newImageFiles);
       setIsModalOpen(false);
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message || "Failed to upload images");
     }
   };
 
   const onSubmit = async (formData, e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       if (formData.image instanceof File) {
@@ -118,6 +120,8 @@ const AdminProductUpdateForm = () => {
     } catch (err) {
       console.error("Error during form submission:", err);
       toast.error(err?.data?.message || "An error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -446,10 +450,11 @@ const AdminProductUpdateForm = () => {
           <div>
             <button
               type="submit"
-              className="w-full dark:bg-blue-600 bg-orange-500 text-white px-6 py-3 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 flex items-center justify-center"
+              disabled={isSubmitting}
+              className="w-full dark:bg-blue-600 bg-orange-500 text-white px-6 py-3 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Upload className="mr-2" />
-              Update Product
+              {isSubmitting ? "Updating Product..." : "Update Product"}
             </button>
           </div>
         </form>

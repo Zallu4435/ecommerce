@@ -104,13 +104,29 @@ exports.getUserDetails = async (req, res) => {
     const addresses = await Address.find({ userId: id });
 
     const orders = await Orders.find({ UserId: id })
+      .populate({
+        path: 'items.ProductId',
+        select: 'productName image offerPrice'
+      })
       .sort({ createdAt: -1 })
       .limit(5);
+
+    // Transform orders to include product details in items
+    const transformedOrders = orders.map(order => {
+      const orderObj = order.toObject();
+      orderObj.items = orderObj.items.map(item => ({
+        ...item,
+        ProductName: item.ProductId?.productName || 'Unknown Product',
+        ProductImage: item.ProductId?.image || '',
+        offerPrice: item.ProductId?.offerPrice || item.Price
+      }));
+      return orderObj;
+    });
 
     res.status(200).json({
       user,
       addresses,
-      orders,
+      orders: transformedOrders,
     });
   } catch (err) {
     console.error(err);

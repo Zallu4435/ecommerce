@@ -13,7 +13,7 @@ const ContactUs = () => {
     resolver: zodResolver(contactSchema),
   });
 
-  const [contact] = useContactMutation();
+  const [contact, { isLoading }] = useContactMutation();
 
   const onSubmit = async (data) => {
     try {
@@ -56,6 +56,7 @@ const ContactUs = () => {
               <input
                 type="text"
                 id="name"
+                placeholder="Enter your full name"
                 {...register("name")}
                 className={`w-full p-3 border ${
                   errors.name ? "border-red-500" : "border-gray-300"
@@ -78,6 +79,7 @@ const ContactUs = () => {
               <input
                 type="email"
                 id="email"
+                placeholder="Enter your email address"
                 {...register("email")}
                 className={`w-full p-3 border ${
                   errors.email ? "border-red-500" : "border-gray-300"
@@ -100,6 +102,7 @@ const ContactUs = () => {
             </label>
             <textarea
               id="message"
+              placeholder="Write your message here..."
               {...register("message")}
               rows="5"
               className={`w-full p-3 border ${
@@ -116,9 +119,10 @@ const ContactUs = () => {
           <div className="text-center">
             <button
               type="submit"
-              className="w-full sm:w-auto py-3 mt-2 md:mt-0 px-6 bg-pink-500 text-white font-semibold rounded-md shadow-md hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-pink-700 dark:hover:bg-pink-600"
+              disabled={isLoading}
+              className="w-full sm:w-auto py-3 mt-2 md:mt-0 px-6 bg-pink-500 text-white font-semibold rounded-md shadow-md hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-pink-700 dark:hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Send Message
+              {isLoading ? "Sending..." : "Send Message"}
             </button>
           </div>
         </form>

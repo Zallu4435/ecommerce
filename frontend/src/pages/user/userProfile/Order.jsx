@@ -9,6 +9,7 @@ import OrderDetailsModal from "../../../modal/user/OrderDetailsModal";
 import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
 import ReturnConfirmationModal from "../../../modal/user/OrderReturnModal";
 import { FaEye, FaMapMarkerAlt, FaSort } from "react-icons/fa";
+import { toast } from "react-toastify";
 import { InvoiceDownloadIcon } from "../../admin/Sales Management/DownloadUtils";
 
 const OrdersList = () => {
@@ -96,9 +97,10 @@ const OrdersList = () => {
         }
         return prev;
       });
+      toast.success("Order cancelled successfully!");
     } catch (err) {
       console.error("Error canceling order:", err);
-      alert("Failed to cancel order");
+      toast.error(err?.data?.message || "Failed to cancel order");
     }
   };
 
@@ -118,9 +120,10 @@ const OrdersList = () => {
         }
         return prev;
       });
+      toast.success("Order return request submitted successfully!");
     } catch (err) {
       console.error("Error returning order:", err);
-      alert("Failed to return order");
+      toast.error(err?.data?.message || "Failed to return order");
     }
   };
 

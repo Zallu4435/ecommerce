@@ -1,8 +1,8 @@
-import React from 'react';
+import { toast } from 'react-toastify';
 
 const CompareButton = () => {
   const handleCompare = () => {
-    alert('Comparing products');
+    toast.info('Comparing products');
   };
 
   return (
