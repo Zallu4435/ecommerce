@@ -1,7 +1,7 @@
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addressSchema } from "../../validation/schemas/addressSchema";
+import usePreventBodyScroll from "../../hooks/usePreventBodyScroll";
 
 const AddressModal = ({ isOpen, onClose, onSave, formData }) => {
   const {
@@ -23,21 +23,9 @@ const AddressModal = ({ isOpen, onClose, onSave, formData }) => {
     },
     mode: "onBlur",
   });
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    if (isOpen) {
-      document.body.classList.add("modal-open");
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = previousOverflow || "";
-    }
-
-    return () => {
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = previousOverflow || "";
-    };
-  }, [isOpen]);
+  
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(isOpen);
 
   useEffect(() => {
     if (formData) {

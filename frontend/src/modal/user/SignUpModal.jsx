@@ -1,21 +1,12 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiCheckCircle } from "react-icons/fi";
+import usePreventBodyScroll from "../../hooks/usePreventBodyScroll";
 
 const SignupSuccessModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.classList.remove("modal-open");
-    }
-
-    return () => {
-      document.body.classList.remove("modal-open");
-    };
-  }, [isOpen]);
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(isOpen);
 
   const handleClose = () => {
     onClose();

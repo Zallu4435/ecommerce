@@ -10,6 +10,7 @@ const AdminTable = ({
   isError,
   search,
   setSearch,
+  refetch,
 }) => {
 
   const types = {
@@ -94,7 +95,7 @@ const AdminTable = ({
                 </td>
               </tr>
             ) : (
-              filteredData.map(rowRenderer)
+              filteredData.map((item) => rowRenderer(item, refetch))
             )}
           </tbody>
         </table>

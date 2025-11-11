@@ -3,6 +3,8 @@ import {
   useAddToCartMutation,
   useGetCartQuery,
 } from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { useGetWishlistQuery } from "../../../redux/apiSliceFeatures/WishlistApiSlice";
+import { useGetComparisonListQuery } from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -17,6 +19,8 @@ const TableRow = ({ item, onRemove }) => {
   } = item;
 
   const { refetch: refetchCart } = useGetCartQuery();
+  const { refetch: refetchWishlist } = useGetWishlistQuery();
+  const { refetch: refetchComparison } = useGetComparisonListQuery();
   const [addToCart] = useAddToCartMutation();
 
   const [isAdding, setIsAdding] = useState(false);
@@ -32,6 +36,8 @@ const TableRow = ({ item, onRemove }) => {
       setIsAdding(true);
       await addToCart(productDetails);
       await refetchCart();
+      await refetchWishlist();
+      await refetchComparison();
 
       onRemove(productId); 
 

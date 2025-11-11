@@ -4,7 +4,7 @@ import { server } from "../../server";
 export const crudApiSlice = createApi({
   reducerPath: "crudApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${server}` }),
-  tagTypes: ["Entity", "Coupon"],
+  tagTypes: ["Entity", "Coupon", "User"],
   endpoints: (builder) => ({
     addEntity: builder.mutation({
       query: ({ entity, data }) => ({
@@ -76,6 +76,13 @@ export const crudApiSlice = createApi({
             ...baseInvalidations,
             { type: "Coupon", id: "LIST" },
             { type: "Coupon", id: "active-coupons" },
+          ];
+        }
+        if (entity === "admin") {
+          return [
+            ...baseInvalidations,
+            { type: "User", id: "LIST" },
+            "User",
           ];
         }
         return baseInvalidations;

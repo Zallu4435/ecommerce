@@ -17,11 +17,11 @@ const AddToWishlist = ({ productId }) => {
   const handleAddToWishlist = async () => {
     setIsLoading(true);
     try {
-      await addToWishlist(productId);
+      const response = await addToWishlist(productId).unwrap();
       await refetchWishlist();
-      toast.success("Product added to wishlist");
+      toast.success(response?.message || "Product added to wishlist");
     } catch (error) {
-      toast.error(`Error: ${error.message}`);
+      toast.error(error?.data?.message || error?.message || "Failed to add to wishlist");
     } finally {
       setIsLoading(false);
     }

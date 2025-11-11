@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useGetOrdersQuery } from "../../../redux/apiSliceFeatures/userProfileApi";
 import {
   useCancelOrderMutation,
@@ -14,6 +14,7 @@ import { InvoiceDownloadIcon } from "../../admin/Sales Management/DownloadUtils"
 
 const OrdersList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState({
@@ -30,10 +31,12 @@ const OrdersList = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const limit = 10;
 
-  const { data, error, isLoading, isFetching } = useGetOrdersQuery({
+  const { data, error, isLoading, isFetching, refetch } = useGetOrdersQuery({
     page,
     limit,
     sortOrder,
+  }, {
+    refetchOnMountOrArgChange: true,
   });
   const [cancelOrder] = useCancelOrderMutation();
   const [returnOrder] = useReturnOrderMutation();
@@ -45,6 +48,13 @@ const OrdersList = () => {
       setOrders(data.orders);
     }
   }, [data]);
+
+  // Refetch orders when navigating from payment failure
+  useEffect(() => {
+    if (location.state?.refetch) {
+      refetch();
+    }
+  }, [location.state, refetch]);
 
   const totalPages = data?.totalPages || 1;
 
@@ -188,6 +198,10 @@ const OrdersList = () => {
                           className={`text-sm font-semibold ${
                             order.Status === "Delivered"
                               ? "text-green-500"
+                              : order.Status === "Payment Failed" || order.Status === "Failed"
+                              ? "text-red-500"
+                              : order.Status === "Cancelled"
+                              ? "text-gray-500"
                               : "text-yellow-500"
                           }`}
                         >
@@ -205,7 +219,8 @@ const OrdersList = () => {
                             order.Status === "Delivered" ||
                             order.Status === "Cancelled" ||
                             order.Status === "Returned" ||
-                            order.Status === "Failed"
+                            order.Status === "Failed" ||
+                            order.Status === "Payment Failed"
                               ? "opacity-40 cursor-not-allowed filter"
                               : ""
                           }`}
@@ -216,7 +231,8 @@ const OrdersList = () => {
                             order.Status === "Delivered" ||
                             order.Status === "Cancelled" ||
                             order.Status === "Returned" ||
-                            order.Status === "Failed"
+                            order.Status === "Failed" ||
+                            order.Status === "Payment Failed"
                           }
                         >
                           Cancel Order

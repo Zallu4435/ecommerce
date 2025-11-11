@@ -34,13 +34,21 @@ const TrackOrder = () => {
     { label: "Out for Delivery", shortLabel: "Delivery", icon: <FaShippingFast /> },
     { label: "Delivered", shortLabel: "Delivered", icon: <FaCheckCircle /> },
     { label: "Cancelled", shortLabel: "Cancelled", icon: <FaTimesCircle />, cancel: true },
+    { label: "Payment Failed", shortLabel: "Failed", icon: <FaTimesCircle />, failed: true },
+    { label: "Failed", shortLabel: "Failed", icon: <FaTimesCircle />, failed: true },
   ]
 
   const currentStep = trackingSteps.findIndex((step) => step.label === order.Status)
 
   const calculateLineProgress = () => {
     if (currentStep === -1) return 0
-    return ((currentStep + 1) / trackingSteps.length) * 100
+    // For failed or cancelled orders, don't show full progress
+    if (order.Status === "Cancelled" || order.Status === "Failed" || order.Status === "Payment Failed") {
+      return 0 // No progress for failed/cancelled orders
+    }
+    // Only count progress for successful flow (first 5 steps)
+    const successfulSteps = 5 // Order Placed, Processing, Shipped, Out for Delivery, Delivered
+    return ((currentStep + 1) / successfulSteps) * 100
   }
 
   const getStatusColor = () => {
@@ -56,6 +64,9 @@ const TrackOrder = () => {
       case "Delivered":
         return "bg-green-500"
       case "Cancelled":
+        return "bg-red-500"
+      case "Payment Failed":
+      case "Failed":
         return "bg-red-500"
       default:
         return "bg-gray-300"
@@ -151,25 +162,45 @@ const TrackOrder = () => {
 
       <div className="relative mb-12 mt-8">
         <div className="flex justify-between items-center w-full mb-4">
-          {trackingSteps.map((step, index) => (
-            <div key={index} className="flex z-20 flex-col items-center text-center relative">
-              <div
-                className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full mb-1 ${
-                  index <= currentStep ? "bg-green-500 text-white" : "bg-gray-300 dark:bg-gray-600 text-gray-500"
-                } ${step.cancel ? "bg-red-500" : ""}`}
-              >
-                {step.icon}
-              </div>
-              <div
-                className={`absolute top-10 sm:top-12 text-xs sm:text-sm font-semibold ${
-                  index <= currentStep ? "text-green-500" : "text-gray-500 dark:text-gray-400"
-                } ${step.cancel ? "text-red-500" : ""}`}
-              >
-                <span className="hidden sm:inline">{step.label}</span>
-                <span className="sm:hidden">{step.shortLabel}</span>
-              </div>
-            </div>
-          ))}
+          {trackingSteps
+            .filter((step) => {
+              // Only show normal flow steps, hide failed/cancelled unless it's the current status
+              if (step.cancel || step.failed) {
+                return step.label === order.Status
+              }
+              return true
+            })
+            .map((step, index) => {
+              const isCurrentStatus = step.label === order.Status
+              const isFailed = step.failed || step.cancel
+              return (
+                <div key={index} className="flex z-20 flex-col items-center text-center relative">
+                  <div
+                    className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full mb-1 ${
+                      isCurrentStatus && isFailed
+                        ? "bg-red-500 text-white"
+                        : index <= currentStep && !isFailed
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-300 dark:bg-gray-600 text-gray-500"
+                    }`}
+                  >
+                    {step.icon}
+                  </div>
+                  <div
+                    className={`absolute top-10 sm:top-12 text-xs sm:text-sm font-semibold ${
+                      isCurrentStatus && isFailed
+                        ? "text-red-500"
+                        : index <= currentStep && !isFailed
+                        ? "text-green-500"
+                        : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    <span className="hidden sm:inline">{step.label}</span>
+                    <span className="sm:hidden">{step.shortLabel}</span>
+                  </div>
+                </div>
+              )
+            })}
         </div>
         <div className="absolute w-full top-4 sm:top-5 left-0">
           <div className="w-full bg-gray-300 dark:bg-gray-600 h-1 sm:h-2">
@@ -224,18 +255,88 @@ const TrackOrder = () => {
         </div>
       )}
 
-      {order.Status === "Failed" && (
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 bg-red-100 p-4 rounded-md shadow-md">
-          <div className="text-xl text-red-600 font-semibold mb-4 sm:mb-0">
-            <strong>Order has been Failed</strong>
+      {(order.Status === "Failed" || order.Status === "Payment Failed") && (
+        <div className="mt-8 border-2 border-red-300 dark:border-red-700 rounded-lg overflow-hidden">
+          {/* Header */}
+          <div className="bg-red-50 dark:bg-red-900/30 px-6 py-4 border-b border-red-200 dark:border-red-800">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                <FaTimesCircle className="text-red-600 dark:text-red-400 text-2xl" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-red-700 dark:text-red-300">Payment Failed</h3>
+                <p className="text-sm text-red-600 dark:text-red-400">Order ID: {generateOrderId(order._id)}</p>
+              </div>
+            </div>
           </div>
-          <button
-            className={`flex items-center bg-gradient-to-r from-purple-500 to-blue-500 text-white px-5 py-2 rounded-lg shadow-lg hover:from-purple-600 hover:to-blue-600 transform hover:scale-105 transition-transform`}
-            onClick={handleAddPayment}
-          >
-            <FaCreditCard className="w-5 h-5 mr-2" />
-            Add Payment
-          </button>
+
+          {/* Body */}
+          <div className="bg-white dark:bg-gray-800 px-6 py-6">
+            <div className="mb-6">
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">What happened?</h4>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                Your payment could not be processed. This might be due to insufficient wallet balance, 
+                payment gateway issues, or network problems. Don't worry - your order is saved and you can retry the payment anytime.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <h5 className="font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2">
+                <FaCheckCircle className="text-blue-600 dark:text-blue-400" />
+                Your items are reserved
+              </h5>
+              <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1 ml-6">
+                <li>• Product stock is reserved for you</li>
+                <li>• Cart items are still available</li>
+                <li>• Order details are saved</li>
+              </ul>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Next Steps:</h4>
+              <div className="grid gap-3">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-green-600 dark:text-green-400 text-sm font-bold">1</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-200">Check your wallet balance</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Ensure you have sufficient funds (₹{totalPrice} required)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-green-600 dark:text-green-400 text-sm font-bold">2</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-200">Click "Retry Payment" below</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Choose your preferred payment method and complete the transaction</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transform hover:scale-[1.02] transition-all duration-200"
+                onClick={handleAddPayment}
+              >
+                <FaCreditCard className="text-xl" />
+                <span>Retry Payment</span>
+              </button>
+              <button
+                className="flex-1 flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold px-6 py-3 rounded-lg transition-colors duration-200"
+                onClick={() => navigate('/profile/wallet')}
+              >
+                <span>Add Money to Wallet</span>
+              </button>
+            </div>
+
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+              Need help? <a href="/help" className="text-blue-600 dark:text-blue-400 hover:underline">Contact Support</a>
+            </p>
+          </div>
         </div>
       )}
     </div>

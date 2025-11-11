@@ -182,39 +182,117 @@ exports.getCouponDetails = async (req, res, next) => {
 
 exports.createCoupon = async (req, res, next) => {
   try {
+    // Coupon code validation
     if (!req.body.couponCode || req.body.couponCode.trim() === "") {
       return next(new ErrorHandler("Coupon code is required", 400));
     }
 
+    const couponCodeNormalized = req.body.couponCode.trim().toUpperCase();
+    
+    // Validate coupon code format
+    if (!/^[A-Z0-9_-]+$/.test(couponCodeNormalized)) {
+      return next(new ErrorHandler("Coupon code can only contain uppercase letters, numbers, hyphens, and underscores", 400));
+    }
+
+    if (couponCodeNormalized.length < 3 || couponCodeNormalized.length > 50) {
+      return next(new ErrorHandler("Coupon code must be between 3 and 50 characters", 400));
+    }
+
+    // Title validation
     if (!req.body.title || req.body.title.trim() === "") {
       return next(new ErrorHandler("Coupon title is required", 400));
     }
 
+    if (req.body.title.trim().length < 3 || req.body.title.trim().length > 100) {
+      return next(new ErrorHandler("Coupon title must be between 3 and 100 characters", 400));
+    }
+
+    // Description validation
     if (!req.body.description || req.body.description.trim() === "") {
       return next(new ErrorHandler("Coupon description is required", 400));
     }
 
+    if (req.body.description.trim().length < 10 || req.body.description.trim().length > 500) {
+      return next(new ErrorHandler("Coupon description must be between 10 and 500 characters", 400));
+    }
+
+    // Discount validation
     if (
       !req.body.discount ||
       isNaN(req.body.discount) ||
       Number(req.body.discount) <= 0 ||
-      Number(req.body.discount) > 100
+      Number(req.body.discount) > 70
     ) {
-      return next(new ErrorHandler("Discount must be between 1 and 100", 400));
+      return next(new ErrorHandler("Discount must be between 1 and 70 percent", 400));
     }
 
-    if (
-      !req.body.expiry ||
-      isNaN(Date.parse(req.body.expiry)) ||
-      Date.parse(req.body.expiry) <= Date.now()
-    ) {
-      return next(
-        new ErrorHandler("Expiry date must be a valid future date", 400)
-      );
+    // Min amount validation
+    if (req.body.minAmount === undefined || req.body.minAmount === null) {
+      return next(new ErrorHandler("Minimum purchase amount is required", 400));
     }
 
-    const couponCodeNormalized = req.body.couponCode.trim();
+    if (isNaN(req.body.minAmount) || Number(req.body.minAmount) < 500) {
+      return next(new ErrorHandler("Minimum purchase amount must be at least ₹500", 400));
+    }
 
+    if (Number(req.body.minAmount) > 100000) {
+      return next(new ErrorHandler("Minimum purchase amount cannot exceed ₹1,00,000", 400));
+    }
+
+    // Max amount validation
+    if (req.body.maxAmount === undefined || req.body.maxAmount === null) {
+      return next(new ErrorHandler("Maximum discount amount is required", 400));
+    }
+
+    if (isNaN(req.body.maxAmount) || Number(req.body.maxAmount) <= 0) {
+      return next(new ErrorHandler("Maximum discount amount must be greater than 0", 400));
+    }
+
+    if (Number(req.body.maxAmount) > 5000) {
+      return next(new ErrorHandler("Maximum discount amount cannot exceed ₹5,000", 400));
+    }
+
+    // Validate relationship between minAmount and maxAmount
+    // Minimum purchase must be at least 5x the max discount to prevent abuse
+    if (Number(req.body.minAmount) < Number(req.body.maxAmount) * 5) {
+      return next(new ErrorHandler("Minimum purchase amount must be at least 5 times the maximum discount amount", 400));
+    }
+
+    // Expiry date validation
+    if (!req.body.expiry || isNaN(Date.parse(req.body.expiry))) {
+      return next(new ErrorHandler("Valid expiry date is required", 400));
+    }
+
+    const expiryDate = new Date(req.body.expiry);
+    const now = new Date();
+    
+    if (expiryDate <= now) {
+      return next(new ErrorHandler("Expiry date must be in the future", 400));
+    }
+
+    // Check if expiry is too far in the future (e.g., more than 2 years)
+    const twoYearsFromNow = new Date();
+    twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+    
+    if (expiryDate > twoYearsFromNow) {
+      return next(new ErrorHandler("Expiry date cannot be more than 2 years in the future", 400));
+    }
+
+    // Usage limit validation
+    if (req.body.usageLimit !== undefined && req.body.usageLimit !== null) {
+      if (isNaN(req.body.usageLimit) || !Number.isInteger(Number(req.body.usageLimit)) || Number(req.body.usageLimit) < 1) {
+        return next(new ErrorHandler("Usage limit must be a positive integer or leave empty for unlimited", 400));
+      }
+    }
+
+    // Per user limit validation
+    if (req.body.perUserLimit !== undefined && req.body.perUserLimit !== null) {
+      if (isNaN(req.body.perUserLimit) || !Number.isInteger(Number(req.body.perUserLimit)) || Number(req.body.perUserLimit) < 1 || Number(req.body.perUserLimit) > 5) {
+        return next(new ErrorHandler("Per user limit must be between 1 and 5", 400));
+      }
+    }
+
+    // Check for existing coupon
     const existingCoupon = await Coupon.findOne({
       couponCode: { $regex: new RegExp(`^${couponCodeNormalized}$`, "i") },
     });
@@ -222,18 +300,27 @@ exports.createCoupon = async (req, res, next) => {
     if (existingCoupon) {
       return next(
         new ErrorHandler(
-          "A coupon with this code already exists, case-insensitive",
+          "A coupon with this code already exists",
           400
         )
       );
     }
 
+    // Create coupon
     let coupon;
     try {
-      coupon = await Coupon.create({ ...req.body, couponCode: couponCodeNormalized });
+      coupon = await Coupon.create({ 
+        ...req.body, 
+        couponCode: couponCodeNormalized,
+        usageCount: 0
+      });
     } catch (err) {
       if (err && err.code === 11000) {
         return next(new ErrorHandler("A coupon with this code already exists", 400));
+      }
+      if (err.name === 'ValidationError') {
+        const messages = Object.values(err.errors).map(e => e.message);
+        return next(new ErrorHandler(messages.join(', '), 400));
       }
       throw err;
     }
@@ -260,17 +347,93 @@ exports.updateCoupon = async (req, res, next) => {
       return next(new ErrorHandler("Coupon not found", 404));
     }
 
+    // Coupon code validation
     if (!req.body.couponCode || req.body.couponCode.trim() === "") {
       return next(new ErrorHandler("Coupon code is required", 400));
     }
 
+    const couponCodeNormalized = req.body.couponCode.trim().toUpperCase();
+    
+    // Validate coupon code format
+    if (!/^[A-Z0-9_-]+$/.test(couponCodeNormalized)) {
+      return next(new ErrorHandler("Coupon code can only contain uppercase letters, numbers, hyphens, and underscores", 400));
+    }
+
+    if (couponCodeNormalized.length < 3 || couponCodeNormalized.length > 50) {
+      return next(new ErrorHandler("Coupon code must be between 3 and 50 characters", 400));
+    }
+
+    // Title validation
     if (!req.body.title || req.body.title.trim() === "") {
       return next(new ErrorHandler("Coupon title is required", 400));
     }
 
+    if (req.body.title.trim().length < 3 || req.body.title.trim().length > 100) {
+      return next(new ErrorHandler("Coupon title must be between 3 and 100 characters", 400));
+    }
+
+    // Description validation
+    if (req.body.description !== undefined) {
+      if (!req.body.description || req.body.description.trim() === "") {
+        return next(new ErrorHandler("Coupon description is required", 400));
+      }
+      if (req.body.description.trim().length < 10 || req.body.description.trim().length > 500) {
+        return next(new ErrorHandler("Coupon description must be between 10 and 500 characters", 400));
+      }
+    }
+
+    // Discount validation
+    if (req.body.discount !== undefined) {
+      if (isNaN(req.body.discount) || Number(req.body.discount) <= 0 || Number(req.body.discount) > 70) {
+        return next(new ErrorHandler("Discount must be between 1 and 70 percent", 400));
+      }
+    }
+
+    // Min/Max amount validation
+    if (req.body.minAmount !== undefined && req.body.maxAmount !== undefined) {
+      if (Number(req.body.minAmount) < Number(req.body.maxAmount) * 5) {
+        return next(new ErrorHandler("Minimum purchase amount must be at least 5 times the maximum discount amount", 400));
+      }
+    }
+
+    // Individual min/max amount validation
+    if (req.body.minAmount !== undefined) {
+      if (Number(req.body.minAmount) < 500 || Number(req.body.minAmount) > 100000) {
+        return next(new ErrorHandler("Minimum purchase amount must be between ₹500 and ₹1,00,000", 400));
+      }
+    }
+
+    if (req.body.maxAmount !== undefined) {
+      if (Number(req.body.maxAmount) <= 0 || Number(req.body.maxAmount) > 5000) {
+        return next(new ErrorHandler("Maximum discount amount must be between ₹1 and ₹5,000", 400));
+      }
+    }
+
+    // Expiry date validation
+    if (req.body.expiry) {
+      if (isNaN(Date.parse(req.body.expiry))) {
+        return next(new ErrorHandler("Valid expiry date is required", 400));
+      }
+
+      const expiryDate = new Date(req.body.expiry);
+      const now = new Date();
+      
+      if (expiryDate <= now) {
+        return next(new ErrorHandler("Expiry date must be in the future", 400));
+      }
+
+      const twoYearsFromNow = new Date();
+      twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+      
+      if (expiryDate > twoYearsFromNow) {
+        return next(new ErrorHandler("Expiry date cannot be more than 2 years in the future", 400));
+      }
+    }
+
+    // Check for duplicate coupon code
     const existingCoupon = await Coupon.findOne({
       couponCode: {
-        $regex: new RegExp(`^${req.body.couponCode.trim()}$`, "i"),
+        $regex: new RegExp(`^${couponCodeNormalized}$`, "i"),
       },
       _id: { $ne: req.params.id },
     });
@@ -287,7 +450,7 @@ exports.updateCoupon = async (req, res, next) => {
         req.params.id,
         {
           ...req.body,
-          couponCode: req.body.couponCode.trim(),
+          couponCode: couponCodeNormalized,
         },
         {
           new: true,
@@ -298,6 +461,10 @@ exports.updateCoupon = async (req, res, next) => {
     } catch (err) {
       if (err && err.code === 11000) {
         return next(new ErrorHandler("A coupon with this code already exists", 400));
+      }
+      if (err.name === 'ValidationError') {
+        const messages = Object.values(err.errors).map(e => e.message);
+        return next(new ErrorHandler(messages.join(', '), 400));
       }
       throw err;
     }
@@ -374,30 +541,88 @@ exports.getCouponStatistics = async (req, res, next) => {
 
 exports.validateCoupon = async (req, res, next) => {
   try {
-    const { couponCode } = req.body;
+    const { couponCode, userId, purchaseAmount, productIds } = req.body;
 
     if (!couponCode) {
       return next(new ErrorHandler("Coupon code is required", 400));
     }
 
-    const coupon = await Coupon.findOne({ couponCode });
+    const coupon = await Coupon.findOne({ couponCode: couponCode.toUpperCase() });
 
     if (!coupon) {
       return next(new ErrorHandler("Invalid coupon code", 404));
     }
 
+    // Check expiry
     const currentDate = new Date();
     if (currentDate > coupon.expiry) {
       return next(new ErrorHandler("Coupon has expired", 400));
     }
 
+    // Check usage limit
+    if (coupon.usageLimit !== null && coupon.usageCount >= coupon.usageLimit) {
+      return next(new ErrorHandler("Coupon usage limit has been reached", 400));
+    }
+
+    // Check user-specific validations if userId is provided
+    if (userId) {
+      // Check if user has already used the coupon (per user limit)
+      const userUsageCount = coupon.appliedUsers.filter(id => id.toString() === userId.toString()).length;
+      if (userUsageCount >= coupon.perUserLimit) {
+        return next(new ErrorHandler(`You have already used this coupon ${coupon.perUserLimit} time(s)`, 400));
+      }
+
+      // Check if user is in applicable users list (if list is not empty)
+      if (coupon.applicableUsers.length > 0) {
+        const isUserEligible = coupon.applicableUsers.some(id => id.toString() === userId.toString());
+        if (!isUserEligible) {
+          return next(new ErrorHandler("This coupon is not applicable for your account", 403));
+        }
+      }
+    }
+
+    // Check minimum purchase amount if provided
+    if (purchaseAmount !== undefined && purchaseAmount !== null) {
+      if (Number(purchaseAmount) < coupon.minAmount) {
+        return next(new ErrorHandler(`Minimum purchase amount of ₹${coupon.minAmount} required to use this coupon`, 400));
+      }
+    }
+
+    // Check product applicability if provided
+    if (productIds && productIds.length > 0 && coupon.applicableProducts.length > 0) {
+      const hasApplicableProduct = productIds.some(pid => 
+        coupon.applicableProducts.some(apid => apid.toString() === pid.toString())
+      );
+      if (!hasApplicableProduct) {
+        return next(new ErrorHandler("This coupon is not applicable for the selected products", 400));
+      }
+    }
+
+    // Calculate potential discount
+    let potentialDiscount = 0;
+    if (purchaseAmount) {
+      potentialDiscount = Math.min(
+        (Number(purchaseAmount) * coupon.discount) / 100,
+        coupon.maxAmount
+      );
+    }
+
     res.status(200).json({
       success: true,
       message: "Coupon is valid",
-      discount: coupon.discount,
-      expiry: coupon.expiry,
-      maxDiscount: coupon.maxAmount,
-      minPurchase: coupon.minAmount,
+      coupon: {
+        code: coupon.couponCode,
+        title: coupon.title,
+        description: coupon.description,
+        discount: coupon.discount,
+        expiry: coupon.expiry,
+        maxDiscount: coupon.maxAmount,
+        minPurchase: coupon.minAmount,
+        usageLimit: coupon.usageLimit,
+        remainingUses: coupon.usageLimit ? coupon.usageLimit - coupon.usageCount : null,
+        perUserLimit: coupon.perUserLimit,
+        potentialDiscount: potentialDiscount || null
+      }
     });
   } catch (error) {
     next(error);

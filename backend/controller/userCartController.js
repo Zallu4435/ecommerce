@@ -1,5 +1,7 @@
 const Cart = require("../model/Cart");
 const Product = require("../model/Products");
+const Wishlist = require("../model/Wishlist");
+const Comparison = require("../model/Comparison");
 const mongoose = require("mongoose");
 
 exports.addToCart = async (req, res) => {
@@ -39,7 +41,7 @@ exports.addToCart = async (req, res) => {
     );
 
     if (existingItemIndex >= 0) {
-      cart.items[existingItemIndex].quantity = quantity;
+      return res.status(400).json({ message: "This product is already in your cart" });
     } else {
       cart.items.push({
         productId,
@@ -50,6 +52,30 @@ exports.addToCart = async (req, res) => {
     }
 
     await cart.save();
+
+    // Automatically remove the product from wishlist if it exists
+    try {
+      await Wishlist.findOneAndUpdate(
+        { userId },
+        { $pull: { items: { productId: productId } } },
+        { new: true }
+      );
+    } catch (wishlistError) {
+      // Log the error but don't fail the cart operation
+      console.error("Error removing item from wishlist:", wishlistError);
+    }
+
+    // Automatically remove the product from comparison if it exists
+    try {
+      await Comparison.findOneAndUpdate(
+        { userId },
+        { $pull: { items: { productId: productId } } },
+        { new: true }
+      );
+    } catch (comparisonError) {
+      // Log the error but don't fail the cart operation
+      console.error("Error removing item from comparison:", comparisonError);
+    }
 
     res.status(200).json({ message: "Item successfully added to cart!", cart });
   } catch (error) {

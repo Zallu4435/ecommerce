@@ -14,7 +14,9 @@ const {
   checkProductStock,
   contact,
   primaryAddress,
-  verifyRazorpayPayment
+  verifyRazorpayPayment,
+  retryPayment,
+  cancelPayment
 } = require("../controller/userProfileController");
 
 router.post('/contact', catchAsyncErrors(contact))
@@ -45,6 +47,16 @@ router.post(
   "/verify-razorpay-payment",
   isAuthenticated,
   catchAsyncErrors(verifyRazorpayPayment)
+);
+router.post(
+  "/retry-payment",
+  isAuthenticated,
+  catchAsyncErrors(retryPayment)
+);
+router.post(
+  "/cancel-payment",
+  isAuthenticated,
+  catchAsyncErrors(cancelPayment)
 );
 router.get("/products/:productId/stock", catchAsyncErrors(checkProductStock));
 

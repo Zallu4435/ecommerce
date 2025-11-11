@@ -1,16 +1,8 @@
-import { useEffect } from "react"
+import usePreventBodyScroll from "../../hooks/usePreventBodyScroll"
 
 const ReturnConfirmationModal = ({ show, onClose, onConfirm, orderId, productId, reason, onReasonChange }) => {
-  useEffect(() => {
-    if (show) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "auto"
-    }
-    return () => {
-      document.body.style.overflow = "auto"
-    }
-  }, [show])
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(show)
 
   if (!show) return null
 

@@ -168,7 +168,7 @@ const ShoppingCard = ({
 
         <button
           onClick={() =>
-            handleAddToCart(_id, addToCart, refetchCart, setIsAdding)
+            handleAddToCart(_id, addToCart, refetchCart, setIsAdding, refetchWishlist, refetchComparison)
           }
           disabled={!isAuthenticated || isAdding}
           className={`w-full py-2 sm:py-3 flex border-yellow-500 border-2 justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${

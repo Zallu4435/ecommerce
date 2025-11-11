@@ -4,14 +4,12 @@ import {
   useDeleteEntityMutation,
   useBanEntityMutation,
 } from "../../redux/apiSliceFeatures/crudApiSlice";
-import { useGetUsersQuery } from "../../redux/apiSliceFeatures/userApiSlice";
 import { useGetCategoriesQuery } from "../../redux/apiSliceFeatures/categoryApiSlice";
 
-export const useButtonHandlers = () => {
+export const useButtonHandlers = (refetch) => {
   const navigate = useNavigate();
   const [deleteEntity] = useDeleteEntityMutation();
   const [banEntity] = useBanEntityMutation();
-  const { refetch } = useGetUsersQuery();
   const { refetch: refetchCategory } = useGetCategoriesQuery();
 
   const handleUpdate = async (id, type) => {
@@ -48,7 +46,9 @@ export const useButtonHandlers = () => {
   const handleBan = async (type, id) => {
     try {
       await banEntity({ entity: type, id }).unwrap();
-      refetch();
+      if (refetch) {
+        await refetch();
+      }
       toast.success("User status updated successfully!");
     } catch (error) {
       console.error("Ban failed:", error);

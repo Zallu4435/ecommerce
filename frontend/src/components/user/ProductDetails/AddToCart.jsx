@@ -3,6 +3,8 @@ import {
   useAddToCartMutation,
   useGetCartQuery,
 } from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { useGetWishlistQuery } from "../../../redux/apiSliceFeatures/WishlistApiSlice";
+import { useGetComparisonListQuery } from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
 import { toast } from "react-toastify";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -25,6 +27,8 @@ const AddToCart = ({
   const [selectedColor, setSelectedColor] = useState((colorOption && colorOption[0]) || "");
   const [isLoading, setIsLoading] = useState(false);
   const { refetch: refetchCart } = useGetCartQuery();
+  const { refetch: refetchWishlist } = useGetWishlistQuery();
+  const { refetch: refetchComparison } = useGetComparisonListQuery();
   const [addToCart] = useAddToCartMutation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -111,14 +115,16 @@ const AddToCart = ({
         quantity,
         size: selectedSize,
         color: selectedColor,
-      });
+      }).unwrap();
       await refetchCart();
+      await refetchWishlist();
+      await refetchComparison();
 
-      if (response?.data?.message) {
-        toast.success(response.data.message);
+      if (response?.message) {
+        toast.success(response.message);
       }
     } catch (error) {
-      toast.error(error?.data?.message || error.message);
+      toast.error(error?.data?.message || error?.message || "Failed to add item to cart");
     } finally {
       setIsLoading(false);
     }

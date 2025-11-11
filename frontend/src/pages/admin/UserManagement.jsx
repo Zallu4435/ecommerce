@@ -13,6 +13,7 @@ const UserManagement = () => {
     data: allData = {},
     isLoading,
     isError,
+    refetch,
   } = useGetUsersQuery({
     page: currentPage,
     limit,
@@ -98,7 +99,7 @@ const UserManagement = () => {
           setSearch={setSearch}
           isLoading={isLoading}
           isError={isError}
-          refetch={debouncedSearch ? refetchSearch : undefined}
+          refetch={debouncedSearch ? refetchSearch : refetch}
         />
       </div>
     </div>

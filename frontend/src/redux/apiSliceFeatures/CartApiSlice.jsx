@@ -4,6 +4,7 @@ import { baseQueryWithReauth } from "../../middleware/authMiddleware";
 export const cartApi = createApi({
   reducerPath: "cartApi",
   baseQuery: baseQueryWithReauth,
+  tagTypes: ["Cart", "Wishlist", "Comparison"],
   endpoints: (builder) => ({
     addToCart: builder.mutation({
       query: (productDetails) => ({
@@ -11,7 +12,7 @@ export const cartApi = createApi({
         method: "POST",
         body: productDetails,
       }),
-      invalidatesTags: [{ type: "Cart", id: "LIST" }],
+      invalidatesTags: [{ type: "Cart", id: "LIST" }, "Wishlist", "Comparison"],
     }),
 
     updateQuantity: builder.mutation({

@@ -1,10 +1,23 @@
 const Wishlist = require("../model/Wishlist");
+const Cart = require("../model/Cart");
 const mongoose = require("mongoose");
 
 exports.addToWishlist = async (req, res) => {
   try {
     const { productId } = req.body;
     const userId = req.user;
+
+    // Check if product is already in cart
+    const cart = await Cart.findOne({ userId });
+    if (cart) {
+      const productInCart = cart.items.some(
+        (item) => item.productId.toString() === productId
+      );
+      if (productInCart) {
+        return res.status(400).json({ message: "This product is already in your cart" });
+      }
+    }
+
     const existingWishlist = await Wishlist.findOne({ userId });
     if (existingWishlist) {
       const productExists = existingWishlist.items.some(

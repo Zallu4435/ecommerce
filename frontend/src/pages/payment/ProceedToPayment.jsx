@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useProcessPaymentMutation } from "../../redux/apiSliceFeatures/userProfileApi";
@@ -9,8 +9,23 @@ const ProceedToPaymentPage = () => {
   const navigate = useNavigate();
   const { address, order, payment, coupon } = location.state || {};
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [processPayment, { isLoading: isPaymentProcessing }] =
     useProcessPaymentMutation();
+
+  // Prevent body scroll when redirecting loader is shown
+  useEffect(() => {
+    if (redirecting) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [redirecting]);
 
   if (!address || !order || !payment) {
     return (
@@ -89,7 +104,21 @@ const ProceedToPaymentPage = () => {
                 toast.error(
                   "Failed to process the order or payment. Please try again."
                 );
+              } finally {
+                setLoading(false);
               }
+            },
+            modal: {
+              ondismiss: function() {
+                // User closed the payment modal without completing payment
+                toast.warning("Payment cancelled. You can retry anytime from your orders.");
+                setLoading(false);
+                
+                // Optionally navigate to orders page or stay on payment page
+                // navigate("/orders");
+              },
+              escape: true,
+              backdropclose: false,
             },
             prefill: {
               name: "John Doe",
@@ -105,27 +134,52 @@ const ProceedToPaymentPage = () => {
           };
 
           const razorpayInstance = new window.Razorpay(options);
+          razorpayInstance.on('payment.failed', function (response) {
+            // Payment failed (card declined, insufficient funds, etc.)
+            console.error("Razorpay payment failed:", response.error);
+            toast.error(
+              response.error.description || 
+              "Payment failed. Please try again or use a different payment method."
+            );
+            setLoading(false);
+          });
+          
           razorpayInstance.open();
         } else if (payment.onlinePaymentMethod === "card") {
-          toast.info("Processing card payment...");
-          const isSuccessful = await simulateCardPayment();
-          if (isSuccessful) {
-            const paymentData = {
-              address,
-              order,
-              couponCode: coupon ? coupon.couponCode : null,
-              payment: {
-                paymentMethod: "card",
-                onlinePaymentMethod: "card",
-              },
-              productId: null,
-              quantity: null,
-            };
+          const isCardPaymentSuccessful = await simulateCardPayment();
+          if (isCardPaymentSuccessful) {
+            try {
+              const paymentData = {
+                address,
+                order,
+                couponCode: coupon ? coupon.couponCode : null,
+                payment: {
+                  paymentMethod: "card",
+                  onlinePaymentMethod: "card",
+                },
+                productId: null,
+                quantity: null,
+              };
 
-            const data = await processPayment(paymentData).unwrap();
-            navigate("/payment-success", {
-              state: { paymentId: data.paymentId, orderId: data.orderId },
-            });
+              const data = await processPayment(paymentData).unwrap();
+              toast.success("Wallet payment successful!");
+              navigate("/payment-success", {
+                state: { paymentId: data.paymentId, orderId: data.orderId },
+              });
+            } catch (error) {
+              console.error("Error processing wallet payment:", error);
+              toast.error(
+                error?.data?.message || error?.message || "Wallet payment failed. Please check your balance and try again."
+              );
+              // Show redirecting loader instantly and navigate after 3 seconds
+              setRedirecting(true);
+              setTimeout(() => {
+                navigate("/profile/order", { 
+                  replace: true,
+                  state: { refetch: true, timestamp: Date.now() }
+                });
+              }, 4000);
+            }
           } else {
             toast.error("Card payment failed. Please try again.");
           }
@@ -231,7 +285,7 @@ const ProceedToPaymentPage = () => {
                   {item.productName}
                 </span>
                 <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {item.quantity} x ₹{item.offerPrice?.toFixed(2)}
+                  {item.quantity} x ₹{(item.offerPrice || item.originalPrice)?.toFixed(2)}
                 </span>
               </div>
             ))}
@@ -322,6 +376,28 @@ const ProceedToPaymentPage = () => {
           </button>
         </div>
       </div>
+
+      {/* Redirecting Loader Overlay */}
+      {redirecting && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999] backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 max-w-sm mx-4 text-center pointer-events-auto">
+            <div className="mb-4">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto"></div>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              Redirecting...
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Taking you to your orders page where you can retry payment.
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-1">
+              <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

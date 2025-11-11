@@ -1,7 +1,7 @@
-import { useEffect } from "react"
 import { useGetAddressByOrderIdQuery } from "../../redux/apiSliceFeatures/OrderApiSlice"
 import { FaTimes } from "react-icons/fa"
 import LoadingSpinner from "../../components/LoadingSpinner"
+import usePreventBodyScroll from "../../hooks/usePreventBodyScroll"
 
 const OrderDetailsModal = ({ order, onClose, isAdmin = false }) => {
   const {
@@ -12,14 +12,8 @@ const OrderDetailsModal = ({ order, onClose, isAdmin = false }) => {
     skip: !order._id,
   })
 
-  useEffect(() => {
-    if (order && order._id) {
-      document.body.style.overflow = "hidden"
-      return () => {
-        document.body.style.overflow = "auto"
-      }
-    }
-  }, [order])
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(!!order)
 
   if (isLoading) return <LoadingSpinner />
   if (error)

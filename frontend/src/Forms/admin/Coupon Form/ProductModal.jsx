@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import usePreventBodyScroll from '../../../hooks/usePreventBodyScroll';
 
 const ProductModal = ({ showModal, setShowModal, products, handleProductSelect, selectedProducts, loadMoreProducts, hasMoreProducts, isProductFetching }) => {
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [productPage, setProductPage] = useState(1);
+  
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(showModal);
 
   const loadMore = useCallback(() => {
     if (!isProductFetching && hasMoreProducts) {

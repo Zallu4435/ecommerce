@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useUpdateUserInfoMutation } from "../../redux/apiSliceFeatures/userApiSlice";
 import { toast } from "react-toastify";
+import usePreventBodyScroll from "../../hooks/usePreventBodyScroll";
 
 function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
   const [updateUserInfo] = useUpdateUserInfoMutation();
@@ -14,17 +15,8 @@ function EditProfileModal({ isOpen, onClose, userInfo = {} }) {
   });
   const oldEmail = userInfo.email;
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.classList.remove("modal-open");
-    }
-
-    return () => {
-      document.body.classList.remove("modal-open");
-    };
-  }, [isOpen]);
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(isOpen);
 
   if (!isOpen) return null;
 

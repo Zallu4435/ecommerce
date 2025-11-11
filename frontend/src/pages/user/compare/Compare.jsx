@@ -8,6 +8,7 @@ import {
   useAddToCartMutation,
   useGetCartQuery,
 } from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { useGetWishlistQuery } from "../../../redux/apiSliceFeatures/WishlistApiSlice";
 import { toast } from "react-toastify";
 import ComparisonCard from "./ComparisonCard";
 import ComparisonTable from "./ComparisonTable";
@@ -20,8 +21,10 @@ const Compare = () => {
     data: compareItem = [],
     isLoading,
     isError,
+    refetch: refetchComparison,
   } = useGetComparisonListQuery();
   const { refetch: refetchCart } = useGetCartQuery();
+  const { refetch: refetchWishlist } = useGetWishlistQuery();
   const [addToCart] = useAddToCartMutation();
   const [removeFromComparison] = useRemoveFromComparisonMutation();
 
@@ -43,6 +46,8 @@ const Compare = () => {
       setIsAdding(true);
       await addToCart(productDetails);
       await refetchCart();
+      await refetchWishlist();
+      await refetchComparison();
       toast.success("Item added to cart!");
     } catch (error) {
       toast.error(error.message || "Failed to add item to cart.");

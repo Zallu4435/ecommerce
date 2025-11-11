@@ -1,17 +1,8 @@
-import { useEffect } from "react";
+import usePreventBodyScroll from "../../hooks/usePreventBodyScroll";
 
 const TransactionModal = ({ transactions, closeModal, isOpen }) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.classList.remove("modal-open");
-    }
-
-    return () => {
-      document.body.classList.remove("modal-open");
-    };
-  }, [isOpen]);
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(isOpen);
 
   if (!isOpen) return null;
 

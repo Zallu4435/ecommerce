@@ -59,6 +59,7 @@ export const adminApiSlice = createApi({
         const queryString = new URLSearchParams(params).toString();
         return `/users/search?${queryString}`;
       },
+      providesTags: ["User"],
     }),
 
     searchAdminProducts: builder.query({

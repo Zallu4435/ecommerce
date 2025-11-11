@@ -4,6 +4,8 @@ import {
   useAddToCartMutation,
   useGetCartQuery,
 } from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { useGetWishlistQuery } from "../../../redux/apiSliceFeatures/WishlistApiSlice";
+import { useGetComparisonListQuery } from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
 import { toast } from "react-toastify";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import LoadingSpinner from "../../LoadingSpinner";
@@ -22,6 +24,8 @@ const RelatedProduct = ({ category }) => {
   });
 
   const { refetch: refetchCart } = useGetCartQuery();
+  const { refetch: refetchWishlist } = useGetWishlistQuery();
+  const { refetch: refetchComparison } = useGetComparisonListQuery();
   const [addToCart] = useAddToCartMutation();
 
   const updateProductsPerPage = () => {
@@ -87,6 +91,8 @@ const RelatedProduct = ({ category }) => {
       setIsAdding(true);
       await addToCart(productDetails);
       await refetchCart();
+      await refetchWishlist();
+      await refetchComparison();
       toast.success("Item added to cart!");
     } catch (error) {
       toast.error(error.message || "Failed to add item to cart.");

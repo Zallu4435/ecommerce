@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import usePreventBodyScroll from "../../../hooks/usePreventBodyScroll";
 
 const UserModal = ({
   showModal,
@@ -12,6 +13,9 @@ const UserModal = ({
 }) => {
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [userPage, setUserPage] = useState(1);
+  
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(showModal);
 
   const loadMore = useCallback(() => {
     if (!isUserFetching && hasMoreUsers) {

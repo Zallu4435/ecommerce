@@ -59,6 +59,8 @@ const AdminCouponUpdateForm = () => {
       minAmount: "",
       maxAmount: "",
       expiry: "",
+      usageLimit: "",
+      perUserLimit: 1,
     },
   });
 
@@ -77,6 +79,8 @@ const AdminCouponUpdateForm = () => {
       setValue("minAmount", couponData.coupon.minAmount.toString());
       setValue("maxAmount", couponData.coupon.maxAmount.toString());
       setValue("expiry", couponData.coupon.expiry.split("T")[0]);
+      setValue("usageLimit", couponData.coupon.usageLimit ? couponData.coupon.usageLimit.toString() : "");
+      setValue("perUserLimit", couponData.coupon.perUserLimit ? couponData.coupon.perUserLimit.toString() : "1");
       setSelectedUsers(
         couponData.coupon.applicableUsers.map((user) => ({
           userId: user.id,
@@ -100,6 +104,8 @@ const AdminCouponUpdateForm = () => {
         discount: Number(formData.discount),
         minAmount: Number(formData.minAmount),
         maxAmount: Number(formData.maxAmount),
+        usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
+        perUserLimit: formData.perUserLimit ? parseInt(formData.perUserLimit) : 1,
         applicableUsers: selectedUsers.map((user) => user.userId),
         applicableProducts: selectedProducts.map(
           (product) => product.productId
@@ -208,6 +214,10 @@ const AdminCouponUpdateForm = () => {
                       type={field.type}
                       value={value}
                       onChange={onChange}
+                      placeholder={field.placeholder || ""}
+                      {...(field.name === "expiry" ? { min: new Date().toISOString().split("T")[0] } : {})}
+                      {...(field.min !== undefined ? { min: field.min } : {})}
+                      {...(field.max !== undefined ? { max: field.max } : {})}
                       className="w-full dark:text-white dark:bg-gray-800"
                     />
                   )}

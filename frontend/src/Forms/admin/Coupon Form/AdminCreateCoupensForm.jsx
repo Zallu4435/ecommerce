@@ -47,6 +47,8 @@ const AdminCouponCreateForm = () => {
       minAmount: "",
       maxAmount: "",
       expiry: "",
+      usageLimit: "",
+      perUserLimit: 1,
       applicableUsers: [],
       applicableProducts: [],
     },
@@ -67,6 +69,8 @@ const AdminCouponCreateForm = () => {
         discount: parseFloat(formData.discount),
         minAmount: parseFloat(formData.minAmount),
         maxAmount: parseFloat(formData.maxAmount),
+        usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
+        perUserLimit: formData.perUserLimit ? parseInt(formData.perUserLimit) : 1,
         applicableUsers: selectedUsers.map((user) => user.userId),
         applicableProducts: selectedProducts.map(
           (product) => product.productId
@@ -156,12 +160,14 @@ const AdminCouponCreateForm = () => {
               { name: "title", label: "Coupon Title", type: "text" },
               {
                 name: "discount",
-                label: "Discount Percentage",
+                label: "Discount Percentage (1-70%)",
                 type: "number",
               },
-              { name: "minAmount", label: "Minimum Purchase Amount", type: "number" },
-              { name: "maxAmount", label: "Maximum Purchase Amount", type: "number" },
+              { name: "minAmount", label: "Minimum Purchase Amount (₹500-₹1,00,000)", type: "number" },
+              { name: "maxAmount", label: "Maximum Discount Amount (₹1-₹5,000)", type: "number" },
               { name: "expiry", label: "Expiry Date", type: "date" },
+              { name: "usageLimit", label: "Total Usage Limit (Optional)", type: "number", placeholder: "Leave empty for unlimited" },
+              { name: "perUserLimit", label: "Per User Limit (1-5)", type: "number", min: 1, max: 5 },
             ].map((field) => (
               <InputContainer key={field.name}>
                 <Label className="dark:text-white">{field.label} *</Label>
@@ -173,7 +179,10 @@ const AdminCouponCreateForm = () => {
                       type={field.type}
                       value={value}
                       onChange={onChange}
+                      placeholder={field.placeholder || ""}
                       {...(field.name === "expiry" ? { min: new Date().toISOString().split("T")[0] } : {})}
+                      {...(field.min !== undefined ? { min: field.min } : {})}
+                      {...(field.max !== undefined ? { max: field.max } : {})}
                       className="w-full dark:text-white dark:bg-gray-800"
                     />
                   )}

@@ -1,18 +1,10 @@
-import React, { useEffect } from 'react';
-import { FaExclamationTriangle } from 'react-icons/fa'; // Importing an icon
+import React from 'react';
+import { FaExclamationTriangle } from 'react-icons/fa'; 
+import usePreventBodyScroll from '../../hooks/usePreventBodyScroll';
 
-const DeleteConfirmationModal = ({ show, onClose, onConfirm, itemName }) => {
-
-  useEffect(() => {
-    if (show) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [show]);
+const ConfirmDeleteModal = ({ show, onClose, onConfirm, itemName }) => {
+  // Prevent body scroll when modal is open
+  usePreventBodyScroll(show);
 
   if (!show) return null;
 
@@ -47,4 +39,4 @@ const DeleteConfirmationModal = ({ show, onClose, onConfirm, itemName }) => {
   );
 };
 
-export default DeleteConfirmationModal;
+export default ConfirmDeleteModal;

@@ -1,13 +1,13 @@
 import { Button } from "../user/StyledComponents/StyledComponents";
 import { useButtonHandlers } from "./ButtonHandlers";
-import DeleteConfirmationModal from "../../modal/admin/ConfirmDeleteModal";
+import ConfirmDeleteModal from "../../modal/admin/ConfirmDeleteModal";
 import { useState } from "react";
 import { defaultProfile } from "../../assets/images";
 import { useNavigate } from "react-router-dom";
 
-const TableRow = ({ item, type }) => {
+const TableRow = ({ item, type, refetch }) => {
   const { handleBan, handleDelete, handleUpdate, handleView } =
-    useButtonHandlers();
+    useButtonHandlers(refetch);
   const [showModal, setShowModal] = useState(false); 
   const [itemToDelete, setItemToDelete] = useState(null); 
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ const TableRow = ({ item, type }) => {
                 hoverColor="white"
                 onClick={() => handleBan("admin", item.id)}
               >
-                {item.isBlocked ? "Ban" : "Unban"}
+                {item.isBlocked ? "Unban" : "Ban"}
               </Button>
               <Button
                 borderColor="#D4A017"
@@ -222,7 +222,7 @@ const TableRow = ({ item, type }) => {
         )}
       </tr>
 
-      <DeleteConfirmationModal
+      <ConfirmDeleteModal
         show={showModal}
         onClose={closeModal}
         onConfirm={handleConfirmDelete}
@@ -237,11 +237,11 @@ const TableRow = ({ item, type }) => {
 export const config = {
   users: {
     headers: ["Username", "Email", "Role", "Join Date", "Actions"],
-    rowRenderer: (item) => <TableRow item={item} type="users" />,
+    rowRenderer: (item, refetch) => <TableRow item={item} type="users" refetch={refetch} />,
   },
   categories: {
     headers: ["Category Name", "Category Description", "Created At", "Actions"],
-    rowRenderer: (item) => <TableRow item={item} type="categories" />,
+    rowRenderer: (item, refetch) => <TableRow item={item} type="categories" refetch={refetch} />,
   },
   orders: {
     headers: [
@@ -251,7 +251,7 @@ export const config = {
       "Last Order Date",
       "Actions",
     ],
-    rowRenderer: (item) => <TableRow item={item} type="orders" />,
+    rowRenderer: (item, refetch) => <TableRow item={item} type="orders" refetch={refetch} />,
   },
   coupons: {
     headers: [
@@ -261,7 +261,7 @@ export const config = {
       "Valid Until",
       "Actions",
     ],
-    rowRenderer: (item) => <TableRow item={item} type="coupons" />,
+    rowRenderer: (item, refetch) => <TableRow item={item} type="coupons" refetch={refetch} />,
   },
   products: {
     headers: [
@@ -272,6 +272,6 @@ export const config = {
       "Offer Price",
       "Actions",
     ],
-    rowRenderer: (item) => <TableRow item={item} type="products" />,
+    rowRenderer: (item, refetch) => <TableRow item={item} type="products" refetch={refetch} />,
   },
 };

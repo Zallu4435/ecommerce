@@ -8,6 +8,9 @@ import { logoLight, logoDark, defaultProfile } from "../../assets/images/index";
 import { useSelector } from "react-redux";
 import { useGetUserQuery } from "../../redux/apiSliceFeatures/userApiSlice";
 import { useSearchProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
+import { useGetCartQuery } from "../../redux/apiSliceFeatures/CartApiSlice";
+import { useGetWishlistQuery } from "../../redux/apiSliceFeatures/WishlistApiSlice";
+import { useGetComparisonListQuery } from "../../redux/apiSliceFeatures/ComparisonApiSlice";
 import debounce from "lodash/debounce";
 import LoadingSpinner from "../LoadingSpinner";
 
@@ -33,6 +36,24 @@ const Header = () => {
     }
   );
 
+  // Fetch cart, wishlist, and comparison data only if authenticated
+  const { data: cartData = [] } = useGetCartQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  
+  const { data: wishlistData = [] } = useGetWishlistQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  
+  const { data: comparisonData = [] } = useGetComparisonListQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  // Calculate counts
+  const cartCount = cartData?.length || 0;
+  const wishlistCount = wishlistData?.length || 0;
+  const comparisonCount = comparisonData?.length || 0;
+
   const resolvedAvatar = userData?.user?.avatar || avatar || defaultProfile;
   const resolvedUsername = userData?.user?.username || username;
 
@@ -43,16 +64,18 @@ const Header = () => {
           Icon: null,
           avatar: resolvedAvatar,
           label: resolvedUsername ? resolvedUsername : "Profile",
+          count: null,
         }
       : {
           to: "/login",
           Icon: FaUser,
           avatar: null,
           label: "Profile",
+          count: null,
         },
-    { to: "/wishlist", Icon: FaHeart, label: "Wishlist" },
-    { to: "/compare", Icon: MdOutlineCompare, label: "Compare" },
-    { to: "/cart", Icon: FaShoppingCart, label: "Cart" },
+    { to: "/wishlist", Icon: FaHeart, label: "Wishlist", count: wishlistCount },
+    { to: "/compare", Icon: MdOutlineCompare, label: "Compare", count: comparisonCount },
+    { to: "/cart", Icon: FaShoppingCart, label: "Cart", count: cartCount },
   ]
 
   const debouncedSearch = useCallback(
@@ -205,21 +228,30 @@ const Header = () => {
             <Link
               key={index}
               to={link.to}
-              className="flex flex-col items-center group p-2 sm:p-3"
+              className="flex flex-col items-center group p-2 sm:p-3 relative"
             >
-              {link.Icon ? (
-                <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300" />
-              ) : link.avatar ? (
-                <img
-                  src={link.avatar}
-                  alt="User Avatar"
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-300 dark:border-gray-600"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = defaultProfile;
-                  }}
-                />
-              ) : null}
+              <div className="relative">
+                {link.Icon ? (
+                  <>
+                    <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300" />
+                    {link.count !== null && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {link.count > 99 ? '99+' : link.count}
+                      </span>
+                    )}
+                  </>
+                ) : link.avatar ? (
+                  <img
+                    src={link.avatar}
+                    alt="User Avatar"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-300 dark:border-gray-600"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = defaultProfile;
+                    }}
+                  />
+                ) : null}
+              </div>
               <span className="hidden sm:block text-xs text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300 mt-1">
                 {link.label}
               </span>
