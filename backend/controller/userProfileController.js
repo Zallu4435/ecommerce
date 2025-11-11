@@ -8,7 +8,7 @@ const Cart = require("../model/Cart");
 const Payment = require("../model/Payment");
 const Wallet = require("../model/Wallet");
 const Transaction = require("../model/WalletTransaction");
-const { sendMail } = require("../utils/sendMail")
+const { sendMail } = require("../utils/email")
 
 
 exports.contact = async (req, res) => {

@@ -1,7 +1,7 @@
 const User = require("../model/User");
 const ErrorHandler = require("../utils/ErrorHandler");
 const jwt = require("jsonwebtoken");
-const { sendMail, sendOTPEmail, templates } = require("../utils/sendMail");
+const { sendMail, sendOTPEmail, templates } = require("../utils/email");
 const { sendToken } = require("../utils/jwtToken");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
