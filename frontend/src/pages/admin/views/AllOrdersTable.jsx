@@ -127,8 +127,8 @@ const IndividualOrdersOfUsers = () => {
   // Admin view does not allow direct Cancel/Return; only status updates via dropdown.
 
   return (
-    <div className="max-w-7xl mx-auto overflow-y-hidden p-6 bg-orange-50 dark:bg-gray-800 mt-10 shadow-lg rounded-lg">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="dark:bg-gray-900 py-2 h-screen fixed left-[420px] top-10 right-0 dark:text-white bg-orange-50 px-14 overflow-y-auto">
+      <div className="sticky top-0 z-20 bg-orange-50 dark:bg-gray-900 py-4 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
@@ -173,7 +173,7 @@ const IndividualOrdersOfUsers = () => {
         )}
       </div>
 
-      <div className="mb-4 sticky overflow-hidden top-0 z-10 py-4">
+      <div className="mb-4 sticky top-16 z-10 py-4 bg-orange-50 dark:bg-gray-900">
         <input
           type="text"
           placeholder="Search by product name or category"
@@ -210,7 +210,7 @@ const IndividualOrdersOfUsers = () => {
           No orders found.
         </p>
       ) : (
-        <ul className="space-y-4 max-h-[540px] scrollbar-hidden overflow-y-auto">
+        <ul className="space-y-4">
           {displayOrders?.map((order) => (
             <li
               key={order._id}
