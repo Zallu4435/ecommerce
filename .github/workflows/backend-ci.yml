@@ -13,7 +13,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: Zallu4435/ecommerce-backend
+  IMAGE_NAME: zallu4435/ecommerce-backend
   IMAGE_TAG: latest
 
 jobs:
