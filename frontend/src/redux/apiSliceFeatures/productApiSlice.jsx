@@ -5,17 +5,17 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
     getProducts: builder.query({
       query: ({ page, limit = 5 }) =>
         `/products/getProducts?page=${page}&limit=${limit}`,
-      providesTags: ["Products"],
+      providesTags: (result) => [{ type: "Entity", id: "products-LIST" }],
     }),
 
     getShopProducts: builder.query({
       query: () => "/products/getShopProducts",
-      providesTags: ["Products"],
+      providesTags: (result) => [{ type: "Entity", id: "products-LIST" }],
     }),
 
     getRelatedProducts: builder.query({
       query: (category) => `/products/relatedProduct?category=${category}`,
-      providesTags: ["Products"],
+      providesTags: (result) => [{ type: "Entity", id: "products-LIST" }],
     }),
     getProductById: builder.query({
       query: (id) => `/products/getProduct/${id}`,

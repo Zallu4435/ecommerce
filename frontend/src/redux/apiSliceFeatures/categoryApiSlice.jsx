@@ -4,13 +4,13 @@ export const categoryApiSlice = crudApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getCategories: builder.query({
       query: () => "/category/getCategories",
-      providesTags: (result) =>
-        Array.isArray(result)
-          ? [
-              ...result.map(({ id }) => ({ type: "category", id })),
-              { type: "category", id: "categories-LIST" },
-            ]
-          : [{ type: "category", id: "categories-LIST" }],
+      providesTags: (result) => {
+        const categories = result?.categories || [];
+        return [
+          ...categories.map((c) => ({ type: "Entity", id: c._id })),
+          { type: "Entity", id: "category-LIST" },
+        ];
+      },
     }),
 
     getCategoryById: builder.query({
@@ -20,7 +20,7 @@ export const categoryApiSlice = crudApiSlice.injectEndpoints({
 
     getPopularCategories: builder.query({
       query: () => "/category/getPopularCategories",
-      providesTags: ["category"],
+      providesTags: [{ type: "Entity", id: "category-LIST" }],
     }),
   }),
 });

@@ -1,17 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { useParticularUserQuery } from "../../../redux/apiSliceFeatures/userProfileApi";
+import { useGetUsersIndividualOrdersQuery } from "../../../redux/apiSliceFeatures/AdminApiSlice";
 import {
   useUpdateOrderStatusMutation,
-  useCancelOrderMutation,
-  useReturnOrderMutation,
 } from "../../../redux/apiSliceFeatures/OrderApiSlice";
 import { ChevronDown, ArrowLeft, AlertCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import OrderDetailsModal from "../../../modal/user/OrderDetailsModal";
 import { useSearchUsersIndividualOrdersQuery } from "../../../redux/apiSliceFeatures/AdminApiSlice";
-import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
-import ReturnConfirmationModal from "../../../modal/user/OrderReturnModal";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 
 const statusColors = {
@@ -20,64 +16,82 @@ const statusColors = {
   "Out for Delivery": "bg-orange-200",
   Delivered: "bg-green-200",
   Cancelled: "bg-red-200",
+  "Payment Failed": "bg-red-300",
 };
 
 const IndividualOrdersOfUsers = () => {
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showReturnModal, setShowReturnModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [orderToCancel, setOrderToCancel] = useState({
-    orderId: null,
-    productId: null,
-    reason: "",
-  });
-  const [orderToReturn, setOrderToReturn] = useState({
-    orderId: null,
-    productId: null,
-    reason: "",
-  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
 
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedSafeSearch, setDebouncedSafeSearch] = useState("");
+  const [searchErrorMsg, setSearchErrorMsg] = useState("");
 
   const location = useLocation();
   const { username, email } = location.state || {};
 
 
-  const page = 1;
-  const limit = 10;
+  const page = currentPage;
 
   const {
     data: ordersData = { orders: [] },
     error: ordersError,
     isLoading: ordersLoading,
     refetch,
-  } = useParticularUserQuery({ page, limit, email });
+  } = useGetUsersIndividualOrdersQuery({ page, limit, email });
 
   const {
     data: searchData = { orders: [] },
     isLoading: isSearchLoading,
     error: searchError,
-  } = useSearchUsersIndividualOrdersQuery(debouncedSearch, {
-    skip: !debouncedSearch,
-  });
+  } = useSearchUsersIndividualOrdersQuery(
+    { query: debouncedSafeSearch, email },
+    {
+      skip: !debouncedSafeSearch,
+    }
+  );
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
-  const [cancelOrder] = useCancelOrderMutation();
-  const [returnOrder] = useReturnOrderMutation();
   const navigate = useNavigate();
+
+  const sanitizeQuery = (q) =>
+    q
+      .replace(/[^\w\s-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 50);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search);
+      const cleaned = sanitizeQuery(search);
+      if (cleaned.length === 0) {
+        setSearchErrorMsg("");
+        setDebouncedSafeSearch("");
+        setCurrentPage(1);
+        return;
+      }
+      if (cleaned.length < 2) {
+        setSearchErrorMsg("Please enter at least 2 characters to search.");
+        setDebouncedSafeSearch("");
+        setCurrentPage(1);
+        return;
+      }
+      if (cleaned !== search.trim()) {
+        setSearchErrorMsg("Some characters were removed for a safer search.");
+      } else {
+        setSearchErrorMsg("");
+      }
+      setDebouncedSafeSearch(cleaned);
+      setCurrentPage(1);
     }, 500);
 
     return () => clearTimeout(timer);
   }, [search]);
 
-  const displayOrders = debouncedSearch ? searchData?.orders : ordersData.orders;
-  const isLoading = ordersLoading || (debouncedSearch && isSearchLoading);
-  const error = ordersError || (debouncedSearch && searchError);
+  const displayOrders = debouncedSafeSearch ? searchData?.orders : ordersData.orders;
+  const isLoading = ordersLoading || (debouncedSafeSearch && isSearchLoading);
+  const error = ordersError || (debouncedSafeSearch && searchError);
 
   const handleStatusChange = async (orderId, newStatus, itemsIds) => {
     try {
@@ -94,64 +108,77 @@ const IndividualOrdersOfUsers = () => {
     }
   };
 
-  const handleCancelClick = (orderId, productId) => {
-    setOrderToCancel({ orderId, productId, reason: "" });
-    setShowCancelModal(true);
+  const totalPages = ordersData?.totalPages || 1;
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((p) => p + 1);
+  };
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage((p) => p - 1);
   };
 
-  const handleReturnClick = (orderId, productId) => {
-    setOrderToReturn({ orderId, productId, reason: "" });
-    setShowReturnModal(true);
-  };
-
-  const handleConfirmCancel = async () => {
-    try {
-      await cancelOrder(orderToCancel).unwrap();
-      setShowCancelModal(false);
-      await refetch();
-      toast.success("Order cancelled successfully!");
-    } catch (err) {
-      console.error("Error canceling order:", err);
-      toast.error(err?.data?.message || "Failed to cancel order");
-    }
-  };
-
-  const handleConfirmReturn = async () => {
-    try {
-      await returnOrder(orderToReturn).unwrap();
-      setShowReturnModal(false);
-      await refetch();
-      toast.success("Order return request submitted successfully!");
-    } catch (err) {
-      console.error("Error returning order:", err);
-      toast.error(err?.data?.message || "Failed to return order");
-    }
-  };
+  // Admin view does not allow direct Cancel/Return; only status updates via dropdown.
 
   return (
     <div className="max-w-7xl mx-auto overflow-y-hidden p-6 bg-orange-50 dark:bg-gray-800 mt-10 shadow-lg rounded-lg">
-      <div className="mb-8 flex items-center justify-between">
-        <h2 className="text-3xl font-semibold text-gray-800 dark:text-gray-100 font-playfair">
-          <span className="text-indigo-600">{username}'s</span> Orders
-        </h2>
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white font-poppins"
-        >
-          <ArrowLeft className="mr-2" />
-          <span>Back to Orders</span>
-        </button>
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white font-poppins"
+          >
+            <ArrowLeft className="mr-2" />
+            <span>Back to Orders</span>
+          </button>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 font-playfair">
+            <span className="text-indigo-600">{username}'s</span> Orders
+          </h2>
+        </div>
+
+        {!debouncedSafeSearch && (
+          <div className="flex justify-end items-center gap-3">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-md ${
+                currentPage === 1
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              Previous
+            </button>
+            <span className="text-gray-600 dark:text-gray-300">
+              Page {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-md ${
+                currentPage === totalPages
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mb-4 sticky overflow-hidden top-0 z-10 py-4">
         <input
           type="text"
-          placeholder="Search for Orders"
+          placeholder="Search by product name or category"
           className="w-full p-3 rounded-md border border-gray-600 text-gray-800 dark:text-white dark:bg-gray-600"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        {searchErrorMsg && (
+          <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-400">{searchErrorMsg}</p>
+        )}
       </div>
+
+      
 
       {isLoading && (
         <LoadingSpinner />
@@ -160,7 +187,13 @@ const IndividualOrdersOfUsers = () => {
       {error && (
         <div className="flex items-center justify-center text-red-500 dark:text-red-400">
           <AlertCircle className="mr-2" />
-          <p>Error fetching orders: {error.message}</p>
+          <p>
+            {error?.data?.message ||
+              (typeof error?.error === "string" && error.error) ||
+              (error?.status === 400
+                ? "Invalid search query. Please refine your search."
+                : "Failed to fetch orders. Please try again.")}
+          </p>
         </div>
       )}
 
@@ -184,7 +217,7 @@ const IndividualOrdersOfUsers = () => {
                   />
                   <div>
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-                      Order ID: {order._id}
+                      {order.ProductName}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {order.Quantity} {order.Quantity === 1 ? "Item" : "Items"}
@@ -208,42 +241,6 @@ const IndividualOrdersOfUsers = () => {
                     }
                   />
                   <button
-                    className={`bg-red-500 whitespace-nowrap text-white px-4 py-2 rounded-lg hover:bg-red-600 transition ${
-                      order.Status === "Delivered" ||
-                      order.Status === "Cancelled" ||
-                      order.Status === "Returned"
-                        ? "opacity-40 cursor-not-allowed"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      handleCancelClick(order._id, order.ProductId)
-                    }
-                    disabled={
-                      order.Status === "Delivered" ||
-                      order.Status === "Cancelled" ||
-                      order.Status === "Returned"
-                    }
-                  >
-                    Cancel Order
-                  </button>
-                  <button
-                    className={`bg-yellow-500 whitespace-nowrap text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition ${
-                      order.Status !== "Delivered" ||
-                      order.Status === "Returned"
-                        ? "opacity-40 cursor-not-allowed filter"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      handleReturnClick(order._id, order.ProductId)
-                    }
-                    disabled={
-                      order.Status !== "Delivered" ||
-                      order.Status === "Returned"
-                    }
-                  >
-                    Return Order
-                  </button>
-                  <button
                     className="bg-blue-500 whitespace-nowrap text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
                     onClick={() => setSelectedOrder(order)}
                   >
@@ -263,29 +260,7 @@ const IndividualOrdersOfUsers = () => {
         />
       )}
 
-      <CancelConfirmationModal
-        show={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        onConfirm={handleConfirmCancel}
-        orderId={orderToCancel.orderId}
-        productId={orderToCancel.productId}
-        reason={orderToCancel.reason}
-        onReasonChange={(reason) =>
-          setOrderToCancel((prev) => ({ ...prev, reason }))
-        }
-      />
 
-      <ReturnConfirmationModal
-        show={showReturnModal}
-        onClose={() => setShowReturnModal(false)}
-        onConfirm={handleConfirmReturn}
-        orderId={orderToReturn.orderId}
-        productId={orderToReturn.productId}
-        reason={orderToReturn.reason}
-        onReasonChange={(reason) =>
-          setOrderToReturn((prev) => ({ ...prev, reason }))
-        }
-      />
     </div>
   );
 };
@@ -300,7 +275,7 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
     "Out for Delivery",
     "Delivered",
     "Cancelled",
-    "Failed"
+    "Payment Failed",
   ];
 
   useEffect(() => {

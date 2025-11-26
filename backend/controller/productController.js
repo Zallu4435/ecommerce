@@ -2,6 +2,7 @@ const Product = require("../model/Products");
 const ErrorHandler = require("../utils/ErrorHandler");
 const Review = require("../model/Review");
 const cloudinary = require("cloudinary").v2;
+const Category = require("../model/Categories");
 
 // Configure Cloudinary from environment variables if present
 if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
@@ -326,6 +327,14 @@ exports.createProduct = async (req, res, next) => {
 
     const normalizedProductName = productName.trim().toLowerCase();
 
+    // Validate category exists (case-insensitive) and normalize to stored categoryName
+    const categoryDoc = await Category.findOne({
+      categoryName: { $regex: `^${String(category).trim()}$`, $options: "i" },
+    });
+    if (!categoryDoc) {
+      return res.status(400).json({ success: false, message: "Invalid category" });
+    }
+
     const existingProduct = await Product.findOne({
       productName: { $regex: `^${normalizedProductName}$`, $options: "i" },
     });
@@ -344,6 +353,7 @@ exports.createProduct = async (req, res, next) => {
         image,
         imagePublicId,
         productName: normalizedProductName,
+        category: categoryDoc.categoryName,
       });
     } catch (err) {
       if (err && err.code === 11000) {
@@ -422,9 +432,21 @@ exports.updateProduct = async (req, res, next) => {
         }
       }
 
+      // If category provided, validate and normalize
+      let updatePayload = { ...req.body, image, imagePublicId, productName: normalizedProductName };
+      if (category !== undefined) {
+        const categoryDoc = await Category.findOne({
+          categoryName: { $regex: `^${String(category).trim()}$`, $options: "i" },
+        });
+        if (!categoryDoc) {
+          return res.status(400).json({ success: false, message: "Invalid category" });
+        }
+        updatePayload.category = categoryDoc.categoryName;
+      }
+
       product = await Product.findByIdAndUpdate(
         id,
-        { ...req.body, image, imagePublicId, productName: normalizedProductName },
+        updatePayload,
         {
           new: true,
           runValidators: true,

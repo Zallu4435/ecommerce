@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import { useAddEntityMutation } from "../../redux/apiSliceFeatures/crudApiSlice";
 import { uploadImageToCloudinary } from "../../server";
 import ImageInput from "../../components/ImageInput";
+import { useGetCategoriesQuery } from "../../redux/apiSliceFeatures/categoryApiSlice";
 
 const AdminProductUpdateForm = () => {
   const navigate = useNavigate();
@@ -40,6 +41,8 @@ const AdminProductUpdateForm = () => {
       colorOption: [],
     },
   });
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const categoryOptions = categoriesData?.categories || [];
   const handleImageUpload = (uploadedFiles) => {
     try {
       setImageFiles(uploadedFiles);
@@ -176,9 +179,11 @@ const AdminProductUpdateForm = () => {
                     className="w-full p-3 border rounded-md dark:text-white dark:bg-gray-800"
                   >
                     <option value="">Select category</option>
-                    <option value="Men">Men</option>
-                    <option value="Women">Women</option>
-                    <option value="Child">Child</option>
+                    {categoryOptions.map((c) => (
+                      <option key={c._id} value={c.categoryName}>
+                        {c.categoryName}
+                      </option>
+                    ))}
                   </select>
                 )}
               />

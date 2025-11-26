@@ -443,45 +443,72 @@ exports.searchCoupons = async (req, res) => {
 
 exports.searchIndividualOrders = async (req, res) => {
   try {
-    const orderId = req.query.query;
+    const query = req.query.query;
+    const email = req.query.email;
 
-    const order = await Orders.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+    if (!query || typeof query !== "string") {
+      return res
+        .status(400)
+        .json({ message: "Search query is required and must be a string" });
     }
 
-    const productIds = order?.items?.map((elem) =>
-      new mongoose.Types.ObjectId(elem.ProductId)
+    // Optional: limit search to a specific user's orders if email provided
+    let userIdFilter = null;
+    if (email && typeof email === "string") {
+      const user = await User.findOne({ email });
+      if (user) {
+        userIdFilter = user._id;
+      } else {
+        // If email provided but user not found, return empty results
+        return res.status(200).json({ orders: [] });
+      }
+    }
+
+    const pipeline = [];
+    if (userIdFilter) {
+      pipeline.push({ $match: { UserId: userIdFilter } });
+    }
+    pipeline.push(
+      { $unwind: "$items" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.ProductId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $match: {
+          $or: [
+            { "productDetails.productName": { $regex: query, $options: "i" } },
+            { "productDetails.category": { $regex: query, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          UserId: 1,
+          TotalAmount: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          Status: "$items.Status",
+          ProductId: "$items.ProductId",
+          Price: "$items.Price",
+          Quantity: "$items.Quantity",
+          ProductName: "$productDetails.productName",
+          ProductImage: "$productDetails.image",
+          offerPrice: "$productDetails.offerPrice",
+          itemsIds: "$items._id",
+        },
+      },
+      { $sort: { updatedAt: -1 } }
     );
 
-    const products = await Product.find(
-      { _id: { $in: productIds } },
-      { _id: 1, image: 1, productName: 1, originalPrice: 1, offerPrice: 1 } 
-    );
-
-    const formattedOrderData = order.items.map((item) => {
-      const matchingProduct = products.find(
-        (product) => product._id.toString() === item.ProductId.toString()
-      );
-
-      return {
-        _id: order._id, 
-        UserId: order.UserId,
-        TotalAmount: order.TotalAmount,
-        createdAt: order.createdAt,
-        updatedAt: order.updatedAt,
-        Status: item.Status,
-        ProductId: item.ProductId,
-        Price: matchingProduct?.originalPrice || null,
-        Quantity: item.Quantity,
-        ProductName: matchingProduct?.productName || null,
-        ProductImage: matchingProduct?.image || null,
-        offerPrice: matchingProduct?.offerPrice || null,
-        itemsIds: item._id, 
-      };
-    });
-
-    res.status(200).json({ orders: formattedOrderData });
+    const matchedItems = await Orders.aggregate(pipeline);
+    return res.status(200).json({ orders: matchedItems });
   } catch (error) {
     console.error("Error in searchIndividualOrders:", error);
     res.status(500).json({ message: "Internal server error" });

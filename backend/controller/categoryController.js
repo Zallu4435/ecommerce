@@ -90,6 +90,7 @@ exports.updateCategory = async (req, res, next) => {
       return next(new ErrorHandler("Category not found", 404));
     }
 
+    const previousCategoryName = category.categoryName; // capture old name
     const normalizedCategoryName = req.body.categoryName.trim().toLowerCase();
 
     const existingCategory = await Category.findOne({
@@ -120,6 +121,17 @@ exports.updateCategory = async (req, res, next) => {
           runValidators: true,
         }
       );
+
+      // Cascade update: update all products that reference the old category name
+      if (
+        previousCategoryName &&
+        previousCategoryName.toLowerCase() !== normalizedCategoryName
+      ) {
+        await Product.updateMany(
+          { category: { $regex: `^${previousCategoryName}$`, $options: "i" } },
+          { $set: { category: normalizedCategoryName } }
+        );
+      }
     } catch (err) {
       if (err && err.code === 11000) {
         return next(new ErrorHandler("Category name already exists", 400));

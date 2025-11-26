@@ -15,6 +15,7 @@ const {
   searchCoupons,
   searchIndividualOrders
 } = require("../controller/adminController");
+const { getUserIndividualOrders } = require("../controller/orderController");
 const { verifyAdminRefreshToken } = require("../middleware/auth");
 
 router.patch("/ban/:id", banUser);
@@ -34,6 +35,12 @@ router.get("/categories/search", catchAsyncErrors(searchCategories));
 router.get("/coupons/search", catchAsyncErrors(searchCoupons));
 
 router.get("/orders/search-individual-order", catchAsyncErrors(searchIndividualOrders));
+
+// Admin proxy to fetch a user's individual orders (uses same controller)
+router.get(
+  "/orders/get-users-individual-orders",
+  catchAsyncErrors(getUserIndividualOrders)
+);
 
 
 module.exports = router;

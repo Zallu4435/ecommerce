@@ -19,6 +19,7 @@ import { uploadImageToCloudinary } from "../../server";
 import { useGetProductByIdQuery } from "../../redux/apiSliceFeatures/productApiSlice";
 import ImageInput from "../../components/ImageInput";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import { useGetCategoriesQuery } from "../../redux/apiSliceFeatures/categoryApiSlice";
 
 const AdminProductUpdateForm = () => {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ const AdminProductUpdateForm = () => {
   const [updateEntity] = useUpdateEntityMutation();
 
   const { data, error, isLoading } = useGetProductByIdQuery(id);
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const categoryOptions = categoriesData?.categories || [];
 
   const {
     control,
@@ -213,9 +216,11 @@ const AdminProductUpdateForm = () => {
                     className="w-full p-3 border rounded-md dark:text-white dark:bg-gray-800"
                   >
                     <option value="">Select category</option>
-                    <option value="Electronics">Men</option>
-                    <option value="Clothing">Women</option>
-                    <option value="Books">Child</option>
+                    {categoryOptions.map((c) => (
+                      <option key={c._id} value={c.categoryName}>
+                        {c.categoryName}
+                      </option>
+                    ))}
                   </select>
                 )}
               />

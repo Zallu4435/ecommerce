@@ -81,8 +81,21 @@ export const adminApiSlice = createApi({
     }),
 
     searchUsersIndividualOrders: builder.query({
-      query: (searchTerm) =>
-        `/orders/search-individual-order?query=${searchTerm}`,
+      query: ({ query, email }) => {
+        const params = new URLSearchParams();
+        if (query) params.set("query", query);
+        if (email) params.set("email", email);
+        return `/orders/search-individual-order?${params.toString()}`;
+      },
+    }),
+
+    // Admin fetch of a particular user's orders (proxy route)
+    getUsersIndividualOrders: builder.query({
+      query: ({ page = 1, limit = 10, email }) =>
+        `/orders/get-users-individual-orders?page=${page}&limit=${limit}&email=${encodeURIComponent(
+          email || ""
+        )}`,
+      providesTags: ["Order"],
     }),
 
     
@@ -102,4 +115,5 @@ export const {
   useSearchAdminOrdersQuery,
   useSearchAdminCouponsQuery,
   useSearchUsersIndividualOrdersQuery,
+  useGetUsersIndividualOrdersQuery,
 } = adminApiSlice; 
