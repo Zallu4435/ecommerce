@@ -38,13 +38,17 @@ const IndividualOrdersOfUsers = () => {
     data: ordersData = { orders: [] },
     error: ordersError,
     isLoading: ordersLoading,
-    refetch,
-  } = useGetUsersIndividualOrdersQuery({ page, limit, email });
+    refetch: refetchPaginated,
+  } = useGetUsersIndividualOrdersQuery(
+    { page, limit, email },
+    { skip: !email || Boolean(debouncedSafeSearch) }
+  );
 
   const {
     data: searchData = { orders: [] },
     isLoading: isSearchLoading,
     error: searchError,
+    refetch: refetchSearch,
   } = useSearchUsersIndividualOrdersQuery(
     { query: debouncedSafeSearch, email },
     {
@@ -100,7 +104,11 @@ const IndividualOrdersOfUsers = () => {
         status: newStatus,
         itemsIds,
       }).unwrap();
-      await refetch();
+      if (debouncedSafeSearch) {
+        await refetchSearch();
+      } else {
+        await refetchPaginated();
+      }
       toast.success("Order status updated successfully!");
     } catch (err) {
       console.error("Error updating order status:", err.message);

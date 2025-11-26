@@ -5,12 +5,12 @@ import { clearAdminCredentials } from "../slice/adminSlice";
 export const adminApiSlice = createApi({
   reducerPath: "adminApi",
   baseQuery: adminBaseQueryWithReauth,
-  tagTypes: ["User", "Avatar"],
+  tagTypes: ["User", "Order", "Entity", "Avatar"],
   endpoints: (builder) => ({
     blockUser: builder.mutation({
       query: (userId) => ({
-        url: `/block-user/${userId}`,
-        method: "POST",
+        url: `/ban/${userId}`,
+        method: "PATCH",
       }),
     }),
 

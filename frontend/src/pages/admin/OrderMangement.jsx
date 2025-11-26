@@ -15,14 +15,12 @@ const OrderManagement = () => {
     isError,
   } = useGetUsersOrdersQuery({ page: currentPage, limit });
 
-  const { data: searchData = {}, refetch: refetchSearch } =
-    useSearchAdminOrdersQuery(
-      debouncedSearch,
-      { search: debouncedSearch, page: currentPage, limit },
-      {
-        skip: !debouncedSearch,
-      }
-    );
+  const {
+    data: searchData = {},
+    refetch: refetchSearch,
+  } = useSearchAdminOrdersQuery(debouncedSearch, {
+    skip: !debouncedSearch,
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
