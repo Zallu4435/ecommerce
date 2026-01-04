@@ -1,13 +1,7 @@
-const { Resend } = require('resend');
+const { sendGmail } = require('./gmail');
 const path = require('path');
 
 require('dotenv').config({ path: path.join(__dirname, '../config/.env') });
-
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Get the sender email from environment or use default
-const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
 /**
  * Base email template for consistent styling
@@ -44,7 +38,7 @@ function baseEmailTemplate({ title, bodyHtml, ctaLabel, ctaUrl }) {
 }
 
 /**
- * Send email using Resend API
+ * Send email using Gmail API
  * @param {Object} options - Email options
  * @param {string} options.email - Recipient email address
  * @param {string} options.subject - Email subject
@@ -53,34 +47,31 @@ function baseEmailTemplate({ title, bodyHtml, ctaLabel, ctaUrl }) {
  */
 exports.sendMail = async (options) => {
   try {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY is not configured');
+    if (!options.email) {
+      throw new Error('Recipient email is required');
+    }
+    if (!options.subject) {
+      throw new Error('Email subject is required');
     }
 
-    const emailData = {
-      from: fromEmail,
-      to: options.email,
-      subject: options.subject,
-    };
+    // Use HTML if provided, otherwise create simple HTML from plain text
+    let htmlContent = options.html;
+    if (!htmlContent && options.message) {
+      htmlContent = `<p>${options.message.replace(/\n/g, '<br>')}</p>`;
+    }
 
-    // Use HTML if provided, otherwise use plain text
-    if (options.html) {
-      emailData.html = options.html;
-    } else if (options.message) {
-      emailData.text = options.message;
-    } else {
+    if (!htmlContent) {
       throw new Error('Either html or message must be provided');
     }
 
-    const { data, error } = await resend.emails.send(emailData);
+    const response = await sendGmail({
+      to: options.email,
+      subject: options.subject,
+      html: htmlContent,
+    });
 
-    if (error) {
-      console.error('Resend API error:', error);
-      throw new Error(`Email sending failed: ${error.message}`);
-    }
-
-    console.log('Email sent successfully:', data);
-    return data;
+    console.log('Email sent successfully via Gmail API');
+    return response;
   } catch (err) {
     console.error('Error sending email:', err.message);
     throw new Error('Email sending failed');
@@ -88,7 +79,7 @@ exports.sendMail = async (options) => {
 };
 
 /**
- * Send OTP email using Resend API
+ * Send OTP email using Gmail API
  * @param {Object} options - Email options
  * @param {string} options.email - Recipient email address
  * @param {string} options.subject - Email subject
@@ -97,34 +88,31 @@ exports.sendMail = async (options) => {
  */
 exports.sendOTPEmail = async (options) => {
   try {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY is not configured');
+    if (!options.email) {
+      throw new Error('Recipient email is required');
+    }
+    if (!options.subject) {
+      throw new Error('Email subject is required');
     }
 
-    const emailData = {
-      from: fromEmail,
-      to: options.email,
-      subject: options.subject,
-    };
+    // Use HTML if provided, otherwise create simple HTML from plain text
+    let htmlContent = options.html;
+    if (!htmlContent && options.message) {
+      htmlContent = `<p>${options.message.replace(/\n/g, '<br>')}</p>`;
+    }
 
-    // Use HTML if provided, otherwise use plain text
-    if (options.html) {
-      emailData.html = options.html;
-    } else if (options.message) {
-      emailData.text = options.message;
-    } else {
+    if (!htmlContent) {
       throw new Error('Either html or message must be provided');
     }
 
-    const { data, error } = await resend.emails.send(emailData);
+    const response = await sendGmail({
+      to: options.email,
+      subject: options.subject,
+      html: htmlContent,
+    });
 
-    if (error) {
-      console.error('Resend API error:', error);
-      throw new Error(`OTP email sending failed: ${error.message}`);
-    }
-
-    console.log('OTP email sent successfully:', data);
-    return data;
+    console.log('OTP email sent successfully via Gmail API');
+    return response;
   } catch (err) {
     console.error('Error sending OTP email:', err.message);
     throw new Error('OTP sending failed');

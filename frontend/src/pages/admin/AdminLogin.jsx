@@ -1,4 +1,5 @@
 import { adminLoginSchema } from "../../validation/admin/loginFormValidation";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLoginAdminMutation } from "../../redux/apiSliceFeatures/AdminApiSlice";
@@ -14,6 +15,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const isUserAuthenticated = useSelector((state) => state.user.isAuthenticated);
   const [backendErr, setBackendErr] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -36,12 +38,20 @@ const AdminLogin = () => {
     }
   };
 
+  const isAdminAuthenticated = useSelector((state) => state.admin.isAdminAuthenticated);
+
   useEffect(() => {
     if (isUserAuthenticated) {
       toast.error("Access denied. User accounts cannot log in to admin.");
       navigate("/", { replace: true });
+    } else if (isAdminAuthenticated) {
+      navigate("/admin/dashboard", { replace: true });
     }
-  }, [isUserAuthenticated, navigate]);
+  }, [isUserAuthenticated, isAdminAuthenticated, navigate]);
+
+  if (isAdminAuthenticated || isUserAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen dark:bg-gray-900 flex bg-orange-50 items-center justify-center p-4">
@@ -59,9 +69,8 @@ const AdminLogin = () => {
               type="email"
               placeholder="Enter your email"
               {...register("email")}
-              className={`w-full p-4 border ${
-                errors.email ? "border-red-500" : "border-gray-600"
-              } rounded-md dark:bg-gray-700 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
+              className={`w-full p-4 border ${errors.email ? "border-red-500" : "border-gray-600"
+                } rounded-md dark:bg-gray-700 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
             />
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">
@@ -70,15 +79,26 @@ const AdminLogin = () => {
             )}
           </div>
 
-          <div className="mb-6">
+          <div className="mb-6 relative">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               {...register("password")}
-              className={`w-full p-4 border ${
-                errors.password ? "border-red-500" : "border-gray-600"
-              } rounded-md dark:bg-gray-700 dark:text-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg`}
+              className={`w-full p-4 border ${errors.password ? "border-red-500" : "border-gray-600"
+                } rounded-md dark:bg-gray-700 dark:text-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg pr-12`}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <FiEyeOff className="w-6 h-6" />
+              ) : (
+                <FiEye className="w-6 h-6" />
+              )}
+            </button>
             {errors.password && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.password.message}

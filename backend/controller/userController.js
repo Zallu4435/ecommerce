@@ -124,7 +124,7 @@ exports.googleLogin = async (req, res, next) => {
     audience: process.env.GOOGLE_CLIENT_ID,
   });
 
-  
+
   const payload = ticket.getPayload();
   const { sub, email, name, picture } = payload;
 
@@ -336,6 +336,14 @@ exports.verifyResetPassword = async (req, res, next) => {
 
     const isMatch = user.verifyOTP(otp);
 
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Clear OTP after successful verification to prevent reuse
+    user.clearOTP();
+    await user.save();
+
     const resetToken = jwt.sign({ email: user.email }, process.env.OTP_SECRET, {
       expiresIn: "1h",
     });
@@ -354,7 +362,7 @@ exports.resetPassword = async (req, res, next) => {
   const { token, newPassword } = req.body;
 
   if (!token || !newPassword) {
-    return res.status(400).send("Token and OTP are required");
+    return res.status(400).send("Token and new password are required");
   }
 
   try {
@@ -366,17 +374,14 @@ exports.resetPassword = async (req, res, next) => {
       return res.status(404).send("User not found");
     }
 
-    const isMatch = jwt.verify(token, process.env.OTP_SECRET);
+    // Update password
     user.password = newPassword;
     await user.save();
-    if (isMatch) {
-      res.status(200).json("Password reset successfully");
-    } else {
-      res.status(400).send("Invalid or expired OTP");
-    }
+
+    res.status(200).json("Password reset successfully");
   } catch (error) {
-    console.error("Error verifying OTP:", error);
-    next(new ErrorHandler("OTP verification failed", 500));
+    console.error("Error resetting password:", error);
+    next(new ErrorHandler("Password reset failed", 500));
   }
 };
 
@@ -418,7 +423,7 @@ exports.getAllUsers = async (req, res) => {
 
     const users = await User.find(searchFilter)
       .select("id username avatar email role createdAt isBlocked status")
-      .sort({ updatedAt: -1, createdAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNumber);
 
@@ -506,6 +511,10 @@ exports.verifyEmailOtp = async (req, res, next) => {
     const isMatch = user.verifyOTP(otp);
 
     if (isMatch) {
+      // Clear OTP after successful verification to prevent reuse
+      user.clearOTP();
+      await user.save();
+
       sendToken(user, 200, res);
     } else {
       res.status(400).send("Invalid or expired OTP");

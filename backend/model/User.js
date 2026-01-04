@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
+      unique: true,
     },
     password: {
       type: String,
@@ -113,11 +114,21 @@ userSchema.methods.generateOTP = function () {
 };
 
 userSchema.methods.verifyOTP = function (enteredOTP) {
+  // Check if OTP exists
+  if (!this.otp || !this.otpExpires) {
+    return false;
+  }
+
   const hashedEnteredOTP = hashOTP(enteredOTP);
   const isNotExpired = this.otpExpires > new Date();
   const isMatching = hashedEnteredOTP === this.otp;
-  
+
   return isMatching && isNotExpired;
+};
+
+userSchema.methods.clearOTP = function () {
+  this.otp = null;
+  this.otpExpires = null;
 };
 
 module.exports = mongoose.model("User", userSchema);

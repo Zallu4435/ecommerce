@@ -26,11 +26,11 @@ const App = () => {
           <Route element={<PersistLogin />}>
             <Route path="/*" element={<MainLayout />} />
             <Route path="/admin/*" element={<AdminLayout />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
           </Route>
           {resetToken && (
             <Route path="/reset-password" element={<ResetPassword />} />
           )}
-          <Route path="/admin/login" element={<AdminLogin />} />
         </Routes>
       </GoogleOAuthProvider>
 
