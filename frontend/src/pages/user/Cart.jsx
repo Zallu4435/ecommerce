@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   useGetCartQuery,
   useRemoveFromCartMutation,
-} from "../../redux/apiSliceFeatures/CartApiSlice";
+} from "../../redux/apiSliceFeatures/unifiedApiSlice";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useState, useEffect } from "react";
 
@@ -24,9 +24,9 @@ const Cart = () => {
   const calculateSubtotal = () =>
     cartItems
       ? cartItems?.reduce(
-          (acc, item) => acc + item.originalPrice * item.quantity,
-          0
-        )
+        (acc, item) => acc + item.originalPrice * item.quantity,
+        0
+      )
       : 0;
 
   const calculateTax = (subtotal) => (subtotal * 0.08).toFixed(2);
@@ -142,11 +142,10 @@ const Cart = () => {
             <button
               onClick={handleCheckout}
               disabled={isOutOfStock}
-              className={`w-full py-3 ${
-                isOutOfStock
+              className={`w-full py-3 ${isOutOfStock
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 text-white hover:bg-blue-700 transition-all transform hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600"
-              } rounded-md mt-5`}
+                } rounded-md mt-5`}
             >
               Proceed to Checkout
             </button>

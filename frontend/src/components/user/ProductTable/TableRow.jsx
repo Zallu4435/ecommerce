@@ -2,11 +2,10 @@ import { useState } from "react";
 import {
   useAddToCartMutation,
   useGetCartQuery,
-} from "../../../redux/apiSliceFeatures/CartApiSlice";
-import { useGetWishlistQuery } from "../../../redux/apiSliceFeatures/WishlistApiSlice";
-import { useGetComparisonListQuery } from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
+} from "../../../redux/apiSliceFeatures/unifiedApiSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { validateAddToCart, handleApiError } from "../../../utils/edgeCaseValidators";
 
 const TableRow = ({ item, onRemove }) => {
   const {
@@ -18,15 +17,25 @@ const TableRow = ({ item, onRemove }) => {
     productId,
   } = item;
 
-  const { refetch: refetchCart } = useGetCartQuery();
-  const { refetch: refetchWishlist } = useGetWishlistQuery();
-  const { refetch: refetchComparison } = useGetComparisonListQuery();
   const [addToCart] = useAddToCartMutation();
-
   const [isAdding, setIsAdding] = useState(false);
   const navigate = useNavigate();
 
+  // Get current cart data for validation
+  const { data: cartData = [] } = useGetCartQuery();
+
   const handleAddToCart = async () => {
+    // Use centralized validation
+    const validation = validateAddToCart({
+      product: item,
+      cartData,
+      stockQuantity,
+    });
+
+    if (!validation.valid) {
+      return; // Validation already showed appropriate toast message
+    }
+
     const productDetails = {
       productId: productId,
       quantity: 1,
@@ -35,15 +44,14 @@ const TableRow = ({ item, onRemove }) => {
     try {
       setIsAdding(true);
       await addToCart(productDetails);
-      await refetchCart();
-      await refetchWishlist();
-      await refetchComparison();
 
-      onRemove(productId); 
+      // Remove from wishlist after successful cart addition
+      onRemove(productId);
 
-      toast.success("Item added to cart!");
+      toast.success(`Item moved to cart successfully! ${validation.warning || ""}`);
     } catch (error) {
-      toast.error(error.message || "Failed to add item to cart.");
+      // Use centralized error handler
+      handleApiError(error, "add item to cart");
     } finally {
       setIsAdding(false);
     }
@@ -97,10 +105,22 @@ const TableRow = ({ item, onRemove }) => {
         <td className="px-6 py-4 border-b text-center">
           <button
             onClick={handleAddToCart}
-            disabled={isAdding}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600"
+            disabled={isAdding || !stockQuantity || stockQuantity === 0 || cartData?.some(item => item.productId === productId)}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${!stockQuantity || stockQuantity === 0
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : cartData?.some(item => item.productId === productId)
+                ? 'bg-yellow-500 text-white cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600 transform hover:scale-105'
+              }`}
           >
-            {isAdding ? "Adding to Cart..." : "Add to Cart"}
+            {isAdding
+              ? "Adding..."
+              : !stockQuantity || stockQuantity === 0
+                ? "Out of Stock"
+                : cartData?.some(item => item.productId === productId)
+                  ? "In Cart"
+                  : "Add to Cart"
+            }
           </button>
         </td>
       </tr>
@@ -142,10 +162,22 @@ const TableRow = ({ item, onRemove }) => {
         <div className="flex justify-center">
           <button
             onClick={handleAddToCart}
-            disabled={isAdding}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600"
+            disabled={isAdding || !stockQuantity || stockQuantity === 0 || cartData?.some(item => item.productId === productId)}
+            className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 ${!stockQuantity || stockQuantity === 0
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : cartData?.some(item => item.productId === productId)
+                ? 'bg-yellow-500 text-white cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600'
+              }`}
           >
-            {isAdding ? "Adding to Cart..." : "Add to Cart"}
+            {isAdding
+              ? "Adding..."
+              : !stockQuantity || stockQuantity === 0
+                ? "Out of Stock"
+                : cartData?.some(item => item.productId === productId)
+                  ? "In Cart"
+                  : "Add to Cart"
+            }
           </button>
         </div>
       </div>

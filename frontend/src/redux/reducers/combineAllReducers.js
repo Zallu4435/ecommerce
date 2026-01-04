@@ -7,9 +7,7 @@ import adminReducer from "../slice/adminSlice";
 import { userProfileApi } from "../apiSliceFeatures/userProfileApi";
 import { crudApiSlice } from "../apiSliceFeatures/crudApiSlice";
 import { productApiSlice } from "../apiSliceFeatures/productApiSlice";
-import { cartApi } from "../apiSliceFeatures/CartApiSlice";
-import { wishlistApiSlice } from "../apiSliceFeatures/WishlistApiSlice";
-import { comparisonApiSlice } from "../apiSliceFeatures/ComparisonApiSlice";
+import { unifiedApiSlice } from "../apiSliceFeatures/unifiedApiSlice";
 import { salesApiSlice } from "../apiSliceFeatures/SalesApiSlice";
 import { walletApiSlice } from "../apiSliceFeatures/WalletApiSlice";
 import { reviewApi } from "../apiSliceFeatures/ReviewApiSlice";
@@ -23,10 +21,8 @@ const rootReducer = combineReducers({
   crudApi: crudApiSlice.reducer,
   userProfileApi: userProfileApi.reducer,
   productApiSlice: productApiSlice.reducer,
-  cartApi: cartApi.reducer,
-  wishlistApi: wishlistApiSlice.reducer,
+  unifiedApi: unifiedApiSlice.reducer,
   salesApi: salesApiSlice.reducer,
-  comparisonApi: comparisonApiSlice.reducer,
   walletApi: walletApiSlice.reducer,
   reviewApi: reviewApi.reducer,
   orderApiSlice: orderApiSlice.reducer,
@@ -39,9 +35,7 @@ export const apiMiddleware = [
   userProfileApi.middleware,
   crudApiSlice.middleware,
   productApiSlice.middleware,
-  cartApi.middleware,
-  wishlistApiSlice.middleware,
-  comparisonApiSlice.middleware,
+  unifiedApiSlice.middleware,
   salesApiSlice.middleware,
   walletApiSlice.middleware,
   reviewApi.middleware,

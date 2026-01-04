@@ -28,7 +28,19 @@ exports.addToCart = async (req, res) => {
       return res.status(400).json({ message: "Invalid size selected" });
     }
 
+    const limit = 50; // Cart limit
+    // Check if stock is sufficient
+    if (product.stockQuantity < quantity) {
+      return res.status(400).json({ message: "Product is out of stock or insufficient quantity" });
+    }
+
     let cart = await Cart.findOne({ userId });
+
+    // Check Cart Limit
+    if (cart && cart.items.length >= limit) {
+      return res.status(400).json({ message: `Cart is full. Maximum ${limit} items allowed.` });
+    }
+
     if (!cart) {
       cart = new Cart({ userId, items: [] });
     }
@@ -135,9 +147,11 @@ exports.getCartItems = async (req, res) => {
           productName: "$productDetails.productName",
           productImage: "$productDetails.image",
           originalPrice: "$productDetails.originalPrice",
+          offerPrice: "$productDetails.offerPrice",
           quantity: "$items.quantity",
           stockQuantity: "$productDetails.stockQuantity",
           productId: "$productDetails._id",
+          category: "$productDetails.category",
           totalReviews: 1,
           averageRating: 1,
         },

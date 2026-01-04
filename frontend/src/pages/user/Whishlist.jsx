@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import {
   useRemoveFromWishlistMutation,
   useGetWishlistQuery,
-} from "../../redux/apiSliceFeatures/WishlistApiSlice";
+} from "../../redux/apiSliceFeatures/unifiedApiSlice";
 import ProductTable from "../../components/user/ProductTable/ProductTable";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";

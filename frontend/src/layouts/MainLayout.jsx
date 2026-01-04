@@ -48,37 +48,37 @@ const MainLayout = () => {
       <Navbar />
       <main className="">
         <Suspense fallback={<LoadingSpinner />}>
-        <Routes>
-          {routes.map(({ path, component: Component, isProtected }, index) => {
-            if (isProtected) {
-              return (
-                <Route
-                  key={index}
-                  path={path}
-                  element={
-                    <ProtectedRoute>
-                      <Component />
-                    </ProtectedRoute>
-                  }
-                />
-              );
-            }
-            if (path === "/login" || path === "/signup") {
-              return (
-                <Route
-                  key={index}
-                  path={path}
-                  element={
-                    <AuthRoute>
-                      <Component />
-                    </AuthRoute>
-                  }
-                />
-              );
-            }
-            return <Route key={index} path={path} element={<Component />} />;
-          })}
-        </Routes>
+          <Routes>
+            {routes.map(({ path, component: Component, isProtected }, index) => {
+              if (isProtected) {
+                return (
+                  <Route
+                    key={index}
+                    path={path}
+                    element={
+                      <ProtectedRoute>
+                        <Component />
+                      </ProtectedRoute>
+                    }
+                  />
+                );
+              }
+              if (path === "/login" || path === "/signup") {
+                return (
+                  <Route
+                    key={index}
+                    path={path}
+                    element={
+                      <AuthRoute>
+                        <Component />
+                      </AuthRoute>
+                    }
+                  />
+                );
+              }
+              return <Route key={index} path={path} element={<Component />} />;
+            })}
+          </Routes>
         </Suspense>
       </main>
       {shouldShowFooter && <Footer />}

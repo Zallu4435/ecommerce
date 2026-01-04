@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import {
   useAddToCartMutation,
-  useGetCartQuery,
-} from "../../../redux/apiSliceFeatures/CartApiSlice";
-import { useGetWishlistQuery } from "../../../redux/apiSliceFeatures/WishlistApiSlice";
-import { useGetComparisonListQuery } from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
+} from "../../../redux/apiSliceFeatures/unifiedApiSlice";
 import { toast } from "react-toastify";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { LIMITS } from "../../../utils/edgeCaseValidators";
 
 const TAX_RATE = 0.08;
 const SHIPPING_COST = 5;
@@ -26,13 +24,10 @@ const AddToCart = ({
   const [selectedSize, setSelectedSize] = useState((sizeOption && sizeOption[0]) || "");
   const [selectedColor, setSelectedColor] = useState((colorOption && colorOption[0]) || "");
   const [isLoading, setIsLoading] = useState(false);
-  const { refetch: refetchCart } = useGetCartQuery();
-  const { refetch: refetchWishlist } = useGetWishlistQuery();
-  const { refetch: refetchComparison } = useGetComparisonListQuery();
   const [addToCart] = useAddToCartMutation();
   const navigate = useNavigate();
   const location = useLocation();
-  const MAX_QUANTITY = 7;
+  const MAX_QUANTITY = LIMITS.CART_QUANTITY_MAX;
 
   const isAuthenticated = useSelector((state) => state?.user?.isAuthenticated);
 
@@ -116,13 +111,13 @@ const AddToCart = ({
         size: selectedSize,
         color: selectedColor,
       }).unwrap();
-      await refetchCart();
-      await refetchWishlist();
-      await refetchComparison();
 
-      if (response?.message) {
-        toast.success(response.message);
-      }
+      const successMsg = response?.message || "Item added to cart!";
+      const warningMsg =
+        stockQuantity < LIMITS.LOW_STOCK_THRESHOLD && stockQuantity > 0
+          ? ` Hurry! Only ${stockQuantity} items left.`
+          : "";
+      toast.success(successMsg + warningMsg);
     } catch (error) {
       toast.error(error?.data?.message || error?.message || "Failed to add item to cart");
     } finally {
@@ -156,11 +151,10 @@ const AddToCart = ({
             Price: ₹{offerPrice}
           </p>
           <p
-            className={`text-sm font-bold mb-4 ${
-              stockQuantity > 0
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
-            }`}
+            className={`text-sm font-bold mb-4 ${stockQuantity > 0
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
+              }`}
           >
             {stockQuantity > 0 ? `Stock Left ${stockQuantity}` : "Out of Stock"}
           </p>
@@ -278,11 +272,10 @@ const AddToCart = ({
         </button>
 
         <button
-          className={`w-full px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-all duration-300 transform hover:scale-105 ${
-            stockQuantity <= 0 || !isAuthenticated || isLoading || !selectedSize || !selectedColor
-              ? "opacity-50 cursor-not-allowed"
-              : ""
-          }`}
+          className={`w-full px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-all duration-300 transform hover:scale-105 ${stockQuantity <= 0 || !isAuthenticated || isLoading || !selectedSize || !selectedColor
+            ? "opacity-50 cursor-not-allowed"
+            : ""
+            }`}
           onClick={handleAddToCart}
           disabled={!isAuthenticated || isLoading || stockQuantity <= 0 || !selectedSize || !selectedColor}
         >

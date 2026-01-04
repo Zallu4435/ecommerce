@@ -5,6 +5,11 @@ import {
   useGetFilteredProductsQuery,
   useSearchProductsQuery,
 } from "../../redux/apiSliceFeatures/productApiSlice";
+import {
+  useGetCartQuery,
+  useGetWishlistQuery,
+  useGetComparisonListQuery,
+} from "../../redux/apiSliceFeatures/unifiedApiSlice";
 import { ErrorBoundary } from "../../ErrorBoundary";
 import { Menu } from "lucide-react";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -55,11 +60,16 @@ const ShopPage = () => {
     isLoading: isSearchLoading,
   } = useSearchProductsQuery(searchQuery, { skip: !searchQuery });
 
+  // Subscribe once at parent level instead of in each card
+  const { data: cartData = [] } = useGetCartQuery();
+  const { data: wishlistData = [] } = useGetWishlistQuery();
+  const { data: comparisonData = [] } = useGetComparisonListQuery();
+
   const dataList = searchQuery
     ? searchData
     : filteredData?.products
-    ? filteredData?.products
-    : [];
+      ? filteredData?.products
+      : [];
 
   const totalPages = searchQuery
     ? Math.ceil((searchData?.totalItems || 0) / cardsPerPage)
@@ -141,9 +151,8 @@ const ShopPage = () => {
 
       <div className="container mx-auto flex flex-col lg:flex-row gap-6">
         <div
-          className={`${
-            isSmallScreen ? (isMobileMenuOpen ? "block" : "hidden") : "block"
-          } w-full lg:w-[300px] lg:sticky lg:top-16 lg:h-[calc(74vh-4rem)] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 overflow-auto transition-all duration-300 ease-in-out`}
+          className={`${isSmallScreen ? (isMobileMenuOpen ? "block" : "hidden") : "block"
+            } w-full lg:w-[300px] lg:sticky lg:top-16 lg:h-[calc(74vh-4rem)] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 overflow-auto transition-all duration-300 ease-in-out`}
         >
           <div className="mb-6">
             <h3 className="text-lg font-medium dark:text-white text-gray-700 mb-4">
@@ -247,6 +256,11 @@ const ShopPage = () => {
                     image={product.image || "/default-image.jpg"}
                     averageRating={product.averageRating || 0}
                     totalReviews={product.totalReviews || 0}
+                    stockQuantity={product.stockQuantity || 0}
+                    category={product.category || ""}
+                    cartData={cartData}
+                    wishlistData={wishlistData}
+                    comparisonData={comparisonData}
                   />
                 ))
               ) : (

@@ -1,10 +1,16 @@
 const Comparison = require("../model/Comparison");
+const Product = require("../model/Products");
 const mongoose = require("mongoose");
 
 exports.addToComparison = async (req, res) => {
   try {
     const { productId } = req.body;
     const userId = req.user;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
     const existingComparison = await Comparison.findOne({ userId });
 
@@ -18,10 +24,21 @@ exports.addToComparison = async (req, res) => {
           .json({ message: "Product already in comparison list" });
       }
 
-      if (existingComparison.items.length > 3) {
+      const limit = 4;
+      if (existingComparison.items.length >= limit) {
         return res
           .status(400)
-          .json({ message: "Comparison list can only contain 3 products" });
+          .json({ message: `Comparison list is full. Maximum ${limit} items allowed.` });
+      }
+
+      // Check Category
+      if (existingComparison.items.length > 0) {
+        const firstProduct = await Product.findById(existingComparison.items[0].productId);
+        if (firstProduct && product.category) {
+          if (firstProduct.category.toLowerCase().trim() !== product.category.toLowerCase().trim()) {
+            return res.status(400).json({ message: "Can only compare products from the same category" });
+          }
+        }
       }
 
       existingComparison.items.push({
@@ -134,9 +151,12 @@ exports.getComparisonList = async (req, res) => {
           productName: "$productDetails.productName",
           productImage: "$productDetails.image",
           originalPrice: "$productDetails.originalPrice",
+          offerPrice: "$productDetails.offerPrice",
+          stockQuantity: "$productDetails.stockQuantity",
           averageRating: { $ifNull: ["$averageRating", 0] },
           reviewCount: { $ifNull: ["$reviewCount", 0] },
           description: "$productDetails.description",
+          category: "$productDetails.category",
         },
       },
     ]);

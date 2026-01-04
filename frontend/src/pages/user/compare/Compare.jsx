@@ -3,16 +3,14 @@ import { Link } from "react-router-dom";
 import {
   useGetComparisonListQuery,
   useRemoveFromComparisonMutation,
-} from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
-import {
   useAddToCartMutation,
   useGetCartQuery,
-} from "../../../redux/apiSliceFeatures/CartApiSlice";
-import { useGetWishlistQuery } from "../../../redux/apiSliceFeatures/WishlistApiSlice";
+} from "../../../redux/apiSliceFeatures/unifiedApiSlice";
 import { toast } from "react-toastify";
 import ComparisonCard from "./ComparisonCard";
 import ComparisonTable from "./ComparisonTable";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import { validateAddToCart, handleApiError } from "../../../utils/edgeCaseValidators";
 
 const Compare = () => {
   const [isAdding, setIsAdding] = useState(false);
@@ -21,10 +19,8 @@ const Compare = () => {
     data: compareItem = [],
     isLoading,
     isError,
-    refetch: refetchComparison,
   } = useGetComparisonListQuery();
-  const { refetch: refetchCart } = useGetCartQuery();
-  const { refetch: refetchWishlist } = useGetWishlistQuery();
+  const { data: cartData = [] } = useGetCartQuery();
   const [addToCart] = useAddToCartMutation();
   const [removeFromComparison] = useRemoveFromComparisonMutation();
 
@@ -37,6 +33,25 @@ const Compare = () => {
   }
 
   const handleAddToCart = async (productId) => {
+    // Find product in comparison list to get stock info
+    const product = compareItem.find(item => item.productId === productId);
+
+    if (!product) {
+      toast.error("Product not found");
+      return;
+    }
+
+    // Use centralized validation
+    const validation = validateAddToCart({
+      product,
+      cartData,
+      stockQuantity: product.stockQuantity,
+    });
+
+    if (!validation.valid) {
+      return; // Validation already showed appropriate toast message
+    }
+
     const productDetails = {
       productId: productId,
       quantity: 1,
@@ -45,12 +60,15 @@ const Compare = () => {
     try {
       setIsAdding(true);
       await addToCart(productDetails);
-      await refetchCart();
-      await refetchWishlist();
-      await refetchComparison();
-      toast.success("Item added to cart!");
+
+      // Remove from comparison after successfully adding to cart
+      // Backend already removed it, this just updates the UI immediately
+      await removeFromComparison(productId);
+
+      toast.success(`Item moved to cart successfully! ${validation.warning || ""}`);
     } catch (error) {
-      toast.error(error.message || "Failed to add item to cart.");
+      // Use centralized error handler
+      handleApiError(error, "add item to cart");
     } finally {
       setIsAdding(false);
     }
@@ -126,6 +144,7 @@ const Compare = () => {
             handleAddToCart={handleAddToCart}
             handleRemoveProduct={handleRemoveProduct}
             isAdding={isAdding}
+            cartData={cartData}
           />
           <ComparisonTable compareItem={compareItem} />
         </>

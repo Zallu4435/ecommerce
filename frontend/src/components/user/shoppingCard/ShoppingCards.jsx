@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaTimes,
@@ -9,16 +9,9 @@ import {
 } from "react-icons/fa";
 import {
   useAddToCartMutation,
-  useGetCartQuery,
-} from "../../../redux/apiSliceFeatures/CartApiSlice";
-import {
   useAddToWishlistMutation,
-  useGetWishlistQuery,
-} from "../../../redux/apiSliceFeatures/WishlistApiSlice";
-import {
   useAddToComparisonMutation,
-  useGetComparisonListQuery,
-} from "../../../redux/apiSliceFeatures/ComparisonApiSlice";
+} from "../../../redux/apiSliceFeatures/unifiedApiSlice";
 import { icons } from "./icons";
 import { useSelector } from "react-redux";
 import { handleAddToCart } from "./ActionHandlers";
@@ -32,11 +25,17 @@ const ShoppingCard = ({
   averageRating,
   totalReviews,
   offerPrice,
+  stockQuantity,
+  category,
+  cartData = [],        // Receive as prop
+  wishlistData = [],    // Receive as prop
+  comparisonData = [],  // Receive as prop
 }) => {
   const formattedPrice = parseFloat(originalPrice);
   const formattedOriginalPrice = parseFloat(offerPrice);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const processingRef = useRef(false);
 
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
 
@@ -46,12 +45,16 @@ const ShoppingCard = ({
   };
 
   const navigate = useNavigate();
-  const { refetch: refetchCart } = useGetCartQuery();
+  // Remove these subscriptions - data now comes from props
+  // const { data: cartData = [] } = useGetCartQuery();
+  // const { data: wishlistData = [] } = useGetWishlistQuery();
+  // const { data: comparisonData = [] } = useGetComparisonListQuery();
+
   const [addToCart] = useAddToCartMutation();
-  const [addToWishlist] = useAddToWishlistMutation();
-  const { refetch: refetchWishlist } = useGetWishlistQuery();
-  const [addToComparison] = useAddToComparisonMutation();
-  const { refetch: refetchComparison } = useGetComparisonListQuery();
+  const [addToWishlist, { isLoading: isWishlistLoading }] = useAddToWishlistMutation();
+  const [addToComparison, { isLoading: isComparisonLoading }] = useAddToComparisonMutation();
+
+  const product = { _id, productId: _id, productName, stockQuantity, originalPrice, offerPrice, category };
 
   const handleDropdownToggle = () => setShowDropdown(!showDropdown);
 
@@ -84,9 +87,8 @@ const ShoppingCard = ({
           <div className="relative group">
             <div
               onClick={handleDropdownToggle}
-              className={`bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-2xl sm:text-4xl ${
-                showDropdown ? "rounded-t-full sm:pt-4" : "rounded-full sm:pt-1"
-              } w-12 h-12 sm:w-[60px] sm:h-16 flex items-center pb-1 sm:pb-4  justify-center cursor-pointer`}
+              className={`bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-2xl sm:text-4xl ${showDropdown ? "rounded-t-full sm:pt-4" : "rounded-full sm:pt-1"
+                } w-12 h-12 sm:w-[60px] sm:h-16 flex items-center pb-1 sm:pb-4  justify-center cursor-pointer`}
             >
               {showDropdown ? (
                 <FaTimes
@@ -102,23 +104,39 @@ const ShoppingCard = ({
                 {icons.map(({ Icon, color, action, label }, index) => (
                   <div
                     key={index}
-                    onClick={() => {
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (processingRef.current) return;
+
+                      // Backup check in case ref fails or isLoading is already true from elsewhere
+                      if (label === 'wishlist' && isWishlistLoading) return;
+                      if (label === 'compare' && isComparisonLoading) return;
+
                       if (!isAuthenticated) {
                         const messages = {
                           wishlist: "Please log in to add items to your wishlist.",
                           compare: "Log in to compare products.",
                           cart: "Sign in to add this item to your cart.",
-                          view: "Please log in to view product details.", 
+                          view: "Please log in to view product details.",
                         };
                         toast.error(messages[label] || "Please log in to continue.");
                         return;
                       }
-                      action(_id, {
-                        addToWishlist,
-                        refetchWishlist,
-                        addToComparison,
-                        refetchComparison,
-                      });
+
+                      processingRef.current = true;
+                      try {
+                        await action(
+                          _id,
+                          {
+                            addToWishlist,
+                            addToComparison,
+                          },
+                          product,
+                          label === "wishlist" ? wishlistData : comparisonData
+                        );
+                      } finally {
+                        processingRef.current = false;
+                      }
                     }}
                     className="bg-gray-200 dark:bg-gray-700 p-2 sm:p-3 rounded-full cursor-pointer"
                   >
@@ -168,20 +186,19 @@ const ShoppingCard = ({
 
         <button
           onClick={() =>
-            handleAddToCart(_id, addToCart, refetchCart, setIsAdding, refetchWishlist, refetchComparison)
+            handleAddToCart(_id, addToCart, setIsAdding, product, cartData)
           }
           disabled={!isAuthenticated || isAdding}
-          className={`w-full py-2 sm:py-3 flex border-yellow-500 border-2 justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${
-            !isAuthenticated || isAdding
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-yellow-500 dark:hover:bg-yellow-600"
-          }`}
+          className={`w-full py-2 sm:py-3 flex border-yellow-500 border-2 justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${!isAuthenticated || isAdding
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:bg-yellow-500 dark:hover:bg-yellow-600"
+            }`}
         >
           {!isAuthenticated
             ? "SignIn to Add to Cart"
             : isAdding
-            ? "Adding to Cart..."
-            : "Add to Cart"}
+              ? "Adding to Cart..."
+              : "Add to Cart"}
           {!isAuthenticated || isAdding ? null : <FaShoppingCart />}
         </button>
       </div>

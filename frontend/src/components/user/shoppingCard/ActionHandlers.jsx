@@ -1,13 +1,27 @@
 import { toast } from "react-toastify";
+import { validateAddToCart, validateAddToWishlist, validateAddToComparison, handleApiError } from "../../../utils/edgeCaseValidators";
+
+const processingRequests = new Set();
 
 export const handleAddToCart = async (
   _id,
   addToCart,
-  refetchCart,
   setIsAdding,
-  refetchWishlist,
-  refetchComparison
+  product,
+  cartData
 ) => {
+  // Use centralized validation
+  const validation = validateAddToCart({
+    product: product || { productId: _id },
+    cartData,
+    stockQuantity: product?.stockQuantity,
+  });
+
+  if (!validation.valid) {
+    setIsAdding(false);
+    return;
+  }
+
   const productDetails = {
     productId: _id,
     quantity: 1,
@@ -16,16 +30,9 @@ export const handleAddToCart = async (
   try {
     setIsAdding(true);
     const response = await addToCart(productDetails).unwrap();
-    await refetchCart();
-    if (refetchWishlist) {
-      await refetchWishlist();
-    }
-    if (refetchComparison) {
-      await refetchComparison();
-    }
-    toast.success(response?.message || "Item added to cart!");
+    toast.success(`${response?.message || "Item added to cart!"} ${validation.warning || ""}`);
   } catch (error) {
-    toast.error(error?.data?.message || error?.message || "Failed to add item to cart.");
+    handleApiError(error, "add item to cart");
   } finally {
     setIsAdding(false);
   }
@@ -33,27 +40,70 @@ export const handleAddToCart = async (
 
 export const handleAddToWishlist = async (
   _id,
-  { addToWishlist, refetchWishlist }
+  { addToWishlist },
+  product,
+  wishlistData
 ) => {
+  const requestId = `wishlist-${_id}`;
+  if (processingRequests.has(requestId)) return;
+
+  processingRequests.add(requestId);
+
   try {
-    const response = await addToWishlist(_id).unwrap();
-    await refetchWishlist();
-    toast.success(response?.message || "Product added to wishlist");
-  } catch (error) {
-    toast.error(error?.data?.message || error?.message || "Failed to add to wishlist");
+    // Use centralized validation
+    const validation = validateAddToWishlist({
+      product: product || { productId: _id, _id },
+      wishlistData,
+    });
+
+    if (!validation.valid) {
+      return;
+    }
+
+    try {
+      const response = await addToWishlist(_id).unwrap();
+      toast.success(response?.message || "Product added to Wishlist");
+    } catch (error) {
+      handleApiError(error, "add to wishlist");
+    }
+  } finally {
+    processingRequests.delete(requestId);
   }
 };
 
 export const handleAddToComparison = async (
   _id,
-  { addToComparison, refetchComparison }
+  { addToComparison },
+  product,
+  comparisonData
 ) => {
+  const requestId = `compare-${_id}`;
+
+  if (processingRequests.has(requestId)) {
+    return;
+  }
+
+  processingRequests.add(requestId);
+
   try {
-    const response = await addToComparison(_id).unwrap();
-    await refetchComparison();
-    toast.success(response?.message || "Product added to Comparison");
-  } catch (error) {
-    toast.error(error?.data?.message || error?.message || "Failed to add to comparison");
+    // Use centralized validation
+    const validation = validateAddToComparison({
+      product: product || { productId: _id, _id },
+      comparisonData,
+    });
+
+    if (!validation.valid) {
+      return;
+    }
+
+    try {
+      const response = await addToComparison(_id).unwrap();
+      toast.success(response?.message || "Product added to Comparison");
+    } catch (error) {
+      handleApiError(error, "add to comparison");
+    }
+  } finally {
+    processingRequests.delete(requestId);
   }
 };
 

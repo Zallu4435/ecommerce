@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetCartQuery, useUpdateQuantityMutation } from "../../../redux/apiSliceFeatures/CartApiSlice";
+import { useUpdateQuantityMutation } from "../../../redux/apiSliceFeatures/unifiedApiSlice";
 import { toast } from "react-toastify";
 import { FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -9,8 +9,8 @@ const TableRowForCartlist = ({ item, onRemove }) => {
   const [isOutOfStock, setIsOutOfStock] = useState(false);
   const navigate = useNavigate();
 
-  const { refetch } = useGetCartQuery();
-  
+  const [updateQuantity] = useUpdateQuantityMutation();
+
   const {
     productId,
     originalPrice,
@@ -21,8 +21,6 @@ const TableRowForCartlist = ({ item, onRemove }) => {
     averageRating,
     stockQuantity
   } = item;
-
-  const [updateQuantity] = useUpdateQuantityMutation();
 
   const handleQuantityUpdate = async (newQuantity) => {
     try {
@@ -41,7 +39,6 @@ const TableRowForCartlist = ({ item, onRemove }) => {
       } else {
         setQuantity(newQuantity);
         setIsOutOfStock(false);
-        await refetch();
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -110,11 +107,10 @@ const TableRowForCartlist = ({ item, onRemove }) => {
   );
 
   const StockStatus = () => (
-    <span className={`px-2 py-1 rounded-md text-sm font-semibold ${
-      isOutOfStock || stockQuantity == 0 
-        ? "text-red-500 bg-red-100 dark:bg-red-900 animate-pulse"
-        : "text-green-500 bg-green-100 dark:bg-green-900"
-    }`}>
+    <span className={`px-2 py-1 rounded-md text-sm font-semibold ${isOutOfStock || stockQuantity == 0
+      ? "text-red-500 bg-red-100 dark:bg-red-900 animate-pulse"
+      : "text-green-500 bg-green-100 dark:bg-green-900"
+      }`}>
       {isOutOfStock || stockQuantity == 0 ? "Out of Stock" : "In Stock"}
     </span>
   );
@@ -145,23 +141,23 @@ const TableRowForCartlist = ({ item, onRemove }) => {
             ❌
           </button>
         </div>
-        
+
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-gray-600 dark:text-gray-300">Status:</span>
             <StockStatus />
           </div>
-          
+
           <div className="flex justify-between items-center">
             <span className="text-gray-600 dark:text-gray-300">Price:</span>
             <span className="text-gray-900 dark:text-gray-100">₹ {originalPrice}</span>
           </div>
-          
+
           <div className="flex justify-between items-center">
             <span className="text-gray-600 dark:text-gray-300">Quantity:</span>
             <QuantityControls />
           </div>
-          
+
           <div className="flex justify-between items-center font-semibold">
             <span className="text-gray-600 dark:text-gray-300">Subtotal:</span>
             <span className="text-gray-900 dark:text-gray-100">₹ {calculateSubtotal()}</span>

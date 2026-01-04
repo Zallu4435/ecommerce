@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaUser, FaShoppingCart } from "react-icons/fa";
 import { IoIosSearch } from "react-icons/io";
@@ -8,9 +8,11 @@ import { logoLight, logoDark, defaultProfile } from "../../assets/images/index";
 import { useSelector } from "react-redux";
 import { useGetUserQuery } from "../../redux/apiSliceFeatures/userApiSlice";
 import { useSearchProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
-import { useGetCartQuery } from "../../redux/apiSliceFeatures/CartApiSlice";
-import { useGetWishlistQuery } from "../../redux/apiSliceFeatures/WishlistApiSlice";
-import { useGetComparisonListQuery } from "../../redux/apiSliceFeatures/ComparisonApiSlice";
+import {
+  useGetCartQuery,
+  useGetWishlistQuery,
+  useGetComparisonListQuery,
+} from "../../redux/apiSliceFeatures/unifiedApiSlice";
 import debounce from "lodash/debounce";
 import LoadingSpinner from "../LoadingSpinner";
 
@@ -21,10 +23,13 @@ const Header = () => {
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
   const avatar = useSelector((state) => state.user.avatar);
   const username = useSelector((state) => state.user.username);
-  // Live user info from RTK Query; invalidated by profile updates
+
+  // Only fetch user data when authenticated - optimized
   const { data: userData } = useGetUserQuery(undefined, {
-    refetchOnMountOrArgChange: true,
+    skip: !isAuthenticated,
+    refetchOnMountOrArgChange: false, // Changed to false to prevent excessive refetching
   });
+
   const navigate = useNavigate();
   const location = useLocation();
   const searchRef = useRef(null);
@@ -40,11 +45,11 @@ const Header = () => {
   const { data: cartData = [] } = useGetCartQuery(undefined, {
     skip: !isAuthenticated,
   });
-  
+
   const { data: wishlistData = [] } = useGetWishlistQuery(undefined, {
     skip: !isAuthenticated,
   });
-  
+
   const { data: comparisonData = [] } = useGetComparisonListQuery(undefined, {
     skip: !isAuthenticated,
   });
@@ -57,33 +62,42 @@ const Header = () => {
   const resolvedAvatar = userData?.user?.avatar || avatar || defaultProfile;
   const resolvedUsername = userData?.user?.username || username;
 
-  const links = [
+  // Memoize links array to prevent recreation on every render
+  const links = useMemo(() => [
     isAuthenticated
       ? {
-          to: "/profile",
-          Icon: null,
-          avatar: resolvedAvatar,
-          label: resolvedUsername ? resolvedUsername : "Profile",
-          count: null,
-        }
+        to: "/profile",
+        Icon: null,
+        avatar: resolvedAvatar,
+        label: resolvedUsername ? resolvedUsername : "Profile",
+        count: null,
+      }
       : {
-          to: "/login",
-          Icon: FaUser,
-          avatar: null,
-          label: "Profile",
-          count: null,
-        },
+        to: "/login",
+        Icon: FaUser,
+        avatar: null,
+        label: "Profile",
+        count: null,
+      },
     { to: "/wishlist", Icon: FaHeart, label: "Wishlist", count: wishlistCount },
     { to: "/compare", Icon: MdOutlineCompare, label: "Compare", count: comparisonCount },
     { to: "/cart", Icon: FaShoppingCart, label: "Cart", count: cartCount },
-  ]
+  ], [isAuthenticated, resolvedAvatar, resolvedUsername, wishlistCount, comparisonCount, cartCount]);
 
-  const debouncedSearch = useCallback(
-    debounce((term) => {
+  // Memoize debounced search function
+  const debouncedSearch = useMemo(
+    () => debounce((term) => {
       setDebouncedSearchTerm(term);
     }, 300),
     []
   );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   useEffect(() => {
     debouncedSearch(searchTerm);
@@ -147,7 +161,7 @@ const Header = () => {
   const isShopPage = location.pathname === "/shop";
 
   return (
-    <header className="dark:bg-gray-800 bg-gray-100 py-4 z-50 shadow-md">
+    <header className="relative dark:bg-gray-800 bg-gray-100 py-4 z-30 shadow-md">
       <div className="container mx-auto px-6 sm:px-8 md:px-12 flex items-center justify-between">
         <div className="flex-shrink-0">
           <Link to="/" className="block">
@@ -234,7 +248,7 @@ const Header = () => {
                 {link.Icon ? (
                   <>
                     <link.Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition-colors duration-300" />
-                    {link.count !== null && (
+                    {isAuthenticated && link.count !== null && link.count > 0 && (
                       <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                         {link.count > 99 ? '99+' : link.count}
                       </span>
