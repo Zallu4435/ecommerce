@@ -314,6 +314,34 @@ exports.updateOrderStatus = async (req, res) => {
 
     await order.save();
 
+    // Check for Referral Reward (if status is Delivered)
+    if (status === "Delivered") {
+      const user = await User.findById(order.UserId);
+      if (user && user.referredBy && !user.isReferrerRewardClaimed) {
+        const referrerId = user.referredBy;
+        const referrerWallet = await Wallet.findOne({ userId: referrerId });
+
+        if (referrerWallet) {
+          const bonusAmount = 100; // Configurable amount
+          referrerWallet.balance += bonusAmount;
+          await referrerWallet.save();
+
+          await Transaction.create({
+            walletId: referrerWallet._id,
+            userId: referrerId,
+            type: "Credit",
+            amount: bonusAmount,
+            description: `Referral Bonus: Friend ${user.username} placed first order`,
+            transactionType: "Referral",
+            status: "Successful"
+          });
+
+          user.isReferrerRewardClaimed = true;
+          await user.save();
+        }
+      }
+    }
+
     return res.status(200).json({
       message: "Order and item statuses updated successfully",
       order: order,
@@ -554,7 +582,7 @@ exports.returnOrder = async (req, res) => {
       const discountedPrice =
         order.items[itemIndex].Price -
         (order.items[itemIndex].Price * order.items[itemIndex].CouponDiscount) /
-          100;
+        100;
       refundAmount = discountedPrice * order.items[itemIndex].Quantity;
     }
 

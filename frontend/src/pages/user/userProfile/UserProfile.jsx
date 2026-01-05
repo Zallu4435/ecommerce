@@ -11,6 +11,7 @@ function UserProfile() {
 
   const [userAvatar, setUserAvatar] = useState("");
   const [userUsername, setUserUsername] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (data?.user) {
@@ -53,7 +54,32 @@ function UserProfile() {
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Refer & Earn</h3>
+        <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg">
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+            Share your referral code with friends! They get <span className="font-bold text-green-600">₹50</span> instantly on signup,
+            and you earn <span className="font-bold text-green-600">₹100</span> when they place their first order!
+          </p>
+          <div className="flex items-center gap-4 mt-3">
+            <div className="bg-white dark:bg-gray-800 border border-dashed border-gray-400 dark:border-gray-600 px-4 py-2 rounded font-mono font-bold text-xl tracking-wider text-blue-600 dark:text-blue-400">
+              {data.user?.referralCode || "Loading..."}
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(data.user?.referralCode);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className={`text-sm px-3 py-2 rounded transition ${copied ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+            >
+              {copied ? "Copied!" : "Copy Code"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6">
         <button
           onClick={() => setIsModalOpen(!isModalOpen)}
           className="w-full bg-yellow-500 text-white py-2 rounded-md hover:bg-yellow-600 transition duration-300"

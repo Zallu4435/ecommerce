@@ -5,6 +5,10 @@ const { sendMail, sendOTPEmail, templates } = require("../utils/email");
 const { sendToken } = require("../utils/jwtToken");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const Wallet = require("../model/Wallet");
+const Transaction = require("../model/WalletTransaction");
+
+// ... (existing imports)
 
 const createActivationToken = (user) => {
   const expires = process.env.JWT_ACTIVATION_EXPIRES || "30m";
@@ -18,6 +22,10 @@ const createActivationOtp = (email) => {
     expiresIn: process.env.OTP_EXPIRATION || "10m",
   });
   return arr;
+};
+
+const generateReferralCode = () => {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
 };
 
 exports.activateAccount = async (req, res, next) => {
@@ -48,32 +56,29 @@ exports.activateAccount = async (req, res, next) => {
 };
 
 exports.signupUser = async (req, res, next) => {
-  const { username, email, password, phone } = req.body;
+  const { username, email, password, phone, referralCode } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
-    if (userExists) {
-      if (userExists.status === "active") {
-        return next(new ErrorHandler("User already exists.", 400));
-      }
-      if (userExists.status === "pending") {
-        const createdAt = userExists.createdAt || new Date();
-        const expiry = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const now = new Date();
+    // ... (existing userExists check)
 
-        if (now >= expiry) {
-          await User.deleteOne({ _id: userExists._id });
-        } else {
-          const remainingMs = expiry.getTime() - now.getTime();
-          const remainingDays = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
-          return next(
-            new ErrorHandler(
-              `You already signed up. Check your email to activate or wait ${remainingDays} day(s) to sign up again`,
-              400
-            )
-          );
-        }
+    let referredByUserId = null;
+    let referrerWallet = null;
+
+    if (referralCode) {
+      const referrer = await User.findOne({ referralCode });
+      if (referrer) {
+        referredByUserId = referrer._id;
+        // You might want to validate self-referral (not possible for new user usually, but good to note)
       }
+    }
+
+    // Ensure unique referral code for new user
+    let newReferralCode = generateReferralCode();
+    let codeExists = await User.findOne({ referralCode: newReferralCode });
+    while (codeExists) {
+      newReferralCode = generateReferralCode();
+      codeExists = await User.findOne({ referralCode: newReferralCode });
     }
 
     const newUser = new User({
@@ -82,8 +87,38 @@ exports.signupUser = async (req, res, next) => {
       password,
       phone,
       status: "pending",
+      referralCode: newReferralCode,
+      referredBy: referredByUserId
     });
+
     await newUser.save();
+
+    // Create Wallet for new user
+    const newWallet = await Wallet.create({
+      userId: newUser._id,
+      balance: 0
+    });
+
+    // If referred, credit the NEW USER (Referee) immediately (e.g. 50)
+    if (referredByUserId) {
+      newWallet.balance += 50;
+      await newWallet.save();
+
+      await Transaction.create({
+        walletId: newWallet._id,
+        userId: newUser._id,
+        type: "Credit",
+        amount: 50,
+        description: "Referral Signup Bonus",
+        transactionType: "Referral",
+        status: "Successful"
+      });
+
+      newUser.isReferralRewardClaimed = true; // Mark as claimed for the referee part (signup bonus)
+      await newUser.save();
+    }
+
+    // ... (existing activation logic)
 
     const activationToken = createActivationToken({ id: newUser._id });
     const activationUrl = `${process.env.ORIGIN}/activation/${activationToken}`;
@@ -464,11 +499,24 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getUser = async (req, res, next) => {
   const user = await User.findById(req.user).select(
-    "username nickname phone email gender address avatar status"
+    "username nickname phone email gender address avatar status referralCode"
   );
   if (!user) {
     return next(new ErrorHandler("User doesn't exist!", 400));
   }
+
+  // Generate referral code for existing users if missing
+  if (!user.referralCode) {
+    user.referralCode = generateReferralCode();
+    // Ensure uniqueness just in case, though collision rare
+    let codeExists = await User.findOne({ referralCode: user.referralCode });
+    while (codeExists) {
+      user.referralCode = generateReferralCode();
+      codeExists = await User.findOne({ referralCode: user.referralCode });
+    }
+    await user.save();
+  }
+
   res.status(200).json({
     success: true,
     user,

@@ -42,6 +42,7 @@ export const signupSchema = z
     phone: phoneField,
     password: strongPassword,
     confirmPassword: z.string(),
+    referralCode: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'],

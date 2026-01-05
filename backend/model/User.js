@@ -57,6 +57,23 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
+    referredBy: {
+      type: String,
+      default: null
+    },
+    isReferralRewardClaimed: {
+      type: Boolean,
+      default: false
+    },
+    isReferrerRewardClaimed: {
+      type: Boolean,
+      default: false
+    }
   },
   {
     timestamps: true,

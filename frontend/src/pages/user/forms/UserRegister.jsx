@@ -1,5 +1,5 @@
 import { useState } from "react";
-  import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import {
   Input,
   InputContainer,
@@ -167,6 +167,23 @@ const UserRegister = () => {
               </div>
               {errors.confirmPassword && (
                 <p className="text-red-500">{errors.confirmPassword.message}</p>
+              )}
+            </InputContainer>
+          </div>
+
+          <div className="mb-4">
+            <InputContainer>
+              <Label className="dark:text-gray-100 text-gray-800">
+                Referral Code (Optional)
+              </Label>
+              <Input
+                type="text"
+                {...register("referralCode")}
+                placeholder="Enter referral code"
+                className="w-full p-3 rounded-md border dark:bg-gray-700 dark:border-gray-600 text-sm sm:text-base uppercase tracking-wider"
+              />
+              {errors.referralCode && (
+                <p className="text-red-500">{errors.referralCode.message}</p>
               )}
             </InputContainer>
           </div>

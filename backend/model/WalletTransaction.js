@@ -1,30 +1,35 @@
-const mongoose =  require("mongoose");
+const mongoose = require("mongoose");
 
 const TransactionSchema = new mongoose.Schema(
   {
     walletId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Wallet",
-      required: true, 
+      required: true,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true, 
+      required: true,
     },
     type: {
       type: String,
-      enum: ["Credit", "Debit"], 
+      enum: ["Credit", "Debit"],
       required: true,
     },
     amount: {
       type: Number,
       required: true,
-      min: 0, 
+      min: 0,
     },
     description: {
       type: String,
-      trim: true, 
+      trim: true,
+    },
+    transactionType: {
+      type: String,
+      enum: ["Purchase", "Refund", "Referral", "Deposit", "Widhdrawal"],
+      default: "Purchase"
     },
     status: {
       type: String,
@@ -52,11 +57,11 @@ const TransactionSchema = new mongoose.Schema(
     },
     createdAt: {
       type: Date,
-      default: Date.now, 
+      default: Date.now,
     },
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 
