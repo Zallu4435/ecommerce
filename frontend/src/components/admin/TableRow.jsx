@@ -8,8 +8,8 @@ import { useNavigate } from "react-router-dom";
 const TableRow = ({ item, type, refetch }) => {
   const { handleBan, handleDelete, handleUpdate, handleView } =
     useButtonHandlers(refetch);
-  const [showModal, setShowModal] = useState(false); 
-  const [itemToDelete, setItemToDelete] = useState(null); 
+  const [showModal, setShowModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const navigate = useNavigate();
 
   const openModal = (item) => {
@@ -32,10 +32,10 @@ const TableRow = ({ item, type, refetch }) => {
 
   const handleOrderView = (orderId, username, email) => {
     navigate(`view/orders/${orderId}`, {
-      state: { username, email }, 
+      state: { username, email },
     });
   };
-  
+
 
   return (
     <>
@@ -60,17 +60,17 @@ const TableRow = ({ item, type, refetch }) => {
             </td>
             <td className="px-6 flex py-4 gap-6">
               <Button
-                borderColor="#d97706"
-                textColor="#d97706"
-                hoverColor="white"
+                $borderColor="#d97706"
+                $textColor="#d97706"
+                $hoverColor="white"
                 onClick={() => handleBan("admin", item.id)}
               >
                 {item.isBlocked ? "Unban" : "Ban"}
               </Button>
               <Button
-                borderColor="#D4A017"
-                textColor="#D4A017"
-                hoverColor="white"
+                $borderColor="#D4A017"
+                $textColor="#D4A017"
+                $hoverColor="white"
                 onClick={() => handleView(item.id, "users")}
               >
                 View
@@ -82,25 +82,40 @@ const TableRow = ({ item, type, refetch }) => {
         {type === "categories" && (
           <>
             <td className="px-6 py-4">{item.categoryName}</td>
-            <td className="px-6 py-4 border w-[550px] h-[50px] overflow-hidden border-gray-600">
+            <td className="px-6 py-4 border border-gray-600 max-w-[300px] truncate" title={item.categoryDescription}>
               {item.categoryDescription}
+            </td>
+            <td className="px-6 py-4 border border-gray-600">
+              {item.isOfferActive ? (
+                <div>
+                  <span className="font-semibold text-green-600">{item.offerName}</span>
+                  <span className="text-xs ml-1 bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    {item.categoryOffer}%
+                  </span>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {item.endDate ? `Ends: ${new Date(item.endDate).toLocaleDateString()}` : ""}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-gray-400 italic">No Active Offer</span>
+              )}
             </td>
             <td className="px-6 py-4 border border-gray-600">
               {new Date(item.createdAt).toLocaleDateString()}
             </td>
             <td className="px-6 py-[40px] flex gap-6">
               <Button
-                borderColor="#16a34a"
-                textColor="#16a34a"
-                hoverColor="white"
+                $borderColor="#16a34a"
+                $textColor="#16a34a"
+                $hoverColor="white"
                 onClick={() => handleUpdate(item._id, "category")}
               >
                 Update
               </Button>
               <Button
-                borderColor="#B34D4D"
-                textColor="#B34D4D"
-                hoverColor="white"
+                $borderColor="#B34D4D"
+                $textColor="#B34D4D"
+                $hoverColor="white"
                 onClick={() => openModal(item)}
               >
                 Delete
@@ -123,11 +138,11 @@ const TableRow = ({ item, type, refetch }) => {
             </td>
             <td className="px-6 flex text-nowrap py-4 gap-6">
               <Button
-                borderColor="#D4A017"
-                textColor="#D4A017"
-                hoverColor="white"
+                $borderColor="#D4A017"
+                $textColor="#D4A017"
+                $hoverColor="white"
                 onClick={() => handleOrderView(item._id, item.username, item.email)}
-                >
+              >
                 View Individual Orders
               </Button>
             </td>
@@ -143,32 +158,32 @@ const TableRow = ({ item, type, refetch }) => {
               {item.title || "N/A"}
             </td>
             <td className="px-6 py-4 border border-gray-600">
-            {item.discount ? `${item.discount} %` : "N/A"}
+              {item.discount ? `${item.discount} %` : "N/A"}
             </td>
             <td className="px-6 py-4 border border-gray-600">
               {item.expiry ? new Date(item.expiry).toLocaleDateString() : "N/A"}
             </td>
             <td className="px-6 flex py-4 gap-6">
               <Button
-                borderColor="#d97706"
-                textColor="#d97706"
-                hoverColor="white"
+                $borderColor="#d97706"
+                $textColor="#d97706"
+                $hoverColor="white"
                 onClick={() => handleView(item.id, "coupons")}
               >
                 View
               </Button>
               <Button
-                borderColor="#16a34a"
-                textColor="#16a34a"
-                hoverColor="white"
+                $borderColor="#16a34a"
+                $textColor="#16a34a"
+                $hoverColor="white"
                 onClick={() => handleUpdate(item.id, "coupons")}
               >
                 Update
               </Button>
               <Button
-                borderColor="#B34D4D"
-                textColor="#B34D4D"
-                hoverColor="white"
+                $borderColor="#B34D4D"
+                $textColor="#B34D4D"
+                $hoverColor="white"
                 onClick={() => openModal(item)}
               >
                 Delete
@@ -187,32 +202,32 @@ const TableRow = ({ item, type, refetch }) => {
             </td>
             <td className="px-6 py-4 border border-gray-600">{item.brand}</td>
             <td className="px-6 py-4 border border-gray-600">
-              {item.originalPrice}
+              ₹{item.basePrice || item.originalPrice}
             </td>
             <td className="px-6 py-4 border border-gray-600">
-              {item.offerPrice ? item.offerPrice.toString() : "0"}
+              ₹{item.baseOfferPrice !== undefined ? item.baseOfferPrice : (item.offerPrice || "0")}
             </td>
             <td className="px-6 flex py-4 gap-6">
               <Button
-                borderColor="#d97706"
-                textColor="#d97706"
-                hoverColor="white"
+                $borderColor="#d97706"
+                $textColor="#d97706"
+                $hoverColor="white"
                 onClick={() => handleView(item.id, "products")}
               >
                 View
               </Button>
               <Button
-                borderColor="#16a34a"
-                textColor="#16a34a"
-                hoverColor="white"
+                $borderColor="#16a34a"
+                $textColor="#16a34a"
+                $hoverColor="white"
                 onClick={() => handleUpdate(item.id, "products")}
               >
                 Update
               </Button>
               <Button
-                borderColor="#B34D4D"
-                textColor="#B34D4D"
-                hoverColor="white"
+                $borderColor="#B34D4D"
+                $textColor="#B34D4D"
+                $hoverColor="white"
                 onClick={() => openModal(item)}
               >
                 Delete
@@ -240,7 +255,7 @@ export const config = {
     rowRenderer: (item, refetch) => <TableRow item={item} type="users" refetch={refetch} />,
   },
   categories: {
-    headers: ["Category Name", "Category Description", "Created At", "Actions"],
+    headers: ["Category Name", "Category Description", "Active Offer", "Created At", "Actions"],
     rowRenderer: (item, refetch) => <TableRow item={item} type="categories" refetch={refetch} />,
   },
   orders: {
@@ -268,8 +283,8 @@ export const config = {
       "Product Name",
       "Category",
       "Brand",
-      "Original Price",
-      "Offer Price",
+      "Base Price",
+      "Base Offer Price",
       "Actions",
     ],
     rowRenderer: (item, refetch) => <TableRow item={item} type="products" refetch={refetch} />,

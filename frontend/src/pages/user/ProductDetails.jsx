@@ -34,20 +34,20 @@ const ProductDetails = () => {
 
   const {
     image,
-    variantImages,
     productName,
-    originalPrice,
+    basePrice,
+    baseOfferPrice,
     description,
     _id,
-    colorOption,
-    sizeOption,
-    stockQuantity,
     category,
     brand,
     returnPolicy,
     averageRating,
     totalReviews,
-    offerPrice
+    variants = [],
+    totalStock,
+    availableColors = [],
+    availableSizes = [],
   } = productDetails.product || {};
 
   if (isLoading) {
@@ -68,19 +68,23 @@ const ProductDetails = () => {
         <div className="mt-6 max-w-7xl mx-auto p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.5)] rounded-lg">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
             <div className="lg:col-span-2">
-              <ProductImage image={image} variantImages={variantImages || []} />
+              <ProductImage
+                image={image}
+                variantImages={variants.map(v => v.image).filter(Boolean)}
+              />
             </div>
 
             <div className="lg:col-span-1 space-y-4">
               <AddToCart
                 productId={_id}
-                stockQuantity={stockQuantity ?? 0}
                 productImage={image}
                 productName={productName}
-                colorOption={colorOption || []}
-                sizeOption={sizeOption || []}
-                originalPrice={originalPrice ?? 0}
-                offerPrice={offerPrice ?? originalPrice ?? 0}
+                basePrice={basePrice ?? 0}
+                baseOfferPrice={baseOfferPrice ?? basePrice ?? 0}
+                variants={variants}
+                availableColors={availableColors}
+                availableSizes={availableSizes}
+                totalStock={totalStock ?? 0}
               />
               <AddToWishlist productId={_id} />
             </div>
@@ -89,17 +93,17 @@ const ProductDetails = () => {
           <ProductInfo
             className="mt-8"
             productName={productName}
-            originalPrice={originalPrice ?? 0}
-            offerPrice={offerPrice ?? originalPrice ?? 0}
+            basePrice={basePrice ?? 0}
+            baseOfferPrice={baseOfferPrice ?? basePrice ?? 0}
             description={description}
             totalReviews={totalReviews ?? 0}
             averageRating={averageRating ?? 0}
             category={category || ""}
             brand={brand || ""}
             returnPolicy={returnPolicy || ""}
-            sizeOption={(sizeOption || [])}
-            colorOption={(colorOption || [])}
-            stockQuantity={stockQuantity ?? 0}
+            availableSizes={availableSizes}
+            availableColors={availableColors}
+            totalStock={totalStock ?? 0}
           />
 
           <AddReview className="mt-8" productId={_id} />

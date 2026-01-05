@@ -37,7 +37,7 @@ const CategoryManagement = () => {
             className="border-blue-600 border-4 hover:bg-white text-blue-500 font-bold h-[45px] py-1 px-4 rounded-md transition duration-200"
             onClick={() => handleCreate("category")}
           >
-            Create New Product
+            Create New Category
           </button>
         </div>
 

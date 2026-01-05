@@ -251,12 +251,12 @@ const ShopPage = () => {
                     key={product._id || Math.random()}
                     _id={product._id || ""}
                     productName={product.productName || "Unnamed Product"}
-                    originalPrice={product.originalPrice || 0}
-                    offerPrice={product.offerPrice || 0}
+                    originalPrice={product.basePrice || 0}
+                    offerPrice={product.baseOfferPrice || product.basePrice || 0}
                     image={product.image || "/default-image.jpg"}
                     averageRating={product.averageRating || 0}
                     totalReviews={product.totalReviews || 0}
-                    stockQuantity={product.stockQuantity || 0}
+                    stockQuantity={product.totalStock || 0}
                     category={product.category || ""}
                     cartData={cartData}
                     wishlistData={wishlistData}

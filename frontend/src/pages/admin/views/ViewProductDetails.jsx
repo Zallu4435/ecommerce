@@ -1,24 +1,15 @@
-import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetProductByIdQuery } from "../../../redux/apiSliceFeatures/productApiSlice";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-
 import { ArrowLeft } from "lucide-react";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import VariantDetailsDisplay from "../../../components/admin/VariantDetailsDisplay";
+import ProductImageGallery from "../../../components/admin/ProductImageGallery";
 
 const ViewProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data, error, isLoading } = useGetProductByIdQuery(id);
-
-  const [mainImageIndex, setMainImageIndex] = useState(0);
-
-  useEffect(() => {
-    if (data?.product?.image) {
-      setMainImageIndex(0);
-    }
-  }, [data]);
+  const { data, error, isLoading } = useGetProductByIdQuery({ id, includeInactive: "true" });
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -42,8 +33,6 @@ const ViewProductDetails = () => {
     );
   }
 
-  const allImages = [product.image, ...(product.variantImages || [])];
-
   const productDetails = [
     { label: "Category", value: product.category },
     { label: "Brand", value: product.brand },
@@ -51,19 +40,44 @@ const ViewProductDetails = () => {
     {
       label: "Price",
       value: (
-        <>
-          <span className="line-through text-gray-400 mr-2">
-            ₹{product.originalPrice}
-          </span>{" "}
-          <span className="text-purple-500 font-semibold">
-            ₹{product.offerPrice}
-          </span>
-        </>
+        <div className="flex flex-wrap items-center gap-2">
+          {product.baseOfferPrice && product.baseOfferPrice < product.basePrice ? (
+            <>
+              <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                ₹{product.baseOfferPrice.toLocaleString()}
+              </span>
+              <span className="text-xl text-gray-500 line-through">
+                ₹{product.basePrice.toLocaleString()}
+              </span>
+              <span className="text-xl font-bold text-green-600 dark:text-green-500">
+                {Math.round(((product.basePrice - product.baseOfferPrice) / product.basePrice) * 100)}% off
+              </span>
+              <div className="w-full text-sm text-green-700 dark:text-green-400 font-medium">
+                Discount Amount: ₹{(product.basePrice - product.baseOfferPrice).toLocaleString()}
+              </div>
+            </>
+          ) : (
+            <span className="text-3xl font-bold text-gray-900 dark:text-white">
+              ₹{product.basePrice.toLocaleString()}
+            </span>
+          )}
+        </div>
       ),
     },
-    { label: "Stock", value: `${product.stockQuantity} items available` },
-    { label: "Available Sizes", value: product.sizeOption.join(", ") },
-    { label: "Available Colors", value: product.colorOption.join(", ") },
+    { label: "Total Stock", value: `${product.totalStock || 0} items available` },
+    { label: "Total Variants", value: `${product.variants?.length || 0} variants` },
+    {
+      label: "Available Sizes",
+      value: (product.availableSizes && product.availableSizes.length > 0)
+        ? product.availableSizes.map(s => s.toUpperCase()).join(", ")
+        : "N/A"
+    },
+    {
+      label: "Available Colors",
+      value: (product.availableColors && product.availableColors.length > 0)
+        ? product.availableColors.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", ")
+        : "N/A"
+    },
   ];
 
   return (
@@ -72,81 +86,55 @@ const ViewProductDetails = () => {
         {/* Back Button at Top Right */}
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-10 right-[60px] flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+          className="absolute top-10 right-[60px] flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="mr-2" />
           <span>Back to Products</span>
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 ml-[-60px] gap-8 items-start">
-          <div className="w-full lg:w-3/4 mx-auto">
-            <div className="mb-4">
-                <TransformWrapper
-                  wheel={{ step: 0.2 }}
-                  zoomIn={{ step: 0.5 }} 
-                  zoomOut={{ step: 0.5 }} 
-                  pan={{ disabled: false }}
-                >
-                  <TransformComponent>
-                    <img
-                      src={
-                        allImages[mainImageIndex] ||
-                        "https://via.placeholder.com/400"
-                      }
-                      alt={product.productName}
-                      className="w-[300px] h-[400px] ml-[50px] object-cover rounded-lg shadow-lg"
-                    />
-                  </TransformComponent>
-                </TransformWrapper>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mt-4">
-              {[...Array(3)].map((_, index) => {
-                const imageIndex =
-                  (mainImageIndex + index + 1) % allImages.length;
-                return (
-                  <div
-                    key={index}
-                    className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
-                      imageIndex === mainImageIndex
-                        ? "border-indigo-500"
-                        : "border-transparent"
-                    }`}
-                    onClick={() => setMainImageIndex(imageIndex)}
-                  >
-                    <img
-                      src={allImages[imageIndex]}
-                      alt={`Variant ${imageIndex + 1}`}
-                      className="w-full h-24 object-cover"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mt-8">
+          {/* Image Gallery Section */}
+          <ProductImageGallery product={product} />
 
-          <div className="shadow-lg md:shadow-xl lg:shadow-2xl px-10 py-10 ml-[-60px] transition-all duration-300 dark:shadow-xl dark:shadow-gray-800 hover:dark:shadow-3xl">
-            <h2 className="text-4xl font-bold mb-4 text-red-400 dark:text-red-400">
+          {/* Product Details Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-3xl font-bold mb-4 text-orange-600 dark:text-red-500">
               {product.productName}
             </h2>
-            <p className="text-gray-800 dark:text-gray-200 mb-6">
+            <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
               {product.description}
             </p>
 
-            <ul className="space-y-4">
-              {productDetails.map((detail, index) => (
-                <li
-                  key={index}
-                  className="text-gray-600 dark:text-gray-300 font-medium flex justify-between"
-                >
-                  <span>{detail.label}:</span>{" "}
-                  <span className="text-gray-900 dark:text-gray-100">
-                    {detail.value}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+                Product Information
+              </h3>
+              <ul className="space-y-3">
+                {productDetails.map((detail, index) => (
+                  <li
+                    key={index}
+                    className="flex justify-between items-start py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                  >
+                    <span className="text-gray-600 dark:text-gray-400 font-medium min-w-[140px]">
+                      {detail.label}:
+                    </span>
+                    <span className="text-gray-900 dark:text-gray-100 text-right flex-1 font-semibold">
+                      {detail.value}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
+
+        {/* Variant Details Section - Using Component */}
+        <VariantDetailsDisplay
+          variants={product.variants}
+          totalStock={product.totalStock}
+          availableColors={product.availableColors}
+          availableSizes={product.availableSizes}
+        />
       </div>
     </div>
   );

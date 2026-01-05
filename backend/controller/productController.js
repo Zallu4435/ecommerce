@@ -27,10 +27,11 @@ exports.getAllProducts = async (req, res, next) => {
       : {};
 
     const products = await Product.find(searchFilter)
-      .select("productName category brand originalPrice offerPrice image")
+      .select("productName category brand basePrice baseOfferPrice originalPrice offerPrice image")
       .sort({ updatedAt: -1, createdAt: -1 })
       .skip(skip)
-      .limit(limitNumber);
+      .limit(limitNumber)
+      .lean();
 
     const totalProducts = await Product.countDocuments(searchFilter);
 
@@ -52,8 +53,10 @@ exports.getAllProducts = async (req, res, next) => {
         productName: product.productName,
         category: product.category,
         brand: product.brand,
-        originalPrice: product.originalPrice,
-        offerPrice: product.offerPrice,
+        basePrice: product.basePrice || product.originalPrice,
+        baseOfferPrice: product.baseOfferPrice || product.offerPrice,
+        originalPrice: product.basePrice || product.originalPrice,
+        offerPrice: product.baseOfferPrice || product.offerPrice,
         image: product.image,
       })),
       totalProducts,
@@ -68,7 +71,7 @@ exports.getAllProducts = async (req, res, next) => {
 
 exports.getAllShopProducts = async (req, res, next) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find().lean();
 
     res.status(200).json({
       success: true,
@@ -77,8 +80,10 @@ exports.getAllShopProducts = async (req, res, next) => {
         productName: product.productName,
         category: product.category,
         brand: product.brand,
-        originalPrice: product.originalPrice,
-        offerPrice: product.offerPrice,
+        basePrice: product.basePrice || product.originalPrice,
+        baseOfferPrice: product.baseOfferPrice || product.offerPrice,
+        originalPrice: product.basePrice || product.originalPrice,
+        offerPrice: product.baseOfferPrice || product.offerPrice,
         image: product.image,
         sizeOption: product.sizeOption,
         stockQuantity: product.stockQuantity,
@@ -96,6 +101,18 @@ exports.getProductDetails = async (req, res, next) => {
     if (!product) {
       return next(new ErrorHandler("Product not found", 404));
     }
+
+    // Get variants
+    const ProductVariant = require("../model/ProductVariants");
+    const { includeInactive } = req.query;
+    const variantQuery = { productId: product._id };
+
+    // Only filter by isActive if includeInactive is not true
+    if (includeInactive !== 'true') {
+      variantQuery.isActive = true;
+    }
+
+    const variants = await ProductVariant.find(variantQuery).sort({ color: 1, size: 1 });
 
     const reviews = await Review.find({ productId: product._id }).populate(
       "userId",
@@ -115,6 +132,7 @@ exports.getProductDetails = async (req, res, next) => {
         averageRating,
         totalReviews,
         reviews,
+        variants, // Include variants
       },
     });
   } catch (error) {
@@ -154,11 +172,13 @@ exports.getRelatedProducts = async (req, res) => {
       const totalReviews = productReviews.length;
       const averageRating = totalReviews
         ? productReviews.reduce((sum, review) => sum + review.rating, 0) /
-          totalReviews
+        totalReviews
         : 0;
 
       return {
         ...product.toObject(),
+        originalPrice: product.basePrice,
+        offerPrice: product.baseOfferPrice,
         averageRating,
         totalReviews,
       };
@@ -191,11 +211,33 @@ exports.searchProducts = async (req, res) => {
       productName: { $regex: q.split("").join(".*"), $options: "i" },
     };
 
-    const products = await Product.find(regexQuery).limit(10);
+    const products = await Product.find(regexQuery)
+      .limit(10)
+      .select({
+        productName: 1,
+        image: 1,
+        category: 1,
+        brand: 1,
+        basePrice: 1,
+        baseOfferPrice: 1,
+        originalPrice: 1,
+        offerPrice: 1
+      });
 
     if (products.length === 0) {
       const fallbackRegexQuery = { productName: { $regex: q, $options: "i" } };
-      const fallbackProducts = await Product.find(fallbackRegexQuery).limit(10);
+      const fallbackProducts = await Product.find(fallbackRegexQuery)
+        .limit(10)
+        .select({
+          productName: 1,
+          image: 1,
+          category: 1,
+          brand: 1,
+          basePrice: 1,
+          baseOfferPrice: 1,
+          originalPrice: 1,
+          offerPrice: 1
+        });
 
       return res.json(fallbackProducts);
     }
@@ -240,9 +282,9 @@ exports.getFilteredProducts = async (req, res) => {
     }
 
     if (minPrice || maxPrice) {
-      query.originalPrice = {};
-      if (minPrice) query.originalPrice.$gte = Number(minPrice);
-      if (maxPrice) query.originalPrice.$lte = Number(maxPrice);
+      query.basePrice = {};
+      if (minPrice) query.basePrice.$gte = Number(minPrice);
+      if (maxPrice) query.basePrice.$lte = Number(maxPrice);
     }
 
     if (category && category !== "null" && category !== "") {
@@ -254,8 +296,8 @@ exports.getFilteredProducts = async (req, res) => {
     }
 
     const sortOptions = {
-      priceLowToHigh: { originalPrice: 1 },
-      priceHighToLow: { originalPrice: -1 },
+      priceLowToHigh: { basePrice: 1 },
+      priceHighToLow: { basePrice: -1 },
       newArrivals: { createdAt: -1 },
       aToZ: { productName: 1 },
       zToA: { productName: -1 },
@@ -274,11 +316,13 @@ exports.getFilteredProducts = async (req, res) => {
         const averageRating =
           totalReviews > 0
             ? reviews.reduce((acc, review) => acc + review.rating, 0) /
-              totalReviews
+            totalReviews
             : 0;
 
         return {
           ...product.toObject(),
+          originalPrice: product.basePrice,
+          offerPrice: product.baseOfferPrice,
           averageRating: Number(averageRating.toFixed(1)),
           totalReviews,
         };
@@ -301,10 +345,14 @@ exports.getFilteredProducts = async (req, res) => {
 
 exports.createProduct = async (req, res, next) => {
   try {
-    const { productName, originalPrice, offerPrice, stockQuantity, category, image, imagePublicId } = req.body;
+    const { productName, basePrice, baseOfferPrice, brand, category, image, imagePublicId, variants } = req.body;
 
+    // Validation
     if (!productName || productName.trim() === "") {
       return res.status(400).json({ success: false, message: "Product name is required" });
+    }
+    if (!brand || brand.trim() === "") {
+      return res.status(400).json({ success: false, message: "Brand is required" });
     }
     if (!category || String(category).trim() === "") {
       return res.status(400).json({ success: false, message: "Category is required" });
@@ -312,17 +360,17 @@ exports.createProduct = async (req, res, next) => {
     if (!image || String(image).trim() === "") {
       return res.status(400).json({ success: false, message: "Image is required" });
     }
-    if (originalPrice === undefined || isNaN(Number(originalPrice)) || Number(originalPrice) <= 0) {
-      return res.status(400).json({ success: false, message: "Original price must be a positive number" });
+    if (basePrice === undefined || isNaN(Number(basePrice)) || Number(basePrice) <= 0) {
+      return res.status(400).json({ success: false, message: "Base price must be a positive number" });
     }
-    if (offerPrice === undefined || isNaN(Number(offerPrice)) || Number(offerPrice) <= 0) {
-      return res.status(400).json({ success: false, message: "Offer price must be a positive number" });
+    if (baseOfferPrice !== undefined && (isNaN(Number(baseOfferPrice)) || Number(baseOfferPrice) <= 0)) {
+      return res.status(400).json({ success: false, message: "Base offer price must be a positive number" });
     }
-    if (Number(offerPrice) > Number(originalPrice)) {
-      return res.status(400).json({ success: false, message: "Offer price cannot be greater than original price" });
+    if (baseOfferPrice !== undefined && Number(baseOfferPrice) > Number(basePrice)) {
+      return res.status(400).json({ success: false, message: "Base offer price cannot be greater than base price" });
     }
-    if (stockQuantity === undefined || isNaN(Number(stockQuantity)) || Number(stockQuantity) < 0) {
-      return res.status(400).json({ success: false, message: "Stock quantity must be a non-negative integer" });
+    if (!variants || !Array.isArray(variants) || variants.length === 0) {
+      return res.status(400).json({ success: false, message: "At least one variant is required" });
     }
 
     const normalizedProductName = productName.trim().toLowerCase();
@@ -335,6 +383,7 @@ exports.createProduct = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Invalid category" });
     }
 
+    // Check for existing product
     const existingProduct = await Product.findOne({
       productName: { $regex: `^${normalizedProductName}$`, $options: "i" },
     });
@@ -346,14 +395,21 @@ exports.createProduct = async (req, res, next) => {
       });
     }
 
+    // Create product
     let product;
     try {
       product = await Product.create({
-        ...req.body,
+        productName: normalizedProductName,
+        brand: brand.trim(),
+        category: categoryDoc.categoryName,
+        description: req.body.description,
+        returnPolicy: req.body.returnPolicy,
+        basePrice: Number(basePrice),
+        baseOfferPrice: baseOfferPrice ? Number(baseOfferPrice) : undefined,
         image,
         imagePublicId,
-        productName: normalizedProductName,
-        category: categoryDoc.categoryName,
+        status: req.body.status || "active",
+        createdBy: req.body.createdBy,
       });
     } catch (err) {
       if (err && err.code === 11000) {
@@ -362,9 +418,26 @@ exports.createProduct = async (req, res, next) => {
       throw err;
     }
 
+    // Create variants using bulk utility
+    const { bulkCreateVariants } = require("../utils/variantUtils");
+    const variantResult = await bulkCreateVariants(product._id, variants, product.productName);
+
+    if (variantResult.failed > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Product created but some variants failed",
+        product,
+        variantErrors: variantResult.errors,
+        variantsCreated: variantResult.success,
+        variantsFailed: variantResult.failed,
+      });
+    }
+
     res.status(201).json({
       success: true,
       product,
+      variants: variantResult.created,
+      message: `Product created with ${variantResult.success} variants`,
     });
   } catch (error) {
     next(error);
@@ -374,9 +447,7 @@ exports.createProduct = async (req, res, next) => {
 exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { productName, originalPrice, offerPrice, stockQuantity, category, image, imagePublicId } = req.body;
-
-    const normalizedProductName = productName.trim().toLowerCase();
+    const { productName, basePrice, baseOfferPrice, brand, category, image, imagePublicId } = req.body;
 
     let product = await Product.findById(id);
 
@@ -384,40 +455,43 @@ exports.updateProduct = async (req, res, next) => {
       return next(new ErrorHandler("Product not found", 404));
     }
 
-    const existingProduct = await Product.findOne({
-      productName: { $regex: `^${normalizedProductName}$`, $options: "i" },
-      _id: { $ne: id },
-    });
-
-    if (existingProduct) {
-      return res.status(400).json({
-        success: false,
-        message: "A product with the same name already exists.",
+    // Check for duplicate product name
+    if (productName) {
+      const normalizedProductName = productName.trim().toLowerCase();
+      const existingProduct = await Product.findOne({
+        productName: { $regex: `^${normalizedProductName}$`, $options: "i" },
+        _id: { $ne: id },
       });
+
+      if (existingProduct) {
+        return res.status(400).json({
+          success: false,
+          message: "A product with the same name already exists.",
+        });
+      }
     }
 
     // Validate optional fields if provided
+    if (brand !== undefined && brand.trim() === "") {
+      return res.status(400).json({ success: false, message: "Brand cannot be empty" });
+    }
     if (category !== undefined && String(category).trim() === "") {
       return res.status(400).json({ success: false, message: "Category cannot be empty" });
     }
     if (image !== undefined && String(image).trim() === "") {
       return res.status(400).json({ success: false, message: "Image cannot be empty" });
     }
-    if (originalPrice !== undefined) {
-      if (isNaN(Number(originalPrice)) || Number(originalPrice) <= 0) {
-        return res.status(400).json({ success: false, message: "Original price must be a positive number" });
-      }
+    if (basePrice !== undefined && (isNaN(Number(basePrice)) || Number(basePrice) <= 0)) {
+      return res.status(400).json({ success: false, message: "Base price must be a positive number" });
     }
-    if (offerPrice !== undefined) {
-      if (isNaN(Number(offerPrice)) || Number(offerPrice) <= 0) {
-        return res.status(400).json({ success: false, message: "Offer price must be a positive number" });
-      }
+    if (baseOfferPrice !== undefined && (isNaN(Number(baseOfferPrice)) || Number(baseOfferPrice) <= 0)) {
+      return res.status(400).json({ success: false, message: "Base offer price must be a positive number" });
     }
-    if (offerPrice !== undefined && (originalPrice !== undefined ? Number(offerPrice) > Number(originalPrice) : Number(offerPrice) > Number(product.originalPrice))) {
-      return res.status(400).json({ success: false, message: "Offer price cannot be greater than original price" });
-    }
-    if (stockQuantity !== undefined && (isNaN(Number(stockQuantity)) || Number(stockQuantity) < 0)) {
-      return res.status(400).json({ success: false, message: "Stock quantity must be a non-negative integer" });
+    if (
+      baseOfferPrice !== undefined &&
+      (basePrice !== undefined ? Number(baseOfferPrice) > Number(basePrice) : Number(baseOfferPrice) > Number(product.basePrice))
+    ) {
+      return res.status(400).json({ success: false, message: "Base offer price cannot be greater than base price" });
     }
 
     try {
@@ -427,14 +501,16 @@ exports.updateProduct = async (req, res, next) => {
         try {
           await cloudinary.uploader.destroy(product.imagePublicId);
         } catch (clErr) {
-          // Log and continue; failure to delete should not block the update
           console.error("Cloudinary destroy failed:", clErr?.message || clErr);
         }
       }
 
-      // If category provided, validate and normalize
-      let updatePayload = { ...req.body, image, imagePublicId, productName: normalizedProductName };
-      if (category !== undefined) {
+      // Build update payload
+      let updatePayload = {};
+      if (productName) updatePayload.productName = productName.trim().toLowerCase();
+      if (brand) updatePayload.brand = brand.trim();
+      if (category) {
+        // Validate and normalize category
         const categoryDoc = await Category.findOne({
           categoryName: { $regex: `^${String(category).trim()}$`, $options: "i" },
         });
@@ -443,16 +519,20 @@ exports.updateProduct = async (req, res, next) => {
         }
         updatePayload.category = categoryDoc.categoryName;
       }
+      if (req.body.description !== undefined) updatePayload.description = req.body.description;
+      if (req.body.returnPolicy !== undefined) updatePayload.returnPolicy = req.body.returnPolicy;
+      if (basePrice !== undefined) updatePayload.basePrice = Number(basePrice);
+      if (baseOfferPrice !== undefined) updatePayload.baseOfferPrice = Number(baseOfferPrice);
+      if (image !== undefined) updatePayload.image = image;
+      if (imagePublicId !== undefined) updatePayload.imagePublicId = imagePublicId;
+      if (req.body.status !== undefined) updatePayload.status = req.body.status;
+      if (req.body.updatedBy !== undefined) updatePayload.updatedBy = req.body.updatedBy;
 
-      product = await Product.findByIdAndUpdate(
-        id,
-        updatePayload,
-        {
-          new: true,
-          runValidators: true,
-          useFindAndModify: false,
-        }
-      );
+      product = await Product.findByIdAndUpdate(id, updatePayload, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      });
     } catch (err) {
       if (err && err.code === 11000) {
         return res.status(400).json({ success: false, message: "A product with the same name already exists" });
@@ -463,6 +543,7 @@ exports.updateProduct = async (req, res, next) => {
     res.status(200).json({
       success: true,
       product,
+      message: "Product updated successfully. Use variant endpoints to manage variants.",
     });
   } catch (error) {
     next(error);
@@ -477,7 +558,23 @@ exports.deleteProduct = async (req, res, next) => {
       return next(new ErrorHandler("Product not found", 404));
     }
 
-    // Attempt to delete image from Cloudinary first
+    // Delete all variants and their images
+    const ProductVariant = require("../model/ProductVariants");
+    const variants = await ProductVariant.find({ productId: product._id });
+
+    for (const variant of variants) {
+      if (variant.imagePublicId) {
+        try {
+          await cloudinary.uploader.destroy(variant.imagePublicId);
+        } catch (clErr) {
+          console.error("Cloudinary destroy failed for variant:", clErr?.message || clErr);
+        }
+      }
+    }
+
+    await ProductVariant.deleteMany({ productId: product._id });
+
+    // Delete product main image from Cloudinary
     if (product.imagePublicId) {
       try {
         await cloudinary.uploader.destroy(product.imagePublicId);
@@ -490,7 +587,7 @@ exports.deleteProduct = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Product deleted successfully",
+      message: "Product and all variants deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -509,11 +606,13 @@ exports.getPopularProducts = async (req, res) => {
         const averageRating =
           totalReviews > 0
             ? reviews.reduce((acc, review) => acc + review.rating, 0) /
-              totalReviews
+            totalReviews
             : 0;
 
         return {
           ...product.toObject(),
+          originalPrice: product.basePrice,
+          offerPrice: product.baseOfferPrice,
           averageRating,
           totalReviews,
         };

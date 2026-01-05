@@ -7,7 +7,7 @@ const Orders = require("../model/Orders");
 const Product = require("../model/Products");
 const Category = require("../model/Categories");
 const Coupon = require("../model/Coupon");
-const mongoose = require("mongoose"); 
+const mongoose = require("mongoose");
 
 exports.loginAdmin = async (req, res, next) => {
   try {
@@ -415,7 +415,8 @@ exports.searchCategories = async (req, res) => {
     const categories = await Category.find({
       $or: [
         { categoryName: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } },
+        { categoryDescription: { $regex: query, $options: "i" } },
+        { offerName: { $regex: query, $options: "i" } },
       ],
     });
 

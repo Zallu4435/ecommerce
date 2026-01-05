@@ -12,10 +12,24 @@ const CategoriesSchema = new mongoose.Schema(
       type: String,
     },
     categoryOffer: {
-      type: Number, 
+      type: Number,
       min: 0,
-      max: 100, 
-      default: 0, 
+      max: 100,
+      default: 0,
+    },
+    offerName: {
+      type: String,
+      trim: true,
+    },
+    startDate: {
+      type: Date,
+    },
+    endDate: {
+      type: Date,
+    },
+    isOfferActive: {
+      type: Boolean,
+      default: false,
     },
   },
   {

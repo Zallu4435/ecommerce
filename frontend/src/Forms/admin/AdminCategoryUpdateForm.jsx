@@ -8,9 +8,15 @@ import {
   useGetCategoriesQuery,
   useGetCategoryByIdQuery,
 } from "../../redux/apiSliceFeatures/categoryApiSlice";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload } from "lucide-react";
 import { categorySchema } from "../../validation/admin/categoryFormValidation";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import {
+  Input,
+  InputContainer,
+  TextArea,
+  Label,
+} from "../../components/user/StyledComponents/StyledComponents";
 
 const AdminCategoryUpdateForm = () => {
   const { id } = useParams();
@@ -19,7 +25,7 @@ const AdminCategoryUpdateForm = () => {
   const [updateEntity] = useUpdateEntityMutation();
   const { refetch } = useGetCategoriesQuery();
   const { data, error, isLoading } = useGetCategoryByIdQuery(id);
-  
+
   const {
     register,
     handleSubmit,
@@ -34,6 +40,18 @@ const AdminCategoryUpdateForm = () => {
       setValue("categoryName", data?.category?.categoryName);
       setValue("categoryOffer", data?.category?.categoryOffer);
       setValue("categoryDescription", data?.category?.categoryDescription);
+
+      // Populate new offer details
+      setValue("offerName", data?.category?.offerName || "");
+      setValue("isOfferActive", data?.category?.isOfferActive || false);
+
+      if (data?.category?.startDate) {
+        setValue("startDate", new Date(data.category.startDate).toISOString().split('T')[0]);
+      }
+
+      if (data?.category?.endDate) {
+        setValue("endDate", new Date(data.category.endDate).toISOString().split('T')[0]);
+      }
     }
   }, [data, setValue]);
 
@@ -73,92 +91,132 @@ const AdminCategoryUpdateForm = () => {
   }
 
   return (
-    <div className="dark:bg-gray-900 bg-orange-50 min-h-screen px-6 lg:px-10 mt-10 py-10 text-gray-700 dark:text-white">
-      <div className="flex justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-400 ml-10">
-          Update Category
-        </h1>
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
-        >
-          <ArrowLeft className="mr-2" />
-          <span>Back to Products</span>
-        </button>
-      </div>
+    <div className="dark:bg-black min-h-screen flex mt-10 items-center justify-center">
+      <div className="w-full max-w-[1000px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 shadow-md">
+        {/* Header */}
+        <div className="flex justify-between mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
+            Update Category
+          </h1>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+          >
+            <ArrowLeft className="mr-2" />
+            <span>Back to Products</span>
+          </button>
+        </div>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        method="POST"
-        className="space-y-6"
-      >
-        <div className="flex">
-          <div className="mb-6 mx-10 w-1/2">
-            <label className="font-bold text-xl block mb-2">
-              Category Name
-            </label>
-            <input
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Category Name */}
+          <InputContainer>
+            <Label className="text-gray-700 dark:text-white">Category Name *</Label>
+            <Input
               type="text"
               placeholder="Enter Category Name"
               {...register("categoryName")}
-              className={`w-full p-4 border mt-1 border-gray-600 rounded-md dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg ${
-                errors.categoryName ? "border-red-500" : ""
-              }`}
+              className="dark:text-white dark:bg-gray-800"
             />
             {errors.categoryName && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.categoryName.message}
               </p>
             )}
+          </InputContainer>
+
+          {/* Offer Details Section */}
+          <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-md mb-6 bg-white dark:bg-gray-800/50">
+            <h3 className="text-lg font-bold mb-4 text-orange-600 dark:text-orange-500 border-b border-gray-200 dark:border-gray-700 pb-2">
+              Promo Offer Details
+            </h3>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <InputContainer>
+                <Label className="text-gray-700 dark:text-white">Offer Name</Label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Summer Sale"
+                  {...register("offerName")}
+                  className="dark:text-white dark:bg-gray-800"
+                />
+              </InputContainer>
+
+              <InputContainer>
+                <Label className="text-gray-700 dark:text-white">Discount Percentage (%)</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  {...register("categoryOffer")}
+                  className="dark:text-white dark:bg-gray-800"
+                />
+                {errors.categoryOffer && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.categoryOffer.message}
+                  </p>
+                )}
+              </InputContainer>
+
+              <InputContainer>
+                <Label className="text-gray-700 dark:text-white">Valid From</Label>
+                <Input
+                  type="date"
+                  {...register("startDate")}
+                  className="dark:text-white dark:bg-gray-800"
+                />
+              </InputContainer>
+
+              <InputContainer>
+                <Label className="text-gray-700 dark:text-white">Valid To</Label>
+                <Input
+                  type="date"
+                  {...register("endDate")}
+                  className="dark:text-white dark:bg-gray-800"
+                />
+              </InputContainer>
+            </div>
+
+            <div className="flex items-center mt-2">
+              <input
+                type="checkbox"
+                id="isOfferActive"
+                {...register("isOfferActive")}
+                className="w-5 h-5 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500"
+              />
+              <Label htmlFor="isOfferActive" className="ml-2 mb-0 cursor-pointer text-gray-700 dark:text-white">
+                Activate Offer
+              </Label>
+            </div>
           </div>
 
-          <div className="mb-6 mx-10 w-1/2">
-            <label className="font-bold text-xl block mb-2">
-              Category Offer
-            </label>
-            <input
-              type="text"
-              placeholder="Enter Category Offer"
-              {...register("categoryOffer")}
-              className={`w-full p-4 border mt-1 border-gray-600 rounded-md dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg ${
-                errors.categoryOffer ? "border-red-500" : ""
-              }`}
+          {/* Description */}
+          <InputContainer>
+            <Label className="text-gray-700 dark:text-white">Category Description *</Label>
+            <TextArea
+              placeholder="Write your category description here"
+              {...register("categoryDescription")}
+              rows="5"
+              className="dark:text-white dark:bg-gray-800"
             />
-            {errors.categoryOffer && (
+            {errors.categoryDescription && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.categoryOffer.message}
+                {errors.categoryDescription.message}
               </p>
             )}
+          </InputContainer>
+
+          {/* Submit Button */}
+          <div className="mt-6">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full dark:bg-blue-600 bg-orange-500 text-white px-6 py-3 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 flex items-center justify-center font-bold text-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Upload className="mr-2" />
+              {isSubmitting ? "Updating..." : "Update Category"}
+            </button>
           </div>
-        </div>
-
-        <div className="mb-6 mx-10">
-          <label className="font-bold text-lg">Category Description</label>
-          <textarea
-            placeholder="Write your category description here"
-            {...register("categoryDescription")}
-            className={`w-full p-4 border mt-1 border-gray-600 rounded-md dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-lg ${
-              errors.categoryDescription ? "border-red-500" : ""
-            }`}
-            rows="5"
-          ></textarea>
-          {errors.categoryDescription && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.categoryDescription.message}
-            </p>
-          )}
-        </div>
-
-        <div className="mx-10">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="py-3 w-full  mt-4 text-lg font-bold dark:bg-blue-600 bg-orange-500 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? "Updating..." : "Update"}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

@@ -2,8 +2,8 @@ import styled from 'styled-components';
 
 export const Button = styled.button`
   background: transparent; /* Transparent background */
-  color: ${(props) => props.textColor || 'black'}; /* Dynamic text color */
-  border: 2px solid ${(props) => props.borderColor || 'gray'}; /* Dynamic border color */
+  color: ${(props) => props.$textColor || 'black'}; /* Dynamic text color */
+  border: 2px solid ${(props) => props.$borderColor || 'gray'}; /* Dynamic border color */
   border-radius: 4px;
   padding: 8px 16px;
   cursor: pointer;
@@ -11,7 +11,8 @@ export const Button = styled.button`
   font-weight: bold;
 
   &:hover {
-    background: ${(props) => props.hoverColor || 'lightgray'}; /* Default hover background */
+    background: ${(props) => props.$hoverColor || 'lightgray'}; /* Default hover background */
+  }
 `;
 
 
@@ -33,7 +34,7 @@ export const Input = styled.input`
 `;
 
 export const TextArea = styled.textarea`
-width: 96%;
+width: 100%;
 padding: 15px 15px;
 font-size: 18px;
 border: 1px solid #ccc;
@@ -46,9 +47,9 @@ transition: all 0.3s ease;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
   }
   `;
-  
-  
-  export const CheckboxContainer = styled.div`
+
+
+export const CheckboxContainer = styled.div`
   display: grid; /* Uses grid layout */
   grid-template-columns: repeat(3, 1fr); /* Creates three equal columns */
   gap: 10px; /* Adds space between the grid items */

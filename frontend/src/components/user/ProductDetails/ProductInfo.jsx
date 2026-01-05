@@ -3,17 +3,17 @@ import { FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
 
 const ProductInfo = ({
   productName,
-  originalPrice,
+  basePrice,
   description,
   averageRating,
   totalReviews,
-  offerPrice,
+  baseOfferPrice,
   category,
   brand,
   returnPolicy,
-  sizeOption = [],
-  colorOption = [],
-  stockQuantity,
+  availableSizes = [],
+  availableColors = [],
+  totalStock,
 }) => {
   return (
     <div className="mt-4 sm:mt-6 md:mt-8 p-4 sm:p-5 md:p-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-md rounded-lg">
@@ -48,12 +48,23 @@ const ProductInfo = ({
       </div>
 
       <div className="flex flex-wrap gap-3 sm:gap-5 items-center mb-4 sm:mb-6">
-        <p className="text-xl sm:text-2xl font-semibold text-gray-500 line-through">
-          ₹ {originalPrice}
-        </p>
-        <p className="text-xl sm:text-2xl font-semibold text-green-600">
-          ₹ {offerPrice}
-        </p>
+        {baseOfferPrice && baseOfferPrice < basePrice ? (
+          <>
+            <p className="text-xl sm:text-2xl font-semibold text-gray-500 line-through">
+              ₹ {basePrice}
+            </p>
+            <p className="text-xl sm:text-2xl font-semibold text-green-600">
+              ₹ {baseOfferPrice}
+            </p>
+            <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+              {Math.round(((basePrice - baseOfferPrice) / basePrice) * 100)}% OFF
+            </span>
+          </>
+        ) : (
+          <p className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100">
+            ₹ {basePrice}
+          </p>
+        )}
       </div>
 
       <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-4 sm:mb-6">
@@ -81,15 +92,23 @@ const ProductInfo = ({
             </tr>
             <tr className="border-b">
               <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Available Sizes</td>
-              <td className="py-2 text-sm sm:text-base">{sizeOption.length ? sizeOption.join(", ") : "-"}</td>
+              <td className="py-2 text-sm sm:text-base">
+                {availableSizes.length ? availableSizes.map(s => s.toUpperCase()).join(", ") : "-"}
+              </td>
             </tr>
             <tr className="border-b">
               <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Available Colors</td>
-              <td className="py-2 text-sm sm:text-base">{colorOption.length ? colorOption.join(", ") : "-"}</td>
+              <td className="py-2 text-sm sm:text-base">
+                {availableColors.length ? availableColors.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", ") : "-"}
+              </td>
             </tr>
             <tr>
-              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Stock</td>
-              <td className="py-2 text-sm sm:text-base">{typeof stockQuantity === 'number' ? stockQuantity : '-'}</td>
+              <td className="py-2 pr-4 font-semibold text-sm sm:text-base">Total Stock</td>
+              <td className="py-2 text-sm sm:text-base">
+                <span className={totalStock > 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                  {typeof totalStock === 'number' ? totalStock : '-'}
+                </span>
+              </td>
             </tr>
           </tbody>
         </table>

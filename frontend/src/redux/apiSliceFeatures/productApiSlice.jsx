@@ -18,8 +18,20 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
       providesTags: (result) => [{ type: "Entity", id: "products-LIST" }],
     }),
     getProductById: builder.query({
-      query: (id) => `/products/getProduct/${id}`,
-      providesTags: (result, error, id) => [{ type: "Entity", id }],
+      query: (arg) => {
+        const id = typeof arg === "object" ? arg.id : arg;
+        const params = typeof arg === "object" ? { ...arg } : {};
+        delete params.id; // Remove id from params
+        return {
+          url: `/products/getProduct/${id}`,
+          params,
+        };
+      },
+      providesTags: (result, error, arg) => {
+        const id = typeof arg === "object" ? arg.id : arg;
+        return [{ type: "Entity", id }];
+      },
+      keepUnusedDataFor: 0, // Disable caching to ensure fresh data for admin updates
     }),
 
     getPopularProducts: builder.query({

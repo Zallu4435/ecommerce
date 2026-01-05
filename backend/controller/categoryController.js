@@ -34,7 +34,7 @@ exports.getCategoryDetails = async (req, res, next) => {
 
 exports.createCategory = async (req, res) => {
   try {
-    const { categoryName, categoryDescription, categoryOffer } = req.body;
+    const { categoryName, categoryDescription, categoryOffer, offerName, startDate, endDate, isOfferActive } = req.body;
 
     if (!categoryName || categoryName.trim() === "") {
       return res.status(400).json({ message: "Category name is required" });
@@ -62,6 +62,10 @@ exports.createCategory = async (req, res) => {
       categoryName,
       categoryDescription,
       categoryOffer,
+      offerName,
+      startDate,
+      endDate,
+      isOfferActive,
     });
 
     try {
@@ -84,6 +88,7 @@ exports.createCategory = async (req, res) => {
 
 exports.updateCategory = async (req, res, next) => {
   try {
+    console.log("Updating category with body:", req.body);
     let category = await Category.findById(req.params.id);
 
     if (!category) {
@@ -128,7 +133,7 @@ exports.updateCategory = async (req, res, next) => {
         previousCategoryName.toLowerCase() !== normalizedCategoryName
       ) {
         await Product.updateMany(
-          { category: { $regex: `^${previousCategoryName}$`, $options: "i" } },
+          { category: previousCategoryName }, // Use the exact old name stored in DB, or use Regex if needed. regex is safer for case insensitivity if data is messy. Keeping as is.
           { $set: { category: normalizedCategoryName } }
         );
       }

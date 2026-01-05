@@ -8,7 +8,8 @@ export const headerToFieldMap = {
   },
   categories: {
     "Category Name": "categoryName",
-    "Product Count": "productCount",
+    Description: "categoryDescription",
+    "Active Offer": "offerName",
     "Created At": "createdAt",
     Actions: "actions",
   },
@@ -32,8 +33,8 @@ export const headerToFieldMap = {
     "Product Name": "productName",
     Category: "category",
     Brand: "brand",
-    "Original Price": "originalPrice",
-    "Offer Price": "offerPrice",
+    "Base Price": "basePrice",
+    "Base Offer Price": "baseOfferPrice",
     Actions: "actions",
   },
 };
