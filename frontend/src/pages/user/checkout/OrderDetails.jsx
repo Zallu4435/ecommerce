@@ -1,13 +1,17 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
-const OrderDetails = ({ onOrderChange }) => {
+const OrderDetails = ({ onOrderChange, coupon }) => {
   const location = useLocation();
-  const { cartItems, productId, total } = location.state || {};
+  const { cartItems, productId, total: cartTotal } = location.state || {};
   const prevOrderRef = useRef(null);
 
+  const discountAmount = coupon?.potentialDiscount || 0;
+  const finalTotal = (cartTotal || 0) - discountAmount;
+
   useEffect(() => {
-    const currentOrder = { cartItems, total, productId };
+    const currentOrder = { cartItems, total: finalTotal, subtotal: cartTotal, productId, discount: discountAmount, couponCode: coupon?.code };
+    // Only trigger update if meaningful data changed to avoid loops, though ref check helps
     if (
       onOrderChange &&
       cartItems &&
@@ -16,7 +20,7 @@ const OrderDetails = ({ onOrderChange }) => {
       prevOrderRef.current = currentOrder;
       onOrderChange(currentOrder);
     }
-  }, [onOrderChange, cartItems, total, productId]);
+  }, [onOrderChange, cartItems, cartTotal, productId, discountAmount, coupon, finalTotal]);
 
   if (!cartItems || cartItems.length === 0) {
     return (
@@ -52,10 +56,20 @@ const OrderDetails = ({ onOrderChange }) => {
             </div>
           </div>
         ))}
-        <div className="border-t mt-4 pt-4">
-          <div className="flex justify-between">
-            <span className="font-semibold">Total:</span>
-            <span className="font-semibold">₹ {total}</span>
+        <div className="border-t mt-4 pt-4 space-y-2">
+          <div className="flex justify-between text-gray-600 dark:text-gray-400">
+            <span>Subtotal:</span>
+            <span>₹ {cartTotal}</span>
+          </div>
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-green-600 font-medium">
+              <span>Coupon Discount:</span>
+              <span>- ₹ {discountAmount}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-lg font-bold border-t border-gray-100 pt-2">
+            <span>Total:</span>
+            <span>₹ {finalTotal}</span>
           </div>
         </div>
       </div>

@@ -35,6 +35,14 @@ export const couponApiSlice = crudApiSlice.injectEndpoints({
       query: () => "/coupons/getCouponStats",
       providesTags: [{ type: "Coupon", id: "coupon-stats" }],
     }),
+
+    validateCoupon: builder.mutation({
+      query: (couponData) => ({
+        url: "/coupons/validate",
+        method: "POST",
+        body: couponData,
+      }),
+    }),
   }),
 });
 
@@ -43,4 +51,5 @@ export const {
   useGetCouponQuery,
   useGetActiveCouponsQuery,
   useGetCouponStatisticsQuery,
+  useValidateCouponMutation,
 } = couponApiSlice;

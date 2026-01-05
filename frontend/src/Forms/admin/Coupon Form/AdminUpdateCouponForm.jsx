@@ -7,16 +7,16 @@ import { toast } from "react-toastify";
 import { useGetCouponQuery, useGetAllCouponsQuery } from "../../../redux/apiSliceFeatures/CouponApiSlice";
 import { useGetUsersQuery } from "../../../redux/apiSliceFeatures/userApiSlice";
 import { useGetProductsQuery } from "../../../redux/apiSliceFeatures/productApiSlice";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Tag } from "lucide-react";
 import {
   Input,
   InputContainer,
+  TextArea,
   Label,
 } from "../../../components/user/StyledComponents/StyledComponents";
 import UserModal from "./UserModal";
 import ProductModal from "./ProductModal";
 import couponSchema from "../../../validation/admin/couponFormValidation";
-import { couponsFormsField } from "../../../config/validationConfig";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 
 const AdminCouponUpdateForm = () => {
@@ -107,9 +107,7 @@ const AdminCouponUpdateForm = () => {
         usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
         perUserLimit: formData.perUserLimit ? parseInt(formData.perUserLimit) : 1,
         applicableUsers: selectedUsers.map((user) => user.userId),
-        applicableProducts: selectedProducts.map(
-          (product) => product.productId
-        ),
+        applicableProducts: selectedProducts.map((product) => product.productId),
       };
       await updateEntity({
         entity: "coupons",
@@ -140,9 +138,7 @@ const AdminCouponUpdateForm = () => {
 
   const handleProductSelect = (productId, productName) => {
     setSelectedProducts((prev) => {
-      const isSelected = prev.some(
-        (product) => product.productId === productId
-      );
+      const isSelected = prev.some((product) => product.productId === productId);
       if (isSelected) {
         return prev.filter((product) => product.productId !== productId);
       } else {
@@ -156,9 +152,7 @@ const AdminCouponUpdateForm = () => {
   };
 
   const handleProductRemove = (productId) => {
-    setSelectedProducts((prev) =>
-      prev.filter((product) => product.productId !== productId)
-    );
+    setSelectedProducts((prev) => prev.filter((product) => product.productId !== productId));
   };
 
   const loadMoreUsers = useCallback((page) => {
@@ -184,140 +178,330 @@ const AdminCouponUpdateForm = () => {
   }
 
   return (
-    <div className="dark:bg-black min-h-screen flex w-full mt-10 items-center justify-center">
-      <div className="dark:bg-gray-900 px-10 w-full bg-orange-50 p-6 md:p-8 shadow-md">
-        <div className="flex justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold mb-6 dark:text-gray-400 text-gray-700">
+    <div className="dark:bg-black min-h-screen flex mt-10 items-center justify-center">
+      <div className="w-full max-w-[1300px] dark:bg-gray-900 bg-orange-50 p-6 md:p-8 shadow-md">
+        {/* Header */}
+        <div className="flex justify-between mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold dark:text-gray-400 text-gray-700">
             Update Coupon
           </h1>
-          <div className="flex items-center mb-6">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
-            >
-              <ArrowLeft className="mr-2" />
-              <span>Back to Coupons</span>
-            </button>
-          </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+          >
+            <ArrowLeft className="mr-2" />
+            <span>Back to Coupons</span>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-2 gap-6">
-            {couponsFormsField.map((field) => (
-              <InputContainer key={field.name}>
-                <Label className="dark:text-white">{field.label} *</Label>
-                <Controller
-                  name={field.name}
-                  control={control}
-                  render={({ field: { onChange, value } }) => (
-                    <Input
-                      type={field.type}
-                      value={value}
-                      onChange={onChange}
-                      placeholder={field.placeholder || ""}
-                      {...(field.name === "expiry" ? { min: new Date().toISOString().split("T")[0] } : {})}
-                      {...(field.min !== undefined ? { min: field.min } : {})}
-                      {...(field.max !== undefined ? { max: field.max } : {})}
-                      className="w-full dark:text-white dark:bg-gray-800"
-                    />
-                  )}
-                />
-                {errors[field.name] && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors[field.name].message}
-                  </p>
+          {/* Basic Info */}
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Coupon Code *</Label>
+              <Controller
+                name="couponCode"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="text"
+                    placeholder="e.g., WELCOME50"
+                    className="dark:text-white dark:bg-gray-800 uppercase"
+                  />
                 )}
-              </InputContainer>
-            ))}
-          </div>
-
-          <InputContainer className="col-span-2 mt-6">
-            <Label className="dark:text-white">Description *</Label>
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <textarea
-                  {...field}
-                  className="w-full h-[100px] p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
-                />
+              />
+              {errors.couponCode && (
+                <p className="text-red-500 text-sm mt-1">{errors.couponCode.message}</p>
               )}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.description.message}
-              </p>
-            )}
-          </InputContainer>
-
-          <div>
-            <InputContainer>
-              <Label className="dark:text-white">Applicable Users *</Label>
-              <button
-                type="button"
-                onClick={() => setShowUserModal(true)}
-                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white text-left"
-              >
-                {selectedUsers.length > 0
-                  ? `${selectedUsers.length} user(s) selected`
-                  : "Click to select users"}
-              </button>
-              <div className="mt-2">
-                {selectedUsers.map((user) => (
-                  <span
-                    key={user.userId}
-                    className="inline-block dark:bg-blue-400 bg-blue-200 font-semibold rounded-md p-1 mr-2 mb-2"
-                  >
-                    {user.username}
-                    <button
-                      type="button"
-                      onClick={() => handleUserRemove(user.userId)}
-                      className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
             </InputContainer>
 
             <InputContainer>
-              <Label className="dark:text-white">Applicable Products *</Label>
-              <button
-                type="button"
-                onClick={() => setShowProductModal(true)}
-                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white text-left"
-              >
-                {selectedProducts.length > 0
-                  ? `${selectedProducts.length} product(s) selected`
-                  : "Click to select products"}
-              </button>
-              <div className="mt-2">
-                {selectedProducts.map((product) => (
-                  <span
-                    key={product.productId}
-                    className="inline-block dark:bg-green-400 bg-green-200 font-semibold rounded-md p-1 mr-2 mb-2"
-                  >
-                    {product.productName}
-                    <button
-                      type="button"
-                      onClick={() => handleProductRemove(product.productId)}
-                      className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
+              <Label className="text-gray-700 dark:text-white">Coupon Title *</Label>
+              <Controller
+                name="title"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="text"
+                    placeholder="e.g., Welcome Offer"
+                    className="dark:text-white dark:bg-gray-800"
+                  />
+                )}
+              />
+              {errors.title && (
+                <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+              )}
+            </InputContainer>
+
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Expiry Date *</Label>
+              <Controller
+                name="expiry"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    className="dark:text-white dark:bg-gray-800"
+                  />
+                )}
+              />
+              {errors.expiry && (
+                <p className="text-red-500 text-sm mt-1">{errors.expiry.message}</p>
+              )}
             </InputContainer>
           </div>
 
-          <div className="flex justify-end gap-4 mt-4">
+          {/* Description */}
+          <div className="mb-4">
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Description *</Label>
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <TextArea
+                    {...field}
+                    placeholder="Enter coupon description details..."
+                    rows="3"
+                    className="dark:text-white dark:bg-gray-800"
+                  />
+                )}
+              />
+              {errors.description && (
+                <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
+              )}
+            </InputContainer>
+          </div>
+
+          {/* Discount & Pricing */}
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Discount (%) *</Label>
+              <Controller
+                name="discount"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    placeholder="1-70"
+                    min="1"
+                    max="70"
+                    className="dark:text-white dark:bg-gray-800"
+                  />
+                )}
+              />
+              {errors.discount && (
+                <p className="text-red-500 text-sm mt-1">{errors.discount.message}</p>
+              )}
+            </InputContainer>
+
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Min Purchase Amount (₹) *</Label>
+              <Controller
+                name="minAmount"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    placeholder="₹500 - ₹1,00,000"
+                    min="500"
+                    max="100000"
+                    className="dark:text-white dark:bg-gray-800"
+                  />
+                )}
+              />
+              {errors.minAmount && (
+                <p className="text-red-500 text-sm mt-1">{errors.minAmount.message}</p>
+              )}
+            </InputContainer>
+
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Max Discount Amount (₹) *</Label>
+              <Controller
+                name="maxAmount"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    placeholder="₹1 - ₹5,000"
+                    min="1"
+                    max="5000"
+                    className="dark:text-white dark:bg-gray-800"
+                  />
+                )}
+              />
+              {errors.maxAmount && (
+                <p className="text-red-500 text-sm mt-1">{errors.maxAmount.message}</p>
+              )}
+            </InputContainer>
+          </div>
+
+          {/* Usage Limits */}
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Total Usage Limit</Label>
+              <Controller
+                name="usageLimit"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    placeholder="Leave empty for unlimited (e.g., 10 for first 10 people)"
+                    min="1"
+                    className="dark:text-white dark:bg-gray-800"
+                  />
+                )}
+              />
+              {errors.usageLimit && (
+                <p className="text-red-500 text-sm mt-1">{errors.usageLimit.message}</p>
+              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Set this to limit total uses (e.g., "10" for first 10 people)
+              </p>
+            </InputContainer>
+
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Per User Limit *</Label>
+              <Controller
+                name="perUserLimit"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    placeholder="1-5"
+                    min="1"
+                    max="5"
+                    className="dark:text-white dark:bg-gray-800"
+                  />
+                )}
+              />
+              {errors.perUserLimit && (
+                <p className="text-red-500 text-sm mt-1">{errors.perUserLimit.message}</p>
+              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                How many times each user can use this coupon
+              </p>
+            </InputContainer>
+          </div>
+
+          {/* Targeting */}
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Target Audience</Label>
+              <select
+                className="w-full p-3 border rounded-md dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                value={selectedUsers.length > 0 ? "specific" : "all"}
+                onChange={(e) => {
+                  if (e.target.value === "all") {
+                    setSelectedUsers([]);
+                  } else {
+                    setShowUserModal(true);
+                  }
+                }}
+              >
+                <option value="all">All Users (Public)</option>
+                <option value="specific">Specific Users (Private)</option>
+              </select>
+
+              {selectedUsers.length > 0 && (
+                <div className="mt-3">
+                  <div
+                    onClick={() => setShowUserModal(true)}
+                    className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white text-left cursor-pointer hover:border-orange-500 transition-colors"
+                  >
+                    <span className="font-semibold text-orange-600 dark:text-orange-400">{selectedUsers.length} user(s) selected</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedUsers.map((user) => (
+                      <span
+                        key={user.userId}
+                        className="inline-flex items-center bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-sm font-medium px-2.5 py-0.5 rounded"
+                      >
+                        {user.username}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUserRemove(user.userId);
+                          }}
+                          className="ml-1.5 hover:text-red-500"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </InputContainer>
+
+            <InputContainer>
+              <Label className="text-gray-700 dark:text-white">Applicable Products</Label>
+              <select
+                className="w-full p-3 border rounded-md dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                value={selectedProducts.length > 0 ? "specific" : "all"}
+                onChange={(e) => {
+                  if (e.target.value === "all") {
+                    setSelectedProducts([]);
+                  } else {
+                    setShowProductModal(true);
+                  }
+                }}
+              >
+                <option value="all">All Products (Store-wide)</option>
+                <option value="specific">Specific Products</option>
+              </select>
+
+              {selectedProducts.length > 0 && (
+                <div className="mt-3">
+                  <div
+                    onClick={() => setShowProductModal(true)}
+                    className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white text-left cursor-pointer hover:border-orange-500 transition-colors"
+                  >
+                    <span className="font-semibold text-orange-600 dark:text-orange-400">{selectedProducts.length} product(s) selected</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedProducts.map((product) => (
+                      <span
+                        key={product.productId}
+                        className="inline-flex items-center bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-sm font-medium px-2.5 py-0.5 rounded"
+                      >
+                        {product.productName}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleProductRemove(product.productId);
+                          }}
+                          className="ml-1.5 hover:text-red-500"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </InputContainer>
+          </div>
+
+          {/* Submit Button */}
+          <div>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 text-md w-full font-bold bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full dark:bg-blue-600 bg-orange-500 text-white px-6 py-3 rounded-md dark:hover:bg-blue-700 hover:bg-orange-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <Tag className="mr-2" />
               {isSubmitting ? "Updating Coupon..." : "Update Coupon"}
             </button>
           </div>

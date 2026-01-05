@@ -152,23 +152,60 @@ const TableRow = ({ item, type, refetch }) => {
         {type === "coupons" && (
           <>
             <td className="px-6 py-4 border border-gray-600">
-              {item.couponCode || "N/A"}
+              <div className="flex items-center gap-2">
+                <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm font-bold text-gray-700 dark:text-gray-300">
+                  {item.couponCode || "N/A"}
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(item.couponCode);
+                    // toast.success("Copied!"); 
+                  }}
+                  title="Copy Code"
+                  className="text-gray-400 hover:text-blue-500 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </button>
+              </div>
             </td>
             <td className="px-6 py-4 border border-gray-600">
-              {item.title || "N/A"}
+              <div className="font-medium text-gray-800 dark:text-gray-200">{item.title || "N/A"}</div>
             </td>
             <td className="px-6 py-4 border border-gray-600">
-              {item.discount ? `${item.discount} %` : "N/A"}
+              <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-900">
+                {item.discount ? `${item.discount}%` : "N/A"}
+              </span>
             </td>
             <td className="px-6 py-4 border border-gray-600">
-              {item.expiry ? new Date(item.expiry).toLocaleDateString() : "N/A"}
+              {(() => {
+                const isExpired = new Date(item.expiry) < new Date();
+                const isLimitReached = item.usageLimit !== null && item.usageCount >= item.usageLimit;
+
+                if (isExpired) {
+                  return <span className="text-red-700 bg-red-100 border border-red-200 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">Expired</span>;
+                } else if (isLimitReached) {
+                  return <span className="text-orange-700 bg-orange-100 border border-orange-200 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">Sold Out</span>;
+                } else {
+                  return <span className="text-green-700 bg-green-100 border border-green-200 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">Active</span>;
+                }
+              })()}
             </td>
-            <td className="px-6 flex py-4 gap-6">
+            <td className="px-6 py-4 border border-gray-600 text-sm">
+              <div className="flex flex-col">
+                <span className="font-medium">{item.expiry ? new Date(item.expiry).toLocaleDateString() : "N/A"}</span>
+                <span className="text-xs text-gray-500">{item.expiry ? new Date(item.expiry).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
+              </div>
+            </td>
+            <td className="px-6 flex py-4 gap-3">
               <Button
                 $borderColor="#d97706"
                 $textColor="#d97706"
                 $hoverColor="white"
                 onClick={() => handleView(item.id, "coupons")}
+                className="!px-3 !py-1 text-xs"
               >
                 View
               </Button>
@@ -177,14 +214,16 @@ const TableRow = ({ item, type, refetch }) => {
                 $textColor="#16a34a"
                 $hoverColor="white"
                 onClick={() => handleUpdate(item.id, "coupons")}
+                className="!px-3 !py-1 text-xs"
               >
-                Update
+                Edit
               </Button>
               <Button
                 $borderColor="#B34D4D"
                 $textColor="#B34D4D"
                 $hoverColor="white"
                 onClick={() => openModal(item)}
+                className="!px-3 !py-1 text-xs"
               >
                 Delete
               </Button>
@@ -270,9 +309,10 @@ export const config = {
   },
   coupons: {
     headers: [
-      "Coupon Code",
-      "Coupon Title",
+      "Code",
+      "Title",
       "Discount",
+      "Status",
       "Valid Until",
       "Actions",
     ],

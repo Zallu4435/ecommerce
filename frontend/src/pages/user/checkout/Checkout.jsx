@@ -45,7 +45,7 @@ const CheckoutPage = () => {
     if (!payment.paymentMethod) {
       toast.info("Please select a payment method.");
       return;
-    } 
+    }
 
     if (payment.paymentMethod == 'cod' && order?.total > 2500) {
       toast.info('COD is not available for order greater than 2500')
@@ -61,12 +61,12 @@ const CheckoutPage = () => {
     <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 py-10 px-4 gap-x-12">
       <div className="grid gap-10">
         <ShippingAddress onAddressSelect={handleAddressSelect} />
-        <OrderDetails onOrderChange={handleOrderChange} address={address} />
+        <OrderDetails onOrderChange={handleOrderChange} address={address} coupon={coupon} />
       </div>
 
       <div className="bg-white dark:bg-gray-900 p-6 justify-center grid space-y-3 rounded-lg shadow-md h-fit w-full lg:w-[550px] mx-auto">
         <PaymentMethod onPaymentMethodChange={handlePaymentMethodChange} />
-        <ApplyCoupen onCouponApply={handleCouponApply} />
+        <ApplyCoupen onCouponApply={handleCouponApply} orderTotal={order?.total} />
 
         <button
           onClick={handleProceedToPayment}

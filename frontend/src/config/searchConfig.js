@@ -22,11 +22,10 @@ export const headerToFieldMap = {
     Actions: "actions",
   },
   coupons: {
-    "Coupon Code": "couponCode",
-    "Discount Value": "discountValue",
-    "Expiry Date": "expiryDate",
-    "Max Discount": "maxDiscount",
-    "Min Purchase": "minPurchase",
+    Code: "couponCode",
+    Title: "title",
+    Discount: "discount",
+    "Valid Until": "expiry",
     Actions: "actions",
   },
   products: {
