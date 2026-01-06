@@ -60,12 +60,15 @@ exports.signupUser = async (req, res, next) => {
 
   try {
     const userExists = await User.findOne({ email });
-    // ... (existing userExists check)
+    if (userExists) {
+      return next(new ErrorHandler("User already exists", 400));
+    }
 
     let referredByUserId = null;
     let referrerWallet = null;
 
     if (referralCode) {
+      console.log('👥 [REFERRAL] User signing up with referral code:', referralCode);
       const referrer = await User.findOne({ referralCode });
       if (referrer) {
         referredByUserId = referrer._id;
@@ -121,6 +124,7 @@ exports.signupUser = async (req, res, next) => {
         transactionType: "Referral",
         status: "Successful"
       });
+      console.log('💰 [REFERRAL] Signup bonus credited to new user wallet');
 
       newUser.isReferralRewardClaimed = true; // Mark as claimed for the referee part (signup bonus)
       await newUser.save();
@@ -168,51 +172,58 @@ exports.googleLogin = async (req, res, next) => {
   });
 
 
-  const payload = ticket.getPayload();
-  const { sub, email, name, picture } = payload;
+  try {
+    const payload = ticket.getPayload();
+    const { sub, email, name, picture } = payload;
 
-  let user = await User.findOne({ email });
+    let user = await User.findOne({ email });
 
-  if (!user) {
-    user = await User.create({
-      googleId: sub,
-      email,
-      username: name,
-      avatar: picture,
-      status: "active",
-    });
+    if (!user) {
+      user = await User.create({
+        googleId: sub,
+        email,
+        username: name,
+        avatar: picture,
+        status: "active",
+      });
+    }
+
+    sendToken(user, 200, res);
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
   }
-
-  sendToken(user, 200, res);
 };
 
 exports.loginUser = async (req, res, next) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return next(new ErrorHandler("Please provide all fields!", 400));
+    }
 
-  if (!email || !password) {
-    return next(new ErrorHandler("Please provide all fields!", 400));
-  }
+    const user = await User.findOne({ email }).select("+password");
 
-  const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return next(new ErrorHandler("User doesn't exist!", 400));
+    }
 
-  if (!user) {
-    return next(new ErrorHandler("User doesn't exist!", 400));
-  }
+    if (user.isBlocked) {
+      return next(new ErrorHandler("User banned! Can't login", 403));
+    }
+    if (user.status !== "active") {
+      return next(new ErrorHandler("Please activate your account from email", 403));
+    }
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return next(
+        new ErrorHandler("Please provide the correct information", 400)
+      );
+    }
 
-  if (user.isBlocked) {
-    return next(new ErrorHandler("User banned! Can't login"));
+    sendToken(user, 201, res);
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
   }
-  if (user.status !== "active") {
-    return next(new ErrorHandler("Please activate your account from email", 403));
-  }
-  const isPasswordValid = await user.comparePassword(password);
-  if (!isPasswordValid) {
-    return next(
-      new ErrorHandler("Please provide the correct information", 400)
-    );
-  }
-
-  sendToken(user, 201, res);
 };
 
 exports.otpLogin = async (req, res, next) => {
@@ -229,7 +240,7 @@ exports.otpLogin = async (req, res, next) => {
     }
 
     if (user.isBlocked) {
-      return next(new ErrorHandler("User banned! Can't login"));
+      return next(new ErrorHandler("User banned! Can't login", 403));
     }
 
     if (user.status !== "active") {
@@ -278,35 +289,39 @@ exports.logoutUser = async (req, res, next) => {
 };
 
 exports.updateUserInfo = async (req, res, next) => {
-  const { email, nickname, phone, username, gender, oldEmail } = req.body;
+  try {
+    const { email, nickname, phone, username, gender } = req.body;
 
-  const user = await User.findOne({ email: oldEmail }).select("+password");
+    const user = await User.findById(req.user).select("+password");
 
-  if (!user) {
-    return next(new ErrorHandler("User not found", 400));
-  }
-
-  if (email && email !== user.email) {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return next(
-        new ErrorHandler("Email is already in use by another user", 400)
-      );
+    if (!user) {
+      return next(new ErrorHandler("User not found", 400));
     }
+
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return next(
+          new ErrorHandler("Email is already in use by another user", 400)
+        );
+      }
+    }
+
+    if (username) user.username = username;
+    if (phone) user.phone = phone;
+    if (nickname) user.nickname = nickname;
+    if (gender) user.gender = gender;
+    if (email) user.email = email;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
   }
-
-  if (username) user.username = username;
-  if (phone) user.phone = phone;
-  if (nickname) user.nickname = nickname;
-  if (gender) user.gender = gender;
-  if (email) user.email = email;
-
-  await user.save();
-
-  res.status(200).json({
-    success: true,
-    user,
-  });
 };
 
 exports.updateAvatar = async (req, res, next) => {
@@ -333,36 +348,40 @@ exports.updateAvatar = async (req, res, next) => {
 };
 
 exports.forgotPassword = async (req, res, next) => {
-  const { email } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    return next(new ErrorHandler("User not found with this email", 404));
-  }
-
-  const resetToken = user.getResetPasswordToken();
-
-  await user.save({ validateBeforeSave: false });
-
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-
   try {
-    await sendMail({
-      email: user.email,
-      subject: "Password Reset Request",
-      message: `You requested a password reset. Please click the link below to reset your password: \n\n ${resetUrl}`,
-    });
+    const { email } = req.body;
 
-    res.status(200).json({
-      success: true,
-      message: `Email sent to ${user.email} with password reset link.`,
-    });
-  } catch (err) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(new ErrorHandler("User not found with this email", 404));
+    }
+
+    const resetToken = user.getResetPasswordToken();
+
     await user.save({ validateBeforeSave: false });
 
-    return next(new ErrorHandler("Email could not be sent.", 500));
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+    try {
+      await sendMail({
+        email: user.email,
+        subject: "Password Reset Request",
+        message: `You requested a password reset. Please click the link below to reset your password: \n\n ${resetUrl}`,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Email sent to ${user.email} with password reset link.`,
+      });
+    } catch (err) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return next(new ErrorHandler("Email could not be sent.", 500));
+    }
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
   }
 };
 
@@ -429,25 +448,29 @@ exports.resetPassword = async (req, res, next) => {
 };
 
 exports.updatePassword = async (req, res, next) => {
-  const { currentPassword, newPassword } = req.body;
+  try {
+    const { currentPassword, newPassword } = req.body;
 
-  const user = await User.findById(req.user.id).select("+password");
-  if (!user) {
-    return next(new ErrorHandler("User not found", 404));
+    const user = await User.findById(req.user).select("+password");
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return next(new ErrorHandler("Current password is incorrect", 400));
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
   }
-
-  const isMatch = await user.comparePassword(currentPassword);
-  if (!isMatch) {
-    return next(new ErrorHandler("Current password is incorrect", 400));
-  }
-
-  user.password = newPassword;
-  await user.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Password updated successfully",
-  });
 };
 
 exports.getAllUsers = async (req, res) => {
@@ -506,36 +529,40 @@ exports.getAllUsers = async (req, res) => {
 };
 
 exports.getUser = async (req, res, next) => {
-  const user = await User.findById(req.user).select(
-    "username nickname phone email gender address avatar status referralCode"
-  );
-  if (!user) {
-    return next(new ErrorHandler("User doesn't exist!", 400));
-  }
+  try {
+    const user = await User.findById(req.user).select(
+      "username nickname phone email gender address avatar status referralCode"
+    );
+    if (!user) {
+      return next(new ErrorHandler("User doesn't exist!", 400));
+    }
 
-  // Generate referral code for existing users if missing
-  if (!user.referralCode) {
-    user.referralCode = generateReferralCode();
-    let codeExists = await User.findOne({ referralCode: user.referralCode });
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (codeExists && attempts < maxAttempts) {
+    // Generate referral code for existing users if missing
+    if (!user.referralCode) {
       user.referralCode = generateReferralCode();
-      codeExists = await User.findOne({ referralCode: user.referralCode });
-      attempts++;
+      let codeExists = await User.findOne({ referralCode: user.referralCode });
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      while (codeExists && attempts < maxAttempts) {
+        user.referralCode = generateReferralCode();
+        codeExists = await User.findOne({ referralCode: user.referralCode });
+        attempts++;
+      }
+
+      if (attempts < maxAttempts) {
+        await user.save();
+      }
+      // If max attempts reached, user will not have referral code (rare case)
     }
 
-    if (attempts < maxAttempts) {
-      await user.save();
-    }
-    // If max attempts reached, user will not have referral code (rare case)
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
   }
-
-  res.status(200).json({
-    success: true,
-    user,
-  });
 };
 
 exports.refreshToken = async (req, res, next) => {

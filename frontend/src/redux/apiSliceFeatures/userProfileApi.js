@@ -24,7 +24,7 @@ export const userProfileApi = createApi({
       query: ({ id, updatedAddress }) => ({
         url: `userProfile/address`,
         method: "PUT",
-        body: updatedAddress,
+        body: { _id: id, ...updatedAddress },
       }),
       invalidatesTags: ["Addresses"],
     }),
@@ -60,6 +60,16 @@ export const userProfileApi = createApi({
         method: "POST",
         body: paymentData,
       }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Invalidate Cart in unifiedApi when payment is processed
+          const { unifiedApiSlice } = await import("./unifiedApiSlice");
+          dispatch(unifiedApiSlice.util.invalidateTags(["Cart"]));
+        } catch (err) {
+          // do nothing
+        }
+      },
     }),
 
     getOrders: builder.query({
@@ -100,6 +110,42 @@ export const userProfileApi = createApi({
       }),
       invalidatesTags: ["Addresses"],
     }),
+
+    retryPayment: builder.mutation({
+      query: (data) => ({
+        url: "/userProfile/retry-payment",
+        method: "POST",
+        body: data,
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Invalidate Cart in unifiedApi when a payment is retried successfully
+          const { unifiedApiSlice } = await import("./unifiedApiSlice");
+          dispatch(unifiedApiSlice.util.invalidateTags(["Cart"]));
+        } catch (err) {
+          // do nothing
+        }
+      },
+    }),
+
+    verifyRazorpayPayment: builder.mutation({
+      query: (data) => ({
+        url: "/userProfile/verify-razorpay-payment",
+        method: "POST",
+        body: data,
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Invalidate Cart in unifiedApi when Razorpay payment is verified
+          const { unifiedApiSlice } = await import("./unifiedApiSlice");
+          dispatch(unifiedApiSlice.util.invalidateTags(["Cart"]));
+        } catch (err) {
+          // do nothing
+        }
+      },
+    }),
   }),
 });
 
@@ -118,4 +164,6 @@ export const {
   useContactMutation,
   useParticularUserQuery,
   useSetPrimaryAddressMutation,
+  useRetryPaymentMutation,
+  useVerifyRazorpayPaymentMutation,
 } = userProfileApi;

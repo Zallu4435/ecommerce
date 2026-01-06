@@ -3,6 +3,7 @@ const Product = require("../model/Products");
 const Wishlist = require("../model/Wishlist");
 const Comparison = require("../model/Comparison");
 const mongoose = require("mongoose");
+const { checkStockAvailability } = require("../utils/orderHelper");
 
 exports.addToCart = async (req, res) => {
   const { productId, quantity, size, color, gender } = req.body;
@@ -63,13 +64,18 @@ exports.addToCart = async (req, res) => {
       }
     }
 
-    const limit = 50; // Cart limit
+    // Check Stock using helper
+    const isStockAvailable = await checkStockAvailability(productId, quantity, {
+      color: selectedColor,
+      size: selectedSize,
+      gender: finalGender
+    });
 
-    // Check Stock (Using totalStock as per schema)
-    // Note: Ideally we should check Variant stock if variants exist, but taking totalStock as first line of defense
-    if (product.totalStock < quantity) {
+    if (!isStockAvailable) {
       return res.status(400).json({ message: "Product is out of stock or insufficient quantity" });
     }
+
+    const limit = 50; // Cart limit
 
     let cart = await Cart.findOne({ userId });
 
@@ -282,8 +288,15 @@ exports.updateCartQuantity = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    if (quantity > product.totalStock) {
-      return res.status(400).json({ message: "Out of stock" });
+    // Check Stock using helper
+    const isStockAvailable = await checkStockAvailability(cart.items[itemIndex].productId, quantity, {
+      color: cart.items[itemIndex].color,
+      size: cart.items[itemIndex].size,
+      gender: cart.items[itemIndex].gender
+    });
+
+    if (!isStockAvailable) {
+      return res.status(400).json({ message: "Out of stock or insufficient quantity" });
     }
 
     cart.items[itemIndex].quantity = quantity;

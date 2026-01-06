@@ -8,7 +8,7 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
     }),
 
     getOrderById: builder.query({
-      query: (id) => `/orders/getOrder/${id}`,
+      query: (id) => `/orders/order-details/${id}`,
       providesTags: ["Order"],
     }),
 

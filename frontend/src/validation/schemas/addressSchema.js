@@ -4,7 +4,7 @@ const namePattern = /^[A-Za-z][A-Za-z\s.'-]*$/;
 const noEmoji = /^(?!.*([\uD83C-\uDBFF\uDC00-\uDFFF]|[\u2600-\u27BF])).*$/;
 
 export const addressSchema = z.object({
-  username: z.string()
+  fullName: z.string()
     .trim()
     .min(1, "Full name is required")
     .max(50, "Full name cannot exceed 50 characters")

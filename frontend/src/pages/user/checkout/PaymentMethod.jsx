@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { card, razorpay } from "../../../assets/images/index";
+import { CheckCircle2, Wallet, Banknote, CreditCard } from "lucide-react";
 
 const PaymentMethod = ({ onPaymentMethodChange }) => {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [onlinePaymentMethod, setOnlinePaymentMethod] = useState("");
 
   const paymentMethods = [
-    { label: "Pay Online", value: "online" },
-    { label: "Cash on Delivery", value: "cod" },
+    { label: "Pay Online", value: "online", icon: <CreditCard className="w-5 h-5" />, description: "Cards, Net Banking, Wallet" },
+    { label: "Cash on Delivery", value: "cod", icon: <Banknote className="w-5 h-5" />, description: "Pay when you receive" },
   ];
 
   const onlineMethods = [
@@ -17,14 +18,13 @@ const PaymentMethod = ({ onPaymentMethodChange }) => {
       img: razorpay,
     },
     {
-      label: "wallet",
+      label: "Wallet",
       value: "card",
       img: card,
     },
   ];
 
-  const handlePaymentMethodChange = (e) => {
-    const { value } = e.target;
+  const handlePaymentMethodChange = (value) => {
     setPaymentMethod(value);
     setOnlinePaymentMethod("");
     onPaymentMethodChange?.({
@@ -42,56 +42,68 @@ const PaymentMethod = ({ onPaymentMethodChange }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-700 p-4 sm:p-5 md:p-6 shadow-md rounded-md w-full sm:w-[400px] md:w-[440px] mx-auto">
-      <h2 className="text-lg sm:text-xl dark:text-gray-200 text-gray-700 font-semibold mb-3 sm:mb-4">
-        Payment Method
-      </h2>
-      
-      <div className="space-y-2 sm:space-y-3">
+    <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800 p-6 sm:p-8 shadow-sm transition-all duration-300">
+      <div className="space-y-4">
         {paymentMethods.map((method) => (
-          <div 
-            className="flex items-center" 
+          <div
             key={method.value}
+            onClick={() => handlePaymentMethodChange(method.value)}
+            className={`relative flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === method.value
+                ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10"
+                : "border-gray-50 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 bg-gray-50/30 dark:bg-gray-800/20"
+              }`}
           >
-            <input
-              type="radio"
-              name="paymentMethod"
-              value={method.value}
-              checked={paymentMethod === method.value}
-              onChange={handlePaymentMethodChange}
-              className="mr-2 h-4 w-4"
-            />
-            <label className="text-sm sm:text-base font-medium">
-              {method.label}
-            </label>
+            <div className={`p-3 rounded-xl ${paymentMethod === method.value
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+              }`}>
+              {method.icon}
+            </div>
+            <div className="flex-grow min-w-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className={`font-bold ${paymentMethod === method.value ? "text-blue-600 dark:text-blue-400" : "text-gray-900 dark:text-white"}`}>
+                  {method.label}
+                </span>
+                {paymentMethod === method.value && (
+                  <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                )}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{method.description}</p>
+            </div>
           </div>
         ))}
       </div>
 
       {paymentMethod === "online" && (
-        <div className="mt-4 sm:mt-5">
-          <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
-            Select Online Payment Option
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+        <div className="mt-8 animate-fadeIn">
+          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 ml-1">
+            Select Service Provider
+          </p>
+          <div className="grid grid-cols-2 gap-4">
             {onlineMethods.map((method) => (
               <div
                 key={method.value}
                 onClick={() => handleOnlinePaymentMethodChange(method.value)}
-                className={`cursor-pointer border p-3 sm:p-4 rounded-md flex flex-col items-center ${
-                  onlinePaymentMethod === method.value
-                    ? "border-indigo-500"
-                    : "border-gray-300"
-                } hover:shadow-md transition-shadow duration-200`}
+                className={`relative group cursor-pointer border-2 p-4 rounded-2xl flex flex-col items-center gap-3 transition-all duration-300 ${onlinePaymentMethod === method.value
+                    ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10"
+                    : "border-gray-50 dark:border-gray-800 hover:border-blue-100 dark:hover:border-gray-700 bg-gray-50/30 dark:bg-gray-800/20"
+                  }`}
               >
-                <img
-                  src={method.img}
-                  alt={method.label}
-                  className="mb-2 w-16 sm:w-20 h-10 sm:h-12 object-cover"
-                />
-                <span className="text-xs sm:text-sm font-medium text-center">
+                <div className="w-full h-12 flex items-center justify-center">
+                  <img
+                    src={method.img}
+                    alt={method.label}
+                    className="max-h-full max-w-full object-contain filter dark:brightness-110 grayscale group-hover:grayscale-0 transition-all"
+                  />
+                </div>
+                <span className={`text-xs font-bold ${onlinePaymentMethod === method.value ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}>
                   {method.label}
                 </span>
+                {onlinePaymentMethod === method.value && (
+                  <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-0.5 shadow-lg border-2 border-white dark:border-gray-900">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                )}
               </div>
             ))}
           </div>

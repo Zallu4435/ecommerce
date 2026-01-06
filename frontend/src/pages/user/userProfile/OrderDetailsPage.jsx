@@ -198,217 +198,170 @@ const OrderDetailsPage = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
-            {/* Header */}
-            <div className="mb-8">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all w-fit"
-                >
-                    <FaArrowLeft className="text-sm" />
-                    <span className="font-medium">Back to Orders</span>
-                </button>
+        <div className="max-w-7xl mx-auto pt-32 pb-16 px-4 sm:px-6 lg:px-8 min-h-screen">
+            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 lg:p-8">
+                {/* Header / Navigation */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <div>
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-2 transition-colors"
+                        >
+                            <FaArrowLeft className="text-sm" />
+                            <span className="text-sm font-medium">Back to Orders</span>
+                        </button>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            Order <span className="text-blue-600 dark:text-blue-400">#{order.orderId}</span>
+                        </h1>
+                    </div>
 
-                <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div>
-                            <div className="flex items-center gap-3 mb-3">
-                                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                                    Order #{order.orderId}
-                                </h1>
-                                <span
-                                    className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${getStatusColor(
-                                        order.orderStatus
-                                    )}`}
-                                >
-                                    {order.orderStatus}
-                                </span>
-                            </div>
+                    {order.canCancelOrder && (
+                        <button
+                            onClick={handleCancelEntireOrder}
+                            className="px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors border border-red-100 dark:border-red-900/30"
+                        >
+                            Cancel Entire Order
+                        </button>
+                    )}
 
-                            <div className="flex flex-wrap gap-6 text-sm text-gray-600 dark:text-gray-400">
-                                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
-                                    <FaCalendar className="text-gray-400" />
-                                    <span>Placed: <span className="font-semibold text-gray-900 dark:text-gray-200">{formatDate(order.orderDate)}</span></span>
-                                </div>
-                                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
-                                    <FaBox className="text-gray-400" />
-                                    <span>Items: <span className="font-semibold text-gray-900 dark:text-gray-200">{order.itemCount}</span></span>
-                                </div>
-                            </div>
+                    {(order.paymentStatus === "Failed" || order.orderStatus === "Failed" || order.items.some(item => item.status === "Payment Failed")) && order.paymentMethod?.toLowerCase() !== "cod" && (
+                        <button
+                            onClick={() => navigate("/retry-payment", {
+                                state: {
+                                    orderId: order._id,
+                                    amount: order.totalAmount
+                                }
+                            })}
+                            className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-md"
+                        >
+                            Retry Payment
+                        </button>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main Content: Items List */}
+                    <div className="lg:col-span-2 space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <FaBox className="text-gray-400" />
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Items in this Order</h2>
                         </div>
 
-                        {order.canCancelOrder && (
-                            <button
-                                onClick={handleCancelEntireOrder}
-                                className="px-6 py-3 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/20 transition-all font-semibold text-sm border border-red-100 dark:border-red-900/30 shadow-sm hover:shadow-md"
-                            >
-                                Cancel Entire Order
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Content - Items */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-                            <span className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                                <FaBox className="text-blue-600 dark:text-blue-400" />
-                            </span>
-                            Items in this Order
-                        </h2>
-
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {order.items.map((item) => (
                                 <div
                                     key={item.itemId}
-                                    className="group bg-gray-50/50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-900 transition-colors duration-200"
+                                    className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700"
                                 >
-                                    <div className="flex flex-col sm:flex-row gap-6">
+                                    <div className="flex flex-col sm:flex-row gap-5">
                                         {/* Product Image */}
-                                        <div className="relative flex-shrink-0 w-full sm:w-32">
-                                            <div className="aspect-square rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700">
-                                                <img
-                                                    src={item.productImage}
-                                                    alt={item.productName}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                            </div>
-                                            {/* Quantity Badge */}
-                                            <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full">
+                                        <div className="relative flex-shrink-0 w-full sm:w-24 aspect-square">
+                                            <img
+                                                src={item.productImage}
+                                                alt={item.productName}
+                                                className="w-full h-full object-cover rounded-lg shadow-sm"
+                                            />
+                                            <div className="absolute -top-2 -right-2 bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                                                 x{item.quantity}
                                             </div>
                                         </div>
 
-                                        {/* Product Details */}
-                                        <div className="flex-1 flex flex-col">
-                                            <div className="flex-1">
-                                                <div className="flex justify-between items-start gap-4 mb-2">
-                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-                                                        {item.productName}
-                                                    </h3>
-                                                    <p className="font-bold text-lg text-gray-900 dark:text-white">
-                                                        ₹{item.itemTotal.toFixed(2)}
-                                                    </p>
-                                                </div>
-
-                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                                                    {[
-                                                        item.price > 0 && `₹${item.price} each`,
-                                                        item.color,
-                                                        item.size,
-                                                        item.gender === "Male" ? "Boy" : item.gender === "Female" ? "Girl" : item.gender
-                                                    ].filter(Boolean).join(" • ")}
+                                        {/* Item Info */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start gap-4">
+                                                <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
+                                                    {item.productName}
+                                                </h3>
+                                                <p className="text-base font-bold text-gray-900 dark:text-white">
+                                                    ₹{item.itemTotal.toFixed(2)}
                                                 </p>
-
-                                                <div className="flex flex-wrap items-center gap-3 mb-4">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${getStatusColor(
-                                                            item.status
-                                                        )}`}
-                                                    >
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
-                                                        {item.status}
-                                                    </span>
-
-                                                    {item.trackingNumber && (
-                                                        <span className="text-xs font-mono text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                                                            #{item.trackingNumber}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Timeline / Additional Info */}
-                                                <div className="grid gap-2 text-sm text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                                                    {item.confirmedAt && !item.cancelledAt && (
-                                                        <div className="flex items-center gap-2">
-                                                            <FaCheckCircle className="text-green-500 text-xs" />
-                                                            <span>Confirmed on {formatDate(item.confirmedAt)}</span>
-                                                        </div>
-                                                    )}
-                                                    {item.shippedAt && (
-                                                        <div className="flex items-center gap-2">
-                                                            <FaCheckCircle className="text-blue-500 text-xs" />
-                                                            <span>Shipped on {formatDate(item.shippedAt)}</span>
-                                                        </div>
-                                                    )}
-                                                    {item.deliveredAt && (
-                                                        <div className="flex items-center gap-2">
-                                                            <FaCheckCircle className="text-green-600 text-xs" />
-                                                            <span className="font-medium text-green-700 dark:text-green-400">Delivered on {formatDate(item.deliveredAt)}</span>
-                                                        </div>
-                                                    )}
-                                                    {item.cancelledAt && (
-                                                        <div className="flex items-start gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                                                            <FaTimes className="mt-1 flex-shrink-0" />
-                                                            <div>
-                                                                <p className="font-medium">Cancelled on {formatDate(item.cancelledAt)}</p>
-                                                                {item.cancellationReason && (
-                                                                    <p className="text-xs opacity-90 mt-0.5">"{item.cancellationReason}"</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {item.returnedAt && (
-                                                        <div className="flex items-start gap-2 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 p-2 rounded">
-                                                            <FaBox className="mt-1 flex-shrink-0" />
-                                                            <div>
-                                                                <p className="font-medium">Returned on {formatDate(item.returnedAt)}</p>
-                                                                {item.returnReason && (
-                                                                    <p className="text-xs opacity-90 mt-0.5">"{item.returnReason}"</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {item.refundAmount > 0 && (
-                                                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
-                                                            <FaRupeeSign className="text-xs" />
-                                                            <span>Refunded ₹{item.refundAmount.toFixed(2)} ({item.refundStatus})</span>
-                                                        </div>
-                                                    )}
-                                                </div>
                                             </div>
 
-                                            {/* Action Buttons */}
-                                            <div className="flex flex-wrap gap-3 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3">
+                                                {[
+                                                    `₹${item.price.toFixed(2)} each`,
+                                                    item.color,
+                                                    item.size,
+                                                    item.gender === "Male" ? "Boy" : item.gender === "Female" ? "Girl" : item.gender
+                                                ].filter(Boolean).join(" • ")}
+                                            </p>
+
+                                            {/* Offer Badge - inferred if price < originalPrice */}
+                                            {item.originalPrice > item.price && (
+                                                <div className="inline-block px-2 py-0.5 mb-2 mr-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                                                    Offer Applied
+                                                </div>
+                                            )}
+
+                                            <div className="flex flex-wrap items-center gap-2 mb-3">
+                                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(item.status)}`}>
+                                                    {item.status}
+                                                </span>
+                                                {item.trackingNumber && (
+                                                    <span className="text-[10px] text-gray-500 bg-white dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700 font-mono">
+                                                        #{item.trackingNumber}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Status Message */}
+                                            <div className="text-xs space-y-1.5 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                                {item.cancelledAt ? (
+                                                    <div className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg flex gap-2">
+                                                        <FaTimes className="mt-0.5 flex-shrink-0" />
+                                                        <div>
+                                                            <p className="font-semibold">Cancelled on {formatDate(item.cancelledAt)}</p>
+                                                            {item.cancellationReason && <p className="opacity-80 italic">"{item.cancellationReason}"</p>}
+                                                        </div>
+                                                    </div>
+                                                ) : item.deliveredAt ? (
+                                                    <p className="text-green-600 dark:text-green-500 font-medium flex items-center gap-1.5">
+                                                        <FaCheckCircle /> Delivered on {formatDate(item.deliveredAt)}
+                                                    </p>
+                                                ) : item.shippedAt ? (
+                                                    <p className="text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1.5">
+                                                        <FaBox /> Shipped on {formatDate(item.shippedAt)}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                                        <FaCalendar /> Placed on {formatDate(item.confirmedAt || order.orderDate)}
+                                                    </p>
+                                                )}
+
+                                                {item.refundAmount > 0 && (
+                                                    <div className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold mt-1">
+                                                        <FaRupeeSign className="text-[10px]" />
+                                                        <span>₹{item.refundAmount.toFixed(2)} Refunded ({item.refundStatus})</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Item Actions */}
+                                            <div className="flex gap-2 mt-4">
                                                 <button
                                                     onClick={() => handleTrackOrder(item)}
-                                                    className="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                                                    className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                                                 >
-                                                    <FaBox className="text-sm" /> Track Order
+                                                    Track Order
                                                 </button>
-
-                                                <div className="flex-none inline-flex items-center justify-center">
-                                                    <InvoiceDownloadIcon
-                                                        order={{
-                                                            ...order,
-                                                            ...item,
-                                                            Status: item.status,
-                                                            TotalAmount: item.itemTotal,
-                                                            Price: item.price,
-                                                            ProductName: item.productName
-                                                        }}
-                                                        className="w-11 h-11 p-2.5 flex items-center justify-center bg-white dark:bg-gray-800 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 border border-gray-200 dark:border-gray-700 rounded-xl hover:shadow-md transition-all cursor-pointer"
-                                                    />
-                                                </div>
-
+                                                <InvoiceDownloadIcon
+                                                    order={{ ...order, ...item, Status: item.status, TotalAmount: item.itemTotal, Price: item.price, ProductName: item.productName }}
+                                                    className="w-8 h-8 p-2 flex items-center justify-center bg-white dark:bg-gray-800 text-gray-500 hover:text-red-600 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-sm transition-all cursor-pointer"
+                                                />
                                                 {item.canCancel && (
                                                     <button
                                                         onClick={() => handleCancelItem(item)}
-                                                        className="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border border-gray-200 dark:border-gray-700 font-medium rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                        className="px-4 py-1.5 bg-white dark:bg-gray-800 text-red-600 border border-red-100 dark:border-red-900/30 text-xs font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                                     >
-                                                        Cancel Item
+                                                        Cancel
                                                     </button>
                                                 )}
-
                                                 {item.canReturn && (
                                                     <button
                                                         onClick={() => handleReturnItem(item)}
-                                                        className="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 border border-gray-200 dark:border-gray-700 font-medium rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                                                        className="px-4 py-1.5 bg-white dark:bg-gray-800 text-amber-600 border border-amber-100 dark:border-amber-900/30 text-xs font-bold rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                                                     >
-                                                        Return Item
+                                                        Return
                                                     </button>
                                                 )}
                                             </div>
@@ -418,113 +371,102 @@ const OrderDetailsPage = () => {
                             ))}
                         </div>
                     </div>
-                </div>
 
-                {/* Sidebar - Order Summary & Address */}
-                <div className="space-y-6">
-                    {/* Order Summary */}
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 sticky top-24">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-                            Payment Summary
-                        </h2>
-
-                        <div className="space-y-3 text-sm">
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                                <span>Subtotal</span>
-                                <span className="font-medium text-gray-900 dark:text-white">₹{order.subtotal.toFixed(2)}</span>
-                            </div>
-
-                            {order.couponDiscount > 0 && (
-                                <div className="flex justify-between text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
-                                    <span>Coupon Discount</span>
-                                    <span>-₹{order.couponDiscount.toFixed(2)}</span>
+                    {/* Sidebar: Summary & Address */}
+                    <div className="space-y-6">
+                        {/* Payment Summary */}
+                        <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-700">
+                            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Payment Summary</h2>
+                            <div className="space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Subtotal</span>
+                                    <span className="font-bold text-gray-900 dark:text-white">₹{order.subtotal.toFixed(2)}</span>
                                 </div>
-                            )}
-
-                            <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-between items-end">
-                                <span className="text-gray-900 dark:text-white font-medium">Total Amount</span>
-                                <span className="text-2xl font-bold text-gray-900 dark:text-white">₹{order.totalAmount.toFixed(2)}</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 space-y-4">
-                            <div>
-                                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Payment Info</h3>
-                                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-                                            <FaCreditCard className="text-gray-400" />
+                                {order.couponDiscount > 0 && (
+                                    <div className="flex justify-between text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold">Coupon Applied</span>
+                                            <span className="text-xs opacity-75">{order.couponCode || "Discount"}</span>
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-gray-900 dark:text-white text-sm">{order.paymentMethod}</p>
-                                            <p className={`text-xs font-medium ${order.paymentStatus === 'Completed' ? 'text-green-600' : 'text-yellow-600'}`}>
-                                                {order.paymentStatus}
-                                            </p>
-                                        </div>
+                                        <span className="font-bold">-₹{order.couponDiscount.toFixed(2)}</span>
                                     </div>
-                                    {order.paymentStatus === 'Completed' && (
-                                        <FaCheckCircle className="text-green-500" />
-                                    )}
+                                )}
+                                <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-end">
+                                    <span className="text-sm font-bold text-gray-900 dark:text-white">Total Amount</span>
+                                    <span className="text-xl font-black text-blue-600 dark:text-blue-400">₹{order.totalAmount.toFixed(2)}</span>
                                 </div>
                             </div>
 
-                            {order.expectedDeliveryDate && (
-                                <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Expected Delivery</h3>
-                                    <p className="font-medium text-gray-900 dark:text-white">
-                                        {formatDate(order.expectedDeliveryDate)}
-                                    </p>
+                            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center border border-gray-100 dark:border-gray-700 shadow-sm">
+                                        <FaCreditCard className="text-gray-400" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Payment Method</p>
+                                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{order.paymentMethod}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center border border-gray-100 dark:border-gray-700 shadow-sm">
+                                        <FaCheckCircle className={`${order.paymentStatus === 'Completed' ? 'text-green-500' : 'text-amber-500'}`} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Payment Status</p>
+                                        <p className="text-sm font-bold text-gray-900 dark:text-white">{order.paymentStatus}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Shipping Address */}
+                        <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center gap-2 mb-4">
+                                <FaMapMarkerAlt className="text-gray-400" />
+                                <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Shipping Address</h2>
+                            </div>
+                            {order.shippingAddress && (
+                                <div className="text-sm space-y-3">
+                                    <div className="grid grid-cols-[80px_1fr] gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                        <span className="text-gray-500">Name:</span>
+                                        <span className="font-bold text-gray-900 dark:text-white truncate">{order.shippingAddress.fullName || order.shippingAddress.name || order.shippingAddress.username}</span>
+                                    </div>
+                                    <div className="grid grid-cols-[80px_1fr] gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                        <span className="text-gray-500">Phone:</span>
+                                        <span className="text-gray-900 dark:text-white font-medium">{order.shippingAddress.phone}</span>
+                                    </div>
+                                    <div className="grid grid-cols-[80px_1fr] gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                        <span className="text-gray-500">Street:</span>
+                                        <span className="text-gray-700 dark:text-gray-300">
+                                            {order.shippingAddress.street || order.shippingAddress.addressLine1}
+                                            {order.shippingAddress.addressLine2 && `, ${order.shippingAddress.addressLine2}`}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-[80px_1fr] gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                        <span className="text-gray-500">City:</span>
+                                        <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.city}</span>
+                                    </div>
+                                    <div className="grid grid-cols-[80px_1fr] gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                        <span className="text-gray-500">State:</span>
+                                        <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.state}</span>
+                                    </div>
+                                    <div className="grid grid-cols-[80px_1fr] gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                        <span className="text-gray-500">Zip:</span>
+                                        <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.zipCode || order.shippingAddress.pincode}</span>
+                                    </div>
+                                    {order.shippingAddress.landmark && (
+                                        <div className="grid grid-cols-[80px_1fr] gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                            <span className="text-gray-500">Landmark:</span>
+                                            <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.landmark}</span>
+                                        </div>
+                                    )}
+                                    <div className="grid grid-cols-[80px_1fr] gap-2">
+                                        <span className="text-gray-500">Country:</span>
+                                        <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.country}</span>
+                                    </div>
                                 </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* Shipping Address */}
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
-                        <div className="flex items-center gap-3 mb-4">
-                            <span className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-                                <FaMapMarkerAlt className="text-indigo-600 dark:text-indigo-400" />
-                            </span>
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                                Shipping Details
-                            </h2>
-                        </div>
-
-                        {order.shippingAddress && (
-                            <div className="text-sm space-y-3">
-                                <div className="flex border-b border-gray-100 dark:border-gray-800 pb-2">
-                                    <span className="text-gray-500 w-20 flex-shrink-0">Name:</span>
-                                    <span className="font-bold text-gray-900 dark:text-white">{order.shippingAddress.name}</span>
-                                </div>
-                                <div className="flex border-b border-gray-100 dark:border-gray-800 pb-2">
-                                    <span className="text-gray-500 w-20 flex-shrink-0">Phone:</span>
-                                    <span className="text-gray-900 dark:text-white font-medium">{order.shippingAddress.phone}</span>
-                                </div>
-                                <div className="flex border-b border-gray-100 dark:border-gray-800 pb-2">
-                                    <span className="text-gray-500 w-20 flex-shrink-0">Street:</span>
-                                    <span className="text-gray-700 dark:text-gray-300">
-                                        {order.shippingAddress.street || order.shippingAddress.addressLine1}
-                                        {order.shippingAddress.addressLine2 && `, ${order.shippingAddress.addressLine2}`}
-                                    </span>
-                                </div>
-                                <div className="flex border-b border-gray-100 dark:border-gray-800 pb-2">
-                                    <span className="text-gray-500 w-20 flex-shrink-0">City:</span>
-                                    <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.city}</span>
-                                </div>
-                                <div className="flex border-b border-gray-100 dark:border-gray-800 pb-2">
-                                    <span className="text-gray-500 w-20 flex-shrink-0">State:</span>
-                                    <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.state}</span>
-                                </div>
-                                <div className="flex border-b border-gray-100 dark:border-gray-800 pb-2">
-                                    <span className="text-gray-500 w-20 flex-shrink-0">Zip:</span>
-                                    <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.zipCode || order.shippingAddress.pincode}</span>
-                                </div>
-                                <div className="flex">
-                                    <span className="text-gray-500 w-20 flex-shrink-0">Country:</span>
-                                    <span className="text-gray-700 dark:text-gray-300">{order.shippingAddress.country}</span>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
@@ -539,6 +481,7 @@ const OrderDetailsPage = () => {
                 onConfirm={confirmCancelItem}
                 orderId={orderId}
                 productId={selectedItem?.productId}
+                productName={selectedItem?.productName}
                 reason={cancelReason}
                 onReasonChange={setCancelReason}
             />
@@ -556,7 +499,6 @@ const OrderDetailsPage = () => {
                 onReasonChange={setCancelReason}
             />
 
-            {/* Cancel Entire Order Modal */}
             <CancelConfirmationModal
                 show={showCancelOrderModal}
                 onClose={() => {

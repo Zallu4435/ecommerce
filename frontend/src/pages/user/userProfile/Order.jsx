@@ -8,7 +8,7 @@ import {
 import OrderDetailsModal from "../../../modal/user/OrderDetailsModal";
 import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
 import ReturnConfirmationModal from "../../../modal/user/OrderReturnModal";
-import { FaEye, FaMapMarkerAlt, FaSort } from "react-icons/fa";
+import { FaEye, FaMapMarkerAlt, FaSort, FaBoxOpen, FaChevronRight, FaFileInvoice } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { InvoiceDownloadIcon } from "../../admin/Sales Management/DownloadUtils";
 
@@ -49,7 +49,6 @@ const OrdersList = () => {
     }
   }, [data]);
 
-  // Refetch orders when navigating from payment failure
   useEffect(() => {
     if (location.state?.refetch) {
       refetch();
@@ -96,12 +95,11 @@ const OrdersList = () => {
     try {
       await cancelOrder({ orderId, productId, reason }).unwrap();
       setOrders((prev) => {
-        const d = prev.find((item) => item.ProductId === productId);
-        const filtered = prev.filter((item) => item.ProductId !== productId);
-        if (d) {
-          const updatedItem = { ...d, Status: "Cancelled" };
-          const data = [updatedItem, ...filtered];
-          return data;
+        const itemIndex = prev.findIndex((item) => item.ProductId === productId && item._id === orderId);
+        if (itemIndex > -1) {
+          const updatedOrders = [...prev];
+          updatedOrders[itemIndex] = { ...updatedOrders[itemIndex], Status: "Cancelled" };
+          return updatedOrders;
         }
         return prev;
       });
@@ -119,12 +117,11 @@ const OrdersList = () => {
     try {
       await returnOrder({ orderId, productId, reason }).unwrap();
       setOrders((prev) => {
-        const d = prev.find((item) => item.ProductId === productId);
-        const filtered = prev.filter((item) => item.ProductId !== productId);
-        if (d) {
-          const updatedItem = { ...d, Status: "Returned" };
-          const data = [updatedItem, ...filtered];
-          return data;
+        const itemIndex = prev.findIndex((item) => item.ProductId === productId && item._id === orderId);
+        if (itemIndex > -1) {
+          const updatedOrders = [...prev];
+          updatedOrders[itemIndex] = { ...updatedOrders[itemIndex], Status: "Return Requested" };
+          return updatedOrders;
         }
         return prev;
       });
@@ -144,257 +141,246 @@ const OrdersList = () => {
   };
 
   const generateOrderId = (id) => {
-    return `ORD-${id.slice(0, 6).toUpperCase()}`;
+    return `ORD-${id.slice(-6).toUpperCase()}`;
   };
 
-  // Loading state
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case "Delivered":
+        return "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800";
+      case "Payment Failed":
+      case "Failed":
+      case "Cancelled":
+        return "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800";
+      case "Shipped":
+        return "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800";
+      default:
+        return "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800";
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="max-w-6xl mt-8 lg:mt-[-10px] mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading your orders...</p>
-          </div>
+      <div className="max-w-6xl mx-auto p-6 min-h-[600px] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-500 font-medium animate-pulse">Fetching your orders...</p>
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="max-w-6xl mt-8 lg:mt-[-10px] mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-center">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-              Error Loading Orders
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {error?.data?.message || error?.message || "Failed to fetch orders"}
-            </p>
-            <button
-              onClick={() => refetch()}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              Try Again
-            </button>
+      <div className="max-w-6xl mx-auto p-6 mt-10">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-12 text-center shadow-2xl border border-gray-100 dark:border-gray-700">
+          <div className="w-20 h-20 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-4xl">⚠️</span>
           </div>
+          <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Something went wrong</h3>
+          <p className="text-gray-500 mb-8 max-w-md mx-auto">
+            {error?.data?.message || "We couldn't load your orders. Please check your connection and try again."}
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="px-8 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all font-semibold shadow-lg shadow-indigo-200 dark:shadow-none bg-gradient-to-r from-indigo-600 to-indigo-700"
+          >
+            Try Refreshing
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mt-8 lg:mt-[-10px] mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100">
-          Your Orders
-        </h2>
-        <button
-          onClick={toggleSortOrder}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-        >
-          <FaSort className="text-gray-600 dark:text-gray-300" />
-          <span className="text-sm text-gray-600 dark:text-gray-300">
-            {sortOrder === "desc" ? "Newest First" : "Oldest First"}
-          </span>
-        </button>
+    <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:py-10">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+            Order History
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">
+            Manage your purchases and track your deliveries
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleSortOrder}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl hover:border-indigo-500 dark:hover:border-indigo-400 transition-all shadow-sm group"
+          >
+            <FaSort className="text-gray-400 group-hover:text-indigo-500 transition-colors" />
+            <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
+              {sortOrder === "desc" ? "Newest First" : "Oldest First"}
+            </span>
+          </button>
+        </div>
       </div>
 
-      {orders?.length === 0 && !isLoading ? (
-        <p className="text-center text-gray-600 dark:text-gray-400">
-          You have no orders yet.
-        </p>
+      {orders?.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-16 text-center shadow-xl border border-gray-100 dark:border-gray-700">
+          <div className="w-24 h-24 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FaBoxOpen className="text-4xl text-gray-300" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">No orders found</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">
+            You haven't placed any orders yet. Explore our latest products and start shopping!
+          </p>
+          <button
+            onClick={() => navigate("/shop")}
+            className="px-10 py-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all font-bold shadow-xl shadow-indigo-100 dark:shadow-none bg-gradient-to-r from-indigo-600 to-indigo-700"
+          >
+            Start Shopping
+          </button>
+        </div>
       ) : (
-        <div className="space-y-4">
-          <div className="max-h-[70vh] overflow-y-auto scrollbar-hide hover:scrollbar-default">
-            <ul className="divide-y divide-gray-300 dark:divide-gray-600">
-              {orders?.map((order, index) => (
-                <li
-                  key={index}
-                  className="p-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-lg"
-                >
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex items-start lg:items-center">
-                      <img
-                        src={order.ProductImage}
-                        alt={order.ProductName}
-                        className="w-16 h-16 object-cover rounded-lg mr-4"
-                      />
-                      <div>
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100">
-                          Order ID: {generateOrderId(order._id)}
+        <div className="space-y-6">
+          <div className="grid gap-6">
+            {orders?.map((order, index) => (
+              <div
+                key={index}
+                className="group relative bg-white dark:bg-gray-800 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              >
+                {/* Status Bar Top */}
+                <div className={`h-1.5 w-full ${getStatusStyles(order.Status).split(' ')[0]}`}></div>
+
+                <div className="p-6 sm:p-8">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                    {/* Product Info */}
+                    <div className="flex items-center gap-6">
+                      <div className="relative flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                        <img
+                          src={order.ProductImage}
+                          alt={order.ProductName}
+                          className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-3xl shadow-lg ring-4 ring-gray-50 dark:ring-gray-900"
+                        />
+                        <div className="absolute -top-2 -right-2 bg-black text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
+                          x{order.Quantity}
+                        </div>
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider uppercase">
+                            {generateOrderId(order._id)}
+                          </span>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate max-w-xs group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          {order.ProductName}
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {order.Quantity}{" "}
-                          {order.Quantity === 1 ? "Item" : "Items"}
+                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mt-1">
+                          Placed on {new Date().toLocaleDateString()}
                         </p>
-                        <p
-                          className={`text-sm font-semibold ${order.Status === "Delivered"
-                            ? "text-green-500"
-                            : order.Status === "Payment Failed"
-                              ? "text-red-500"
-                              : order.Status === "Cancelled"
-                                ? "text-gray-500"
-                                : "text-yellow-500"
-                            }`}
-                        >
-                          {order.Status}
-                        </p>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <span className={`px-4 py-1.5 rounded-full text-xs font-bold border ${getStatusStyles(order.Status)}`}>
+                            {order.Status}
+                          </span>
+                          <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-transparent">
+                            ₹{(order.TotalAmount || order.Price * order.Quantity).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Action Buttons Container */}
-                    <div className="mt-4 lg:mt-0 lg:flex gap-4">
-                      {/* Primary Actions Row (Cancel & Return) */}
-                      <div className="flex gap-2 mb-3 lg:mb-0">
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      {/* Secondary buttons */}
+                      <div className="flex items-center gap-3 w-full sm:w-auto">
                         <button
-                          className={`flex-1 lg:flex-none bg-red-500 text-white px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-red-600 transition ${order.Status === "Delivered" ||
-                            order.Status === "Cancelled" ||
-                            order.Status === "Returned" ||
-                            order.Status === "Payment Failed"
-                            ? "opacity-40 cursor-not-allowed filter"
-                            : ""
-                            }`}
-                          onClick={() =>
-                            handleCancelClick(order._id, order.ProductId)
-                          }
-                          disabled={
-                            order.Status === "Delivered" ||
-                            order.Status === "Cancelled" ||
-                            order.Status === "Returned" ||
-                            order.Status === "Payment Failed"
-                          }
+                          onClick={() => toggleOrderDetails(order)}
+                          className="flex-1 sm:flex-none p-3.5 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 rounded-2xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800"
+                          title="View Details"
                         >
-                          Cancel Order
+                          <FaEye className="text-xl mx-auto" />
                         </button>
                         <button
-                          className={`flex-1 lg:flex-none bg-yellow-500 text-white px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-yellow-600 transition ${order.Status !== "Delivered" ||
-                            order.Status === "Returned"
-                            ? "opacity-40 cursor-not-allowed filter"
-                            : ""
-                            }`}
-                          onClick={() =>
-                            handleReturnClick(order._id, order.ProductId)
-                          }
-                          disabled={
-                            order.Status !== "Delivered" ||
-                            order.Status === "Returned"
-                          }
+                          onClick={() => navigate(`/track-order/${order._id}`, { state: { order } })}
+                          className="flex-1 sm:flex-none p-3.5 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-800"
+                          title="Track Order"
                         >
-                          Return Order
+                          <FaMapMarkerAlt className="text-xl mx-auto" />
                         </button>
+                        <div className="flex-1 sm:flex-none">
+                          <InvoiceDownloadIcon
+                            order={order}
+                            className="w-full sm:w-auto p-3.5 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400 transition-all border border-transparent hover:border-rose-100 dark:hover:border-rose-800"
+                          />
+                        </div>
+                      </div>
 
-                        {/* Retry Payment Button */}
-                        {order.Status === "Payment Failed" && (
+                      <div className="h-px sm:h-12 w-full sm:w-px bg-gray-100 dark:bg-gray-700 hidden sm:block"></div>
+
+                      <div className="flex flex-col gap-2 w-full sm:w-44">
+                        {((order.Status === "Payment Failed" || order.Status === "Failed" || order.paymentStatus === "Failed") && order.PaymentMethod?.toLowerCase() !== "cod") ? (
                           <button
-                            className="flex-1 lg:flex-none bg-green-500 text-white px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-green-600 transition font-semibold shadow-md"
                             onClick={() => navigate("/retry-payment", {
                               state: {
                                 orderId: order._id,
                                 amount: order.TotalAmount || order.Price * order.Quantity
                               }
                             })}
+                            className="w-full py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 dark:shadow-none bg-gradient-to-r from-emerald-600 to-teal-600"
                           >
                             Retry Payment
                           </button>
+                        ) : order.Status === "Delivered" ? (
+                          <button
+                            onClick={() => handleReturnClick(order._id, order.ProductId)}
+                            disabled={order.Status === "Return Requested" || order.Status === "Returned"}
+                            className="w-full py-3 bg-amber-500 text-white rounded-2xl font-bold hover:bg-amber-600 transition-all shadow-lg shadow-amber-100 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {order.Status === "Return Requested" ? "Return Pending" : "Return Order"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleCancelClick(order._id, order.ProductId)}
+                            disabled={["Cancelled", "Returned", "Return Requested", "Shipped"].includes(order.Status)}
+                            className="w-full py-3 bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 rounded-2xl font-bold hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            Cancel Order
+                          </button>
                         )}
-                      </div>
-
-                      {/* Secondary Actions Row (View, Track, Download) */}
-                      <div className="flex justify-start gap-2">
-                        {/* Full buttons for larger screens */}
-                        <div className="hidden md:flex gap-2">
-                          <button
-                            className="bg-gray-500 p-2 sm:p-3 rounded-full hover:bg-gray-600 transition"
-                            onClick={() => toggleOrderDetails(order)}
-                            title="View Items"
-                          >
-                            <FaEye className="text-white text-lg sm:text-2xl" />
-                          </button>
-                          <div
-                            className="bg-blue-100 p-2 sm:p-3 rounded-full hover:bg-blue-200 transition cursor-pointer"
-                            onClick={() =>
-                              navigate(`/track-order/${order._id}`, {
-                                state: { order },
-                              })
-                            }
-                            title="Track Order"
-                          >
-                            <FaMapMarkerAlt className="text-blue-500 text-lg sm:text-2xl" />
-                          </div>
-                          <InvoiceDownloadIcon order={order} />
-                        </div>
-
-                        {/* Compact version for smaller screens */}
-                        <div className="md:hidden flex items-center gap-2">
-                          <button
-                            className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600 transition"
-                            onClick={() => toggleOrderDetails(order)}
-                            title="View"
-                          >
-                            View Order
-                          </button>
-                          <button
-                            className="bg-blue-100 text-blue-500 px-3 py-2 rounded hover:bg-blue-200 transition"
-                            onClick={() =>
-                              navigate(`/track-order/${order._id}`, {
-                                state: { order },
-                              })
-                            }
-                            title="Track"
-                          >
-                            Track order
-                          </button>
-                          <InvoiceDownloadIcon order={order} />
-                        </div>
+                        <button
+                          onClick={() => navigate(`/track-order/${order._id}`, { state: { order } })}
+                          className="w-full py-2.5 text-xs font-bold text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 group/btn"
+                        >
+                          See full update <FaChevronRight className="group-hover/btn:translate-x-1 transition-transform" />
+                        </button>
                       </div>
                     </div>
                   </div>
-                </li>
-              ))}
-            </ul>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Pagination Controls */}
-          <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Page {page} of {totalPages}
+          {/* Pagination */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-12 gap-6 p-6 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <div className="text-sm font-bold text-gray-500 dark:text-gray-400">
+              Page <span className="text-gray-900 dark:text-white px-2 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg">{page}</span> of {totalPages}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-4">
               <button
                 onClick={handlePreviousPage}
                 disabled={page === 1}
-                className={`px-4 py-2 rounded-lg ${page === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-                  } transition`}
+                className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-md"
               >
                 Previous
               </button>
               <button
                 onClick={handleNextPage}
                 disabled={page === totalPages}
-                className={`px-4 py-2 rounded-lg ${page === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-                  } transition`}
+                className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-indigo-100 dark:shadow-none"
               >
-                Next
+                Next Page
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Keep all the modals and loading state unchanged */}
-      {isFetching && (
-        <div className="flex justify-center items-center mt-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-        </div>
-      )}
+      {/* Modals */}
       {selectedOrder && (
         <OrderDetailsModal order={selectedOrder} onClose={closeModal} />
       )}

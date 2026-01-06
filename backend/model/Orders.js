@@ -138,9 +138,9 @@ const OrdersSchema = new mongoose.Schema(
     TotalAmount: { type: Number, required: true },
 
     // Coupon
-    CoupenId: {
+    CouponId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Coupen",
+      ref: "Coupon",
     },
 
     // Refund tracking
@@ -176,6 +176,7 @@ OrdersSchema.methods.calculateOrderStatus = function () {
     if (status === "Shipped") return "Shipped";
     if (status === "Processing" || status === "Packed") return "Processing";
     if (status === "Confirmed") return "Confirmed";
+    if (status === "Payment Failed") return "Failed";
     return "Pending";
   }
 

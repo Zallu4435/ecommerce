@@ -173,133 +173,129 @@ export const generateInvoicePDF = (order, address) => {
 
   const doc = new jsPDF();
 
-  // --- Color Palette (Professional Dark Blue/Gray) ---
-  const primaryColor = [41, 128, 185]; // A nice professional blue
-  const headingsColor = [44, 62, 80]; // Dark slate
-  const textColor = [50, 50, 50]; // Dark gray for text
+  // --- Constants & Colors ---
+  const primaryColor = [41, 128, 185]; // Professional Blue
+  const darkColor = [44, 62, 80]; // Dark Slate
+  const grayColor = [100, 100, 100]; // Gray text
+  const lightGray = [245, 245, 245]; // Backgrounds
 
-  // --- Constants & Config ---
   const companyName = "VAGO UNIVERSITY";
-  const invoiceDate = new Date().toLocaleDateString("en-IN");
-  const orderDate = new Date(order.createdAt || order.orderDate).toLocaleDateString("en-IN");
+  const companyAddress = ["Bangalore, India", "support@vagouniversity.com"];
+  const invoiceDate = new Date().toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' });
+  const orderDate = new Date(order.createdAt || order.orderDate).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' });
   const invoiceNo = `INV-${(order.orderId || order._id).toString().slice(-6).toUpperCase()}`;
 
-  // Helper: Format Currency (Using 'Rs.' to avoid font encoding issues in PDF)
+  // Helper: Format Currency
   const formatCurrency = (amount) => {
     return `Rs. ${parseFloat(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  // --- Header Section ---
-  doc.setFontSize(24);
-  doc.setTextColor(...headingsColor);
+  // --- Header ---
+  // Logo / Company Name Left
+  doc.setFontSize(22);
+  doc.setTextColor(...primaryColor);
   doc.setFont("helvetica", "bold");
-  doc.text("INVOICE", 14, 20);
+  doc.text(companyName.toUpperCase(), 14, 20);
 
-  // Divider Line
-  doc.setDrawColor(200, 200, 200);
-  doc.setLineWidth(0.5);
-  doc.line(14, 25, 196, 25);
-
-  // Invoice Details (Right Aligned mostly)
-  doc.setFontSize(10);
-  doc.setTextColor(...textColor);
+  // INVOICE Title Right
+  doc.setFontSize(28);
+  doc.setTextColor(...lightGray); // Subtle backing text
   doc.setFont("helvetica", "bold");
-  doc.text(`Invoice No:`, 140, 32);
-  doc.setFont("helvetica", "normal");
-  doc.text(invoiceNo, 196, 32, { align: "right" });
+  doc.text("INVOICE", 140, 25);
+  doc.setTextColor(...darkColor); // Main text
+  doc.setFontSize(14);
+  doc.text("INVOICE", 196, 25, { align: "right" });
 
-  doc.setFont("helvetica", "bold");
-  doc.text(`Invoice Date:`, 140, 37);
-  doc.setFont("helvetica", "normal");
-  doc.text(invoiceDate, 196, 37, { align: "right" });
+  doc.setDrawColor(...primaryColor);
+  doc.setLineWidth(1);
+  doc.line(14, 30, 196, 30);
 
-  // --- Sold By & Billing Address ---
-  const sectionY = 50;
+  // --- Info Columns (Bill To | Order Details) ---
+  const topY = 40;
 
-  // Left Side: Sold By
-  doc.setFontSize(11);
-  doc.setTextColor(...primaryColor); // Blue accent
-  doc.setFont("helvetica", "bold");
-  doc.text("Sold By:", 14, sectionY);
-
-  doc.setTextColor(...textColor); // Reset to black/gray
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text(companyName, 14, sectionY + 6);
-  doc.setFont("helvetica", "normal");
-  doc.text("Bangalore, India", 14, sectionY + 11);
-
-  // Right Side: Billing Address
+  // -- Column 1: Bill To --
   doc.setFontSize(11);
   doc.setTextColor(...primaryColor);
   doc.setFont("helvetica", "bold");
-  doc.text("Billing Address:", 110, sectionY);
+  doc.text("BILL TO:", 14, topY);
 
-  doc.setTextColor(...textColor);
   doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
+  doc.text(address.fullName || address.name || "Customer", 14, topY + 6);
 
-  const addressFields = [
-    { label: "Name", value: address.fullName || address.name || "Customer" },
-    { label: "Phone", value: address.mobile || address.phone },
-    { label: "Street", value: address.street || address.addressLine1 },
-    { label: "City", value: address.city },
-    { label: "State", value: address.state },
-    { label: "Zip", value: address.zipCode || address.pincode },
-    { label: "Country", value: address.country }
-  ].filter(f => f.value);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...grayColor);
+  const addressLines = [
+    address.mobile || address.phone,
+    address.street || address.addressLine1,
+    `${address.city}, ${address.state}`,
+    `${address.zipCode || address.pincode}`,
+    address.country
+  ].filter(line => line); // Remove empty lines
 
-  let currentY = sectionY + 6;
-  addressFields.forEach(field => {
-    doc.setFont("helvetica", "bold");
-    doc.text(`${field.label}:`, 110, currentY);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${field.value}`, 135, currentY);
-    currentY += 5;
+  let addrY = topY + 11;
+  addressLines.forEach(line => {
+    doc.text(line, 14, addrY);
+    addrY += 5;
   });
 
-  // --- Order Details Section ---
-  const orderDetailsY = Math.max(currentY, sectionY + 25) + 10;
-
-  doc.setDrawColor(240, 240, 240);
-  doc.setFillColor(250, 250, 250);
-  doc.rect(14, orderDetailsY - 6, 182, 14, 'F'); // Light gray background box
-
-  doc.setFontSize(10);
-  doc.setTextColor(...headingsColor);
+  // -- Column 2: Order Details --
+  const col2X = 110;
+  doc.setFontSize(11);
+  doc.setTextColor(...primaryColor);
   doc.setFont("helvetica", "bold");
-  doc.text("Order ID:", 18, orderDetailsY);
-  doc.setFont("helvetica", "normal");
-  doc.text(order.orderId || order._id, 40, orderDetailsY);
+  doc.text("ORDER DETAILS:", col2X, topY);
 
-  doc.setFont("helvetica", "bold");
-  doc.text("Order Date:", 110, orderDetailsY);
-  doc.setFont("helvetica", "normal");
-  doc.text(orderDate, 135, orderDetailsY);
+  const orderMeta = [
+    { label: "Invoice No:", value: invoiceNo },
+    { label: "Order ID:", value: `#${order.orderId || order._id}` },
+    { label: "Order Date:", value: orderDate },
+    { label: "Invoice Date:", value: invoiceDate },
+    { label: "Status:", value: (order.orderStatus || order.status || "Confirmed").toUpperCase() },
+    { label: "Payment Method:", value: (order.paymentType || order.paymentMethod || "Online").toUpperCase() },
+  ];
+
+  doc.setFontSize(9);
+  let metaY = topY + 6;
+  orderMeta.forEach(item => {
+    doc.setTextColor(...grayColor);
+    doc.setFont("helvetica", "bold");
+    doc.text(item.label, col2X, metaY);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "normal");
+    doc.text(item.value, col2X + 35, metaY); // Fixed offset for values
+    metaY += 5;
+  });
 
 
-  // --- Invoice Items Table ---
+  // --- Items Table ---
+  // Normalize items
   let items = [];
-  // Logic to handle different order object structures
-  if (order.productName || order.ProductName) {
+  if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+    items = order.items.map(i => ({
+      name: i.productName,
+      qty: i.quantity,
+      price: i.Price || i.price || (i.itemTotal / i.quantity),
+      total: i.itemTotal || (i.Price * i.quantity),
+      status: i.status || order.orderStatus // if individual item status exists
+    }));
+  } else if (order.productName || order.ProductName) {
+    // Single item context
     items.push({
       name: order.productName || order.ProductName,
       qty: order.quantity || order.Quantity || 1,
       price: order.price || order.Price || 0,
       total: order.itemTotal || order.TotalAmount || 0,
     });
-  } else if (order.items && Array.isArray(order.items)) {
-    items = order.items.map(i => ({
-      name: i.productName,
-      qty: i.quantity,
-      price: i.Price || i.price,
-      total: i.itemTotal || (i.Price * i.quantity),
-    }));
   } else {
+    // Fallback for list view objects lacking details
     items.push({
-      name: order.ProductName || `Order #${order.orderId}`,
-      qty: order.Quantity || order.itemCount || 1,
-      price: order.Price || (order.totalAmount / (order.itemCount || 1)) || 0,
-      total: order.TotalAmount || order.totalAmount || 0,
+      name: `Order #${order.orderId}`,
+      qty: order.itemCount || 1,
+      price: order.totalAmount / (order.itemCount || 1),
+      total: order.totalAmount,
     });
   }
 
@@ -312,95 +308,98 @@ export const generateInvoicePDF = (order, address) => {
   ]);
 
   doc.autoTable({
-    startY: orderDetailsY + 15,
-    head: [['SI No', 'Description', 'Unit Price', 'Qty', 'Total Amount']],
+    startY: Math.max(addrY, metaY) + 10,
+    head: [['#', 'Item Description', 'Unit Price', 'Qty', 'Total']],
     body: tableBody,
-    theme: 'plain', // Cleaner look, we add custom borders
+    theme: 'grid',
     headStyles: {
       fillColor: primaryColor,
-      textColor: [255, 255, 255],
+      textColor: 255,
       fontStyle: 'bold',
-      halign: 'left'
+      halign: 'left',
+      cellPadding: 3
     },
     styles: {
       fontSize: 9,
-      cellPadding: 4,
       valign: 'middle',
-      lineColor: [220, 220, 220],
-      lineWidth: 0.1
+      cellPadding: 3,
+      overflow: 'linebreak'
     },
     columnStyles: {
-      0: { cellWidth: 15, halign: 'center' },
-      1: { cellWidth: 'auto' }, // Description gets auto width
-      2: { halign: 'right', cellWidth: 35 },
-      3: { halign: 'center', cellWidth: 20 },
-      4: { halign: 'right', cellWidth: 35 }
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 30, halign: 'right' },
+      3: { cellWidth: 15, halign: 'center' },
+      4: { cellWidth: 30, halign: 'right' }
     },
-    didDrawCell: (data) => {
-      // Add bottom border to every row for a clean look
-      if (data.section === 'body') {
-        doc.setDrawColor(230, 230, 230);
-        doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
-      }
+    footStyles: {
+      fillColor: lightGray,
+      textColor: darkColor,
+      fontStyle: 'bold'
     }
   });
 
-  // --- Footer Summary ---
+  // --- Summary Footer ---
   const finalY = doc.lastAutoTable.finalY + 10;
-  const subTotal = items.reduce((a, b) => a + b.total, 0);
-  const discount = order.CouponDiscount || order.couponDiscount || 0;
-  const grandTotal = subTotal - discount;
 
-  // Right Side: Totals
-  const rightColumnX = 130;
+  // Calculate totals
+  const subTotal = items.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+
+  // Prefer specific fields for discount, fallback to difference if totals don't match
+  const discount = order.couponDiscount || order.discountAmount || (order.subtotal && order.totalAmount ? order.subtotal - order.totalAmount : 0) || 0;
+
+  // Safe grand total
+  const grandTotal = order.totalAmount !== undefined ? parseFloat(order.totalAmount) : (subTotal - discount);
+
+  const couponCode = order.couponCode ? ` (${order.couponCode})` : "";
+
+  const rightColX = 130;
+  const rightValX = 196;
 
   doc.setFontSize(10);
-  doc.setTextColor(...textColor);
 
   // Subtotal
-  doc.text("Subtotal:", rightColumnX, finalY);
-  doc.text(formatCurrency(subTotal), 196, finalY, { align: 'right' });
+  doc.setTextColor(...grayColor);
+  doc.text("Subtotal:", rightColX, finalY);
+  doc.setTextColor(0, 0, 0);
+  doc.text(formatCurrency(subTotal), rightValX, finalY, { align: "right" });
 
   // Discount
   if (discount > 0) {
-    doc.setTextColor(200, 0, 0); // Red for discount
-    doc.text("Discount:", rightColumnX, finalY + 6);
-    doc.text(`-${formatCurrency(discount)}`, 196, finalY + 6, { align: 'right' });
-    doc.setTextColor(...textColor); // Reset
+    doc.setTextColor(220, 53, 69); // Red
+    doc.text(`Discount${couponCode}:`, rightColX, finalY + 6);
+    doc.text(`- ${formatCurrency(discount)}`, rightValX, finalY + 6, { align: "right" });
   }
 
-  // Grand Total Box
-  const totalY = finalY + (discount > 0 ? 12 : 8);
-  doc.setFillColor(245, 245, 245);
-  doc.rect(rightColumnX - 5, totalY - 5, 196 - (rightColumnX - 5), 10, 'F');
+  // Grand Total Background
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.rect(rightColX - 5, finalY + 12, (rightValX - rightColX) + 10, 10, 'F');
 
+  // Grand Total Text
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Grand Total:", rightColumnX, totalY + 2);
-  doc.text(formatCurrency(grandTotal), 196, totalY + 2, { align: 'right' });
+  doc.text("Grand Total:", rightColX, finalY + 18.5);
+  doc.text(formatCurrency(grandTotal), rightValX, finalY + 18.5, { align: "right" });
 
 
-  // Left Side: Words & Signatures
-  doc.setFont("helvetica", "normal");
+  // --- Bottom Footer ---
+  const pageHeight = doc.internal.pageSize.height;
+
+  // Amount in words
+  doc.setTextColor(...darkColor);
   doc.setFontSize(10);
-  doc.text("Amount in Words:", 14, finalY + 5);
+  doc.setFont("helvetica", "normal");
+  doc.text("Amount in Words:", 14, finalY + 6);
   doc.setFont("helvetica", "italic");
-  doc.text(`${convertNumberToWords(Math.round(grandTotal))} Only`, 14, finalY + 10);
+  doc.text(`${convertNumberToWords(Math.round(grandTotal))} Only`, 14, finalY + 11);
 
-  // Signatures
-  const signatureY = finalY + 40;
+  // Contact Info
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-
-  doc.text("For Vago University:", 196, signatureY, { align: 'right' });
-  // You could add an image here using doc.addImage() if you had a signature image
-  doc.setFont("helvetica", "bold");
-  doc.text("Authorized Signatory", 196, signatureY + 15, { align: 'right' });
-
-  // Disclaimer Footer
-  doc.setTextColor(150, 150, 150);
-  doc.setFontSize(8);
-  doc.text("This is a computer generated invoice and does not require a physical signature.", 105, 285, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setTextColor(...grayColor);
+  doc.text("Thank you for your business!", 105, pageHeight - 20, { align: "center" });
+  doc.text("support@vagouniversity.com  |  www.vagouniversity.com", 105, pageHeight - 15, { align: "center" });
 
   doc.save(`Invoice_${order.orderId || order._id}.pdf`);
 };

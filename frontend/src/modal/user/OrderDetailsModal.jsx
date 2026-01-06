@@ -1,9 +1,11 @@
 import { useGetAddressByOrderIdQuery } from "../../redux/apiSliceFeatures/OrderApiSlice"
 import { FaTimes } from "react-icons/fa"
+import { useNavigate } from "react-router-dom"
 import LoadingSpinner from "../../components/LoadingSpinner"
 import usePreventBodyScroll from "../../hooks/usePreventBodyScroll"
 
 const OrderDetailsModal = ({ order, onClose, isAdmin = false }) => {
+  const navigate = useNavigate();
   const {
     data: address,
     error,
@@ -98,7 +100,22 @@ const OrderDetailsModal = ({ order, onClose, isAdmin = false }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end mt-4 lg:mt-6">
+        <div className="flex justify-end mt-4 lg:mt-6 gap-2">
+          {!isAdmin && (order.Status === "Payment Failed" || order.Status === "Failed" || order.paymentStatus === "Failed") && order.PaymentMethod?.toLowerCase() !== "cod" && (
+            <button
+              onClick={() => {
+                navigate("/retry-payment", {
+                  state: {
+                    orderId: order._id, // Aggregation pipeline uses _id
+                    amount: order.TotalAmount || order.Price * order.Quantity
+                  }
+                });
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 text-white px-4 lg:px-6 py-2 rounded-lg transition duration-300 text-sm lg:text-base shadow-md"
+            >
+              Retry Payment
+            </button>
+          )}
           <button
             onClick={onClose}
             className={`${isAdmin ? 'bg-red-400 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 shadow-lg' : 'bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 shadow-md'} text-white px-4 lg:px-6 py-2 rounded-lg transition duration-300 text-sm lg:text-base`}

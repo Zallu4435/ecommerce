@@ -24,7 +24,7 @@ const ShippingAddress = ({ onAddressSelect }) => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      username: "",
+      fullName: "",
       phone: "",
       zipCode: "",
       house: "",
@@ -42,9 +42,13 @@ const ShippingAddress = ({ onAddressSelect }) => {
       const primaryIndex = addresses.findIndex((addr) => addr.isPrimary);
       const defaultIndex = primaryIndex !== -1 ? primaryIndex : 0;
 
+      const selectedAddress = addresses[defaultIndex];
       setSelectedAddressIndex(defaultIndex);
-      setCurrentAddress(addresses[defaultIndex]);
-      reset(addresses[defaultIndex]);
+      setCurrentAddress(selectedAddress);
+      reset({
+        ...selectedAddress,
+        zipCode: selectedAddress.zipCode ? String(selectedAddress.zipCode) : ""
+      });
     }
   }, [addresses, reset]);
 
@@ -61,7 +65,7 @@ const ShippingAddress = ({ onAddressSelect }) => {
 
   const handleReset = () => {
     reset({
-      username: "",
+      fullName: "",
       phone: "",
       zipCode: "",
       house: "",
@@ -98,33 +102,35 @@ const ShippingAddress = ({ onAddressSelect }) => {
 
   if (isError) {
     return (
-      <div className="text-center text-red-500">Error loading addresses.</div>
+      <div className="text-center text-red-500 py-10 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+        Error loading addresses.
+      </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 p-6 shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 dark:text-gray-200 text-gray-800">
+    <div className="bg-white dark:bg-gray-900 p-6 sm:p-8 shadow-xl shadow-gray-200/50 dark:shadow-none rounded-[2rem] border border-gray-100 dark:border-gray-800 transition-all duration-300">
+      <h2 className="text-2xl font-black mb-8 text-gray-900 dark:text-white tracking-tight">
         Shipping Address
       </h2>
 
       {isEditing ? (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { name: "username", placeholder: "Enter full name" },
-              { name: "phone", placeholder: "Enter phone number" },
-              { name: "zipCode", placeholder: "Enter zip code" },
-              { name: "house", placeholder: "Enter house/apartment" },
-              { name: "street", placeholder: "Enter street" },
-              { name: "landmark", placeholder: "Enter landmark (optional)" },
-              { name: "city", placeholder: "Enter city" },
-              { name: "state", placeholder: "Enter state" }
+              { name: "fullName", placeholder: "Enter full name", label: "Full Name" },
+              { name: "phone", placeholder: "Enter phone number", label: "Phone" },
+              { name: "zipCode", placeholder: "Enter zip code", label: "Zip Code" },
+              { name: "house", placeholder: "Enter house/apartment", label: "House No." },
+              { name: "street", placeholder: "Enter street", label: "Street" },
+              { name: "landmark", placeholder: "Enter landmark (optional)", label: "Landmark" },
+              { name: "city", placeholder: "Enter city", label: "City" },
+              { name: "state", placeholder: "Enter state", label: "State" }
             ].map(
-              ({ name, placeholder }) => (
-                <div key={name}>
-                  <label className="block text-sm font-medium dark:text-gray-200 text-gray-700 mb-2">
-                    {name.charAt(0).toUpperCase() + name.slice(1)}
+              ({ name, placeholder, label }) => (
+                <div key={name} className={name === 'street' || name === 'house' ? 'md:col-span-2' : ''}>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 ml-1">
+                    {label}
                   </label>
                   <Controller
                     name={name}
@@ -133,153 +139,124 @@ const ShippingAddress = ({ onAddressSelect }) => {
                       <input
                         {...field}
                         placeholder={placeholder}
-                        className="w-full p-3 dark:bg-gray-300 text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/20 transition-all duration-300 placeholder:text-gray-400 dark:placeholder:text-gray-600"
                       />
                     )}
                   />
                   {errors[name] && (
-                    <p className="text-red-500 text-sm">{errors[name]?.message}</p>
+                    <p className="text-red-500 text-xs font-medium mt-1.5 ml-2">{errors[name]?.message}</p>
                   )}
                 </div>
               )
             )}
           </div>
-          <div className="flex justify-end gap-4 mt-6">
+          <div className="flex flex-col sm:flex-row justify-end gap-4 mt-8">
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+              className="px-8 py-3.5 text-gray-500 dark:text-gray-400 font-bold hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+              className="px-10 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/20 transition-all duration-300 transform hover:scale-[1.02]"
             >
-              Save
+              Save Address
             </button>
           </div>
         </form>
       ) : (
-        <div>
-          <h3 className="text-lg font-semibold mb-2 dark:text-gray-200 text-gray-800">
-            Selected Address:
-          </h3>
-          <div className="p-4 bg-gray-100 dark:bg-gray-600 rounded-lg">
+        <div className="animate-fadeIn">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              Selected Location
+            </h3>
+          </div>
+          <div className="p-6 bg-gray-50 dark:bg-gray-800/40 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 relative group overflow-hidden">
             {currentAddress ? (
-              <>
-                <div className="space-y-2 mt-2">
-                  <div className="flex gap-2">
-                    <span className="text-gray-500 w-16 text-sm">Name:</span>
-                    <span className="text-sm dark:text-gray-200 text-gray-700 font-medium">{currentAddress.username}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-gray-500 w-16 text-sm">Phone:</span>
-                    <span className="text-sm dark:text-gray-200 text-gray-700 font-medium">{currentAddress.phone}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-gray-500 w-16 text-sm">Street:</span>
-                    <span className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.street}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-gray-500 w-16 text-sm">City:</span>
-                    <span className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.city}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-gray-500 w-16 text-sm">State:</span>
-                    <span className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.state}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-gray-500 w-16 text-sm">Zip:</span>
-                    <span className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.zipCode}</span>
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Recipient</p>
+                  <p className="text-base font-bold text-gray-900 dark:text-white">{currentAddress.fullName}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{currentAddress.phone}</p>
                 </div>
-              </>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Address</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                    {currentAddress.house}, {currentAddress.street}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {currentAddress.city}, {currentAddress.state} - <span className="font-bold">{currentAddress.zipCode}</span>
+                  </p>
+                  {currentAddress.landmark && (
+                    <p className="text-xs italic text-blue-500 dark:text-blue-400 mt-1">Near {currentAddress.landmark}</p>
+                  )}
+                </div>
+              </div>
             ) : (
-              <p className="text-sm dark:text-gray-200 text-gray-700">No address selected</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4 italic">Please select or add a shipping address to proceed.</p>
             )}
           </div>
-          <div className="flex justify-end gap-4 mt-6">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8">
             {addresses.length > 1 && (
               <button
                 type="button"
                 onClick={() => setShowModal(true)}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+                className="px-6 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300"
               >
-                Change Address
+                Choose Another
               </button>
             )}
             <button
               type="button"
               onClick={handleReset}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-2 rounded-md transition duration-200"
+              className="px-8 py-3.5 bg-gray-900 dark:bg-gray-700 text-white font-bold rounded-2xl hover:bg-gray-800 dark:hover:bg-gray-600 transition-all duration-300 shadow-lg"
             >
-              New Address
+              Add New Address
             </button>
           </div>
         </div>
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-lg w-full shadow-lg relative">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 p-6 sm:p-8 rounded-[2.5rem] max-w-lg w-full shadow-2xl relative border border-gray-100 dark:border-gray-800 animate-slideUp max-h-[85vh] flex flex-col">
             <button
-              className="absolute top-3 right-3 text-gray-500 dark:text-gray-300 hover:text-red-500"
+              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-red-500 transition-colors"
               onClick={() => setShowModal(false)}
             >
               <FaTimes className="w-5 h-5" />
             </button>
-            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
-              Select an Address:
+            <h3 className="text-2xl font-black mb-6 text-gray-900 dark:text-white pr-10 tracking-tight">
+              Select Address
             </h3>
-            <ul className="space-y-3">
+            <div className="overflow-y-auto pr-2 custom-scrollbar space-y-3 flex-1">
               {addresses.map((address, index) => (
-                <li
+                <div
                   key={index}
-                  className={`cursor-pointer rounded-md p-3 transition duration-200 border ${index === selectedAddressIndex
-                    ? "bg-blue-500 dark:bg-blue-600 border-blue-600 dark:border-blue-700 text-white"
-                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                  onClick={() => handleSelectAddress(index)}
+                  className={`cursor-pointer rounded-[1.5rem] p-5 transition-all duration-300 border-2 text-left group ${index === selectedAddressIndex
+                    ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30"
+                    : "bg-gray-50 dark:bg-gray-800/50 border-transparent hover:border-blue-200 dark:hover:border-blue-900 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800"
                     }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleSelectAddress(index)}
-                    className="text-left w-full"
-                  >
-                    <div className="font-semibold mb-1">{address.username || address.name || 'No Name'}</div>
-                    <div className="text-sm space-y-1">
-                      <div className="flex gap-2">
-                        <span className="opacity-70 w-12">Street:</span>
-                        <span>{address.house ? `${address.house}, ` : ''}{address.street || address.address || 'No Street'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="opacity-70 w-12">City:</span>
-                        <span>{address.city || 'No City'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="opacity-70 w-12">State:</span>
-                        <span>{address.state || 'No State'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="opacity-70 w-12">Zip:</span>
-                        <span>{address.zipCode || address.zip || 'No Zip'}</span>
-                      </div>
-                      {address.phone && (
-                        <div className="flex gap-2">
-                          <span className="opacity-70 w-12">Phone:</span>
-                          <span>{address.phone}</span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                </li>
+                  <div className={`font-bold text-lg mb-2 ${index === selectedAddressIndex ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                    {address.fullName}
+                  </div>
+                  <div className="text-sm space-y-1 opacity-90 font-medium">
+                    <p>{address.house}, {address.street}</p>
+                    <p>{address.city}, {address.state} - {address.zipCode}</p>
+                    <p className="text-xs mt-2 opacity-75">{address.phone}</p>
+                  </div>
+                </div>
               ))}
-            </ul>
-            <div className="flex justify-end mt-4">
+            </div>
+            <div className="flex justify-end mt-8">
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-md transition duration-200"
+                className="px-8 py-3 text-gray-500 dark:text-gray-400 font-bold hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 Close
               </button>

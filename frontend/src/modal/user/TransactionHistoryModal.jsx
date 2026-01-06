@@ -7,16 +7,31 @@ const TransactionModal = ({ transactions, closeModal, isOpen }) => {
   if (!isOpen) return null;
 
   const getTransactionDetails = (description) => {
+    // Helper to format Mongo IDs to ORD-XXXXXX
+    const formatDescriptionId = (text) => {
+      const mongoIdRegex = /[a-f\d]{24}/i;
+      const match = text.match(mongoIdRegex);
+      if (match) {
+        const id = match[0];
+        const formattedId = `ORD-${id.slice(-6).toUpperCase()}`;
+        return text.replace(id, formattedId);
+      }
+      return text;
+    };
+
+    const formattedText = formatDescriptionId(description);
+
     if (description.includes("Refund for order cancel")) {
-      return "Refund issued for a canceled order.";
+      return formatDescriptionId(description); // Show "Refund for order cancel... ORD-..."
     } else if (description.includes("Refund for returned item")) {
-      return "Refund issued for a returned item.";
-    } else if (description.includes("Payment for order")) {
-      return "Payment made for an order.";
+      return formatDescriptionId(description);
+    } else if (description.toLowerCase().includes("payment for order")) {
+      // Handles both "Payment" and "Failed payment"
+      return formattedText;
     } else if (description.includes("Wallet recharge")) {
       return "Funds added to the wallet.";
     } else {
-      return description;
+      return formattedText;
     }
   };
 
@@ -40,11 +55,10 @@ const TransactionModal = ({ transactions, closeModal, isOpen }) => {
               >
                 <div className="flex justify-between items-center">
                   <p
-                    className={`font-bold text-lg ${
-                      transaction.type === "Credit"
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}
+                    className={`font-bold text-lg ${transaction.type === "Credit"
+                      ? "text-green-500"
+                      : "text-red-500"
+                      }`}
                   >
                     {transaction.type}
                   </p>

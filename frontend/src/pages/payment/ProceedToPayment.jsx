@@ -40,6 +40,8 @@ const ProceedToPaymentPage = () => {
   };
 
   const handleConfirmPayment = async () => {
+    if (loading || isPaymentProcessing) return;
+
     try {
       setLoading(true);
 
@@ -56,6 +58,30 @@ const ProceedToPaymentPage = () => {
             return;
           }
 
+          // STEP 1: Create order first with pending payment status
+          let orderData;
+          try {
+            const paymentData = {
+              address,
+              order,
+              couponCode: coupon ? coupon.couponCode : null,
+              payment: {
+                paymentMethod: "razorpay",
+                onlinePaymentMethod: "razorpay",
+              },
+              productId: null,
+              quantity: null,
+            };
+
+            orderData = await processPayment(paymentData).unwrap();
+          } catch (error) {
+            console.error("Error creating order:", error);
+            toast.error("Failed to create order. Please try again.");
+            setLoading(false);
+            return;
+          }
+
+          // STEP 2: Open Razorpay modal for payment
           const options = {
             key: import.meta.env.VITE_RAZORPAY_KEY,
             amount: razorpayAmount,
@@ -63,150 +89,119 @@ const ProceedToPaymentPage = () => {
             name: "Test Business",
             description: "Test Transaction",
             image: "https://example.com/logo.png",
+            order_id: orderData.razorpayOrderId,
             handler: async function (response) {
-              toast.success("Payment successful!");
-
               try {
-                const paymentData = {
-                  address,
-                  order,
-                  couponCode: coupon ? coupon.couponCode : null,
-                  payment: {
-                    paymentMethod: "razorpay",
-                    onlinePaymentMethod: "razorpay",
-                  },
-                  productId: null,
-                  quantity: null,
-                };
+                const axios = (await import('axios')).default;
+                await axios.post("/api/userProfile/verify-razorpay-payment", {
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id || orderData.razorpayOrderId,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: orderData.orderId,
+                  amount: razorpayAmount / 100,
+                });
 
-                const data = await processPayment(paymentData).unwrap();
-
+                toast.success("Payment successful!");
                 navigate("/payment-success", {
-                  state: { paymentId: data.paymentId, orderId: data.orderId },
+                  state: { paymentId: orderData.paymentId, orderId: orderData.orderId },
                 });
               } catch (error) {
-                console.error("Error processing payment:", error);
-                toast.error(
-                  "Failed to process the order or payment. Please try again."
-                );
+                console.error("Error verifying payment:", error);
+                toast.error("Payment verification failed. Please contact support.");
+                navigate("/payment-failure", {
+                  state: {
+                    orderId: orderData.orderId,
+                    reason: "Payment verification failed",
+                    amount: razorpayAmount / 100,
+                  },
+                });
               } finally {
                 setLoading(false);
               }
             },
             modal: {
-              ondismiss: function () {
-                // User closed the payment modal without completing payment
+              ondismiss: async function () {
                 toast.warning("Payment cancelled. You can retry anytime from your orders.");
-                setLoading(false);
+                try {
+                  const axios = (await import('axios')).default;
+                  await axios.post("/api/userProfile/mark-payment-failed", {
+                    orderId: orderData.orderId,
+                    reason: "Payment cancelled by user"
+                  });
+                } catch (error) {
+                  console.error("Error marking payment as failed:", error);
+                }
 
-                // Optionally navigate to orders page or stay on payment page
-                // navigate("/orders");
+                navigate("/payment-failure", {
+                  state: {
+                    orderId: orderData.orderId,
+                    reason: "Payment cancelled by user",
+                    amount: razorpayAmount / 100,
+                    orderDetails: order,
+                    canRetry: true,
+                  },
+                });
+                setLoading(false);
               },
-              escape: true,
-              backdropclose: false,
             },
-            prefill: {
-              name: "John Doe",
-              email: "john.doe@example.com",
-              contact: "9876543210",
-            },
-            notes: {
-              address: "Dummy Address for Testing",
-            },
-            theme: {
-              color: "#3399cc",
-            },
+            theme: { color: "#3399cc" },
           };
 
           const razorpayInstance = new window.Razorpay(options);
           razorpayInstance.on('payment.failed', async function (response) {
-            // Payment failed (card declined, insufficient funds, etc.)
-            console.error("Razorpay payment failed:", response.error);
-
+            toast.error("Payment failed. Please try again.");
             try {
-              // Create order with failed payment status
-              const paymentData = {
-                address,
-                order,
-                couponCode: coupon ? coupon.couponCode : null,
-                payment: {
-                  paymentMethod: "razorpay",
-                  onlinePaymentMethod: "razorpay",
-                },
-                productId: null,
-                quantity: null,
-              };
-
-              const data = await processPayment(paymentData).unwrap();
-
-              // Navigate to payment failure page with order details
-              navigate("/payment-failure", {
-                state: {
-                  orderId: data.orderId,
-                  reason: response.error.description || "Payment failed. Please try again.",
-                  amount: razorpayAmount / 100,
-                  orderDetails: order
-                }
+              const axios = (await import('axios')).default;
+              await axios.post("/api/userProfile/mark-payment-failed", {
+                orderId: orderData.orderId,
+                reason: response.error.description || "Payment failed"
               });
             } catch (error) {
-              console.error("Error creating failed order:", error);
-              toast.error("Payment failed. Please try again.");
-              // Still navigate to failure page even if order creation fails
-              navigate("/payment-failure", {
-                state: {
-                  orderId: null,
-                  reason: response.error.description || "Payment failed. Please try again.",
-                  amount: razorpayAmount / 100
-                }
-              });
+              console.error("Error marking payment as failed:", error);
             }
-
+            navigate("/payment-failure", {
+              state: {
+                orderId: orderData.orderId,
+                reason: response.error.description || "Payment failed",
+                amount: razorpayAmount / 100,
+                orderDetails: order
+              }
+            });
             setLoading(false);
           });
-
           razorpayInstance.open();
         } else if (payment.onlinePaymentMethod === "card") {
-          const isCardPaymentSuccessful = await simulateCardPayment();
-          if (isCardPaymentSuccessful) {
-            try {
-              const paymentData = {
-                address,
-                order,
-                couponCode: coupon ? coupon.couponCode : null,
-                payment: {
-                  paymentMethod: "card",
-                  onlinePaymentMethod: "card",
-                },
-                productId: null,
-                quantity: null,
-              };
+          try {
+            const paymentData = {
+              address,
+              order,
+              couponCode: coupon ? coupon.couponCode : null,
+              payment: { paymentMethod: "card", onlinePaymentMethod: "card" },
+              productId: null,
+              quantity: null,
+            };
 
-              const data = await processPayment(paymentData).unwrap();
-              toast.success("Wallet payment successful!");
-              navigate("/payment-success", {
-                state: { paymentId: data.paymentId, orderId: data.orderId },
-              });
-            } catch (error) {
-              console.error("Error processing wallet payment:", error);
-              const errorMessage = error?.data?.message || error?.message || "Wallet payment failed. Please check your balance and try again.";
-              toast.error(errorMessage);
-
-              // Navigate to payment failure page
-              navigate("/payment-failure", {
-                state: {
-                  orderId: error?.data?.orderId || null,
-                  reason: errorMessage,
-                  amount: coupon ? discountedPrice : order.total,
-                  orderDetails: order
-                },
-                replace: true
-              });
-            }
-          } else {
-            toast.error("Card payment failed. Please try again.");
+            const data = await processPayment(paymentData).unwrap();
+            toast.success("Wallet payment successful!");
+            navigate("/payment-success", {
+              state: { paymentId: data.paymentId, orderId: data.orderId },
+            });
+          } catch (error) {
+            const errorMessage = error?.data?.message || "Wallet payment failed.";
+            toast.error(errorMessage);
+            navigate("/payment-failure", {
+              state: {
+                orderId: error?.data?.orderId,
+                reason: errorMessage,
+                amount: coupon ? discountedPrice : order.total,
+                orderDetails: order,
+                canRetry: error?.data?.canRetry,
+              },
+              replace: true
+            });
+          } finally {
+            setLoading(false);
           }
-        } else {
-          toast.error("Unsupported online payment method.");
         }
       } else if (payment.paymentMethod === "cod") {
         toast.info("Cash on Delivery selected. Confirming order...");
@@ -216,37 +211,27 @@ const ProceedToPaymentPage = () => {
               address,
               order,
               couponCode: coupon ? coupon.couponCode : null,
-              payment: {
-                paymentMethod: "cod",
-                onlinePaymentMethod: null,
-              },
+              payment: { paymentMethod: "cod", onlinePaymentMethod: null },
               productId: null,
               quantity: null,
             };
 
             const data = await processPayment(paymentData).unwrap();
-
             navigate("/payment-success", {
               state: { paymentId: data.paymentId, orderId: data.orderId },
             });
           } catch (error) {
-            console.error("Error processing payment:", error);
-            toast.error(
-              error?.data?.message ||
-              "Failed to process the order or payment. Please try again."
-            );
+            toast.error(error?.data?.message || "Failed to process the order.");
+            setLoading(false);
           }
         }, 1500);
       } else {
         toast.error("Invalid payment method selected.");
+        setLoading(false);
       }
     } catch (error) {
-      console.error("An error occurred:", error?.message || error);
-      toast.error(
-        error?.data?.message,
-        "An unexpected error occurred. Please try again later."
-      );
-    } finally {
+      console.error("An error occurred:", error);
+      toast.error("An unexpected error occurred.");
       setLoading(false);
     }
   };

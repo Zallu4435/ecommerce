@@ -1,4 +1,5 @@
 const Coupon = require("../model/Coupon");
+const Product = require("../model/Products");
 const ErrorHandler = require("../utils/ErrorHandler");
 const mongoose = require("mongoose");
 
@@ -125,12 +126,12 @@ exports.getAllCoupons = async (req, res, next) => {
 
     const searchFilter = search
       ? {
-          $or: [
-            { couponCode: { $regex: search, $options: "i" } },
-            { title: { $regex: search, $options: "i" } },
-            { description: { $regex: search, $options: "i" } },
-          ],
-        }
+        $or: [
+          { couponCode: { $regex: search, $options: "i" } },
+          { title: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ],
+      }
       : {};
 
     const coupons = await Coupon.find(searchFilter)
@@ -188,7 +189,7 @@ exports.createCoupon = async (req, res, next) => {
     }
 
     const couponCodeNormalized = req.body.couponCode.trim().toUpperCase();
-    
+
     // Validate coupon code format
     if (!/^[A-Z0-9_-]+$/.test(couponCodeNormalized)) {
       return next(new ErrorHandler("Coupon code can only contain uppercase letters, numbers, hyphens, and underscores", 400));
@@ -265,7 +266,7 @@ exports.createCoupon = async (req, res, next) => {
 
     const expiryDate = new Date(req.body.expiry);
     const now = new Date();
-    
+
     if (expiryDate <= now) {
       return next(new ErrorHandler("Expiry date must be in the future", 400));
     }
@@ -273,7 +274,7 @@ exports.createCoupon = async (req, res, next) => {
     // Check if expiry is too far in the future (e.g., more than 2 years)
     const twoYearsFromNow = new Date();
     twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
-    
+
     if (expiryDate > twoYearsFromNow) {
       return next(new ErrorHandler("Expiry date cannot be more than 2 years in the future", 400));
     }
@@ -309,8 +310,8 @@ exports.createCoupon = async (req, res, next) => {
     // Create coupon
     let coupon;
     try {
-      coupon = await Coupon.create({ 
-        ...req.body, 
+      coupon = await Coupon.create({
+        ...req.body,
         couponCode: couponCodeNormalized,
         usageCount: 0
       });
@@ -353,7 +354,7 @@ exports.updateCoupon = async (req, res, next) => {
     }
 
     const couponCodeNormalized = req.body.couponCode.trim().toUpperCase();
-    
+
     // Validate coupon code format
     if (!/^[A-Z0-9_-]+$/.test(couponCodeNormalized)) {
       return next(new ErrorHandler("Coupon code can only contain uppercase letters, numbers, hyphens, and underscores", 400));
@@ -417,14 +418,14 @@ exports.updateCoupon = async (req, res, next) => {
 
       const expiryDate = new Date(req.body.expiry);
       const now = new Date();
-      
+
       if (expiryDate <= now) {
         return next(new ErrorHandler("Expiry date must be in the future", 400));
       }
 
       const twoYearsFromNow = new Date();
       twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
-      
+
       if (expiryDate > twoYearsFromNow) {
         return next(new ErrorHandler("Expiry date cannot be more than 2 years in the future", 400));
       }
@@ -589,12 +590,30 @@ exports.validateCoupon = async (req, res, next) => {
     }
 
     // Check product applicability if provided
-    if (productIds && productIds.length > 0 && coupon.applicableProducts.length > 0) {
-      const hasApplicableProduct = productIds.some(pid => 
-        coupon.applicableProducts.some(apid => apid.toString() === pid.toString())
-      );
-      if (!hasApplicableProduct) {
-        return next(new ErrorHandler("This coupon is not applicable for the selected products", 400));
+    let isProductEligible = true;
+    if (productIds && productIds.length > 0) {
+      // If strict product/category rules exist, we must verify matches
+      if (coupon.applicableProducts.length > 0 || coupon.applicableCategories.length > 0) {
+        // Fetch products to check categories
+        const products = await Product.find({ _id: { $in: productIds } });
+
+        let hasMatch = false;
+
+        // 1. Check Product ID Match
+        if (coupon.applicableProducts.length > 0) {
+          const productMatch = products.some(p => coupon.applicableProducts.includes(p._id.toString()));
+          if (productMatch) hasMatch = true;
+        }
+
+        // 2. Check Category Match (if not already matched by ID)
+        if (!hasMatch && coupon.applicableCategories.length > 0) {
+          const categoryMatch = products.some(p => coupon.applicableCategories.includes(p.category));
+          if (categoryMatch) hasMatch = true;
+        }
+
+        if (!hasMatch) {
+          return next(new ErrorHandler("This coupon is not applicable for any items in your cart", 400));
+        }
       }
     }
 

@@ -1,51 +1,40 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import axios from "axios";
 import { ArrowLeft, Wallet, CreditCard, Banknote, AlertCircle, Loader2 } from "lucide-react";
+import { useGetOrderByIdQuery } from "../../redux/apiSliceFeatures/OrderApiSlice";
+import { useRetryPaymentMutation, useVerifyRazorpayPaymentMutation } from "../../redux/apiSliceFeatures/userProfileApi";
 
 const RetryPayment = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { orderId, amount, orderDetails } = location.state || {};
+    const { orderId, amount } = location.state || {};
 
     const [paymentMethod, setPaymentMethod] = useState("");
     const [loading, setLoading] = useState(false);
-    const [orderData, setOrderData] = useState(null);
-    const [loadingOrder, setLoadingOrder] = useState(true);
+
+    // Using RTK Query hooks
+    const { data: orderResponse, isLoading: loadingOrder } = useGetOrderByIdQuery(orderId, {
+        skip: !orderId
+    });
+
+    const [retryPayment] = useRetryPaymentMutation();
+    const [verifyRazorpayPayment] = useVerifyRazorpayPaymentMutation();
+
+    const orderData = orderResponse?.order || orderResponse;
 
     // Edge case: No state provided
     useEffect(() => {
         if (!orderId) {
             toast.error("Invalid access. Please select an order to retry payment.");
             navigate("/profile/order");
-            return;
+        } else if (orderData && orderData.paymentStatus === "Successful") {
+            // Edge case: Payment already successful
+            toast.info("This order has already been paid for.");
+            navigate("/profile/order");
         }
+    }, [orderId, navigate, orderData]);
 
-        // Fetch order details to verify it exists and needs payment
-        const fetchOrderDetails = async () => {
-            try {
-                setLoadingOrder(true);
-                const response = await axios.get(`/orders/${orderId}`);
-                setOrderData(response.data);
-
-                // Edge case: Payment already successful
-                if (response.data.paymentStatus === "Successful") {
-                    toast.info("This order has already been paid for.");
-                    navigate("/profile/order");
-                    return;
-                }
-            } catch (error) {
-                console.error("Error fetching order:", error);
-                toast.error("Failed to load order details");
-                navigate("/profile/order");
-            } finally {
-                setLoadingOrder(false);
-            }
-        };
-
-        fetchOrderDetails();
-    }, [orderId, navigate]);
 
     const loadRazorpayScript = () => {
         return new Promise((resolve) => {
@@ -57,7 +46,7 @@ const RetryPayment = () => {
         });
     };
 
-    const handleRazorpayPayment = async (orderAmount) => {
+    const handleRazorpayPayment = async (orderAmount, razorpayOrderId) => {
         const scriptLoaded = await loadRazorpayScript();
         if (!scriptLoaded) {
             toast.error("Razorpay SDK failed to load. Please try again later.");
@@ -68,18 +57,19 @@ const RetryPayment = () => {
             key: import.meta.env.VITE_RAZORPAY_KEY,
             amount: Math.round(orderAmount * 100),
             currency: "INR",
-            name: "Your Store",
+            name: "VAGO University",
             description: `Retry Payment for Order`,
+            order_id: razorpayOrderId, // Add the Razorpay Order ID here
             handler: async function (response) {
                 try {
-                    // Verify payment on backend
-                    await axios.post("/userProfile/verify-razorpay-payment", {
+                    // Verify payment on backend using RTK Query
+                    const result = await verifyRazorpayPayment({
                         razorpay_payment_id: response.razorpay_payment_id,
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_signature: response.razorpay_signature,
                         orderId: orderId,
                         amount: orderAmount
-                    });
+                    }).unwrap();
 
                     toast.success("Payment successful!");
                     navigate("/payment-success", {
@@ -135,31 +125,33 @@ const RetryPayment = () => {
         try {
             setLoading(true);
 
+            // For wallet and COD, call backend retry API via RTK Query
+            // For Razorpay, we also first call this to get the Order ID
+            const response = await retryPayment({
+                orderId,
+                paymentMethod
+            }).unwrap();
+
             if (paymentMethod === "razorpay") {
-                await handleRazorpayPayment(amount);
+                // If it's Razorpay, the backend now returns razorpayOrderId
+                await handleRazorpayPayment(amount, response.razorpayOrderId);
                 return;
             }
 
-            // For wallet and COD, call backend retry API
-            const response = await axios.post("/userProfile/retry-payment", {
-                orderId,
-                paymentMethod
-            });
-
-            if (response.data.paymentStatus === "Successful") {
+            if (response.paymentStatus === "Successful") {
                 toast.success("Payment successful!");
                 navigate("/payment-success", {
-                    state: { orderId, paymentId: response.data.paymentId }
+                    state: { orderId, paymentId: response.paymentId }
                 });
             } else if (paymentMethod === "cod") {
                 toast.success("Order updated to Cash on Delivery!");
                 navigate("/payment-success", {
-                    state: { orderId, paymentId: response.data.paymentId, isCOD: true }
+                    state: { orderId, paymentId: response.paymentId, isCOD: true }
                 });
             }
         } catch (error) {
             console.error("Retry payment error:", error);
-            const errorMessage = error.response?.data?.message || "Failed to process payment. Please try again.";
+            const errorMessage = error?.data?.message || error?.message || "Failed to process payment. Please try again.";
             toast.error(errorMessage);
 
             // Edge case: Insufficient wallet balance
@@ -248,19 +240,19 @@ const RetryPayment = () => {
                                 {/* Wallet */}
                                 <label
                                     className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${paymentMethod === "card"
-                                            ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
-                                            : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
+                                        : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                                         }`}
                                 >
                                     <input
                                         type="radio"
                                         name="payment"
-                                        value="card"
-                                        checked={paymentMethod === "card"}
+                                        value="wallet"
+                                        checked={paymentMethod === "wallet"}
                                         onChange={(e) => setPaymentMethod(e.target.value)}
                                         className="mr-4 w-5 h-5 text-blue-600"
                                     />
-                                    <Wallet className={`w-6 h-6 mr-3 ${paymentMethod === "card" ? "text-blue-600" : "text-gray-400"}`} />
+                                    <Wallet className={`w-6 h-6 mr-3 ${paymentMethod === "wallet" ? "text-blue-600" : "text-gray-400"}`} />
                                     <div className="flex-1">
                                         <span className="font-semibold text-gray-900 dark:text-white">Wallet</span>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">Pay using your wallet balance</p>
@@ -270,8 +262,8 @@ const RetryPayment = () => {
                                 {/* Razorpay */}
                                 <label
                                     className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${paymentMethod === "razorpay"
-                                            ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
-                                            : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
+                                        : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                                         }`}
                                 >
                                     <input
@@ -292,10 +284,10 @@ const RetryPayment = () => {
                                 {/* COD */}
                                 <label
                                     className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${amount > 2500
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : paymentMethod === "cod"
-                                                ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
-                                                : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : paymentMethod === "cod"
+                                            ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
+                                            : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                                         }`}
                                 >
                                     <input
@@ -322,7 +314,7 @@ const RetryPayment = () => {
                         {paymentMethod && (
                             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
                                 <p className="text-sm text-blue-800 dark:text-blue-300">
-                                    {paymentMethod === "card" && "Make sure you have sufficient balance in your wallet."}
+                                    {paymentMethod === "wallet" && "Make sure you have sufficient balance in your wallet."}
                                     {paymentMethod === "razorpay" && "You'll be redirected to Razorpay's secure payment gateway."}
                                     {paymentMethod === "cod" && "You can pay in cash when the order is delivered."}
                                 </p>
@@ -335,8 +327,8 @@ const RetryPayment = () => {
                                 onClick={handleRetryPayment}
                                 disabled={loading || !paymentMethod}
                                 className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${loading || !paymentMethod
-                                        ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
-                                        : "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+                                    ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+                                    : "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
                                     }`}
                             >
                                 {loading ? (

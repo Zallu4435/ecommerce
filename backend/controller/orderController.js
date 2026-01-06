@@ -9,6 +9,18 @@ const User = require("../model/User");
 const Cart = require("../model/Cart");
 const Coupon = require("../model/Coupon");
 const ProductVariant = require("../model/ProductVariants");
+const {
+  increaseStockForOrder,
+  calculateRefundAmount,
+  processWalletRefund,
+  handleReferralReward,
+  restoreStockIfPending,
+  formatOrderItem,
+  formatOrderSummary,
+  createShippingSnapshot,
+  mapToOrderItemRecord,
+  restoreCouponUsage
+} = require("../utils/orderHelper");
 
 exports.getAllOrders = async (req, res) => {
   try {
@@ -76,13 +88,19 @@ exports.getAllOrders = async (req, res) => {
 
     const orders = await Order.aggregate(pipeline);
 
-    const totalOrders = await Order.countDocuments({ UserId: userIdObj });
+    const totalItemsPipeline = [
+      { $match: { UserId: userIdObj } },
+      { $unwind: "$items" },
+      { $count: "total" }
+    ];
+    const totalItemsResult = await Order.aggregate(totalItemsPipeline);
+    const totalItemsCount = totalItemsResult[0]?.total || 0;
 
     res.status(200).json({
       orders,
       currentPage: page,
-      totalPages: Math.ceil(totalOrders / limit),
-      totalOrders,
+      totalPages: Math.ceil(totalItemsCount / limit),
+      totalOrders: totalItemsCount,
     });
   } catch (error) {
     console.error("Error fetching user orders:", error);
@@ -133,7 +151,9 @@ exports.getUserIndividualOrders = async (req, res) => {
           _id: 1,
           UserId: 1,
           TotalAmount: 1,
-          Status: 1,
+          Status: 1, // Order level status
+          paymentStatus: 1, // Order level payment status
+          PaymentMethod: "$paymentMethod",
           createdAt: 1,
           updatedAt: 1,
           ProductId: "$items.ProductId",
@@ -207,6 +227,14 @@ exports.getOrderById = async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "coupons",
+          localField: "CouponId",
+          foreignField: "_id",
+          as: "couponDetails"
+        }
+      },
+      {
         $addFields: {
           items: {
             $map: {
@@ -253,10 +281,14 @@ exports.getOrderById = async (req, res) => {
                 quantity: "$$item.Quantity",
                 price: "$$item.Price",
                 originalPrice: "$$item.productDetails.originalPrice",
+                itemTotal: "$$item.itemTotal"
               },
             },
           },
           shippingAddress: "$Address",
+          couponDiscount: "$CouponDiscount",
+          subtotal: "$Subtotal",
+          couponCode: { $ifNull: [{ $arrayElemAt: ["$couponDetails.couponCode", 0] }, null] }
         },
       },
       {
@@ -301,15 +333,7 @@ exports.createOrder = async (req, res, next) => {
 
     const userSnapshot = await User.findById(userId).session(session);
 
-    const shippingAddressSnapshot = {
-      name: userSnapshot ? userSnapshot.username : "N/A", // Or fetch from address if available later
-      phone: userSnapshot ? userSnapshot.phone : "N/A",
-      addressLine1: address.street,
-      city: address.city,
-      state: address.state,
-      country: address.country,
-      pincode: address.zipCode.toString()
-    };
+    const shippingAddressSnapshot = createShippingSnapshot(address, userSnapshot);
 
     // 1. Process Items & Deduct Stock
     let orderItems = [];
@@ -360,39 +384,27 @@ exports.createOrder = async (req, res, next) => {
 
         // Override price if variant has specific pricing
         if (variant.offerPrice > 0 || variant.price > 0) {
-          // Logic: if variant has offerPrice, use it. Else if variant has price, use it? 
-          // Or does variant offerPrice override product baseOfferPrice?
-          // Let's assume strict override if present.
           if (variant.offerPrice > 0) price = variant.offerPrice;
           else if (variant.price > 0) price = variant.price;
         }
 
       } else {
-        // Fallback for Products without Variants or outdated data
         if (product.totalStock < item.quantity) {
           throw new Error(`Insufficient stock for ${product.productName}`);
         }
       }
 
-      // Always Deduct Total Stock from Main Product (as a cached sum)
+      // Always Deduct Total Stock from Main Product
       product.totalStock -= item.quantity;
       await product.save({ session });
 
-      const itemTotal = price * item.quantity;
-      subtotal += itemTotal;
+      subtotal += price * item.quantity;
 
-      orderItems.push({
-        ProductId: product._id,
-        productName: product.productName,
-        productImage: product.image,
-        Price: price,
-        Quantity: item.quantity,
-        itemTotal: itemTotal,
+      orderItems.push(mapToOrderItemRecord(product, item.quantity, price, {
         color: item.color,
         size: item.size,
-        gender: item.gender,
-        Status: "Pending"
-      });
+        gender: item.gender
+      }));
     }
 
     // 2. Calculate Costs
@@ -403,37 +415,11 @@ exports.createOrder = async (req, res, next) => {
 
     // 3. Apply Coupon
     if (couponCode) {
-      const coupon = await Coupon.findOne({ couponCode: couponCode.toUpperCase() }).session(session);
+      const { coupon, discountAmount } = await validateAndApplyCoupon(couponCode, userId, orderItems, session);
 
       if (coupon) {
-        if (!coupon.isAvailable()) {
-          throw new Error("Coupon is expired or usage limit reached");
-        }
-
-        if (subtotal < coupon.minAmount) {
-          throw new Error(`Minimum purchase of ₹${coupon.minAmount} required for this coupon`);
-        }
-
-        // Check per-user limit
-        if (!coupon.canUserApply(userId.toString())) {
-          // Allow if unchecked, but strictly user limit applies
-          // Logic in coupon model: canUserApply checks usage count
-          throw new Error("You have already used this coupon or are not eligible");
-        }
-
-        // Calculate Discount
-        let discountCalc = (subtotal * coupon.discount) / 100;
-        if (discountCalc > coupon.maxAmount) {
-          discountCalc = coupon.maxAmount;
-        }
-
-        couponDiscount = Math.round(discountCalc * 100) / 100;
+        couponDiscount = discountAmount;
         couponId = coupon._id;
-
-        // Update Coupon Usage
-        coupon.usageCount += 1;
-        coupon.appliedUsers.push(userId.toString());
-        await coupon.save({ session });
       }
     }
 
@@ -491,7 +477,7 @@ exports.createOrder = async (req, res, next) => {
       Tax: tax,
       ShippingCost: shippingCost,
       CouponDiscount: couponDiscount,
-      CoupenId: couponId,
+      CouponId: couponId,
       TotalAmount: finalTotal,
       itemCount: orderItems.length
     }], { session });
@@ -573,31 +559,14 @@ exports.updateOrderStatus = async (req, res) => {
       if ((status === "Cancelled" || status === "Returned") &&
         item.Status !== "Cancelled" && item.Status !== "Returned") {
 
-        const product = await Product.findById(item.ProductId);
-        if (product) {
-          product.totalStock += item.Quantity;
-          await product.save();
-
-          // Restore Variant Stock
-          if (item.color && item.size) {
-            let variantQuery = {
-              productId: product._id,
-              color: item.color.toLowerCase(),
-              size: item.size.toUpperCase()
-            };
-
-            if (item.gender) {
-              variantQuery.gender = item.gender.charAt(0).toUpperCase() + item.gender.slice(1).toLowerCase();
-            }
-
-            const variant = await ProductVariant.findOne(variantQuery);
-
-            if (variant) {
-              variant.stockQuantity += item.Quantity;
-              await variant.save();
-            }
-          }
-        }
+        // Restore stock using helper
+        await increaseStockForOrder([{
+          ProductId: item.ProductId,
+          Quantity: item.Quantity,
+          color: item.color,
+          size: item.size,
+          gender: item.gender
+        }]);
 
         // Set Timestamps & Reasons
         if (status === "Cancelled") {
@@ -609,56 +578,32 @@ exports.updateOrderStatus = async (req, res) => {
         }
 
         // Handle Refund
-        let refundAmount = item.Price * item.Quantity;
-
-        if (order.CouponDiscount > 0) {
-          const discountPercentage = order.CouponDiscount / order.Subtotal;
-          refundAmount = refundAmount * (1 - discountPercentage);
-        }
-
+        const refundAmount = calculateRefundAmount(order, item);
         item.refundAmount = refundAmount;
         item.RefundStatus = "Pending";
 
-        // Process Wallet Refund (Reusing logic from cancelOrder simplified)
-        // Finding payment record
+        // Process Wallet Refund
         const paymentRecord = await Payment.findOne({ OrderId: order._id });
 
         if (paymentRecord && ["card", "razorpay", "wallet", "cod"].includes(paymentRecord.method.toLowerCase())) {
-          // For COD, only refund if Returned (User paid) or if Cancelled AND status was Delivered? 
-          // Actually if Admin cancels a pending COD, no refund.
-          // if Admin Returns a COD (Delivered), yes refund.
-
-          const shouldRefund = (paymentRecord.method.toLowerCase() !== "cod") ||
-            (status === "Returned");
+          const shouldRefund = (paymentRecord.method.toLowerCase() !== "cod") || (status === "Returned");
 
           if (shouldRefund) {
-            const userWallet = await Wallet.findOne({ userId: order.UserId });
-            if (userWallet && userWallet.status === "Active") {
-              // Check Max Limit
-              if (userWallet.balance + refundAmount <= 100000) {
-                userWallet.balance += refundAmount;
-                await userWallet.save();
+            try {
+              const refundDescription = `Refund for ${status} item in order ${order._id}`;
+              await processWalletRefund(order.UserId, refundAmount, refundDescription, order._id, paymentRecord.method);
 
-                await Transaction.create({
-                  walletId: userWallet._id,
-                  userId: order.UserId,
-                  type: "Credit",
-                  amount: refundAmount,
-                  description: `Refund for ${status} item in order ${order._id}`,
-                  transactionType: "Refund",
-                  status: "Successful",
-                  paymentMethod: paymentRecord.method.toLowerCase()
-                });
+              item.RefundStatus = "Refunded";
+              item.refundedAt = Date.now();
 
-                item.RefundStatus = "Refunded";
-                item.refundedAt = Date.now();
+              paymentRecord.refundAmount += refundAmount;
+              paymentRecord.refundStatus = "Refunded";
+              await paymentRecord.save();
 
-                paymentRecord.refundAmount += refundAmount;
-                paymentRecord.refundStatus = "Refunded";
-                await paymentRecord.save();
-
-                order.RefundAmount += refundAmount;
-              }
+              order.RefundAmount += refundAmount;
+            } catch (refundError) {
+              console.error("Refund failed:", refundError.message);
+              // item.RefundStatus remains "Pending"
             }
           }
         }
@@ -675,47 +620,7 @@ exports.updateOrderStatus = async (req, res) => {
 
     // Check for Referral Reward (only on FIRST order delivery)
     if (status === "Delivered") {
-      const user = await User.findById(order.UserId);
-      if (user && user.referredBy && !user.isReferrerRewardClaimed) {
-        // Check if this is the first delivered order
-        const deliveredOrders = await Order.find({
-          UserId: order.UserId,
-          orderStatus: "Delivered"
-        });
-
-        // Only give referral bonus if this is the first delivered order
-        if (deliveredOrders.length === 1) {
-          const referrerId = user.referredBy;
-          const referrer = await User.findOne({ referralCode: referrerId });
-
-          if (referrer) {
-            const referrerWallet = await Wallet.findOne({ userId: referrer._id });
-
-            if (referrerWallet && referrerWallet.status === "Active") {
-              const bonusAmount = 100; // Configurable amount
-
-              // Check wallet max limit
-              if (referrerWallet.balance + bonusAmount <= 100000) {
-                referrerWallet.balance += bonusAmount;
-                await referrerWallet.save();
-
-                await Transaction.create({
-                  walletId: referrerWallet._id,
-                  userId: referrer._id,
-                  type: "Credit",
-                  amount: bonusAmount,
-                  description: `Referral Bonus: ${user.username || 'Friend'} completed first order`,
-                  transactionType: "Referral",
-                  status: "Successful"
-                });
-
-                user.isReferrerRewardClaimed = true;
-                await user.save();
-              }
-            }
-          }
-        }
-      }
+      await handleReferralReward(order.UserId);
     }
 
     return res.status(200).json({
@@ -754,115 +659,44 @@ exports.cancelOrder = async (req, res) => {
       return res.status(404).json({ message: "Item not found in the order" });
     }
 
-    const product = await Product.findById(order.items[itemIndex].ProductId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
+    console.log(`🚫 [CANCEL ITEM] Initiating cancellation for order ${orderId}, product ${productId}`);
 
-    // Restore Total Stock
-    product.stockQuantity += order.items[itemIndex].Quantity;
-    // NOTE: Schema has totalStock, but previous code successfully used stockQuantity aliased or virtual? 
-    // Schema says totalStock. But check product model... 
-    // Product model has totalStock. Wait. 
-    // Previous code said `product.stockQuantity += ...`
-    // Let's check Product Model again.
-    // Product model has `totalStock`. It does NOT have `stockQuantity`.
-    // Wait, let's fix that.
-    if (product.totalStock !== undefined) {
-      product.totalStock += order.items[itemIndex].Quantity;
-    } else {
-      // Fallback if schema was different in some version, but we saw totalStock in file view
-      product.totalStock = (product.totalStock || 0) + order.items[itemIndex].Quantity;
-    }
+    // Restore Stock using helper
+    await increaseStockForOrder([order.items[itemIndex]]);
 
-    await product.save();
-
-    // Restore Variant Stock
     const item = order.items[itemIndex];
-    if (item.color && item.size) {
-      let variantQuery = {
-        productId: product._id,
-        color: item.color.toLowerCase(),
-        size: item.size.toUpperCase()
-      };
+    item.Status = "Cancelled";
+    item.cancellationReason = reason;
+    item.cancelledAt = Date.now();
 
-      if (item.gender) {
-        variantQuery.gender = item.gender.charAt(0).toUpperCase() + item.gender.slice(1).toLowerCase();
-      }
+    console.log(`📦 [CANCEL ITEM] Item status updated to Cancelled. Calculating refund...`);
 
-      const variant = await ProductVariant.findOne(variantQuery);
-
-      if (variant) {
-        variant.stockQuantity += item.Quantity;
-        await variant.save();
-      }
-    }
-
-    order.items[itemIndex].Status = "Cancelled";
-    order.items[itemIndex].cancellationReason = reason;
-    order.items[itemIndex].cancelledAt = Date.now();
-
-    let refundAmount =
-      order.items[itemIndex].Price * order.items[itemIndex].Quantity;
-
-    if (order?.CouponDiscount > 0) {
-      const discountPercentage = order.CouponDiscount / order.Subtotal;
-      refundAmount = refundAmount * (1 - discountPercentage);
-    }
+    // Calculate refund using helper
+    const refundAmount = calculateRefundAmount(order, item);
 
     // Validate refund amount
     if (refundAmount <= 0) {
       return res.status(400).json({ message: "Invalid refund amount" });
     }
 
-    order.items[itemIndex].refundAmount = refundAmount;
-    order.items[itemIndex].RefundStatus = "Pending";
+    item.refundAmount = refundAmount;
+    item.RefundStatus = "Pending";
 
     const paymentRecord = await Payment.findOne({ OrderId: orderId });
     if (paymentRecord) {
-      if (
-        paymentRecord.method.toLowerCase() === "card" ||
-        paymentRecord.method.toLowerCase() === "razorpay" ||
-        paymentRecord.method.toLowerCase() === "wallet"
-      ) {
-        const userWallet = await Wallet.findOne({
-          userId: paymentRecord.userId,
-        });
-        if (!userWallet) {
-          return res.status(404).json({ message: "User wallet not found" });
+      const method = paymentRecord.method.toLowerCase();
+      if (["card", "razorpay", "wallet"].includes(method)) {
+        try {
+          const refundDescription = `Refund for cancelled item in order ${orderId}`;
+          await processWalletRefund(order.UserId, refundAmount, refundDescription, orderId, method);
+
+          item.RefundStatus = "Refunded";
+          item.refundedAt = Date.now();
+        } catch (refundError) {
+          console.error("Refund failed:", refundError.message);
+          return res.status(400).json({ message: refundError.message });
         }
-
-        // Check wallet status
-        if (userWallet.status !== "Active") {
-          return res.status(400).json({
-            message: "Cannot refund to inactive wallet. Please contact support."
-          });
-        }
-
-        // Check wallet max limit (₹100,000)
-        if (userWallet.balance + refundAmount > 100000) {
-          return res.status(400).json({
-            message: "Refund would exceed wallet maximum limit of ₹100,000. Please contact support."
-          });
-        }
-
-        userWallet.balance += refundAmount;
-        await userWallet.save();
-
-        const transaction = new Transaction({
-          walletId: userWallet?._id,
-          userId: paymentRecord?.userId,
-          type: "Credit",
-          amount: refundAmount,
-          description: `Refund for cancelled item in order ${paymentRecord?.OrderId}`,
-          transactionType: "Refund",
-          status: "Successful",
-        });
-        await transaction.save();
-
-        order.items[itemIndex].RefundStatus = "Refunded";
-        order.items[itemIndex].refundedAt = Date.now();
-      } else if (paymentRecord.method.toLowerCase() === "cod") {
+      } else if (method === "cod") {
         console.log("No refund necessary for COD orders");
       }
 
@@ -874,6 +708,22 @@ exports.cancelOrder = async (req, res) => {
     }
 
     order.RefundAmount += refundAmount;
+
+    // Update Order Payment Status based on remaining items
+    const activeItems = order.items.filter(i =>
+      !["Cancelled", "Returned", "Refunded", "Payment Failed"].includes(i.Status)
+    );
+
+    const isPrepaid = ["card", "razorpay", "wallet"].includes(paymentRecord?.method?.toLowerCase());
+
+    if (activeItems.length === 0) {
+      order.paymentStatus = isPrepaid ? "Refunded" : "Failed";
+    } else if (isPrepaid) {
+      order.paymentStatus = "Partially Refunded";
+    }
+
+    console.log(`✅ [CANCEL ITEM] Success. Refund: ₹${refundAmount}, Order Payment Status: ${order.paymentStatus}`);
+
     const updatedOrder = await order.save();
 
     res.status(200).json({
@@ -1013,49 +863,24 @@ exports.returnOrder = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(order.items[itemIndex].ProductId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    // Restore stock
-    if (product.totalStock !== undefined) {
-      product.totalStock += order.items[itemIndex].Quantity;
-    } else {
-      product.totalStock = (product.totalStock || 0) + order.items[itemIndex].Quantity;
-    }
-    await product.save();
-
-    // Restore Variant Stock
-    const item = order.items[itemIndex];
-    if (item.color && item.size) {
-      const variant = await ProductVariant.findOne({
-        productId: product._id,
-        color: item.color.toLowerCase(),
-        size: item.size.toUpperCase()
-      });
-
-      if (variant) {
-        variant.stockQuantity += item.Quantity;
-        await variant.save();
-      }
-    }
+    // Restore Stock using helper
+    await increaseStockForOrder([{
+      ProductId: order.items[itemIndex].ProductId,
+      Quantity: order.items[itemIndex].Quantity,
+      color: order.items[itemIndex].color,
+      size: order.items[itemIndex].size,
+      gender: order.items[itemIndex].gender
+    }]);
 
     // Update item status and timestamps
-    order.items[itemIndex].Status = "Returned";
-    order.items[itemIndex].returnReason = reason;
-    order.items[itemIndex].returnRequestedAt = Date.now();
-    order.items[itemIndex].returnedAt = Date.now();
+    const item = order.items[itemIndex];
+    item.Status = "Returned";
+    item.returnReason = reason;
+    item.returnRequestedAt = Date.now();
+    item.returnedAt = Date.now();
 
-    // Calculate refund with CORRECT coupon discount (order-level)
-    let refundAmount =
-      order.items[itemIndex].Price * order.items[itemIndex].Quantity;
-
-    // Apply proportional coupon discount (same as cancelOrder)
-    if (order.CouponDiscount > 0) {
-      const discountPercentage = order.CouponDiscount / order.Subtotal;
-      refundAmount = refundAmount * (1 - discountPercentage);
-    }
+    // Calculate refund using helper
+    const refundAmount = calculateRefundAmount(order, item);
 
     // Validate refund amount
     if (refundAmount <= 0) {
@@ -1063,61 +888,23 @@ exports.returnOrder = async (req, res) => {
     }
 
     // Update item refund tracking
-    order.items[itemIndex].refundAmount = refundAmount;
-    order.items[itemIndex].RefundStatus = "Pending";
+    item.refundAmount = refundAmount;
+    item.RefundStatus = "Pending";
 
     const paymentRecord = await Payment.findOne({ OrderId: orderId });
     if (paymentRecord) {
       // Refund to wallet for all payment methods (including COD - already paid)
-      if (
-        paymentRecord.method.toLowerCase() === "card" ||
-        paymentRecord.method.toLowerCase() === "razorpay" ||
-        paymentRecord.method.toLowerCase() === "wallet" ||
-        paymentRecord.method.toLowerCase() === "cod"
-      ) {
-        const userWallet = await Wallet.findOne({
-          userId: paymentRecord.userId,
-        });
-
-        if (!userWallet) {
-          console.error(`Wallet not found for user ${paymentRecord.userId}`);
-          return res.status(404).json({ message: "User wallet not found" });
-        }
-
-        // Check wallet status
-        if (userWallet.status !== "Active") {
-          return res.status(400).json({
-            message: "Cannot refund to inactive wallet. Please contact support."
-          });
-        }
-
-        // Check wallet max limit (₹100,000)
-        if (userWallet.balance + refundAmount > 100000) {
-          return res.status(400).json({
-            message: "Refund would exceed wallet maximum limit of ₹100,000. Please contact support."
-          });
-        }
-
-        // Credit wallet
-        userWallet.balance += refundAmount;
-        await userWallet.save();
-
-        // Create transaction record
-        await Transaction.create({
-          walletId: userWallet._id,
-          userId: paymentRecord.userId,
-          type: "Credit",
-          amount: refundAmount,
-          description: `Refund for returned item in order ${orderId}`,
-          transactionType: "Refund",
-          status: "Successful",
-          orderId: orderId,
-          paymentMethod: paymentRecord.method.toLowerCase(),
-        });
+      const method = paymentRecord.method.toLowerCase();
+      try {
+        const refundDescription = `Refund for returned item in order ${orderId}`;
+        await processWalletRefund(order.UserId, refundAmount, refundDescription, orderId, method);
 
         // Update item refund status
-        order.items[itemIndex].RefundStatus = "Refunded";
-        order.items[itemIndex].refundedAt = Date.now();
+        item.RefundStatus = "Refunded";
+        item.refundedAt = Date.now();
+      } catch (refundError) {
+        console.error("Refund failed:", refundError.message);
+        return res.status(400).json({ message: refundError.message });
       }
 
       // Update payment record
@@ -1173,36 +960,7 @@ exports.getOrdersGrouped = async (req, res) => {
       .lean();
 
     // Transform orders to include calculated fields
-    const transformedOrders = orders.map((order) => {
-      const itemCount = order.items.length;
-      const firstItem = order.items[0];
-
-      // Get first few product images for preview
-      const productImages = order.items
-        .slice(0, 3)
-        .map((item) => item.ProductId?.image)
-        .filter(Boolean);
-
-      return {
-        _id: order._id,
-        orderId: `ORD-${order._id.toString().slice(0, 8).toUpperCase()}`,
-        orderDate: order.createdAt,
-        orderStatus: order.orderStatus,
-        paymentMethod: order.paymentMethod,
-        paymentStatus: order.paymentStatus,
-        totalAmount: order.TotalAmount,
-        itemCount,
-        productImages,
-        expectedDeliveryDate: order.expectedDeliveryDate,
-        canCancel: order.items.some(
-          (item) =>
-            !["Delivered", "Cancelled", "Returned", "Shipped", "Out for Delivery"].includes(
-              item.Status
-            )
-        ),
-        canReturn: order.items.some((item) => item.Status === "Delivered"),
-      };
-    });
+    const transformedOrders = orders.map(formatOrderSummary);
 
     const totalOrders = await Order.countDocuments({ UserId: userIdObj });
 
@@ -1237,11 +995,15 @@ exports.getSingleOrderDetails = async (req, res) => {
       UserId: userId,
     })
       .populate({
+        path: "UserId",
+        select: "username email phone",
+      })
+      .populate({
         path: "items.ProductId",
         select: "productName image offerPrice originalPrice stockQuantity category",
       })
       .populate("AddressId")
-      .populate("CoupenId")
+      .populate("CouponId")
       .lean();
 
     if (!order) {
@@ -1252,81 +1014,24 @@ exports.getSingleOrderDetails = async (req, res) => {
     const payment = await Payment.findOne({ OrderId: orderId }).lean();
 
     // Transform items to include product details
-    const transformedItems = order.items.map((item) => ({
-      itemId: item._id,
-      productId: item.ProductId?._id,
-      productName: item.ProductId?.productName || item.productName,
-      productImage: item.ProductId?.image || item.productImage,
-      price: item.Price,
-      quantity: item.Quantity,
-      itemTotal: item.itemTotal,
-      status: item.Status,
-      trackingNumber: item.trackingNumber,
-
-      // Timestamps
-      confirmedAt: item.confirmedAt,
-      shippedAt: item.shippedAt,
-      deliveredAt: item.deliveredAt,
-      cancelledAt: item.cancelledAt,
-      returnedAt: item.returnedAt,
-
-      // Cancellation/Return info
-      cancellationReason: item.cancellationReason,
-      returnReason: item.returnReason,
-
-      // Refund info
-      refundStatus: item.RefundStatus,
-      refundAmount: item.refundAmount,
-      refundedAt: item.refundedAt,
-
-      // Actions available
-      canCancel: !["Delivered", "Cancelled", "Returned", "Shipped", "Out for Delivery"].includes(
-        item.Status
-      ),
-      canReturn: item.Status === "Delivered",
-    }));
+    const transformedItems = order.items.map(formatOrderItem);
+    const summary = formatOrderSummary(order);
 
     const response = {
-      _id: order._id,
-      orderId: `ORD-${order._id.toString().slice(0, 8).toUpperCase()}`,
-      orderDate: order.createdAt,
-      orderStatus: order.orderStatus,
-
-      // Payment info
-      paymentMethod: order.paymentMethod || payment?.method,
-      paymentStatus: order.paymentStatus || payment?.status,
-
-      // Pricing
+      ...summary,
+      // Overwrite/Extend summary with detailed info
+      items: transformedItems,
       subtotal: order.Subtotal,
       couponDiscount: order.CouponDiscount,
-      totalAmount: order.TotalAmount,
+      discountAmount: order.CouponDiscount,
       refundAmount: order.RefundAmount,
-
-      // Items
-      items: transformedItems,
-      itemCount: order.items.length,
-
-      // Address
-      shippingAddress: order.AddressId,
-
-      // Delivery
-      expectedDeliveryDate: order.expectedDeliveryDate,
+      shippingAddress: { ...(order.AddressId || {}), ...(order.shippingAddress || {}) },
       actualDeliveryDate: order.actualDeliveryDate,
-
-      // Coupon
-      coupon: order.CoupenId,
-
-      // Notes
+      coupon: order.CouponId,
+      couponCode: order.CouponId?.couponCode,
       orderNotes: order.orderNotes,
-
-      // Actions
-      canCancelOrder: order.items.some(
-        (item) =>
-          !["Delivered", "Cancelled", "Returned", "Shipped", "Out for Delivery"].includes(
-            item.Status
-          )
-      ),
-      canReturnOrder: order.items.some((item) => item.Status === "Delivered"),
+      canCancelOrder: summary.canCancel,
+      canReturnOrder: summary.canReturn,
     };
 
     res.status(200).json({
@@ -1379,47 +1084,20 @@ exports.cancelEntireOrder = async (req, res) => {
       });
     }
 
+    console.log(`🚫 [CANCEL ORDER] Initiating FULL cancellation for order ${orderId}`);
+
     let totalRefund = 0;
 
-    // Cancel all items and restore stock
+    // Cancel all items and restore stock using helper
+    await increaseStockForOrder(order.items);
+
     for (const item of order.items) {
-      const product = await Product.findById(item.ProductId);
-      if (product) {
-        if (product.totalStock !== undefined) {
-          product.totalStock += item.Quantity;
-        } else {
-          product.totalStock = (product.totalStock || 0) + item.Quantity;
-        }
-        await product.save();
-
-        // Restore Variant Stock
-        if (item.color && item.size) {
-          const variant = await ProductVariant.findOne({
-            productId: product._id,
-            color: item.color.toLowerCase(),
-            size: item.size.toUpperCase()
-          });
-
-          if (variant) {
-            variant.stockQuantity += item.Quantity;
-            await variant.save();
-          }
-        }
-      }
-
       item.Status = "Cancelled";
       item.cancellationReason = reason;
       item.cancelledAt = Date.now();
 
-      // Calculate refund for this item
-      let itemRefund = item.Price * item.Quantity;
-
-      // Apply proportional coupon discount if exists
-      if (order.CouponDiscount > 0) {
-        const discountPercentage = order.CouponDiscount / order.Subtotal;
-        itemRefund = itemRefund * (1 - discountPercentage);
-      }
-
+      // Calculate refund for this item using helper
+      const itemRefund = calculateRefundAmount(order, item);
       item.refundAmount = itemRefund;
       item.RefundStatus = "Pending";
       totalRefund += itemRefund;
@@ -1428,53 +1106,36 @@ exports.cancelEntireOrder = async (req, res) => {
     // Update order refund amount
     order.RefundAmount = totalRefund;
 
+    // Process payment status update
+    const isPrepaid = ["card", "razorpay", "wallet"].includes(paymentRecord?.method?.toLowerCase());
+    order.paymentStatus = isPrepaid ? "Refunded" : "Failed";
+
+    console.log(`💰 [CANCEL ORDER] Refund calculated: ₹${totalRefund}, Payment Status set to: ${order.paymentStatus}`);
+
+    // Restore coupon usage if any
+    if (order.CouponId) {
+      await restoreCouponUsage(order.CouponId, order.UserId);
+    }
+
     // Process refund
     const paymentRecord = await Payment.findOne({ OrderId: orderId });
 
     if (paymentRecord) {
-      if (
-        paymentRecord.method.toLowerCase() === "card" ||
-        paymentRecord.method.toLowerCase() === "razorpay" ||
-        paymentRecord.method.toLowerCase() === "wallet"
-      ) {
-        const userWallet = await Wallet.findOne({ userId: order.UserId });
+      const method = paymentRecord.method.toLowerCase();
+      if (["card", "razorpay", "wallet"].includes(method)) {
+        try {
+          const refundDescription = `Full refund for cancelled order ${orderId}`;
+          await processWalletRefund(order.UserId, totalRefund, refundDescription, orderId, method);
 
-        if (!userWallet) {
-          return res.status(404).json({ message: "User wallet not found" });
-        }
-
-        // Check wallet status
-        if (userWallet.status !== "Active") {
-          return res.status(400).json({
-            message: "Cannot refund to inactive wallet. Please contact support."
+          // Update refund status for all items
+          order.items.forEach((item) => {
+            item.RefundStatus = "Refunded";
+            item.refundedAt = Date.now();
           });
+        } catch (refundError) {
+          console.error("Refund failed:", refundError.message);
+          return res.status(400).json({ message: refundError.message });
         }
-
-        // Check wallet max limit (₹100,000)
-        if (userWallet.balance + totalRefund > 100000) {
-          return res.status(400).json({
-            message: "Refund would exceed wallet maximum limit of ₹100,000. Please contact support."
-          });
-        }
-
-        userWallet.balance += totalRefund;
-        await userWallet.save();
-
-        await Transaction.create({
-          walletId: userWallet._id,
-          userId: order.UserId,
-          type: "Credit",
-          amount: totalRefund,
-          description: `Full refund for cancelled order ${orderId}`,
-          transactionType: "Refund",
-          status: "Successful",
-        });
-
-        // Update refund status for all items
-        order.items.forEach((item) => {
-          item.RefundStatus = "Refunded";
-          item.refundedAt = Date.now();
-        });
       }
 
       paymentRecord.refundAmount = totalRefund;
@@ -1528,31 +1189,7 @@ exports.getAllOrdersForAdmin = async (req, res) => {
       .lean();
 
     // Transform orders to include user info and calculated fields
-    const transformedOrders = orders.map((order) => {
-      const itemCount = order.items.length;
-
-      // Get first few product images for preview
-      const productImages = order.items
-        .slice(0, 3)
-        .map((item) => item.ProductId?.image)
-        .filter(Boolean);
-
-      return {
-        _id: order._id,
-        orderId: `ORD-${order._id.toString().slice(0, 8).toUpperCase()}`,
-        orderDate: order.createdAt,
-        orderStatus: order.orderStatus,
-        paymentMethod: order.paymentMethod,
-        paymentStatus: order.paymentStatus,
-        totalAmount: order.TotalAmount,
-        itemCount,
-        productImages,
-        expectedDeliveryDate: order.expectedDeliveryDate,
-        userName: order.UserId?.username || "Unknown",
-        userEmail: order.UserId?.email || "Unknown",
-        userId: order.UserId?._id,
-      };
-    });
+    const transformedOrders = orders.map(formatOrderSummary);
 
     const totalOrders = await Order.countDocuments();
 
@@ -1591,7 +1228,7 @@ exports.getAdminOrderDetails = async (req, res) => {
         select: "productName image offerPrice originalPrice stockQuantity category",
       })
       .populate("AddressId")
-      .populate("CoupenId")
+      .populate("CouponId")
       .lean();
 
     if (!order) {
@@ -1602,71 +1239,21 @@ exports.getAdminOrderDetails = async (req, res) => {
     const payment = await Payment.findOne({ OrderId: orderId }).lean();
 
     // Transform items to include product details
-    const transformedItems = order.items.map((item) => ({
-      itemId: item._id,
-      productId: item.ProductId?._id,
-      productName: item.ProductId?.productName || item.productName,
-      productImage: item.ProductId?.image || item.productImage,
-      price: item.Price,
-      quantity: item.Quantity,
-      itemTotal: item.itemTotal,
-      status: item.Status,
-      trackingNumber: item.trackingNumber,
-
-      // Timestamps
-      confirmedAt: item.confirmedAt,
-      shippedAt: item.shippedAt,
-      deliveredAt: item.deliveredAt,
-      cancelledAt: item.cancelledAt,
-      returnedAt: item.returnedAt,
-
-      // Cancellation/Return info
-      cancellationReason: item.cancellationReason,
-      returnReason: item.returnReason,
-
-      // Refund info
-      refundStatus: item.RefundStatus,
-      refundAmount: item.refundAmount,
-      refundedAt: item.refundedAt,
-    }));
+    const transformedItems = order.items.map(formatOrderItem);
+    const summary = formatOrderSummary(order);
 
     const response = {
-      _id: order._id,
-      orderId: `ORD-${order._id.toString().slice(0, 8).toUpperCase()}`,
-      orderDate: order.createdAt,
-      orderStatus: order.orderStatus,
-
-      // User info
-      userName: order.UserId?.username,
-      userEmail: order.UserId?.email,
-      userPhone: order.UserId?.phone,
-      userId: order.UserId?._id,
-
-      // Payment info
-      paymentMethod: order.paymentMethod || payment?.method,
-      paymentStatus: order.paymentStatus || payment?.status,
-
-      // Pricing
+      ...summary,
+      // pricing and details
       subtotal: order.Subtotal,
       couponDiscount: order.CouponDiscount,
-      totalAmount: order.TotalAmount,
+      discountAmount: order.CouponDiscount,
       refundAmount: order.RefundAmount,
-
-      // Items
       items: transformedItems,
-      itemCount: order.items.length,
-
-      // Address
       shippingAddress: order.AddressId,
-
-      // Delivery
-      expectedDeliveryDate: order.expectedDeliveryDate,
       actualDeliveryDate: order.actualDeliveryDate,
-
-      // Coupon
-      coupon: order.CoupenId,
-
-      // Notes
+      coupon: order.CouponId,
+      couponCode: order.CouponId?.couponCode,
       orderNotes: order.orderNotes,
     };
 
