@@ -8,6 +8,7 @@ const Cart = require("../model/Cart");
 const Payment = require("../model/Payment");
 const Wallet = require("../model/Wallet");
 const Transaction = require("../model/WalletTransaction");
+const ProductVariant = require("../model/ProductVariants");
 const { sendMail } = require("../utils/email")
 
 
@@ -248,19 +249,24 @@ exports.checkProductStock = async (req, res) => {
 
 const handleSingleProductOrder = async (productId, quantity) => {
   const product = await Product.findById(productId);
-  if (!product) {
-    throw new Error("Product not found.");
-  }
-  if (product.stockQuantity < quantity) {
+  if (!product) throw new Error("Product not found.");
+
+  // Use correct stock field (totalStock) and fallback
+  if ((product.totalStock || 0) < quantity) {
     throw new Error("Not enough stock available.");
   }
-  // Don't decrease stock here - only validate availability
-  // Stock will be decreased when payment is successful
+
+  // Don't decrease stock here - only validate
+  let price = product.baseOfferPrice > 0 ? product.baseOfferPrice : product.basePrice;
+
   return {
     ProductId: productId,
-    Price: product.originalPrice,
+    Price: price,
     Quantity: quantity,
     Status: "Order Placed",
+    itemTotal: price * quantity,
+    productName: product.productName,
+    productImage: product.image
   };
 };
 
@@ -269,7 +275,26 @@ const decreaseStockForOrder = async (orderItems) => {
   for (let item of orderItems) {
     const product = await Product.findById(item.ProductId);
     if (product) {
-      product.stockQuantity -= item.Quantity;
+      // Decrease Total Stock
+      if (product.totalStock !== undefined) {
+        product.totalStock -= item.Quantity;
+      } else {
+        product.totalStock = (product.totalStock || 0) - item.Quantity;
+      }
+
+      // Decrease Variant Stock if variant details exist
+      if (item.color && item.size) {
+        const variant = await ProductVariant.findOne({
+          productId: product._id,
+          color: item.color.toLowerCase(),
+          size: item.size.toUpperCase()
+        });
+
+        if (variant) {
+          variant.stockQuantity -= item.Quantity;
+          await variant.save();
+        }
+      }
       await product.save();
     }
   }
@@ -277,36 +302,55 @@ const decreaseStockForOrder = async (orderItems) => {
 
 const handleCartOrder = async (userId, cartItems) => {
   const cart = await Cart.findOne({ userId });
-  if (!cart) {
-    throw new Error("Cart not found for this user.");
-  }
+  if (!cart) throw new Error("Cart not found for this user.");
 
   const items = [];
   for (let item of cartItems) {
-    const { cartItemId, quantity, originalPrice } = item;
-    const cartItem = cart.items.find((ci) => ci._id.toString() === cartItemId);
-    if (!cartItem) {
-      throw new Error(`Cart item ${cartItemId} not found.`);
-    }
+    const cartItem = cart.items.find((ci) => ci._id.toString() === item.cartItemId);
+
+    if (!cartItem) throw new Error(`Cart item ${item.cartItemId} not found.`);
 
     const product = await Product.findById(cartItem.productId);
-    if (!product) {
-      throw new Error("Product not found.");
+    if (!product) throw new Error("Product not found.");
+
+    if (product.status !== 'active') {
+      throw new Error(`Product ${product.productName} is currently unavailable`);
     }
 
-    if (product.stockQuantity < quantity) {
-      throw new Error(`Not enough stock for ${product.productName}.`);
+    let price = product.baseOfferPrice > 0 ? product.baseOfferPrice : product.basePrice;
+
+    if (cartItem.color && cartItem.size) {
+      const variant = await ProductVariant.findOne({
+        productId: product._id,
+        color: cartItem.color.toLowerCase(),
+        size: cartItem.size.toUpperCase()
+      });
+
+      if (!variant) throw new Error(`Variant ${cartItem.color}/${cartItem.size} not found`);
+
+      if (variant.stockQuantity < item.quantity) {
+        throw new Error(`Not enough stock for ${product.productName} (${cartItem.color}/${cartItem.size})`);
+      }
+
+      if (variant.offerPrice > 0) price = variant.offerPrice;
+      else if (variant.price > 0) price = variant.price;
+
+    } else {
+      if ((product.totalStock || 0) < item.quantity) {
+        throw new Error(`Not enough stock for ${product.productName}.`);
+      }
     }
-    // Don't decrease stock here - only validate availability
-    // Stock will be decreased when payment is successful
 
     items.push({
       ProductId: cartItem.productId,
-      Price: originalPrice,
-      Quantity: quantity,
-      Color: cartItem.color,
-      Size: cartItem.size,
+      Price: price,
+      Quantity: item.quantity,
+      color: cartItem.color,
+      size: cartItem.size,
       Status: "Order Placed",
+      productName: product.productName,
+      productImage: product.image,
+      itemTotal: price * item.quantity
     });
   }
   return { items, cart };
@@ -358,7 +402,7 @@ const validateAndApplyCoupon = async (couponCode, userId, purchaseAmount = 0, pr
 
   // Check product applicability (if applicable products list is not empty)
   if (coupon.applicableProducts.length > 0 && productIds.length > 0) {
-    const hasApplicableProduct = productIds.some(pid => 
+    const hasApplicableProduct = productIds.some(pid =>
       coupon.applicableProducts.some(apid => apid.toString() === pid.toString())
     );
     if (!hasApplicableProduct) {
@@ -370,7 +414,7 @@ const validateAndApplyCoupon = async (couponCode, userId, purchaseAmount = 0, pr
   coupon.appliedUsers.push(userId);
   coupon.usageCount += 1;
   await coupon.save();
-  
+
   return coupon;
 };
 
@@ -395,7 +439,8 @@ const createOrderRecord = async (
   couponDiscount,
   totalAmount,
   addressId,
-  couponId
+  couponId,
+  shippingAddress // New parameter
 ) => {
   const orderRecord = new Order({
     UserId: userId,
@@ -405,6 +450,7 @@ const createOrderRecord = async (
     TotalAmount: totalAmount,
     AddressId: addressId,
     CouponId: couponId,
+    shippingAddress: shippingAddress // Embed Snapshot
   });
 
   const savedOrder = await orderRecord.save();
@@ -445,7 +491,7 @@ const createPaymentRecord = async (
         }));
         await existingOrder.save();
       }
-      
+
       // Create failed transaction record
       const failedTransaction = new Transaction({
         walletId: wallet._id,
@@ -458,10 +504,10 @@ const createPaymentRecord = async (
         paymentMethod: "card",
       });
       await failedTransaction.save();
-      
+
       paymentStatus = "Failed";
       transactionId = failedTransaction._id;
-      
+
       throw new Error(`Insufficient wallet balance. Available: ₹${wallet.balance.toFixed(2)}, Required: ₹${totalAmount.toFixed(2)}`);
     }
 
@@ -527,11 +573,11 @@ exports.processPayment = async (req, res) => {
         .json({ message: "Either productId or cartItems are required." });
     }
 
-    // Extract product IDs from items
-    const productIds = items.map(item => item.productId);
-    
+    // Extract product IDs from items (Fix: items have ProductId Capitalized)
+    const productIds = items.map(item => item.ProductId);
+
     const coupon = await validateAndApplyCoupon(couponCode, userId, order.total, productIds);
-    
+
     // Calculate discount with max cap
     let couponDiscount = 0;
     if (coupon) {
@@ -540,6 +586,20 @@ exports.processPayment = async (req, res) => {
     }
 
     const addressReference = await handleAddress(address, userId);
+
+    // Create Address Snapshot
+    const addressData = await Address.findById(addressReference);
+    const userData = await User.findById(userId);
+
+    const shippingAddressSnapshot = {
+      name: userData ? userData.name : "Unknown",
+      phone: userData ? (userData.mobile || userData.phone || "") : "",
+      addressLine1: addressData.street,
+      city: addressData.city,
+      state: addressData.state,
+      country: addressData.country,
+      pincode: addressData.zipCode
+    };
 
     const totalAmount = order.total - couponDiscount;
 
@@ -550,7 +610,8 @@ exports.processPayment = async (req, res) => {
       couponDiscount,
       totalAmount,
       addressReference,
-      coupon?._id
+      coupon?._id,
+      shippingAddressSnapshot
     );
 
     const paymentRecord = await createPaymentRecord(
@@ -564,7 +625,7 @@ exports.processPayment = async (req, res) => {
     if (paymentRecord.status === "Successful") {
       // Decrease product stock quantities
       await decreaseStockForOrder(items);
-      
+
       // Remove items from cart if it was a cart order
       if (isCartOrder && cart) {
         await removeItemsFromCart(cart, order.cartItems);
@@ -587,15 +648,13 @@ exports.processPayment = async (req, res) => {
 
 exports.verifyRazorpayPayment = async (req, res) => {
   try {
-    const { 
-      razorpay_payment_id, 
-      razorpay_order_id, 
+    const {
+      razorpay_payment_id,
+      razorpay_order_id,
       razorpay_signature,
       orderId,
-      amount 
+      amount
     } = req.body;
-    
-    const userId = req.user;
 
     // Verify the payment signature
     const crypto = require('crypto');
@@ -605,18 +664,18 @@ exports.verifyRazorpayPayment = async (req, res) => {
       .digest('hex');
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid payment signature' 
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment signature'
       });
     }
 
     // Find the existing order
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Order not found' 
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
       });
     }
 
@@ -630,22 +689,9 @@ exports.verifyRazorpayPayment = async (req, res) => {
       await paymentRecord.save();
     }
 
-    // Create transaction record
-    const wallet = await Wallet.findOne({ userId });
-    if (wallet) {
-      const transaction = new Transaction({
-        walletId: wallet._id,
-        userId,
-        type: "Credit",
-        amount: amount,
-        description: `Razorpay payment for order ${orderId}`,
-        status: "Successful",
-        orderId: orderId,
-        paymentMethod: "razorpay",
-        razorpayPaymentId: razorpay_payment_id,
-        razorpayOrderId: razorpay_order_id,
-      });
-      await transaction.save();
+    // Decrease Stock for the now-successful order
+    if (order.items && order.items.length > 0) {
+      await decreaseStockForOrder(order.items);
     }
 
     res.status(200).json({
@@ -669,7 +715,7 @@ exports.primaryAddress = async (req, res) => {
   try {
     const { addressId } = req.params;
     const address = await Address.findById(addressId);
-    
+
     if (!address) return res.status(404).json({ message: 'Address not found' });
 
     await Address.updateMany({ userId: address.userId }, { isPrimary: false });
@@ -708,8 +754,8 @@ exports.cancelPayment = async (req, res) => {
 
     // Only allow cancellation of pending/failed payments
     if (payment.status === "Successful") {
-      return res.status(400).json({ 
-        message: "Cannot cancel a successful payment. Please request a refund instead." 
+      return res.status(400).json({
+        message: "Cannot cancel a successful payment. Please request a refund instead."
       });
     }
 
@@ -786,16 +832,16 @@ exports.retryPayment = async (req, res) => {
     // Process retry payment based on method
     if (paymentMethod === "card") {
       const wallet = await Wallet.findOne({ userId });
-      
+
       if (!wallet) {
-        return res.status(404).json({ 
-          message: "Wallet not found. Please create a wallet first or choose a different payment method." 
+        return res.status(404).json({
+          message: "Wallet not found. Please create a wallet first or choose a different payment method."
         });
       }
 
       if (wallet.balance < order.TotalAmount) {
-        return res.status(400).json({ 
-          message: `Insufficient wallet balance. Available: ₹${wallet.balance.toFixed(2)}, Required: ₹${order.TotalAmount.toFixed(2)}` 
+        return res.status(400).json({
+          message: `Insufficient wallet balance. Available: ₹${wallet.balance.toFixed(2)}, Required: ₹${order.TotalAmount.toFixed(2)}`
         });
       }
 

@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import ShoppingCard from "./shoppingCard/ShoppingCards";
 import { useGetPopularProductsQuery } from "../../redux/apiSliceFeatures/productApiSlice";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export const CardContainer = () => {
+const CardContainer = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [cardsPerPage, setCardsPerPage] = useState(8);
 
@@ -11,78 +12,105 @@ export const CardContainer = () => {
     data: popular_Products = [],
     error,
     isLoading,
-  } = useGetPopularProductsQuery(); 
+  } = useGetPopularProductsQuery();
 
   useEffect(() => {
+    // Optimized resize handler with debounce logic could be added here, 
+    // but sticking to simple breakpoint logic for now.
     const handleResize = () => {
-      if (window.innerWidth >= 1280) {
+      if (window.innerWidth >= 1280) { // xl
         setCardsPerPage(8);
-      } else if (window.innerWidth >= 1024) {
-        setCardsPerPage(4);
-      } else if (window.innerWidth >= 768) {
-        setCardsPerPage(4);
+      } else if (window.innerWidth >= 1024) { // lg
+        setCardsPerPage(8);
+      } else if (window.innerWidth >= 768) { // md
+        setCardsPerPage(6); // 3x2 grid logic usually works well here
       } else {
-        setCardsPerPage(2);
+        setCardsPerPage(4);
       }
     };
 
-    handleResize();
+    handleResize(); // Initial call
     window.addEventListener("resize", handleResize);
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const totalPages = Math.ceil(popular_Products.length / cardsPerPage);
-
+  const totalPages = Math.ceil((popular_Products?.length || 0) / cardsPerPage);
   const startIndex = (currentPage - 1) * cardsPerPage;
   const endIndex = startIndex + cardsPerPage;
+  const currentProducts = popular_Products?.slice(startIndex, endIndex) || [];
 
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) {
       setCurrentPage(newPage);
+      // Optional: Scroll to top of section smoothly
+      // document.getElementById('popular-products')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  if (isLoading) return <LoadingSpinner />;
-  if (error) return <div>Error loading products!</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl">
+        <p>Failed to load popular products. Please refresh the page.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col items-center shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] p-6 rounded-lg space-y-6 overflow-x-hidden">
-      {/* Grid container for products */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6 w-full">
-        {popular_Products && popular_Products.length > 0 ? (
-          popular_Products.slice(startIndex, endIndex).map((products, index) => (
-            <ShoppingCard key={index} {...products} />
-          ))
+    <div id="popular-products" className="w-full relative">
+      <div className="bg-white dark:bg-gray-800/50 rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-100 dark:border-gray-700/50 shadow-sm dark:shadow-none">
+
+        {/* Products Grid */}
+        {currentProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 justify-items-center">
+            {currentProducts.map((product) => (
+              <ShoppingCard key={product._id} {...product} />
+            ))}
+          </div>
         ) : (
-          <div className="col-span-full text-center py-10 text-gray-600 dark:text-gray-300">
-            No products available.
+          <div className="text-center py-20">
+            <p className="text-gray-500 dark:text-gray-400 text-lg">No popular products found at the moment.</p>
+          </div>
+        )}
+
+        {/* Modern Pagination */}
+        {popular_Products.length > cardsPerPage && (
+          <div className="flex justify-center items-center gap-6 mt-12">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="group p-3 rounded-full border border-gray-200 dark:border-gray-600 hover:bg-black hover:border-black dark:hover:bg-white dark:hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300"
+              aria-label="Previous Page"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-white dark:group-hover:text-black transition-colors" />
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Page</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white min-w-[1.5rem] text-center">
+                {currentPage}
+              </span>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">of {totalPages}</span>
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="group p-3 rounded-full border border-gray-200 dark:border-gray-600 hover:bg-black hover:border-black dark:hover:bg-white dark:hover:border-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300"
+              aria-label="Next Page"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-white dark:group-hover:text-black transition-colors" />
+            </button>
           </div>
         )}
       </div>
-
-      {/* Pagination controls */}
-      {popular_Products && popular_Products.length > 0 && (
-        <div className="flex justify-center space-x-4 mt-6">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-          >
-            Previous
-          </button>
-          <span className="font-semibold text-gray-800 dark:text-gray-200">
-            {currentPage} / {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md disabled:opacity-50 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 };

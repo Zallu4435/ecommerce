@@ -45,12 +45,12 @@ const AddToCart = ({
   useEffect(() => {
     if (selectedColor && variants.length > 0) {
       const sizesForColor = variants
-        .filter(v => v.color === selectedColor && v.stockQuantity > 0 && v.isActive !== false)
+        .filter(v => v.color?.toLowerCase() === selectedColor?.toLowerCase() && v.stockQuantity > 0 && v.isActive !== false)
         .map(v => v.size);
       setAvailableSizesForColor([...new Set(sizesForColor)]);
 
       // Auto-select first available size
-      if (sizesForColor.length > 0 && !sizesForColor.includes(selectedSize)) {
+      if (sizesForColor.length > 0 && !sizesForColor.some(s => s?.toLowerCase() === selectedSize?.toLowerCase())) {
         setSelectedSize(sizesForColor[0]);
       }
     }
@@ -60,7 +60,9 @@ const AddToCart = ({
   useEffect(() => {
     if (selectedColor && selectedSize && variants.length > 0) {
       const variant = variants.find(
-        v => v.color === selectedColor && v.size === selectedSize && v.isActive !== false
+        v => v.color?.toLowerCase() === selectedColor?.toLowerCase() &&
+          v.size?.toLowerCase() === selectedSize?.toLowerCase() &&
+          v.isActive !== false
       );
       setSelectedVariant(variant || null);
 
@@ -200,44 +202,47 @@ const AddToCart = ({
   const canAddToCart = selectedColor && selectedSize && selectedVariant && !isOutOfStock;
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full md:w-96 mx-auto flex flex-col space-y-4 transition-all duration-300 transform hover:scale-105">
-      <div className="flex-grow space-y-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-          Order Summary
-        </h2>
-        <div className="flex justify-between">
-          <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
-            Price: ₹{effectiveOfferPrice}
-            {effectivePrice !== effectiveOfferPrice && (
-              <span className="ml-2 text-sm line-through text-gray-500">
-                ₹{effectivePrice}
-              </span>
-            )}
+    <div className="space-y-5">
+      {/* Price and Stock Info */}
+      <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            ₹{effectiveOfferPrice.toLocaleString()}
           </p>
+          {effectivePrice !== effectiveOfferPrice && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
+              ₹{effectivePrice.toLocaleString()}
+            </p>
+          )}
+        </div>
+        <div className="text-right">
           <p
-            className={`text-sm font-bold mb-4 ${effectiveStock > 0
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
+            className={`text-sm font-semibold ${effectiveStock > 0
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
               }`}
           >
             {selectedVariant
-              ? (effectiveStock > 0 ? `Stock: ${effectiveStock}` : "Out of Stock")
-              : `Total Stock: ${totalStock}`
+              ? (effectiveStock > 0 ? `${effectiveStock} in stock` : "Out of Stock")
+              : `${totalStock} total stock`
             }
           </p>
         </div>
+      </div>
 
-        <div className="space-y-4">
-          {/* Color Selection */}
-          <div className="flex items-center mb-2">
-            <label className="text-gray-700 dark:text-gray-300 mr-2 w-20">
-              Color: *
-            </label>
-            {availableColors && availableColors.length > 0 ? (
+      {/* Selection Controls */}
+      <div className="space-y-5">
+        {/* Color Selection */}
+        <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-600">
+          <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-3">
+            Select Color <span className="text-red-500">*</span>
+          </label>
+          {availableColors && availableColors.length > 0 ? (
+            <div className="relative">
               <select
                 value={selectedColor}
                 onChange={handleColorChange}
-                className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 w-full transition-colors duration-200"
+                className="w-full px-4 py-3 pr-10 border-2 border-gray-300 dark:border-gray-500 rounded-lg text-base font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:border-gray-400 dark:hover:border-gray-400"
               >
                 {availableColors.map((color) => (
                   <option key={color} value={color}>
@@ -245,21 +250,28 @@ const AddToCart = ({
                   </option>
                 ))}
               </select>
-            ) : (
-              <span className="text-gray-500 dark:text-gray-400">No colors available</span>
-            )}
-          </div>
+              <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400 italic">No colors available</p>
+          )}
+        </div>
 
-          {/* Size Selection */}
-          <div className="flex items-center mb-2">
-            <label className="text-gray-700 dark:text-gray-300 mr-2 w-20">
-              Size: *
-            </label>
-            {availableSizesForColor && availableSizesForColor.length > 0 ? (
+        {/* Size Selection */}
+        <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-600">
+          <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-3">
+            Select Size <span className="text-red-500">*</span>
+          </label>
+          {availableSizesForColor && availableSizesForColor.length > 0 ? (
+            <div className="relative">
               <select
                 value={selectedSize}
                 onChange={handleSizeChange}
-                className="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 w-full transition-colors duration-200"
+                className="w-full px-4 py-3 pr-10 border-2 border-gray-300 dark:border-gray-500 rounded-lg text-base font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:border-gray-400 dark:hover:border-gray-400"
               >
                 {availableSizesForColor.map((size) => (
                   <option key={size} value={size}>
@@ -267,92 +279,92 @@ const AddToCart = ({
                   </option>
                 ))}
               </select>
-            ) : (
-              <span className="text-gray-500 dark:text-gray-400">
-                {selectedColor ? "No sizes available for this color" : "Select a color first"}
-              </span>
-            )}
-          </div>
-
-          {/* Quantity Selection */}
-          <div className="flex items-center mb-2">
-            <label className="text-gray-700 dark:text-gray-300 mr-2 w-20">
-              Quantity:
-            </label>
-            <div className="flex items-center border rounded-lg overflow-hidden">
-              <button
-                className="px-3 py-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100 transition-colors duration-200"
-                onClick={handleDecrease}
-                disabled={quantity <= 1}
-              >
-                -
-              </button>
-              <span className="px-4 py-1 text-gray-800 dark:text-gray-100">
-                {quantity}
-              </span>
-              <button
-                className="px-3 py-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-100 transition-colors duration-200"
-                onClick={handleIncrease}
-                disabled={quantity >= MAX_QUANTITY || quantity >= effectiveStock}
-              >
-                +
-              </button>
+              <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+              {selectedColor ? "No sizes available for this color" : "Select a color first"}
+            </p>
+          )}
         </div>
 
-        <div className="mb-6 border-t pt-4 border-gray-300 dark:border-gray-600">
-          <p className="text-gray-700 dark:text-gray-300 flex justify-between">
-            <span>Subtotal:</span>
-            <span>₹{subTotal.toFixed(2)}</span>
-          </p>
-          <p className="text-gray-700 dark:text-gray-300 flex justify-between">
-            <span>Tax (8%):</span>
-            <span>₹{taxAmount.toFixed(2)}</span>
-          </p>
-          <p className="text-gray-700 dark:text-gray-300 flex justify-between">
-            <span>Shipping:</span>
-            <span>₹{SHIPPING_COST.toFixed(2)}</span>
-          </p>
-          <p className="text-xl font-bold text-gray-800 dark:text-gray-100 flex justify-between">
-            <span>Total:</span>
-            <span>₹{totalPrice.toFixed(2)}</span>
-          </p>
+        {/* Quantity Selection */}
+        <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-600">
+          <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-3">
+            Quantity
+          </label>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              className="w-12 h-12 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-500 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-200 text-xl font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white dark:disabled:hover:border-gray-500 dark:disabled:hover:bg-gray-800 shadow-sm hover:shadow-md"
+              onClick={handleDecrease}
+              disabled={quantity <= 1}
+            >
+              −
+            </button>
+            <div className="min-w-[4rem] px-6 py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-500 rounded-xl">
+              <span className="block text-center text-xl font-bold text-gray-900 dark:text-white">
+                {quantity}
+              </span>
+            </div>
+            <button
+              className="w-12 h-12 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-500 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-200 text-xl font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white dark:disabled:hover:border-gray-500 dark:disabled:hover:bg-gray-800 shadow-sm hover:shadow-md"
+              onClick={handleIncrease}
+              disabled={quantity >= MAX_QUANTITY || quantity >= effectiveStock}
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Price Breakdown */}
+      <div className="space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+          <span>Subtotal</span>
+          <span className="font-medium">₹{subTotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+          <span>Tax (8%)</span>
+          <span className="font-medium">₹{taxAmount.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+          <span>Shipping</span>
+          <span className="font-medium">₹{SHIPPING_COST.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
+          <span>Total</span>
+          <span>₹{totalPrice.toFixed(2)}</span>
+        </div>
+      </div>
+
+      {/* Loading State */}
       {isLoading && (
-        <p className="text-center text-gray-700 dark:text-gray-300 mb-4">
-          Adding to cart...
-        </p>
+        <div className="flex items-center justify-center py-2">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Adding to cart...</span>
+        </div>
       )}
 
-      <div className="flex flex-col gap-4 mt-auto">
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-3 pt-2">
         <button
-          style={{
-            opacity:
-              isLoading || !canAddToCart || !isAuthenticated ? 0.5 : 1,
-            cursor:
-              isLoading || !canAddToCart || !isAuthenticated
-                ? "not-allowed"
-                : "pointer",
-          }}
-          className="w-full px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 dark:hover:bg-green-500 transition-all duration-300 transform hover:scale-105"
+          className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
           onClick={handleCheckout}
           disabled={!isAuthenticated || isLoading || !canAddToCart}
         >
-          {isAuthenticated ? "Buy Now" : "SignIn to Buy"}
+          {isAuthenticated ? "Buy Now" : "Sign In to Buy"}
         </button>
 
         <button
-          className={`w-full px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-all duration-300 transform hover:scale-105 ${!canAddToCart || !isAuthenticated || isLoading
-              ? "opacity-50 cursor-not-allowed"
-              : ""
-            }`}
+          className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
           onClick={handleAddToCart}
           disabled={!isAuthenticated || isLoading || !canAddToCart}
         >
-          {isAuthenticated ? "Add to Cart" : "SignIn to Add to Cart"}
+          {isAuthenticated ? "Add to Cart" : "Sign In to Add to Cart"}
         </button>
       </div>
     </div>

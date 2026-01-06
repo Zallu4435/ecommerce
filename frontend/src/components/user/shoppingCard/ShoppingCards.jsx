@@ -31,8 +31,8 @@ const ShoppingCard = ({
   wishlistData = [],    // Receive as prop
   comparisonData = [],  // Receive as prop
 }) => {
-  const formattedPrice = parseFloat(originalPrice);
-  const formattedOriginalPrice = parseFloat(offerPrice);
+  const formattedOfferPrice = parseFloat(offerPrice) || 0;
+  const formattedOriginalPrice = parseFloat(originalPrice) || formattedOfferPrice;
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const processingRef = useRef(false);
@@ -40,8 +40,14 @@ const ShoppingCard = ({
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
 
   const offerPercentage = (originalPrice, offerPrice) => {
+    if (!originalPrice || originalPrice <= 0 || !offerPrice || offerPrice <= 0) {
+      return 0;
+    }
+    if (offerPrice >= originalPrice) {
+      return 0;
+    }
     const percentage = ((originalPrice - offerPrice) / originalPrice) * 100;
-    return Math.round(percentage);
+    return Math.round(Math.max(0, percentage));
   };
 
   const navigate = useNavigate();
@@ -61,7 +67,7 @@ const ShoppingCard = ({
   const handleImageClick = () => navigate(`/product/${_id}`);
 
   return (
-    <div className="m-3 border rounded-lg text-lg shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] overflow-hidden w-full max-w-sm sm:w-[300px] md:w-[350px] lg:w-[420px] p-4 border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+    <div className="border rounded-lg text-lg shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] overflow-hidden w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-200 transition-transform hover:-translate-y-1 hover:shadow-xl duration-300">
       <div className="relative flex justify-center py-6 px-12 sm:py-8 items-center">
         <div className="relative w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] overflow:hidden">
           <img
@@ -106,9 +112,14 @@ const ShoppingCard = ({
                     key={index}
                     onClick={async (e) => {
                       e.stopPropagation();
-                      if (processingRef.current) return;
 
-                      // Backup check in case ref fails or isLoading is already true from elsewhere
+                      // Handle View action separately (no auth needed, just navigate)
+                      if (label === 'view') {
+                        navigate(`/product/${_id}`);
+                        return;
+                      }
+
+                      if (processingRef.current) return;
                       if (label === 'wishlist' && isWishlistLoading) return;
                       if (label === 'compare' && isComparisonLoading) return;
 
@@ -116,8 +127,6 @@ const ShoppingCard = ({
                         const messages = {
                           wishlist: "Please log in to add items to your wishlist.",
                           compare: "Log in to compare products.",
-                          cart: "Sign in to add this item to your cart.",
-                          view: "Please log in to view product details.",
                         };
                         toast.error(messages[label] || "Please log in to continue.");
                         return;
@@ -138,7 +147,7 @@ const ShoppingCard = ({
                         processingRef.current = false;
                       }
                     }}
-                    className="bg-gray-200 dark:bg-gray-700 p-2 sm:p-3 rounded-full cursor-pointer"
+                    className="bg-gray-200 dark:bg-gray-700 p-2 sm:p-3 rounded-full cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   >
                     <Icon className={`${color} text-sm sm:text-xl`} />
                   </div>
@@ -169,7 +178,7 @@ const ShoppingCard = ({
             Rating:{" "}
             {typeof averageRating === "number" && !isNaN(averageRating)
               ? averageRating.toFixed(1)
-              : averageRating || "N/A"}
+              : "0.0"}
           </p>
 
           <p className="text-sm sm:text-base">({totalReviews} reviews)</p>
@@ -177,29 +186,33 @@ const ShoppingCard = ({
 
         <div className="inline-flex items-center space-x-2">
           <span className="text-gray-500 line-through text-sm sm:text-base">
-            &#8377;{formattedPrice.toFixed(2)}
+            &#8377;{formattedOriginalPrice.toFixed(2)}
           </span>
           <span className="text-red-500 font-semibold text-sm sm:text-base">
-            &#8377;{formattedOriginalPrice.toFixed(2)}
+            &#8377;{formattedOfferPrice.toFixed(2)}
           </span>
         </div>
 
         <button
-          onClick={() =>
-            handleAddToCart(_id, addToCart, setIsAdding, product, cartData)
-          }
-          disabled={!isAuthenticated || isAdding}
-          className={`w-full py-2 sm:py-3 flex border-yellow-500 border-2 justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${!isAuthenticated || isAdding
+          onClick={() => {
+            if (!isAuthenticated) {
+              toast.error("Please login to add items to cart");
+              return;
+            }
+            handleAddToCart(_id, addToCart, setIsAdding, product, cartData);
+          }}
+          disabled={isAdding || stockQuantity <= 0}
+          className={`w-full py-2 sm:py-3 flex border-yellow-500 border-2 justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${isAdding || stockQuantity <= 0
             ? "opacity-50 cursor-not-allowed"
-            : "hover:bg-yellow-500 dark:hover:bg-yellow-600"
+            : "hover:bg-yellow-500 dark:hover:bg-yellow-600 cursor-pointer"
             }`}
         >
-          {!isAuthenticated
-            ? "SignIn to Add to Cart"
+          {stockQuantity <= 0
+            ? "Out of Stock"
             : isAdding
-              ? "Adding to Cart..."
+              ? "Adding..."
               : "Add to Cart"}
-          {!isAuthenticated || isAdding ? null : <FaShoppingCart />}
+          {stockQuantity > 0 && !isAdding && <FaShoppingCart />}
         </button>
       </div>
     </div>

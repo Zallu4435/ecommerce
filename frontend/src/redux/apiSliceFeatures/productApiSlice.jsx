@@ -35,7 +35,7 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
     }),
 
     getPopularProducts: builder.query({
-      query: () => "/products/get-popular-prducts",
+      query: () => "/products/get-popular-products",
     }),
 
     searchProducts: builder.query({
@@ -59,6 +59,7 @@ export const productApiSlice = crudApiSlice.injectEndpoints({
           page: params.page,
           limit: params.limit,
           category: params.category,
+          search: params.search,
         },
       }),
     }),

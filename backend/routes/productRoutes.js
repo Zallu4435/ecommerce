@@ -21,7 +21,7 @@ router.get("/getProduct/:id", catchAsyncErrors(getProductDetails));
 router.get("/relatedProduct", catchAsyncErrors(getRelatedProducts));
 router.get("/filter", catchAsyncErrors(getFilteredProducts));
 router.get("/search", catchAsyncErrors(searchProducts));
-router.get("/get-popular-prducts", catchAsyncErrors(getPopularProducts));
+router.get("/get-popular-products", catchAsyncErrors(getPopularProducts));
 
 router.post("/create", catchAsyncErrors(createProduct));
 router.put("/update/:id", catchAsyncErrors(updateProduct));

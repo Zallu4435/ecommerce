@@ -17,11 +17,14 @@ const CheckoutPage = lazy(() => import("../pages/user/checkout/Checkout.jsx"));
 const PaymentSuccess = lazy(() => import("../pages/user/PaymentSuccess.jsx"));
 const ProceedToPaymentPage = lazy(() => import("../pages/payment/ProceedToPayment.jsx"));
 const TrackOrder = lazy(() => import("../pages/user/userProfile/TrackOrder.jsx"));
+const OrdersListGrouped = lazy(() => import("../pages/user/userProfile/OrdersListGrouped.jsx"));
+const OrderDetailsPage = lazy(() => import("../pages/user/userProfile/OrderDetailsPage.jsx"));
 
 // Admin Routes (lazy)
 const UserManagement = lazy(() => import('../pages/admin/UserManagement.jsx'))
 const CategoryManagement = lazy(() => import('../pages/admin/CategoryManagement.jsx'))
-const OrderManagement = lazy(() => import('../pages/admin/OrderMangement.jsx'))
+const AdminOrderManagementNew = lazy(() => import('../pages/admin/AdminOrderManagementNew.jsx'))
+const AdminOrderDetailsPage = lazy(() => import('../pages/admin/AdminOrderDetailsPage.jsx'))
 const SalesManagement = lazy(() => import('../pages/admin/Sales Management/SalesManagement.jsx'))
 const CouponManagement = lazy(() => import('../pages/admin/CouponManagement.jsx'))
 const AdminCreateCouponForm = lazy(() => import('../Forms/admin/Coupon Form/AdminCreateCoupensForm.jsx'))
@@ -42,6 +45,7 @@ const HelpComponent = lazy(() => import('../pages/admin/HelpComponent.jsx'))
 const CurrencyConverter = lazy(() => import('../pages/admin/Admin Settings/CurrencyConverter.jsx'))
 const TermsAndConditions = lazy(() => import('../pages/admin/Admin Settings/Terms&Condition.jsx'))
 
+
 export const routes = [
   { path: "/", component: Home, isProtected: false },
   { path: "/login", component: UserLogin, isProtected: false },
@@ -59,6 +63,8 @@ export const routes = [
   { path: "/payment-success", component: PaymentSuccess, isprotected: true },
   { path: "/proceed-to-payment", component: ProceedToPaymentPage, isProtected: true },
   { path: "/track-order/:id", component: TrackOrder, isProtected: true },
+  { path: "/orders", component: OrdersListGrouped, isProtected: true },
+  { path: "/order-details/:orderId", component: OrderDetailsPage, isProtected: true },
   { path: "*", component: NotFound, isProtected: false },
 ];
 
@@ -70,7 +76,8 @@ export const adminRoutes = [
   { path: "/terms-and-conditions", component: TermsAndConditions },
   { path: "/help", component: HelpComponent },
   { path: "/categoryManagement", component: CategoryManagement },
-  { path: "/orderManagement", component: OrderManagement },
+  { path: "/orderManagement", component: AdminOrderManagementNew }, // Updated to use new page
+  { path: "/order-details/:orderId", component: AdminOrderDetailsPage },
   { path: "/couponManagement", component: CouponManagement },
   { path: "/salesManagement", component: SalesManagement },
   { path: "/productManagement", component: ProductManagement },
@@ -88,4 +95,5 @@ export const adminRoutes = [
   { path: "/couponManagement/view/coupons/:id", component: ViewCouponDetails },
   { path: "*", component: NotFound },
 ];
+
 

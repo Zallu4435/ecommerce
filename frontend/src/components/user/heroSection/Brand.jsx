@@ -1,110 +1,93 @@
 import { useRef } from "react";
 import Slider from "react-slick";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-
-import {
-  brandImg_1,
-  brandImg_2,
-  brandImg_3,
-  brandImg_4,
-  brandImg_5,
-  brandImg_6,
-  brandImg_7,
-  brandImg_8,
-} from "../../../assets/images/index";
+import { SiNike, SiAdidas, SiPuma, SiUnderarmour, SiNewbalance, SiFila, SiJordan, SiReebok } from "react-icons/si";
 
 const FashionBrandSlider = () => {
   const sliderRef = useRef(null);
 
   const settings = {
     infinite: true,
-    autoplay: false,
+    autoplay: true,
+    autoplaySpeed: 3000,
     slidesToShow: 6,
     slidesToScroll: 1,
     speed: 500,
-    cssEase: "linear",
-    prevArrow: (
-      <FaChevronLeft className="text-4xl text-gray-800 dark:text-gray-200 cursor-pointer" />
-    ),
-    nextArrow: (
-      <FaChevronRight className="text-4xl text-gray-800 dark:text-gray-200 cursor-pointer" />
-    ),
+    cssEase: "ease-out",
+    arrows: false,
     responsive: [
       {
         breakpoint: 1280,
-        settings: {
-          slidesToShow: 5,
-        },
+        settings: { slidesToShow: 5 },
       },
       {
         breakpoint: 1024,
-        settings: {
-          slidesToShow: 4,
-        },
+        settings: { slidesToShow: 4 },
       },
       {
         breakpoint: 768,
-        settings: {
-          slidesToShow: 4,
-        },
+        settings: { slidesToShow: 3 },
       },
       {
         breakpoint: 480,
-        settings: {
-          slidesToShow: 3,
-        },
+        settings: { slidesToShow: 2 },
       },
     ],
   };
 
   const brands = [
-    { image: brandImg_1, alt: "Brand 1" },
-    { image: brandImg_2, alt: "Brand 2" },
-    { image: brandImg_3, alt: "Brand 3" },
-    { image: brandImg_4, alt: "Brand 4" },
-    { image: brandImg_5, alt: "Brand 5" },
-    { image: brandImg_6, alt: "Brand 6" },
-    { image: brandImg_7, alt: "Brand 7" },
-    { image: brandImg_8, alt: "Brand 8" },
+    { Icon: SiNike, name: "Nike" },
+    { Icon: SiAdidas, name: "Adidas" },
+    { Icon: SiPuma, name: "Puma" },
+    { Icon: SiUnderarmour, name: "Under Armour" },
+    { Icon: SiNewbalance, name: "New Balance" },
+    { Icon: SiFila, name: "Fila" },
+    { Icon: SiJordan, name: "Jordan" },
+    { Icon: SiReebok, name: "Reebok" },
   ];
 
   return (
-    <div className="relative border-2 space-y-10 border-gray-400 dark:border-gray-600 mx-4 md:mx-10 lg:mx-16 xl:mx-24 rounded-lg shadow-lg overflow-hidden p-4 dark:bg-gray-800 bg-white">
-      <div className="text-2xl sm:text-3xl md:text-4xl text-gray-800 dark:text-gray-200 font-semibold absolute left-8 top-4">
-        TOP BRANDS
-      </div>
-
-      <div className="absolute lg:top-0 lg:right-14 md:right-[30px] top-[-20px] right-[10px] z-10">
-        <FaChevronRight
-          className="text-3xl sm:text-4xl lg:text-5xl text-gray-800 dark:text-gray-200 cursor-pointer p-2 md:p-3 border-2 border-gray-800 dark:border-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
-          onClick={() => sliderRef.current.slickNext()}
-        />
-      </div>
-
-      <div className="absolute lg:top-0 lg:right-28 top-[-20px] right-[50px] md:right-20 z-10">
-        <FaChevronLeft
-          className="text-3xl sm:text-4xl lg:text-5xl text-gray-800 dark:text-gray-200 cursor-pointer p-2 md:p-3 border-2 border-gray-800 dark:border-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
-          onClick={() => sliderRef.current.slickPrev()}
-        />
-      </div>
-
-      <Slider {...settings} ref={sliderRef}>
-        {brands.map((brand, index) => (
-          <div
-            key={index}
-            className="flex justify-center items-center mx-4 sm:mx-6 md:mx-8 lg:mx-10 my-4"
-          >
-            <div role="img" aria-label={brand.alt} className="select-none">
-              <img
-                src={brand.image}
-                alt={brand.alt}
-                className="w-20 sm:w-24 md:w-28 lg:w-32 h-auto object-contain p-4 transition-transform duration-300 hover:scale-110 cursor-default"
-                draggable={false}
-              />
-            </div>
+    <div className="relative py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <div className="relative border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm dark:shadow-none p-8 mx-auto overflow-hidden bg-gray-50 dark:bg-gray-800/50">
+        <div className="flex justify-between items-center mb-10 px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Top Brands
+          </h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => sliderRef.current?.slickPrev()}
+              className="p-3 rounded-full bg-white dark:bg-gray-700 shadow-md hover:shadow-lg text-gray-700 dark:text-gray-200 transition-all active:scale-95"
+              aria-label="Previous brand"
+            >
+              <FaChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => sliderRef.current?.slickNext()}
+              className="p-3 rounded-full bg-white dark:bg-gray-700 shadow-md hover:shadow-lg text-gray-700 dark:text-gray-200 transition-all active:scale-95"
+              aria-label="Next brand"
+            >
+              <FaChevronRight className="w-5 h-5" />
+            </button>
           </div>
-        ))}
-      </Slider>
+        </div>
+
+        <div className="px-4">
+          <Slider {...settings} ref={sliderRef}>
+            {brands.map((brand, index) => (
+              <div key={index} className="px-4 py-6 outline-none">
+                <div className="flex flex-col items-center justify-center group cursor-pointer transition-all duration-300 transform hover:-translate-y-1">
+                  <brand.Icon
+                    className="w-16 h-16 md:w-20 md:h-20 text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-300 drop-shadow-sm"
+                  />
+                  <span className="mt-4 text-sm font-medium text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0">
+                    {brand.name}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </Slider>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import Slider from "react-slick";
-import { FaInstagram } from "react-icons/fa";
+import { Instagram } from "lucide-react";
 import {
   instaImg_1,
   instaImg_2,
@@ -8,81 +8,79 @@ import {
 } from "../../../assets/images";
 
 const HeroSection_5 = () => {
+  // Use images twice to create a longer loop if array is short
   const slides = [
-    { image: instaImg_1, link: "https://www.instagram.com/yourpage" },
-    { image: instaImg_2, link: "https://www.instagram.com/yourpage" },
-    { image: instaImg_3, link: "https://www.instagram.com/yourpage" },
-    { image: instaImg_4, link: "https://www.instagram.com/yourpage" },
+    { image: instaImg_1, link: "https://www.instagram.com" },
+    { image: instaImg_2, link: "https://www.instagram.com" },
+    { image: instaImg_3, link: "https://www.instagram.com" },
+    { image: instaImg_4, link: "https://www.instagram.com" },
+    { image: instaImg_1, link: "https://www.instagram.com" },
   ];
 
   const settings = {
     infinite: true,
     autoplay: true,
-    autoplaySpeed: 2000,
+    autoplaySpeed: 3000,
     slidesToShow: 4,
     slidesToScroll: 1,
-    speed: 500,
-    cssEase: "linear",
-    centerMode: true,
-    focusOnSelect: true,
-    centerPadding: "0",
+    speed: 800,
+    cssEase: "ease-in-out",
+    arrows: false,
     responsive: [
       {
         breakpoint: 1024,
-        settings: {
-          slidesToShow: 4,
-        },
+        settings: { slidesToShow: 3 },
       },
       {
         breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-        },
+        settings: { slidesToShow: 2 },
       },
       {
         breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-        },
+        settings: { slidesToShow: 1 },
       },
     ],
   };
 
   return (
-    <div className="overflow-hidden shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.5)]">
-      <div className="ml-5 sm:space-y-2 mb-2 sm:mb-0">
-        <h1 className="font-medium text-2xl sm:text-3xl md:text-4xl">
-          INSTAGRAM
-        </h1>
-        <h1 className="text-sm sm:text-lg md:text-xl text-gray-500">
-          Get inspired by Indian fans all over the world
-        </h1>
+    <section className="py-20 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+      <div className="container mx-auto px-4 mb-12 text-center">
+        <div className="flex items-center justify-center gap-2 mb-4 text-pink-600 dark:text-pink-400">
+          <Instagram className="w-6 h-6" />
+          <span className="font-bold tracking-wider text-sm uppercase">Follow Us On Instagram</span>
+        </div>
+        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
+          @E-CommerceStyle
+        </h2>
+        <p className="text-gray-500 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+          Tag us in your photos to be featured in our monthly lookbook.
+        </p>
       </div>
-      <Slider {...settings}>
-        {slides.map((slide, index) => (
-          <div
-            key={index}
-            className="p-1 sm:p-2 md:p-3 h-[300px] sm:h-[300px] md:h-[400px] relative"
-          >
-            <img
-              src={slide.image}
-              alt="Instagram"
-              className="w-full h-full px-3 sm:px-0 object-cover"
-            />
-            <a
-              href={slide.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div className="bg-black bg-opacity-50 p-2 sm:p-3 md:p-4 rounded-full">
-                <FaInstagram className="text-white text-3xl sm:text-4xl md:text-5xl opacity-100 hover:opacity-90 transition-opacity duration-300" />
-              </div>
-            </a>
-          </div>
-        ))}
-      </Slider>
-    </div>
+
+      <div className="relative">
+        <Slider {...settings} className="instagram-slider">
+          {slides.map((slide, index) => (
+            <div key={index} className="px-2">
+              <a
+                href={slide.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block relative group overflow-hidden rounded-2xl aspect-square cursor-pointer"
+              >
+                <img
+                  src={slide.image}
+                  alt="Instagram post"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                  <Instagram className="w-10 h-10 text-white transform scale-50 group-hover:scale-100 transition-transform duration-300" />
+                </div>
+              </a>
+            </div>
+          ))}
+        </Slider>
+      </div>
+    </section>
   );
 };
 

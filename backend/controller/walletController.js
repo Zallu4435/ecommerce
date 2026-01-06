@@ -1,4 +1,4 @@
-const Transaction = require("../model/WalletTransaction"); 
+const Transaction = require("../model/WalletTransaction");
 const Wallet = require("../model/Wallet");
 
 exports.addMoneyToWallet = async (req, res) => {
@@ -12,14 +12,8 @@ exports.addMoneyToWallet = async (req, res) => {
         .json({ success: false, message: "Invalid input data" });
     }
 
+    // Find or create wallet FIRST
     let wallet = await Wallet.findOne({ userId });
-
-    if(wallet.balance >= 100000) {
-      return res.status(400).json({
-        success: false,
-        message: "Maximum amount reached",
-      })
-    }
 
     if (!wallet) {
       wallet = new Wallet({
@@ -28,6 +22,23 @@ exports.addMoneyToWallet = async (req, res) => {
         status: "Active",
       });
       await wallet.save();
+    }
+
+    // NOW check max limit (after wallet exists)
+    if (wallet.balance >= 100000) {
+      return res.status(400).json({
+        success: false,
+        message: "Wallet has reached maximum limit of ₹100,000",
+      });
+    }
+
+    // Check if adding amount would exceed limit
+    if (wallet.balance + amount > 100000) {
+      const remainingLimit = 100000 - wallet.balance;
+      return res.status(400).json({
+        success: false,
+        message: `Cannot add ₹${amount}. Maximum limit is ₹100,000. You can only add ₹${remainingLimit} more.`,
+      });
     }
 
     wallet.balance += amount;
@@ -39,6 +50,7 @@ exports.addMoneyToWallet = async (req, res) => {
       type: "Credit",
       amount,
       description: description || "Wallet recharge",
+      transactionType: "Deposit",
       status: "Successful",
     });
 
@@ -188,11 +200,11 @@ exports.getTransactionSummary = async (req, res) => {
       .filter(t => t.type === 'Debit' && t.status === 'Successful')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const successfulPayments = transactions.filter(t => 
+    const successfulPayments = transactions.filter(t =>
       t.status === 'Successful' && t.paymentMethod === 'razorpay'
     ).length;
 
-    const failedPayments = transactions.filter(t => 
+    const failedPayments = transactions.filter(t =>
       t.status === 'Failed'
     ).length;
 

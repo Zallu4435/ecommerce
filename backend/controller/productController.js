@@ -199,7 +199,7 @@ exports.searchProducts = async (req, res) => {
       return res.status(400).json({ message: "Search query is required" });
     }
 
-    q = q.replace(/[^a-zA-Z0-9]/g, "").trim();
+    q = q.replace(/[^a-zA-Z0-9\s]/g, "").trim();
 
     if (q.length === 0) {
       return res.status(400).json({
@@ -261,6 +261,7 @@ exports.getFilteredProducts = async (req, res) => {
       limit = 10,
       category,
       brand,
+      search,
     } = req.query;
 
     if (category.toLowerCase() === "childrens") {
@@ -274,11 +275,11 @@ exports.getFilteredProducts = async (req, res) => {
     const query = {};
 
     if (sizes && sizes !== "") {
-      query.sizeOption = { $in: sizes.split(",") };
+      query.availableSizes = { $in: sizes.split(",") };
     }
 
     if (colors && colors !== "") {
-      query.colorOption = { $in: colors.split(",") };
+      query.availableColors = { $in: colors.split(",").map(c => new RegExp(c, 'i')) };
     }
 
     if (minPrice || maxPrice) {
@@ -293,6 +294,10 @@ exports.getFilteredProducts = async (req, res) => {
 
     if (brand) {
       query.brand = { $regex: brand, $options: "i" };
+    }
+
+    if (search) {
+      query.productName = { $regex: search, $options: "i" };
     }
 
     const sortOptions = {
@@ -596,7 +601,18 @@ exports.deleteProduct = async (req, res, next) => {
 
 exports.getPopularProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ rating: -1 }).limit(8);
+    // Fetch active products with stock, sorted by newest first
+    // Since we don't have a persistent 'rating' or 'popularity' field, we use createdAt as a proxy for trending
+    const products = await Product.find({
+      status: "active",
+      totalStock: { $gt: 0 }
+    })
+      .sort({ createdAt: -1 })
+      .limit(8);
+
+    if (!products || products.length === 0) {
+      return res.status(200).json([]);
+    }
 
     const productsWithReviews = await Promise.all(
       products.map(async (product) => {
@@ -609,11 +625,12 @@ exports.getPopularProducts = async (req, res) => {
             totalReviews
             : 0;
 
+        // Ensure we handle price fields safely
         return {
           ...product.toObject(),
           originalPrice: product.basePrice,
           offerPrice: product.baseOfferPrice,
-          averageRating,
+          averageRating: Number(averageRating.toFixed(1)),
           totalReviews,
         };
       })
@@ -621,7 +638,11 @@ exports.getPopularProducts = async (req, res) => {
 
     res.status(200).json(productsWithReviews);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to fetch products" });
+    console.error("Error in getPopularProducts:", error.message, error.stack);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch popular products",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };

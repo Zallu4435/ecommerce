@@ -15,22 +15,34 @@ exports.addToCart = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    const selectedColor = color || product.colorOption[0];
+    // Default to first available option if not provided, but only if options exist
+    const selectedColor = color || (product.availableColors && product.availableColors.length > 0 ? product.availableColors[0] : null);
+    const selectedSize = size || (product.availableSizes && product.availableSizes.length > 0 ? product.availableSizes[0] : null);
 
-    const selectedSize =
-      size || (product.sizeOption.length > 0 ? product.sizeOption[0] : null);
-
-    if (!product.colorOption.includes(selectedColor)) {
-      return res.status(400).json({ message: "Invalid color selected" });
+    // Validate Status
+    if (product.status !== "active") {
+      return res.status(400).json({ message: "Product is currently unavailable" });
     }
 
-    if (selectedSize && !product.sizeOption.includes(selectedSize)) {
-      return res.status(400).json({ message: "Invalid size selected" });
+    // Validate Color
+    if (product.availableColors && product.availableColors.length > 0) {
+      if (!selectedColor || !product.availableColors.includes(selectedColor)) {
+        return res.status(400).json({ message: "Invalid color selected" });
+      }
+    }
+
+    // Validate Size
+    if (product.availableSizes && product.availableSizes.length > 0) {
+      if (!selectedSize || !product.availableSizes.includes(selectedSize)) {
+        return res.status(400).json({ message: "Invalid size selected" });
+      }
     }
 
     const limit = 50; // Cart limit
-    // Check if stock is sufficient
-    if (product.stockQuantity < quantity) {
+
+    // Check Stock (Using totalStock as per schema)
+    // Note: Ideally we should check Variant stock if variants exist, but taking totalStock as first line of defense
+    if (product.totalStock < quantity) {
       return res.status(400).json({ message: "Product is out of stock or insufficient quantity" });
     }
 
@@ -73,7 +85,6 @@ exports.addToCart = async (req, res) => {
         { new: true }
       );
     } catch (wishlistError) {
-      // Log the error but don't fail the cart operation
       console.error("Error removing item from wishlist:", wishlistError);
     }
 
@@ -85,7 +96,6 @@ exports.addToCart = async (req, res) => {
         { new: true }
       );
     } catch (comparisonError) {
-      // Log the error but don't fail the cart operation
       console.error("Error removing item from comparison:", comparisonError);
     }
 
@@ -146,14 +156,16 @@ exports.getCartItems = async (req, res) => {
           cartItemId: { $toString: "$items._id" },
           productName: "$productDetails.productName",
           productImage: "$productDetails.image",
-          originalPrice: "$productDetails.originalPrice",
-          offerPrice: "$productDetails.offerPrice",
+          originalPrice: "$productDetails.basePrice",
+          offerPrice: "$productDetails.baseOfferPrice",
           quantity: "$items.quantity",
-          stockQuantity: "$productDetails.stockQuantity",
+          stockQuantity: "$productDetails.totalStock",
           productId: "$productDetails._id",
           category: "$productDetails.category",
           totalReviews: 1,
           averageRating: 1,
+          size: "$items.size",
+          color: "$items.color"
         },
       },
     ]);
@@ -242,7 +254,7 @@ exports.updateCartQuantity = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    if (quantity > product.stockQuantity) {
+    if (quantity > product.totalStock) {
       return res.status(400).json({ message: "Out of stock" });
     }
 

@@ -14,8 +14,12 @@ export const reviewApi = createApi({
     }),
 
     getReviews: builder.query({
-      query: ({ page = 1, productId }) =>
-        `reviews/get-reviews?page=${page}&productId=${productId}`,
+      query: ({ page = 1, productId, rating, sortBy }) => {
+        let url = `reviews/get-reviews?page=${page}&productId=${productId}`;
+        if (rating) url += `&rating=${rating}`;
+        if (sortBy) url += `&sortBy=${sortBy}`;
+        return url;
+      },
     }),
 
     hasReviewed: builder.query({

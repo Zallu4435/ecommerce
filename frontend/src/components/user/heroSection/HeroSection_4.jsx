@@ -1,65 +1,43 @@
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { BsStars } from "react-icons/bs";
+import { Sparkles, Zap, Tag, Truck } from "lucide-react";
 
 const HeroSection_4 = () => {
   const settings = {
     infinite: true,
     autoplay: true,
-    autoplaySpeed: 1,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    speed: 3000,
+    autoplaySpeed: 0, // Continuous scrolling
+    speed: 6000,      // Slower, smoother speed
     cssEase: "linear",
+    variableWidth: true, // Allows items to take natural width
     arrows: false,
     dots: false,
-    swipe: true,
     pauseOnHover: false,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-        },
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-        },
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          speed: 2000,
-        },
-      },
-    ],
+    slidesToShow: 1,  // Not used with variableWidth but required
   };
 
-  const arr = [
-    "Spring Collection",
-    "Hot Deal Products",
-    "T-Shirt Offer",
-    "Limited Offer Sale",
-    "Our Services",
+  const offers = [
+    { text: "SEASONAL SALE IS LIVE", icon: Zap },
+    { text: "FREE SHIPPING ON ORDERS OVER $100", icon: Truck },
+    { text: "NEW ARRIVALS DAILY", icon: Sparkles },
+    { text: "LIMITED TIME OFFERS", icon: Tag },
+    { text: "PREMIUM QUALITY GUARANTEED", icon: Sparkles },
   ];
 
   return (
-    <div className="relative w-full dark:bg-gray-800 bg-gray-100 py-10 shadow-lg dark:shadow-md">
-      <Slider {...settings}>
-        {arr.map((slide, index) => (
-          <div
-            key={index}
-            className="px-4 sm:px-6 md:px-8 lg:px-10 whitespace-nowrap"
-          >
-            {" "}
-            <h1 className="flex items-center tracking-wide text-lg sm:text-xl md:text-2xl lg:text-4xl font-semibold gap-10 sm:gap-20 md:gap-30 lg:gap-44 dark:text-white text-gray-800">
-              {slide}
-              <BsStars className="text-yellow-400 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12" />
-            </h1>
+    <div className="relative w-full bg-black text-white py-6 overflow-hidden border-y border-gray-800">
+      <Slider {...settings} className="marquee-slider">
+        {/* Duplicate content to ensure seamless loop if needed, though react-slick handles infinite */}
+        {[...offers, ...offers, ...offers].map((offer, index) => (
+          <div key={index} className="flex items-center px-12 focus:outline-none">
+            <div className="flex items-center gap-4 group cursor-default">
+              <offer.icon className="w-5 h-5 text-yellow-400 animate-pulse" />
+              <span className="text-xl md:text-2xl font-bold tracking-widest uppercase italic">
+                {offer.text}
+              </span>
+              <div className="w-2 h-2 rounded-full bg-gray-600 ml-12"></div>
+            </div>
           </div>
         ))}
       </Slider>

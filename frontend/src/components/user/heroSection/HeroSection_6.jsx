@@ -1,51 +1,57 @@
-import { FaCarSide } from "react-icons/fa6";
+import { Truck, ShieldCheck, CreditCard, Headphones, RefreshCw } from "lucide-react";
 
 const HeroSection_6 = () => {
   const sections = [
     {
       title: "Free Shipping",
-      description: "Free shipping all over the US",
-      icon: <FaCarSide />,
+      description: "On all orders over $99",
+      Icon: Truck,
+      color: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
     },
     {
-      title: "100% Satisfaction",
-      description: "Satisfaction guaranteed on all products",
-      icon: <FaCarSide />,
+      title: "Secure Payment",
+      description: "100% secure payment methods",
+      Icon: ShieldCheck,
+      color: "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400",
     },
     {
-      title: "Secure Payments",
-      description: "Safe and secure payment methods",
-      icon: <FaCarSide />,
+      title: "30 Day Returns",
+      description: "Easy returns & exchanges",
+      Icon: RefreshCw,
+      color: "text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400",
     },
     {
       title: "24/7 Support",
-      description: "Support available 24/7",
-      icon: <FaCarSide />,
+      description: "Dedicated customer support",
+      Icon: Headphones,
+      color: "text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 place-items-center dark:bg-gray-900">
-      {sections.map((section, index) => (
-        <div
-          key={index}
-          className="flex flex-col sm:flex-row items-center text-center sm:text-left w-full max-w-xs md:max-w-sm lg:max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 border border-gray-300 dark:border-gray-700 hover:shadow-2xl transition-all"
-        >
-          <div className="text-primary p-4 bg-gray-200 dark:bg-gray-700 rounded-full sm:mr-6 flex-shrink-0 flex items-center justify-center">
-            <div className="text-3xl sm:text-4xl md:text-5xl text-gray-800 dark:text-gray-200">
-              {section.icon}
+    <div className="py-16 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {sections.map((section, index) => (
+            <div
+              key={index}
+              className="flex items-center p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg transition-all duration-300 group"
+            >
+              <div className={`p-4 rounded-xl mr-5 ${section.color} transition-transform duration-300 group-hover:scale-110`}>
+                <section.Icon className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                  {section.title}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {section.description}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="mt-4 sm:mt-0 flex flex-col items-center sm:items-start">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-              {section.title}
-            </h2>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-              {section.description}
-            </p>
-          </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 };

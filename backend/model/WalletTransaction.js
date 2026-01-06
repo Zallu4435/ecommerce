@@ -28,7 +28,7 @@ const TransactionSchema = new mongoose.Schema(
     },
     transactionType: {
       type: String,
-      enum: ["Purchase", "Refund", "Referral", "Deposit", "Widhdrawal"],
+      enum: ["Purchase", "Refund", "Referral", "Deposit", "Withdrawal"],
       default: "Purchase"
     },
     status: {

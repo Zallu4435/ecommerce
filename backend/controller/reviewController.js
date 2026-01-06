@@ -5,23 +5,37 @@ exports.getReviews = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const itemsPerPage = 5;
     const productId = req.query.productId;
+    const sortBy = req.query.sortBy || "recent";
+    const ratingFilter = req.query.rating ? parseInt(req.query.rating) : null;
 
     const skip = (page - 1) * itemsPerPage;
 
-    const filter = productId ? { productId } : {};
+    const filter = {
+      ...(productId ? { productId } : {}),
+      ...(ratingFilter ? { rating: ratingFilter } : {}),
+    };
+
+    let sortOptions = { createdAt: -1 }; // Default: Most Recent
+    if (sortBy === "highest") sortOptions = { rating: -1 };
+    if (sortBy === "lowest") sortOptions = { rating: 1 };
+    // "helpful" fell back to default (recent) as helpfulCount schema doesn't exist yet
 
     const reviews = await Review.find(filter)
+      .sort(sortOptions)
       .skip(skip)
       .limit(itemsPerPage)
       .populate("userId", "username avatar")
       .populate("productId", "productName");
+
     const totalReviews = await Review.countDocuments(filter);
 
     const formattedReviews = reviews.map((review) => ({
       review: review.review,
       rating: review.rating,
-      username: review.userId.username,
-      avatar: review.userId.avatar,
+      username: review.userId?.username || "Anonymous",
+      avatar: review.userId?.avatar,
+      createdAt: review.createdAt,
+      helpfulCount: 0, // Placeholder
     }));
 
     res.json({

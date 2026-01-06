@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { IoIosArrowDown } from "react-icons/io"
-import { SiPlatformdotsh } from "react-icons/si"
 import { IoMoonSharp } from "react-icons/io5"
 import { BsSun } from "react-icons/bs"
 import { FaMale, FaFemale, FaChild } from "react-icons/fa"
+import { Menu, X } from "lucide-react"
 import { useSelector, useDispatch } from "react-redux"
 import { toggleTheme } from "../../redux/slice/themeSlice"
 import { clearCredentials } from "../../redux/slice/userSlice"
@@ -40,7 +40,6 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await logoutUser().unwrap()
-      // Disable Google auto-select if user logged in with Google
       if (window.google) {
         window.google.accounts.id.disableAutoSelect()
       }
@@ -74,14 +73,12 @@ const Navbar = () => {
     }
   }, [])
 
-  // Memoize categories array to prevent recreation on every render
   const categories = useMemo(() => [
-    { path: "/shop?category=men", label: "Mens", icon: <FaMale /> },
-    { path: "/shop?category=women", label: "Womens", icon: <FaFemale /> },
-    { path: "/shop?category=child", label: "Childrens", icon: <FaChild /> },
+    { path: "/shop?category=Men", label: "Men", icon: <FaMale className="w-4 h-4" /> },
+    { path: "/shop?category=Women", label: "Women", icon: <FaFemale className="w-4 h-4" /> },
+    { path: "/shop?category=Child", label: "Child", icon: <FaChild className="w-4 h-4" /> },
   ], [])
 
-  // Memoize navLinks array to prevent recreation on every render
   const navLinks = useMemo(() => [
     { path: "/", label: "Home" },
     { path: "/shop", label: "Shop" },
@@ -89,144 +86,162 @@ const Navbar = () => {
     { path: "/contact", label: "Contact Us" },
   ], [])
 
-  const handleCategoryClick = (category) => {
-    navigate(`/shop?category=${category.toLowerCase()}`)
+  const handleCategoryClick = (categoryLabel) => {
+    navigate(`/shop?category=${categoryLabel}`)
     setShowDropdown(false)
     setMenuOpen(false)
   }
 
   return (
     <nav
-      className={`${scrolled ? "fixed top-0 left-0 right-0 shadow-lg" : "relative"
-        } bg-gray-800 dark:bg-gray-50 dark:text-gray-900 text-white p-4 flex flex-col md:flex-row md:items-center md:justify-between z-40 transition-all duration-300`}
+      className={`${scrolled ? "fixed top-0 left-0 right-0 shadow-lg backdrop-blur-md bg-white/95 dark:bg-gray-900/95" : "relative bg-white dark:bg-gray-900"
+        } border-b border-gray-300 dark:border-gray-700 z-50 transition-all duration-300`}
     >
-      <div className="flex items-center justify-between w-full md:w-auto">
-        <button
-          className="md:hidden focus:outline-none text-2xl"
-          onClick={handleMenuToggle}
-          aria-label="Toggle menu"
-        >
-          <svg
-            className="w-6 h-6 text-white dark:text-gray-900 transition-transform duration-300"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16m-7 6h7"}
-            />
-          </svg>
-        </button>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
 
-        {/* Mobile Theme Toggle and Auth Buttons */}
-        <div className="md:hidden flex items-center gap-3">
+          {/* Mobile Menu Button */}
           <button
-            onClick={handleThemeToggle}
-            className="p-2.5 rounded-lg bg-yellow-500 dark:bg-indigo-600 hover:bg-yellow-600 dark:hover:bg-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:focus:ring-indigo-400 shadow-md"
-            aria-label="Toggle theme"
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            onClick={handleMenuToggle}
+            aria-label="Toggle menu"
           >
-            {theme === "dark" ? (
-              <BsSun className="w-5 h-5 text-white" />
+            {menuOpen ? (
+              <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
             ) : (
-              <IoMoonSharp className="w-5 h-5 text-gray-900" />
+              <Menu className="w-6 h-6 text-gray-700 dark:text-gray-200" />
             )}
           </button>
 
-          {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              Logout
-            </button>
-          ) : (
-            <button
-              onClick={handleLoginClick}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Login
-            </button>
-          )}
-        </div>
-      </div>
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-8">
+            {/* Categories Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 font-medium"
+                onClick={handleDropdownToggle}
+              >
+                <span>Categories</span>
+                <IoIosArrowDown className={`w-4 h-4 transition-transform duration-300 ${showDropdown ? "rotate-180" : ""}`} />
+              </button>
 
-      <div
-        ref={menuRef}
-        className={`${menuOpen ? "flex" : "hidden"
-          } flex-col md:flex md:flex-row md:items-center md:justify-between w-full mt-4 md:mt-0`}
-      >
-        <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-6">
-          <div className="relative" ref={dropdownRef}>
-            <button
-              className="text-white dark:text-gray-900 focus:outline-none flex items-center text-sm gap-1 font-bold mb-2 md:mb-0 hover:text-yellow-500 dark:hover:text-yellow-600 transition-colors duration-200"
-              onClick={handleDropdownToggle}
-            >
-              <SiPlatformdotsh />
-              Categories
-              <IoIosArrowDown className={`transition-transform duration-300 ${showDropdown ? "rotate-180" : ""}`} />
-            </button>
+              {showDropdown && (
+                <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50 animate-fadeIn">
+                  {categories.map((category) => (
+                    <button
+                      key={category.path}
+                      onClick={() => handleCategoryClick(category.label)}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
+                    >
+                      <div className="text-blue-600 dark:text-blue-400">{category.icon}</div>
+                      <span className="font-medium">{category.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            {showDropdown && (
-              <div className="md:absolute z-10 top-full left-0 md:left-auto mt-2 w-full md:w-52 bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 p-3 rounded-lg shadow-xl animate-fadeIn">
-                {categories.map((category) => (
-                  <button
-                    key={category.path}
-                    onClick={() => handleCategoryClick(category.label)}
-                    className="w-full flex items-center text-sm md:text-base text-left px-4 py-2 rounded-md hover:bg-yellow-500 dark:hover:bg-yellow-600 transition-all duration-200 ease-in-out transform hover:scale-105"
-                  >
-                    {category.icon}
-                    <span className="ml-2">{category.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Nav Links */}
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
 
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className="block text-base md:text-sm hover:text-yellow-500 dark:hover:text-yellow-600 py-2 md:py-0 font-medium transition-colors duration-200"
-              onClick={() => setMenuOpen(false)}
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-3">
+            {/* Theme Toggle */}
+            <button
+              onClick={handleThemeToggle}
+              className="p-2.5 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 dark:from-indigo-500 dark:to-purple-600 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              aria-label="Toggle theme"
             >
-              {link.label}
-            </Link>
-          ))}
+              {theme === "dark" ? (
+                <BsSun className="w-5 h-5 text-white" />
+              ) : (
+                <IoMoonSharp className="w-5 h-5 text-white" />
+              )}
+            </button>
+
+            {/* Auth Button */}
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="hidden sm:block px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-semibold text-sm transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={handleLoginClick}
+                className="hidden sm:block px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-sm transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+              >
+                Login
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Desktop Theme Toggle and Auth Buttons */}
-        <div className="hidden md:flex items-center gap-4 mt-4 md:mt-0">
-          <button
-            onClick={handleThemeToggle}
-            className="p-2.5 rounded-lg bg-yellow-500 dark:bg-indigo-600 hover:bg-yellow-600 dark:hover:bg-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:focus:ring-indigo-400 transform hover:scale-110 shadow-md"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? (
-              <BsSun className="w-5 h-5 text-white" />
-            ) : (
-              <IoMoonSharp className="w-5 h-5 text-gray-900" />
-            )}
-          </button>
+        {/* Mobile Menu */}
+        <div
+          ref={menuRef}
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${menuOpen ? "max-h-96 opacity-100 py-4" : "max-h-0 opacity-0"
+            }`}
+        >
+          <div className="space-y-2">
+            {/* Mobile Categories */}
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-3 mb-3">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-4 mb-2">
+                Categories
+              </p>
+              {categories.map((category) => (
+                <button
+                  key={category.path}
+                  onClick={() => handleCategoryClick(category.label)}
+                  className="w-full flex items-center space-x-3 px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+                >
+                  <div className="text-blue-600 dark:text-blue-400">{category.icon}</div>
+                  <span className="font-medium">{category.label}</span>
+                </button>
+              ))}
+            </div>
 
-          {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 transform hover:scale-105 shadow-md hover:shadow-lg"
-            >
-              Logout
-            </button>
-          ) : (
-            <button
-              onClick={handleLoginClick}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transform hover:scale-105 shadow-md hover:shadow-lg"
-            >
-              Login
-            </button>
-          )}
+            {/* Mobile Nav Links */}
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="block px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors duration-200"
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {/* Mobile Auth Button */}
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700 sm:hidden">
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-semibold text-sm transition-all duration-300"
+                >
+                  Logout
+                </button>
+              ) : (
+                <button
+                  onClick={handleLoginClick}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-sm transition-all duration-300"
+                >
+                  Login
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -234,4 +249,3 @@ const Navbar = () => {
 }
 
 export default Navbar
-

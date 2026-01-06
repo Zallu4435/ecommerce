@@ -73,12 +73,20 @@ exports.signupUser = async (req, res, next) => {
       }
     }
 
-    // Ensure unique referral code for new user
+    // Ensure unique referral code for new user with max attempts
     let newReferralCode = generateReferralCode();
     let codeExists = await User.findOne({ referralCode: newReferralCode });
-    while (codeExists) {
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (codeExists && attempts < maxAttempts) {
       newReferralCode = generateReferralCode();
       codeExists = await User.findOne({ referralCode: newReferralCode });
+      attempts++;
+    }
+
+    if (attempts >= maxAttempts) {
+      return next(new ErrorHandler("Unable to generate unique referral code. Please try again.", 500));
     }
 
     const newUser = new User({
@@ -508,13 +516,20 @@ exports.getUser = async (req, res, next) => {
   // Generate referral code for existing users if missing
   if (!user.referralCode) {
     user.referralCode = generateReferralCode();
-    // Ensure uniqueness just in case, though collision rare
     let codeExists = await User.findOne({ referralCode: user.referralCode });
-    while (codeExists) {
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (codeExists && attempts < maxAttempts) {
       user.referralCode = generateReferralCode();
       codeExists = await User.findOne({ referralCode: user.referralCode });
+      attempts++;
     }
-    await user.save();
+
+    if (attempts < maxAttempts) {
+      await user.save();
+    }
+    // If max attempts reached, user will not have referral code (rare case)
   }
 
   res.status(200).json({

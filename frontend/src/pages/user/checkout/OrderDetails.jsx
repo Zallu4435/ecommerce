@@ -48,6 +48,11 @@ const OrderDetails = ({ onOrderChange, coupon }) => {
             />
             <div className="flex-grow ml-4">
               <span className="font-medium">{product.productName}</span>
+              {product.color && product.size && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {product.color} | {product.size}
+                </p>
+              )}
             </div>
             <div>
               <span>

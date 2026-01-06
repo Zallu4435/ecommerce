@@ -131,6 +131,11 @@ const TableRowForCartlist = ({ item, onRemove }) => {
               <p className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 {productName}
               </p>
+              {item.color && item.size && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  {item.color} | {item.size}
+                </p>
+              )}
               <RatingStars />
             </div>
           </div>
@@ -186,6 +191,11 @@ const TableRowForCartlist = ({ item, onRemove }) => {
             <p className="font-semibold text-gray-900 dark:text-gray-100">
               {productName}
             </p>
+            {item.color && item.size && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {item.color} | {item.size}
+              </p>
+            )}
             <RatingStars />
           </div>
         </td>
