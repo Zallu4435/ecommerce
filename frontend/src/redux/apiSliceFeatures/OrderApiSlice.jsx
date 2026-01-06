@@ -52,6 +52,12 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
       query: ({ orderId }) => `/orders/order-details/${orderId}`,
       invalidatesTags: ["Order"],
     }),
+
+    getAllOrdersForAdmin: builder.query({
+      query: ({ page = 1, limit = 10, sort = "desc" }) =>
+        `/orders/admin/all-orders?page=${page}&limit=${limit}&sort=${sort}`,
+      providesTags: ["Order"],
+    }),
   }),
 });
 
@@ -65,4 +71,5 @@ export const {
   useGetAddressByOrderIdQuery,
   useReturnOrderMutation,
   useLazyGetOrderInvoiceDetailsQuery,
+  useGetAllOrdersForAdminQuery,
 } = orderApiSlice;

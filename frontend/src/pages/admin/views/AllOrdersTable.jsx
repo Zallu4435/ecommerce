@@ -25,12 +25,12 @@ const IndividualOrdersOfUsers = () => {
   const limit = 10;
 
   const [search, setSearch] = useState("");
-  const [debouncedSafeSearch, setDebouncedSafeSearch] = useState("");
-  const [searchErrorMsg, setSearchErrorMsg] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const location = useLocation();
   const { username, email } = location.state || {};
 
+  console.log('📧 Email from location:', email);
 
   const page = currentPage;
 
@@ -41,7 +41,7 @@ const IndividualOrdersOfUsers = () => {
     refetch: refetchPaginated,
   } = useGetUsersIndividualOrdersQuery(
     { page, limit, email },
-    { skip: !email || Boolean(debouncedSafeSearch) }
+    { skip: !email || Boolean(debouncedSearch) }
   );
 
   const {
@@ -50,52 +50,49 @@ const IndividualOrdersOfUsers = () => {
     error: searchError,
     refetch: refetchSearch,
   } = useSearchUsersIndividualOrdersQuery(
-    { query: debouncedSafeSearch, email },
+    { query: debouncedSearch, email },
     {
-      skip: !debouncedSafeSearch,
+      skip: !debouncedSearch || !email,
     }
   );
+
+  console.log('🔍 Search Query State:', {
+    search,
+    debouncedSearch,
+    email,
+    skipCondition: !debouncedSearch || !email,
+    willSkip: !debouncedSearch || !email
+  });
 
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
   const navigate = useNavigate();
 
-  const sanitizeQuery = (q) =>
-    q
-      .replace(/[^\w\s-]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 50);
-
   useEffect(() => {
     const timer = setTimeout(() => {
-      const cleaned = sanitizeQuery(search);
-      if (cleaned.length === 0) {
-        setSearchErrorMsg("");
-        setDebouncedSafeSearch("");
-        setCurrentPage(1);
-        return;
+      console.log('⏱️ Debounce timer fired, setting debouncedSearch to:', search);
+      setDebouncedSearch(search);
+      if (search && email) {
+        console.log('🔍 Search triggered:', { search, email });
       }
-      if (cleaned.length < 2) {
-        setSearchErrorMsg("Please enter at least 2 characters to search.");
-        setDebouncedSafeSearch("");
-        setCurrentPage(1);
-        return;
-      }
-      if (cleaned !== search.trim()) {
-        setSearchErrorMsg("Some characters were removed for a safer search.");
-      } else {
-        setSearchErrorMsg("");
-      }
-      setDebouncedSafeSearch(cleaned);
-      setCurrentPage(1);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, email]);
 
-  const displayOrders = debouncedSafeSearch ? searchData?.orders : ordersData.orders;
-  const isLoading = ordersLoading || (debouncedSafeSearch && isSearchLoading);
-  const error = ordersError || (debouncedSafeSearch && searchError);
+  const displayOrders = debouncedSearch ? searchData?.orders : ordersData.orders;
+  const isLoading = ordersLoading || (debouncedSearch && isSearchLoading);
+  const error = ordersError || (debouncedSearch && searchError);
+
+  console.log('📊 Data State:', {
+    debouncedSearch,
+    hasSearchData: !!searchData?.orders,
+    searchDataLength: searchData?.orders?.length,
+    hasOrdersData: !!ordersData?.orders,
+    ordersDataLength: ordersData?.orders?.length,
+    displayOrdersLength: displayOrders?.length,
+    isSearchLoading,
+    searchError: searchError?.message || searchError
+  });
 
   const handleStatusChange = async (orderId, newStatus, itemsIds) => {
     try {
@@ -104,7 +101,7 @@ const IndividualOrdersOfUsers = () => {
         status: newStatus,
         itemsIds,
       }).unwrap();
-      if (debouncedSafeSearch) {
+      if (debouncedSearch) {
         await refetchSearch();
       } else {
         await refetchPaginated();
@@ -142,16 +139,15 @@ const IndividualOrdersOfUsers = () => {
           </h2>
         </div>
 
-        {!debouncedSafeSearch && (
+        {!debouncedSearch && (
           <div className="flex justify-end items-center gap-3">
             <button
               onClick={handlePreviousPage}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-md ${
-                currentPage === 1
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
+              className={`px-4 py-2 rounded-md ${currentPage === 1
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
             >
               Previous
             </button>
@@ -161,11 +157,10 @@ const IndividualOrdersOfUsers = () => {
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-md ${
-                currentPage === totalPages
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
+              className={`px-4 py-2 rounded-md ${currentPage === totalPages
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
             >
               Next
             </button>
@@ -174,19 +169,24 @@ const IndividualOrdersOfUsers = () => {
       </div>
 
       <div className="mb-4 sticky top-16 z-10 py-4 bg-orange-50 dark:bg-gray-900">
-        <input
-          type="text"
-          placeholder="Search by product name or category"
-          className="w-full p-3 rounded-md border border-gray-600 text-gray-800 dark:text-white dark:bg-gray-600"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        {searchErrorMsg && (
-          <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-400">{searchErrorMsg}</p>
-        )}
+        <div className="relative group">
+          <input
+            type="text"
+            placeholder="Search by product name or category..."
+            className="w-full p-3.5 pl-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+
       </div>
 
-      
+
 
       {isLoading && (
         <LoadingSpinner />
@@ -309,19 +309,16 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className={`flex items-center justify-between w-full px-4 py-2 text-md font-bold dark:text-white ${
-          statusColors[currentStatus]
-        } rounded-md ${
-          disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-opacity-80"
-        } focus:outline-none`}
+        className={`flex items-center justify-between w-full px-4 py-2 text-md font-bold dark:text-white ${statusColors[currentStatus]
+          } rounded-md ${disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-opacity-80"
+          } focus:outline-none`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
       >
         {currentStatus}
         <ChevronDown
-          className={`ml-2 h-5 w-5 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`ml-2 h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""
+            }`}
         />
       </button>
       {isOpen && !disabled && (
@@ -333,11 +330,10 @@ const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
             {statuses.map((status) => (
               <button
                 key={status}
-                className={`${
-                  status === currentStatus
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-700 hover:bg-gray-200"
-                } block px-4 py-2 text-sm w-full text-left`}
+                className={`${status === currentStatus
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-700 hover:bg-gray-200"
+                  } block px-4 py-2 text-sm w-full text-left`}
                 onClick={() => handleStatusClick(status)}
               >
                 {status}

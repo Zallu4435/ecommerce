@@ -311,7 +311,21 @@ const OrderDetailsPage = () => {
                                                         <FaTimes className="mt-0.5 flex-shrink-0" />
                                                         <div>
                                                             <p className="font-semibold">Cancelled on {formatDate(item.cancelledAt)}</p>
+                                                            <p className="text-[10px] uppercase font-bold opacity-75 mb-0.5">
+                                                                by {item.cancelledBy || "User"}
+                                                            </p>
                                                             {item.cancellationReason && <p className="opacity-80 italic">"{item.cancellationReason}"</p>}
+                                                        </div>
+                                                    </div>
+                                                ) : item.returnedAt ? (
+                                                    <div className="text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 p-2 rounded-lg flex gap-2">
+                                                        <FaBox className="mt-0.5 flex-shrink-0" />
+                                                        <div>
+                                                            <p className="font-semibold">Returned on {formatDate(item.returnedAt)}</p>
+                                                            <p className="text-[10px] uppercase font-bold opacity-75 mb-0.5">
+                                                                by {item.returnedBy || "User"}
+                                                            </p>
+                                                            {item.returnReason && <p className="opacity-80 italic">"{item.returnReason}"</p>}
                                                         </div>
                                                     </div>
                                                 ) : item.deliveredAt ? (
@@ -520,6 +534,7 @@ const OrderDetailsPage = () => {
                 onConfirm={confirmReturnItem}
                 orderId={orderId}
                 productId={selectedItem?.productId}
+                productName={selectedItem?.productName}
                 reason={cancelReason}
                 onReasonChange={setCancelReason}
             />

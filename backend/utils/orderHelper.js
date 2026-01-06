@@ -132,15 +132,18 @@ const ensureStockAndDeductForOrder = async (orderItems) => {
  * @param {Array} orderItems - List of items to return to stock
  */
 const increaseStockForOrder = async (orderItems) => {
+    console.log('📈 [STOCK RESTORE] Restoring stock for', orderItems.length, 'items');
     for (let item of orderItems) {
         const product = await Product.findById(item.ProductId);
         if (product) {
             // Restore Total Stock
+            const oldTotal = product.totalStock;
             if (product.totalStock !== undefined) {
                 product.totalStock += item.Quantity;
             } else {
                 product.totalStock = (product.totalStock || 0) + item.Quantity;
             }
+            console.log(`📦 [STOCK RESTORE] Product ${product.productName}: totalStock ${oldTotal} -> ${product.totalStock}`);
 
             // Restore Variant Stock if variant details exist
             if (item.color && item.size) {
@@ -154,13 +157,21 @@ const increaseStockForOrder = async (orderItems) => {
                     variantQuery.gender = item.gender.charAt(0).toUpperCase() + item.gender.slice(1).toLowerCase();
                 }
 
+                console.log('🔦 [STOCK RESTORE] Variant Query:', JSON.stringify(variantQuery));
+
                 const variant = await ProductVariant.findOne(variantQuery);
                 if (variant) {
+                    const oldVariantStock = variant.stockQuantity;
                     variant.stockQuantity += item.Quantity;
                     await variant.save();
+                    console.log(`✅ [STOCK RESTORE] Variant found! stockQuantity ${oldVariantStock} -> ${variant.stockQuantity}`);
+                } else {
+                    console.log('⚠️ [STOCK RESTORE] Variant NOT FOUND. Stock restored to main product but not variant.');
                 }
             }
             await product.save();
+        } else {
+            console.log('❌ [STOCK RESTORE] Product not found for ID:', item.ProductId);
         }
     }
 };
@@ -294,6 +305,25 @@ const restoreCouponUsage = async (couponId, userId) => {
         }
     } catch (error) {
         console.error("Error restoring coupon usage:", error.message);
+    }
+};
+
+/**
+ * Re-consume coupon usage (used for retries on failed/cancelled orders)
+ */
+const consumeCouponUsage = async (couponId, userId) => {
+    if (!couponId) return;
+
+    try {
+        const coupon = await Coupon.findById(couponId);
+        if (coupon) {
+            coupon.appliedUsers.push(userId);
+            coupon.usageCount += 1;
+            await coupon.save();
+            console.log(`🎟️ [COUPON CONSUME] Usage for coupon "${coupon.couponCode}" re-consumed for user ${userId}. New Usage Count: ${coupon.usageCount}`);
+        }
+    } catch (error) {
+        console.error("Error consuming coupon usage:", error.message);
     }
 };
 
@@ -718,7 +748,9 @@ const formatOrderItem = (item) => {
         cancelledAt: item.cancelledAt,
         returnedAt: item.returnedAt,
         cancellationReason: item.cancellationReason,
+        cancelledBy: item.cancelledBy,
         returnReason: item.returnReason,
+        returnedBy: item.returnedBy,
         refundStatus: item.RefundStatus,
         refundAmount: item.refundAmount,
         refundedAt: item.refundedAt,
@@ -737,16 +769,23 @@ const formatOrderSummary = (order) => {
         .map(item => item.ProductId?.image || item.productImage)
         .filter(Boolean);
 
+    const productNames = order.items
+        .map(item => item.ProductId?.productName || item.productName)
+        .filter(Boolean)
+        .join(", ");
+
     const summary = {
         _id: order._id,
         orderId: `ORD-${order._id.toString().slice(0, 8).toUpperCase()}`,
         orderDate: order.createdAt,
         orderStatus: order.orderStatus,
+        productNames,
         paymentMethod: order.paymentMethod,
         paymentStatus: order.paymentStatus,
         totalAmount: order.TotalAmount,
         itemCount,
         productImages,
+        allItemIds: order.items.map(item => item._id),
         expectedDeliveryDate: order.expectedDeliveryDate,
         canCancel: order.items.some(item =>
             !["Delivered", "Cancelled", "Returned", "Shipped", "Out for Delivery"].includes(item.Status)
@@ -803,5 +842,6 @@ module.exports = {
     formatOrderItem,
     formatOrderSummary,
     mapToOrderItemRecord,
-    restoreCouponUsage
+    restoreCouponUsage,
+    consumeCouponUsage
 };

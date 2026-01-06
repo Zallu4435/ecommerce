@@ -36,4 +36,11 @@ export const headerToFieldMap = {
     "Base Offer Price": "baseOfferPrice",
     Actions: "actions",
   },
+  allOrders: {
+    "Order ID": "orderId",
+    Product: "productNames",
+    Customer: "userName",
+    Email: "userEmail",
+    Status: "orderStatus",
+  },
 };

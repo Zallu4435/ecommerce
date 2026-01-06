@@ -534,7 +534,7 @@ exports.createOrder = async (req, res, next) => {
 };
 
 exports.updateOrderStatus = async (req, res) => {
-  const { orderId, status, itemsIds } = req.body;
+  const { orderId, status, itemsIds, reason } = req.body; // Added reason
 
   if (!orderId || !status || !itemsIds) {
     return res
@@ -571,10 +571,12 @@ exports.updateOrderStatus = async (req, res) => {
         // Set Timestamps & Reasons
         if (status === "Cancelled") {
           item.cancelledAt = Date.now();
-          item.cancellationReason = "Cancelled by Admin";
+          item.cancellationReason = reason || "Cancelled by Admin"; // Use provided reason
+          item.cancelledBy = "Admin";
         } else {
           item.returnedAt = Date.now();
-          item.returnReason = "Returned by Admin";
+          item.returnReason = reason || "Returned by Admin"; // Use provided reason
+          item.returnedBy = "Admin";
         }
 
         // Handle Refund
@@ -668,6 +670,7 @@ exports.cancelOrder = async (req, res) => {
     item.Status = "Cancelled";
     item.cancellationReason = reason;
     item.cancelledAt = Date.now();
+    item.cancelledBy = "User";
 
     console.log(`📦 [CANCEL ITEM] Item status updated to Cancelled. Calculating refund...`);
 
@@ -878,6 +881,7 @@ exports.returnOrder = async (req, res) => {
     item.returnReason = reason;
     item.returnRequestedAt = Date.now();
     item.returnedAt = Date.now();
+    item.returnedBy = "User";
 
     // Calculate refund using helper
     const refundAmount = calculateRefundAmount(order, item);
@@ -1095,6 +1099,7 @@ exports.cancelEntireOrder = async (req, res) => {
       item.Status = "Cancelled";
       item.cancellationReason = reason;
       item.cancelledAt = Date.now();
+      item.cancelledBy = "User";
 
       // Calculate refund for this item using helper
       const itemRefund = calculateRefundAmount(order, item);
@@ -1269,5 +1274,4 @@ exports.getAdminOrderDetails = async (req, res) => {
     });
   }
 };
-
 

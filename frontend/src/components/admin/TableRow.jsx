@@ -1,9 +1,10 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../user/StyledComponents/StyledComponents";
 import { useButtonHandlers } from "./ButtonHandlers";
 import ConfirmDeleteModal from "../../modal/admin/ConfirmDeleteModal";
-import { useState } from "react";
 import { defaultProfile } from "../../assets/images";
-import { useNavigate } from "react-router-dom";
+import { STATUS_CONFIG } from "./StatusDropdown";
 
 const TableRow = ({ item, type, refetch }) => {
   const { handleBan, handleDelete, handleUpdate, handleView } =
@@ -274,6 +275,69 @@ const TableRow = ({ item, type, refetch }) => {
             </td>
           </>
         )}
+
+        {type === "allOrders" && (
+          <>
+            <td className="px-6 py-4 border border-gray-600 font-medium whitespace-nowrap">
+              {item.orderId}
+            </td>
+            <td className="px-6 py-4 border border-gray-600">
+              <div className="flex -space-x-2 overflow-hidden">
+                {item.productImages?.slice(0, 3).map((img, i) => (
+                  <img
+                    key={i}
+                    src={img}
+                    className="inline-block h-10 w-10 rounded-lg ring-2 ring-white dark:ring-gray-800 object-cover shadow-sm bg-gray-50 dark:bg-gray-700"
+                    alt="Product"
+                  />
+                ))}
+                {item.itemCount > 3 && (
+                  <div className="flex items-center justify-center h-10 w-10 rounded-lg ring-2 ring-white dark:ring-gray-800 bg-gray-100 dark:bg-gray-700 text-[10px] font-bold text-gray-500">
+                    +{item.itemCount - 3}
+                  </div>
+                )}
+              </div>
+            </td>
+            <td className="px-6 py-4 border border-gray-600 min-w-[200px]">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 h-9 w-9 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm">
+                  {item.userName?.[0]?.toUpperCase()}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm">{item.userName}</span>
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{item.userEmail}</span>
+                </div>
+              </div>
+            </td>
+            <td className="px-6 py-4 border border-gray-600 text-sm whitespace-nowrap text-center">
+              <span className="font-bold text-gray-700 dark:text-gray-300">{item.itemCount}</span> items
+            </td>
+            <td className="px-6 py-4 border border-gray-600 whitespace-nowrap font-black text-gray-900 dark:text-gray-100">
+              ₹{item.totalAmount?.toFixed(2)}
+            </td>
+            <td className="px-6 py-4 border border-gray-600 min-w-[140px] text-center">
+              <span className={`inline-block px-3 py-1.5 text-[10px] font-black rounded-full uppercase tracking-widest border ${STATUS_CONFIG[item.orderStatus]?.color || "bg-gray-100 text-gray-700"}`}>
+                {item.orderStatus}
+              </span>
+            </td>
+            <td className="px-6 py-4 border border-gray-600 text-[11px] font-semibold text-gray-500 whitespace-nowrap">
+              {new Date(item.orderDate).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric'
+              })}
+            </td>
+            <td className="px-6 py-4 border border-gray-600 whitespace-nowrap">
+              <Button
+                $borderColor="#3b82f6"
+                $textColor="#3b82f6"
+                $hoverColor="white"
+                onClick={() => navigate(`/admin/order-details/${item._id}`)}
+                className="!px-3 !py-1.5 text-[11px] font-black uppercase tracking-tighter"
+              >
+                Details
+              </Button>
+            </td>
+          </>
+        )}
       </tr>
 
       <ConfirmDeleteModal
@@ -328,5 +392,18 @@ export const config = {
       "Actions",
     ],
     rowRenderer: (item, refetch) => <TableRow item={item} type="products" refetch={refetch} />,
+  },
+  allOrders: {
+    headers: [
+      "Order ID",
+      "Product",
+      "Customer",
+      "Items",
+      "Amount",
+      "Status",
+      "Date",
+      "Actions",
+    ],
+    rowRenderer: (item, refetch) => <TableRow item={item} type="allOrders" refetch={refetch} />,
   },
 };

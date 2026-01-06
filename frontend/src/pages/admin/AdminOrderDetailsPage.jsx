@@ -14,11 +14,20 @@ import {
 import { toast } from "react-toastify";
 import axios from "axios";
 
+import StatusDropdown, { STATUS_CONFIG } from "../../components/admin/StatusDropdown";
+import CancelReasonModal from "../../modal/admin/CancelReasonModal";
+
 const AdminOrderDetailsPage = () => {
     const { orderId } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [updatingStatus, setUpdatingStatus] = useState(null); // Track which item is updating
+
+    // Modal state
+    const [showReasonModal, setShowReasonModal] = useState(false);
+    const [cancelReason, setCancelReason] = useState("");
+    const [pendingStatusChange, setPendingStatusChange] = useState(null);
 
     useEffect(() => {
         fetchOrderDetails();
@@ -44,40 +53,54 @@ const AdminOrderDetailsPage = () => {
     };
 
     const handleUpdateItemStatus = async (itemId, newStatus) => {
+        // If status is Cancelled or Returned, show modal for reason
+        if (["Cancelled", "Returned"].includes(newStatus)) {
+            setPendingStatusChange({ itemId, newStatus });
+            setShowReasonModal(true);
+            return;
+        }
+
+        // For other statuses, proceed directly
+        await updateItemStatus(itemId, newStatus, null);
+    };
+
+    const handleConfirmCancellation = async () => {
+        if (!cancelReason.trim()) {
+            toast.error("Please provide a reason");
+            return;
+        }
+
+        const { itemId, newStatus } = pendingStatusChange;
+        await updateItemStatus(itemId, newStatus, cancelReason);
+
+        // Reset modal state
+        setShowReasonModal(false);
+        setCancelReason("");
+        setPendingStatusChange(null);
+    };
+
+    const updateItemStatus = async (itemId, newStatus, reason) => {
         try {
+            setUpdatingStatus(itemId);
             await axios.patch(
                 `${import.meta.env.VITE_API_URL}/api/orders/update-bulk`,
                 {
                     orderId: order._id,
                     status: newStatus,
                     itemsIds: [itemId],
+                    ...(reason && { reason }),
                 },
                 { withCredentials: true }
             );
 
             toast.success("Item status updated successfully!");
-            fetchOrderDetails();
+            await fetchOrderDetails();
         } catch (error) {
             console.error("Error updating item status:", error);
             toast.error(error.response?.data?.message || "Failed to update status");
+        } finally {
+            setUpdatingStatus(null);
         }
-    };
-
-    const getStatusColor = (status) => {
-        const statusColors = {
-            Delivered: "text-green-600 bg-green-50",
-            Shipped: "text-blue-600 bg-blue-50",
-            "Out for Delivery": "text-blue-700 bg-blue-100",
-            Processing: "text-yellow-600 bg-yellow-50",
-            Packed: "text-yellow-700 bg-yellow-100",
-            Confirmed: "text-indigo-600 bg-indigo-50",
-            Pending: "text-gray-600 bg-gray-50",
-            Cancelled: "text-red-600 bg-red-50",
-            Returned: "text-purple-600 bg-purple-50",
-            "Return Requested": "text-purple-500 bg-purple-50",
-            Refunded: "text-green-700 bg-green-100",
-        };
-        return statusColors[status] || "text-gray-600 bg-gray-50";
     };
 
     const formatDate = (date) => {
@@ -108,47 +131,45 @@ const AdminOrderDetailsPage = () => {
     }
 
     return (
-        <div className="dark:bg-gray-900 bg-orange-50 min-h-screen fixed left-[420px] top-10 right-0 bottom-0 overflow-y-auto px-14 py-6">
+        <div className="dark:bg-gray-900 bg-orange-50 min-h-screen fixed left-[420px] top-10 right-0 bottom-0 overflow-y-auto px-14 py-6 scrollbar-hidden">
             {/* Header */}
             <div className="mb-6">
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4 transition-colors font-semibold"
                 >
                     <FaArrowLeft />
                     <span>Back to Orders</span>
                 </button>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-                                Order {order.orderId}
-                            </h1>
-                            <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                <div className="flex items-center gap-1">
-                                    <FaUser />
+                            <div className="flex items-center gap-3 mb-1">
+                                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                                    Order {order.orderId}
+                                </h1>
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${STATUS_CONFIG[order.orderStatus]?.color || "bg-gray-100 text-gray-600"}`}>
+                                    {order.orderStatus}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                <div className="flex items-center gap-1.5 hover:text-blue-600 transition-colors cursor-default">
+                                    <FaUser size={12} />
                                     <span>{order.userName} ({order.userEmail})</span>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <FaCalendar />
+                                <div className="flex items-center gap-1.5">
+                                    <FaCalendar size={12} />
                                     <span>Placed on {formatDate(order.orderDate)}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <FaBox />
-                                    <span>{order.itemCount} Items</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-2">
-                            <span
-                                className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(
-                                    order.orderStatus
-                                )}`}
-                            >
-                                {order.orderStatus}
-                            </span>
+                        <div className="flex items-center gap-4">
+                            <div className="text-right">
+                                <p className="text-xs text-gray-400 uppercase font-bold mb-1">Total Amount</p>
+                                <p className="text-2xl font-black text-blue-600">₹{order.totalAmount.toFixed(2)}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -204,9 +225,7 @@ const AdminOrderDetailsPage = () => {
                                                     onStatusChange={(newStatus) =>
                                                         handleUpdateItemStatus(item.itemId, newStatus)
                                                     }
-                                                    disabled={["Cancelled", "Returned", "Delivered"].includes(
-                                                        item.status
-                                                    )}
+                                                    isLoading={updatingStatus === item.itemId}
                                                 />
                                             </div>
 
@@ -389,97 +408,24 @@ const AdminOrderDetailsPage = () => {
                     )}
                 </div>
             </div>
-        </div>
-    );
-};
 
-// Status Dropdown Component
-const StatusDropdown = ({ currentStatus, onStatusChange, disabled }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef(null);
-
-    const statuses = [
-        "Pending",
-        "Confirmed",
-        "Processing",
-        "Packed",
-        "Shipped",
-        "Out for Delivery",
-        "Delivered",
-        "Cancelled",
-        "Return Requested",
-        "Returned",
-    ];
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const handleStatusClick = (status) => {
-        if (status !== currentStatus) {
-            onStatusChange(status);
-        }
-        setIsOpen(false);
-    };
-
-    const getStatusColor = (status) => {
-        const colors = {
-            Delivered: "bg-green-100 text-green-800",
-            Shipped: "bg-blue-100 text-blue-800",
-            "Out for Delivery": "bg-blue-200 text-blue-900",
-            Processing: "bg-yellow-100 text-yellow-800",
-            Packed: "bg-yellow-200 text-yellow-900",
-            Confirmed: "bg-indigo-100 text-indigo-800",
-            Pending: "bg-gray-100 text-gray-800",
-            Cancelled: "bg-red-100 text-red-800",
-            Returned: "bg-purple-100 text-purple-800",
-            "Return Requested": "bg-purple-50 text-purple-700",
-        };
-        return colors[status] || "bg-gray-100 text-gray-800";
-    };
-
-    return (
-        <div className="relative inline-block" ref={dropdownRef}>
-            <button
-                className={`flex items-center justify-between px-4 py-2 text-sm font-semibold rounded-lg ${getStatusColor(
-                    currentStatus
-                )} ${disabled
-                    ? "opacity-60 cursor-not-allowed"
-                    : "hover:opacity-80 cursor-pointer"
-                    } focus:outline-none min-w-[180px]`}
-                onClick={() => !disabled && setIsOpen(!isOpen)}
-                disabled={disabled}
-            >
-                {currentStatus}
-                <FaChevronDown
-                    className={`ml-2 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                />
-            </button>
-            {isOpen && !disabled && (
-                <div className="absolute left-0 mt-2 w-full rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-10">
-                    <div className="py-1">
-                        {statuses.map((status) => (
-                            <button
-                                key={status}
-                                className={`${status === currentStatus
-                                    ? "bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
-                                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                                    } block px-4 py-2 text-sm w-full text-left`}
-                                onClick={() => handleStatusClick(status)}
-                            >
-                                {status}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
+            {/* Cancellation Reason Modal */}
+            <CancelReasonModal
+                show={showReasonModal}
+                onClose={() => {
+                    setShowReasonModal(false);
+                    setCancelReason("");
+                    setPendingStatusChange(null);
+                }}
+                onConfirm={handleConfirmCancellation}
+                orderId={order?.orderId}
+                productId={pendingStatusChange?.itemId}
+                productName={order?.items?.find(item => item.itemId === pendingStatusChange?.itemId)?.productName}
+                productImage={order?.items?.find(item => item.itemId === pendingStatusChange?.itemId)?.productImage}
+                reason={cancelReason}
+                setReason={setCancelReason}
+                type={pendingStatusChange?.newStatus === "Returned" ? "Return" : "Cancel"}
+            />
         </div>
     );
 };

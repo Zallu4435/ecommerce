@@ -21,7 +21,9 @@ const {
   removeOrderedItemsFromCart,
   ensureStockAndDeductForOrder,
   verifyRazorpaySignature,
-  createShippingSnapshot
+  createShippingSnapshot,
+  restoreStockIfPending,
+  consumeCouponUsage
 } = require("../utils/orderHelper");
 require("dotenv").config({ path: "backend/config/.env" }); // Ensure env vars are loaded
 
@@ -671,6 +673,10 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     if (needsStockRededuction) {
       await ensureStockAndDeductForOrder(order.items);
+      // Re-consume coupon if it was restored
+      if (order.CouponId) {
+        await consumeCouponUsage(order.CouponId, order.UserId);
+      }
       stockUpdated = true;
     }
 
@@ -937,6 +943,9 @@ exports.retryPayment = async (req, res) => {
 
       if (needsStockRededuction) {
         await ensureStockAndDeductForOrder(order.items);
+        if (order.CouponId) {
+          await consumeCouponUsage(order.CouponId, order.UserId);
+        }
       }
 
       order.items = order.items.map(item => ({
@@ -999,6 +1008,9 @@ exports.retryPayment = async (req, res) => {
 
       if (needsStockRededuction) {
         await ensureStockAndDeductForOrder(order.items);
+        if (order.CouponId) {
+          await consumeCouponUsage(order.CouponId, order.UserId);
+        }
       }
 
       order.items = order.items.map(item => ({

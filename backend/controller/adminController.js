@@ -362,14 +362,25 @@ exports.searchProducts = async (req, res) => {
 };
 
 exports.searchOrders = async (req, res) => {
-  const query = req.query.query;
-
-  if (!query) {
-    return res.status(400).json({ message: "Search query is required" });
-  }
-
   try {
+    const query = req.query.query;
+
+    if (!query || typeof query !== "string") {
+      return res
+        .status(400)
+        .json({ message: "Search query is required and must be a string" });
+    }
+
+    // Check if query is a valid MongoDB ObjectId
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(query) && query.length === 24;
+
     const orders = await Orders.aggregate([
+      // First match by order ID if it's a valid ObjectId
+      ...(isValidObjectId ? [{
+        $match: {
+          _id: new mongoose.Types.ObjectId(query)
+        }
+      }] : []),
       {
         $lookup: {
           from: "users",
@@ -385,26 +396,70 @@ exports.searchOrders = async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "products",
+          localField: "items.ProductId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      // Match by username, email, or product name if not searching by order ID
+      ...(!isValidObjectId ? [{
         $match: {
-          $or: [{ "userDetails.email": { $regex: query, $options: "i" } }],
+          $or: [
+            { "userDetails.username": { $regex: query, $options: "i" } },
+            { "userDetails.email": { $regex: query, $options: "i" } },
+            { "productDetails.productName": { $regex: query, $options: "i" } },
+          ],
         },
-      },
+      }] : []),
       {
-        $group: {
-          _id: "$UserId",
-          username: { $first: "$userDetails.username" },
-          email: { $first: "$userDetails.email" },
-          ordersCount: { $sum: 1 },
-          totalAmount: { $sum: "$TotalAmount" },
-          lastOrderDate: { $max: "$createdAt" },
-          lastOrderStatus: { $first: "$Status" },
+        $project: {
+          _id: 1,
+          orderId: {
+            $concat: [
+              "ORD-",
+              { $toUpper: { $substr: [{ $toString: "$_id" }, 0, 8] } }
+            ]
+          },
+          userName: "$userDetails.username",
+          userEmail: "$userDetails.email",
+          totalAmount: "$TotalAmount",
+          orderStatus: "$orderStatus",
+          orderDate: "$createdAt",
+          itemCount: { $size: "$items" },
+          productImages: {
+            $map: {
+              input: { $slice: ["$items", 3] },
+              as: "item",
+              in: {
+                $let: {
+                  vars: {
+                    product: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$productDetails",
+                            cond: { $eq: ["$$this._id", "$$item.ProductId"] },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                  in: "$$product.image",
+                },
+              },
+            },
+          },
         },
       },
+      { $sort: { orderDate: -1 } },
     ]);
 
     res.status(200).json(orders);
   } catch (error) {
-    console.error("Error fetching users with orders:", error);
+    console.error("Error in searchOrders:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -512,6 +567,96 @@ exports.searchIndividualOrders = async (req, res) => {
     return res.status(200).json({ orders: matchedItems });
   } catch (error) {
     console.error("Error in searchIndividualOrders:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+// Add this to adminController.js after searchIndividualOrders
+
+exports.searchAllOrders = async (req, res) => {
+  try {
+    const query = req.query.query;
+
+    if (!query || typeof query !== "string") {
+      return res
+        .status(400)
+        .json({ message: "Search query is required and must be a string" });
+    }
+
+    const orders = await Orders.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "UserId",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.ProductId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      {
+        $match: {
+          $or: [
+            { _id: { $regex: query, $options: "i" } }, // Order ID
+            { "userDetails.username": { $regex: query, $options: "i" } }, // Username
+            { "userDetails.email": { $regex: query, $options: "i" } }, // Email
+            { "productDetails.productName": { $regex: query, $options: "i" } }, // Product name
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          orderId: { $toString: "$_id" },
+          userName: "$userDetails.username",
+          userEmail: "$userDetails.email",
+          totalAmount: "$TotalAmount",
+          orderStatus: "$orderStatus",
+          orderDate: "$createdAt",
+          itemCount: { $size: "$items" },
+          productImages: {
+            $map: {
+              input: { $slice: ["$items", 3] },
+              as: "item",
+              in: {
+                $let: {
+                  vars: {
+                    product: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$productDetails",
+                            cond: { $eq: ["$$this._id", "$$item.ProductId"] },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                  in: "$$product.image",
+                },
+              },
+            },
+          },
+        },
+      },
+      { $sort: { orderDate: -1 } },
+    ]);
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error in searchAllOrders:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

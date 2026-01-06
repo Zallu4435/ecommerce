@@ -18,12 +18,25 @@ const OrderManagement = () => {
   const {
     data: searchData = {},
     refetch: refetchSearch,
+    isLoading: isSearchLoading,
+    isFetching: isSearchFetching,
   } = useSearchAdminOrdersQuery(debouncedSearch, {
     skip: !debouncedSearch,
   });
 
+  console.log('🔍 OrderManagement Search State:', {
+    search,
+    debouncedSearch,
+    skipCondition: !debouncedSearch,
+    willSkip: !debouncedSearch,
+    isSearchLoading,
+    isSearchFetching,
+    searchData,
+  });
+
   useEffect(() => {
     const timer = setTimeout(() => {
+      console.log('⏱️ Setting debouncedSearch to:', search);
       setDebouncedSearch(search);
     }, 500);
 
@@ -31,6 +44,14 @@ const OrderManagement = () => {
   }, [search]);
 
   const dataToDisplay = debouncedSearch ? searchData || [] : allData || [];
+
+  console.log('📊 Data to display:', {
+    debouncedSearch,
+    usingSearchData: !!debouncedSearch,
+    dataToDisplay,
+    allDataLength: allData?.length,
+    searchDataLength: searchData?.length,
+  });
 
   const totalProducts = debouncedSearch
     ? searchData.length || 0
@@ -60,11 +81,10 @@ const OrderManagement = () => {
           <button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-md ${
-              currentPage === 1
+            className={`px-4 py-2 rounded-md ${currentPage === 1
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 text-white hover:bg-blue-600"
-            }`}
+              }`}
           >
             Previous
           </button>
@@ -74,11 +94,10 @@ const OrderManagement = () => {
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-md ${
-              currentPage === totalPages
+            className={`px-4 py-2 rounded-md ${currentPage === totalPages
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 text-white hover:bg-blue-600"
-            }`}
+              }`}
           >
             Next
           </button>

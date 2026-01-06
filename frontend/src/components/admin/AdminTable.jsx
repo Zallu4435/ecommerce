@@ -1,11 +1,10 @@
 import LoadingSpinner from "../LoadingSpinner";
 import { config } from "./TableRow";
-import { headerToFieldMap } from "../../config/searchConfig";
 
 
 const AdminTable = ({
   type,
-  data = {}, 
+  data = {},
   isLoading,
   isError,
   search,
@@ -13,49 +12,39 @@ const AdminTable = ({
   refetch,
 }) => {
 
-  const types = {
-    users: "users",
-    categories: "categories",
-    coupons: "coupons",
-    orders: "orders",
-    products: "products",
+  const displayTypes = {
+    users: "Users",
+    categories: "Categories",
+    coupons: "Coupons",
+    orders: "Orders",
+    products: "Products",
+    allOrders: "Orders",
   };
-  
-  const dataList = data?.[types[type]] ? data?.[types[type]] : data;
+
+  const dataList = data?.[type] ? data?.[type] : data;
 
   const { headers, rowRenderer } = config[type];
 
-  const filteredData = Array.isArray(dataList) ? dataList.filter((item) => {
-    return config[type].headers.some((header) => {
-      const field = headerToFieldMap[type]?.[header];
-      const value = item[field];
-  
-      if (!value) return false;
-  
-      if (typeof value === "object" && value?.$numberDecimal) {
-        return value.$numberDecimal
-          .toString()
-          .toLowerCase()
-          .includes(search.toLowerCase());
-      }
-  
-      return value.toString().toLowerCase().includes(search.toLowerCase());
-    });
-  }) : [];
+  // Data is already filtered by backend search in parent component
+  const displayData = Array.isArray(dataList) ? dataList : [];
 
-  
-
-  
   return (
     <div>
-      <div className="mb-4 sticky overflow-hidden top-0 z-10 dark:bg-gray-900 py-4">
-        <input
-          type="text"
-          placeholder={`Search for ${types[type]}`}
-          className="w-full p-3 rounded-md border border-gray-600 text-gray-800"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="mb-6 sticky overflow-hidden top-0 z-10 dark:bg-gray-900 bg-orange-50/80 backdrop-blur-sm py-4">
+        <div className="relative group">
+          <input
+            type="text"
+            placeholder={`Search ${displayTypes[type]} by ID, name, or other details...`}
+            className="w-full p-3.5 pl-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Scrollable Table */}
@@ -88,14 +77,14 @@ const AdminTable = ({
                   Error loading state
                 </td>
               </tr>
-            ) : filteredData.length === 0 ? (
+            ) : displayData.length === 0 ? (
               <tr>
                 <td colSpan={headers.length} className="text-center py-4">
-                  {`No ${types[type]} Found` || "No results found"}
+                  {`No ${displayTypes[type]} Found` || "No results found"}
                 </td>
               </tr>
             ) : (
-              filteredData.map((item) => rowRenderer(item, refetch))
+              displayData.map((item) => rowRenderer(item, refetch))
             )}
           </tbody>
         </table>

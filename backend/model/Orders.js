@@ -103,11 +103,19 @@ const OrdersSchema = new mongoose.Schema(
         // Cancellation
         cancelledAt: Date,
         cancellationReason: String,
+        cancelledBy: {
+          type: String,
+          enum: ["User", "Admin", "System"],
+        },
 
         // Return
         returnRequestedAt: Date,
         returnedAt: Date,
         returnReason: String,
+        returnedBy: {
+          type: String,
+          enum: ["User", "Admin", "System"],
+        },
 
         // Refund
         RefundStatus: {

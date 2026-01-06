@@ -98,7 +98,7 @@ export const adminApiSlice = createApi({
       providesTags: ["Order"],
     }),
 
-    
+
   }),
 });
 
