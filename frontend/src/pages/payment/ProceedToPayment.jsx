@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useProcessPaymentMutation } from "../../redux/apiSliceFeatures/userProfileApi";
@@ -9,23 +9,8 @@ const ProceedToPaymentPage = () => {
   const navigate = useNavigate();
   const { address, order, payment, coupon } = location.state || {};
   const [loading, setLoading] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
   const [processPayment, { isLoading: isPaymentProcessing }] =
     useProcessPaymentMutation();
-
-  // Prevent body scroll when redirecting loader is shown
-  useEffect(() => {
-    if (redirecting) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    // Cleanup on unmount
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [redirecting]);
 
   if (!address || !order || !payment) {
     return (
@@ -109,11 +94,11 @@ const ProceedToPaymentPage = () => {
               }
             },
             modal: {
-              ondismiss: function() {
+              ondismiss: function () {
                 // User closed the payment modal without completing payment
                 toast.warning("Payment cancelled. You can retry anytime from your orders.");
                 setLoading(false);
-                
+
                 // Optionally navigate to orders page or stay on payment page
                 // navigate("/orders");
               },
@@ -134,16 +119,51 @@ const ProceedToPaymentPage = () => {
           };
 
           const razorpayInstance = new window.Razorpay(options);
-          razorpayInstance.on('payment.failed', function (response) {
+          razorpayInstance.on('payment.failed', async function (response) {
             // Payment failed (card declined, insufficient funds, etc.)
             console.error("Razorpay payment failed:", response.error);
-            toast.error(
-              response.error.description || 
-              "Payment failed. Please try again or use a different payment method."
-            );
+
+            try {
+              // Create order with failed payment status
+              const paymentData = {
+                address,
+                order,
+                couponCode: coupon ? coupon.couponCode : null,
+                payment: {
+                  paymentMethod: "razorpay",
+                  onlinePaymentMethod: "razorpay",
+                },
+                productId: null,
+                quantity: null,
+              };
+
+              const data = await processPayment(paymentData).unwrap();
+
+              // Navigate to payment failure page with order details
+              navigate("/payment-failure", {
+                state: {
+                  orderId: data.orderId,
+                  reason: response.error.description || "Payment failed. Please try again.",
+                  amount: razorpayAmount / 100,
+                  orderDetails: order
+                }
+              });
+            } catch (error) {
+              console.error("Error creating failed order:", error);
+              toast.error("Payment failed. Please try again.");
+              // Still navigate to failure page even if order creation fails
+              navigate("/payment-failure", {
+                state: {
+                  orderId: null,
+                  reason: response.error.description || "Payment failed. Please try again.",
+                  amount: razorpayAmount / 100
+                }
+              });
+            }
+
             setLoading(false);
           });
-          
+
           razorpayInstance.open();
         } else if (payment.onlinePaymentMethod === "card") {
           const isCardPaymentSuccessful = await simulateCardPayment();
@@ -168,17 +188,19 @@ const ProceedToPaymentPage = () => {
               });
             } catch (error) {
               console.error("Error processing wallet payment:", error);
-              toast.error(
-                error?.data?.message || error?.message || "Wallet payment failed. Please check your balance and try again."
-              );
-              // Show redirecting loader instantly and navigate after 3 seconds
-              setRedirecting(true);
-              setTimeout(() => {
-                navigate("/profile/order", { 
-                  replace: true,
-                  state: { refetch: true, timestamp: Date.now() }
-                });
-              }, 4000);
+              const errorMessage = error?.data?.message || error?.message || "Wallet payment failed. Please check your balance and try again.";
+              toast.error(errorMessage);
+
+              // Navigate to payment failure page
+              navigate("/payment-failure", {
+                state: {
+                  orderId: error?.data?.orderId || null,
+                  reason: errorMessage,
+                  amount: coupon ? discountedPrice : order.total,
+                  orderDetails: order
+                },
+                replace: true
+              });
             }
           } else {
             toast.error("Card payment failed. Please try again.");
@@ -211,7 +233,7 @@ const ProceedToPaymentPage = () => {
             console.error("Error processing payment:", error);
             toast.error(
               error?.data?.message ||
-                "Failed to process the order or payment. Please try again."
+              "Failed to process the order or payment. Please try again."
             );
           }
         }, 1500);
@@ -335,7 +357,7 @@ const ProceedToPaymentPage = () => {
                 id="cod"
                 name="paymentMethod"
                 checked={payment.paymentMethod === "cod"}
-                onChange={() => {}}
+                onChange={() => { }}
                 className="mr-3 h-4 w-4"
               />
               <label
@@ -351,7 +373,7 @@ const ProceedToPaymentPage = () => {
                 id="online"
                 name="paymentMethod"
                 checked={payment.paymentMethod === "online"}
-                onChange={() => {}}
+                onChange={() => { }}
                 className="mr-3 h-4 w-4"
               />
               <label
@@ -377,27 +399,7 @@ const ProceedToPaymentPage = () => {
         </div>
       </div>
 
-      {/* Redirecting Loader Overlay */}
-      {redirecting && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999] backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 max-w-sm mx-4 text-center pointer-events-auto">
-            <div className="mb-4">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto"></div>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-              Redirecting...
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Taking you to your orders page where you can retry payment.
-            </p>
-            <div className="mt-4 flex items-center justify-center gap-1">
-              <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

@@ -35,7 +35,6 @@ const TrackOrder = () => {
     { label: "Delivered", shortLabel: "Delivered", icon: <FaCheckCircle /> },
     { label: "Cancelled", shortLabel: "Cancelled", icon: <FaTimesCircle />, cancel: true },
     { label: "Payment Failed", shortLabel: "Failed", icon: <FaTimesCircle />, failed: true },
-    { label: "Failed", shortLabel: "Failed", icon: <FaTimesCircle />, failed: true },
   ]
 
   const currentStep = trackingSteps.findIndex((step) => step.label === order.Status)
@@ -43,7 +42,7 @@ const TrackOrder = () => {
   const calculateLineProgress = () => {
     if (currentStep === -1) return 0
     // For failed or cancelled orders, don't show full progress
-    if (order.Status === "Cancelled" || order.Status === "Failed" || order.Status === "Payment Failed") {
+    if (order.Status === "Cancelled" || order.Status === "Payment Failed") {
       return 0 // No progress for failed/cancelled orders
     }
     // Only count progress for successful flow (first 5 steps)
@@ -52,25 +51,23 @@ const TrackOrder = () => {
   }
 
   const getStatusColor = () => {
-    switch (order.Status) {
-      case "Order Placed":
-        return "bg-green-500"
-      case "Processing":
-        return "bg-blue-400"
-      case "Shipped":
-        return "bg-green-400"
-      case "Out for Delivery":
-        return "bg-orange-400"
-      case "Delivered":
-        return "bg-green-500"
-      case "Cancelled":
-        return "bg-red-500"
-      case "Payment Failed":
-      case "Failed":
-        return "bg-red-500"
-      default:
-        return "bg-gray-300"
-    }
+    const status = order.originalStatus || order.Status;
+    const statusColors = {
+      Delivered: "text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800",
+      Shipped: "text-blue-700 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-100 dark:border-blue-800",
+      "Out for Delivery": "text-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800",
+      Processing: "text-amber-700 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-100 dark:border-amber-800",
+      Packed: "text-amber-700 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-100 dark:border-amber-800",
+      Confirmed: "text-violet-700 bg-violet-50 dark:bg-violet-900/30 dark:text-violet-400 border border-violet-100 dark:border-violet-800",
+      "Order Placed": "text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
+      Pending: "text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
+      Cancelled: "text-red-700 bg-red-50 dark:bg-red-900/30 dark:text-red-400 border border-red-100 dark:border-red-800",
+      Returned: "text-orange-700 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-100 dark:border-orange-800",
+      "Return Requested": "text-orange-700 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-100 dark:border-orange-800",
+      Refunded: "text-teal-700 bg-teal-50 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-100 dark:border-teal-800",
+      "Payment Failed": "text-red-700 bg-red-50 dark:bg-red-900/30 dark:text-red-400 border border-red-100 dark:border-red-800",
+    };
+    return statusColors[status] || statusColors[order.Status] || "text-gray-600 bg-gray-50 border border-gray-100";
   }
 
   const totalQuantity = order.Quantity
@@ -112,22 +109,22 @@ const TrackOrder = () => {
       description: "Wallet Recharge",
       handler: async (response) => {
         try {
-            try {
-              await updateOrderStatus({
-                orderId: order?._id,
-                status: "Order Placed",
-                itemsIds: order?.itemsIds,
-              }).unwrap()
+          try {
+            await updateOrderStatus({
+              orderId: order?._id,
+              status: "Order Placed",
+              itemsIds: order?.itemsIds,
+            }).unwrap()
 
-              await refetch()
+            await refetch()
 
-              // navigate("/profile/order")
-              window.location.href = '/profile/order'
-            } catch (err) {
-              console.error("Error updating order status:", err.message)
-              toast(err?.data?.message || "Failed to update order status. Please try again.")
-            }
-            toast.success("Payment successful! Order updated.")
+            // navigate("/profile/order")
+            window.location.href = '/profile/order'
+          } catch (err) {
+            console.error("Error updating order status:", err.message)
+            toast(err?.data?.message || "Failed to update order status. Please try again.")
+          }
+          toast.success("Payment successful! Order updated.")
           // }
         } catch (error) {
           toast.error(error?.data?.message || "Failed to update wallet. Please try again.")
@@ -148,194 +145,175 @@ const TrackOrder = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 bg-white my-10 dark:bg-gray-800 shadow-lg rounded-lg">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-600 dark:text-gray-200 mb-4 sm:mb-0">Track Order</h2>
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 min-h-screen">
+      {/* Header & Back Button */}
+      <div className="mb-8">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+          className="group flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all w-fit"
         >
-          <ArrowLeft className="mr-2" />
-          <span>Back to Products</span>
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Back to Order Details</span>
         </button>
-      </div>
 
-      <div className="relative mb-12 mt-8">
-        <div className="flex justify-between items-center w-full mb-4">
-          {trackingSteps
-            .filter((step) => {
-              // Only show normal flow steps, hide failed/cancelled unless it's the current status
-              if (step.cancel || step.failed) {
-                return step.label === order.Status
-              }
-              return true
-            })
-            .map((step, index) => {
-              const isCurrentStatus = step.label === order.Status
-              const isFailed = step.failed || step.cancel
-              return (
-                <div key={index} className="flex z-20 flex-col items-center text-center relative">
-                  <div
-                    className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full mb-1 ${
-                      isCurrentStatus && isFailed
-                        ? "bg-red-500 text-white"
-                        : index <= currentStep && !isFailed
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-300 dark:bg-gray-600 text-gray-500"
-                    }`}
-                  >
-                    {step.icon}
-                  </div>
-                  <div
-                    className={`absolute top-10 sm:top-12 text-xs sm:text-sm font-semibold ${
-                      isCurrentStatus && isFailed
-                        ? "text-red-500"
-                        : index <= currentStep && !isFailed
-                        ? "text-green-500"
-                        : "text-gray-500 dark:text-gray-400"
-                    }`}
-                  >
-                    <span className="hidden sm:inline">{step.label}</span>
-                    <span className="sm:hidden">{step.shortLabel}</span>
-                  </div>
-                </div>
-              )
-            })}
-        </div>
-        <div className="absolute w-full top-4 sm:top-5 left-0">
-          <div className="w-full bg-gray-300 dark:bg-gray-600 h-1 sm:h-2">
-            <div
-              className={`h-full ${getStatusColor()} transition-all duration-500 ease-in-out`}
-              style={{ width: `${calculateLineProgress()}%` }}
-            ></div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
+              Track Shipment
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400">
+              Order ID: <span className="font-mono font-medium text-gray-900 dark:text-gray-200">{order.orderId || generateOrderId(order._id)}</span>
+            </p>
+          </div>
+          <div className={`px-4 py-2 rounded-full text-sm font-bold shadow-sm self-start sm:self-center ${getStatusColor()}`}>
+            {order.Status}
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between mb-8">
-        <div className="text-gray-700 dark:text-gray-300 mb-4 sm:mb-0">
-          <strong>Order ID:</strong> {generateOrderId(order._id) || "N/A"}
-        </div>
-        <div className="text-gray-700 dark:text-gray-300">
-          <strong>Delivery Date:</strong> {order.deliveryDate || "N/A"}
-        </div>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Tracking Timeline */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
+              <span className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+                <FaTruck className="text-blue-600 dark:text-blue-400" />
+              </span>
+              Tracking History
+            </h2>
 
-      <div className="grid items-center justify-center gap-6 mb-8">
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-md">
-          <img
-            src={order.ProductImage || "/placeholder.svg"}
-            alt={order.ProductName}
-            className="w-32 h-32 object-cover rounded-lg mb-4 mx-auto"
-          />
-          <p className="text-lg font-semibold text-gray-700 dark:text-gray-100 text-center">{order.ProductName}</p>
-          <div className="flex justify-between mt-4">
-            <p className="text-gray-600 dark:text-gray-400">
-              <strong>Quantity:</strong> {order.Quantity}
-            </p>
-            <p className="text-gray-600 dark:text-gray-400">
-              <strong>Price:</strong> ₹ {order.offerPrice}
-            </p>
-          </div>
-        </div>
-      </div>
+            <div className="relative pl-4 sm:pl-6">
+              {/* Timeline Items */}
+              {trackingSteps
+                .filter((step) => {
+                  if (step.cancel || step.failed) return step.label === order.Status;
+                  return true;
+                })
+                .map((step, index) => {
+                  const isCompleted = index <= currentStep;
+                  const isCurrent = index === currentStep;
+                  const isFailed = step.failed || step.cancel;
 
-      <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-100 dark:bg-gray-600 p-4 rounded-lg shadow-md mb-8">
-        <div className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 sm:mb-0">
-          <strong>Total Quantity:</strong> {totalQuantity}
-        </div>
-        <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-          <strong>Total Price:</strong> ₹ {totalPrice}
-        </div>
-      </div>
+                  // Connector Line
+                  const showLine = index !== trackingSteps.length - 1;
 
-      {order.Status === "Cancelled" && (
-        <div className="text-center mt-6 text-xl text-red-500 font-semibold">
-          <strong>Order has been Cancelled</strong>
-        </div>
-      )}
+                  return (
+                    <div key={index} className="relative pb-10 last:pb-0">
+                      {index < trackingSteps.filter(s => !(s.cancel || s.failed) || s.label === order.Status).length - 1 && (
+                        <div className={`absolute top-8 left-[15px] sm:left-[19px] w-0.5 h-[calc(100%-20px)] ${isCompleted && !isFailed ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
+                          }`} />
+                      )}
 
-      {(order.Status === "Failed" || order.Status === "Payment Failed") && (
-        <div className="mt-8 border-2 border-red-300 dark:border-red-700 rounded-lg overflow-hidden">
-          {/* Header */}
-          <div className="bg-red-50 dark:bg-red-900/30 px-6 py-4 border-b border-red-200 dark:border-red-800">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-                <FaTimesCircle className="text-red-600 dark:text-red-400 text-2xl" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-red-700 dark:text-red-300">Payment Failed</h3>
-                <p className="text-sm text-red-600 dark:text-red-400">Order ID: {generateOrderId(order._id)}</p>
-              </div>
+                      <div className="flex gap-4 sm:gap-6">
+                        {/* Icon/Dot */}
+                        <div className={`relative z-10 flex items-center justify-center flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full border-4 ${isCurrent && isFailed ? 'bg-red-500 border-red-100 dark:border-red-900' :
+                          isCompleted ? 'bg-blue-600 border-blue-100 dark:border-blue-900' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                          }`}>
+                          {isCompleted ? (
+                            isFailed ? <FaTimesCircle className="text-white text-sm" /> : <FaCheckCircle className="text-white text-sm" />
+                          ) : (
+                            <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className={`${isCompleted ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'} pt-1`}>
+                          <h3 className={`font-bold text-base sm:text-lg ${isCurrent ? 'text-blue-600 dark:text-blue-400' : ''}`}>
+                            {step.label}
+                          </h3>
+                          <p className="text-sm mt-1 mb-2 max-w-xs leading-relaxed opacity-80">
+                            {step.label === 'Order Placed' && 'We have received your order.'}
+                            {step.label === 'Processing' && 'We are preparing your items.'}
+                            {step.label === 'Shipped' && 'Your order is on the way.'}
+                            {step.label === 'Out for Delivery' && 'Agent is out to deliver.'}
+                            {step.label === 'Delivered' && 'Package delivered successfully.'}
+                            {step.label === 'Cancelled' && 'This order was cancelled.'}
+                            {step.label === 'Payment Failed' && 'Transaction was unsuccessful.'}
+                          </p>
+                          {isCurrent && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                              Current Status
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
             </div>
           </div>
+        </div>
 
-          {/* Body */}
-          <div className="bg-white dark:bg-gray-800 px-6 py-6">
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">What happened?</h4>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Your payment could not be processed. This might be due to insufficient wallet balance, 
-                payment gateway issues, or network problems. Don't worry - your order is saved and you can retry the payment anytime.
+        {/* Right Column: Order Item Summary */}
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 sticky top-4">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-lg">Item Details</h3>
+
+            <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-6 relative group">
+              <img
+                src={order.ProductImage || "/placeholder.svg"}
+                alt={order.ProductName}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute bottom-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-lg text-sm font-bold text-gray-900 dark:text-white shadow-sm">
+                x{order.Quantity} Units
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-bold text-gray-900 dark:text-white text-lg leading-tight">
+                {order.ProductName}
+              </h4>
+
+              <div className="flex justify-between items-center py-3 border-t border-gray-100 dark:border-gray-800">
+                <span className="text-gray-500 dark:text-gray-400">Total Price</span>
+                <span className="font-bold text-xl text-gray-900 dark:text-white">₹{totalPrice}</span>
+              </div>
+
+              {order.deliveryDate && order.Status !== 'Cancelled' && order.Status !== 'Payment Failed' && (
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-100 dark:border-green-800/30">
+                  <p className="text-xs text-green-600 dark:text-green-400 font-bold uppercase tracking-wide mb-1">
+                    Expected Delivery
+                  </p>
+                  <p className="text-green-800 dark:text-green-200 font-medium">
+                    {order.deliveryDate}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Failure / Retry Section */}
+      {order.Status === "Payment Failed" && (
+        <div className="mt-8 bg-red-50 dark:bg-red-900/10 rounded-3xl p-8 border border-red-100 dark:border-red-900/30">
+          <div className="flex flex-col md:flex-row items-start gap-6">
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 text-red-600 dark:text-red-400 text-xl">
+              <FaCreditCard />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Payment Required</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-2xl">
+                We reserved your items, but the transaction didn't go through. Please retry payment to confirm your order.
               </p>
-            </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-              <h5 className="font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2">
-                <FaCheckCircle className="text-blue-600 dark:text-blue-400" />
-                Your items are reserved
-              </h5>
-              <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1 ml-6">
-                <li>• Product stock is reserved for you</li>
-                <li>• Cart items are still available</li>
-                <li>• Order details are saved</li>
-              </ul>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Next Steps:</h4>
-              <div className="grid gap-3">
-                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-green-600 dark:text-green-400 text-sm font-bold">1</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800 dark:text-gray-200">Check your wallet balance</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Ensure you have sufficient funds (₹{totalPrice} required)</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-green-600 dark:text-green-400 text-sm font-bold">2</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800 dark:text-gray-200">Click "Retry Payment" below</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Choose your preferred payment method and complete the transaction</p>
-                  </div>
-                </div>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={handleAddPayment}
+                  className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity shadow-lg shadow-gray-200 dark:shadow-none"
+                >
+                  <span>Retry Payment Now</span>
+                  <FaCreditCard />
+                </button>
+                <button
+                  onClick={() => navigate('/profile/wallet')}
+                  className="px-6 py-3 rounded-xl font-semibold text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
+                >
+                  Check Wallet Balance
+                </button>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transform hover:scale-[1.02] transition-all duration-200"
-                onClick={handleAddPayment}
-              >
-                <FaCreditCard className="text-xl" />
-                <span>Retry Payment</span>
-              </button>
-              <button
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold px-6 py-3 rounded-lg transition-colors duration-200"
-                onClick={() => navigate('/profile/wallet')}
-              >
-                <span>Add Money to Wallet</span>
-              </button>
-            </div>
-
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-              Need help? <a href="/help" className="text-blue-600 dark:text-blue-400 hover:underline">Contact Support</a>
-            </p>
           </div>
         </div>
       )}

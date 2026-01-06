@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addressSchema } from "../../validation/schemas/addressSchema";
@@ -23,7 +24,7 @@ const AddressModal = ({ isOpen, onClose, onSave, formData }) => {
     },
     mode: "onBlur",
   });
-  
+
   // Prevent body scroll when modal is open
   usePreventBodyScroll(isOpen);
 

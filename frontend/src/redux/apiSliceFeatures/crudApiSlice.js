@@ -1,9 +1,9 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { server } from "../../server";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../../middleware/authMiddleware";
 
 export const crudApiSlice = createApi({
   reducerPath: "crudApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${server}` }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Entity", "Coupon", "User"],
   endpoints: (builder) => ({
     addEntity: builder.mutation({

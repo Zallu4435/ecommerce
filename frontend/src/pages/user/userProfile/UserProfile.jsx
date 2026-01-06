@@ -31,7 +31,6 @@ function UserProfile() {
     { label: "Email", value: data.user?.email || "N/A" },
     { label: "Phone Number", value: data.user?.phone || "N/A" },
     { label: "Gender", value: data.user?.gender || "N/A" },
-    { label: "Shipping Address", value: data.user?.address || "N/A" },
   ];
 
   return (

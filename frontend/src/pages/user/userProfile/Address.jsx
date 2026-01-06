@@ -148,15 +148,33 @@ const AddressPage = () => {
               {addresses.map((address, index) => (
                 <li
                   key={address.id}
-                  className={`flex flex-col p-4 ${
-                    address.isPrimary ? 'bg-indigo-50 dark:bg-indigo-900' : 'bg-gray-100 dark:bg-gray-800'
-                  } rounded-md`}
+                  className={`flex flex-col p-4 ${address.isPrimary ? 'bg-indigo-50 dark:bg-indigo-900' : 'bg-gray-100 dark:bg-gray-800'
+                    } rounded-md`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="text-gray-900 dark:text-gray-100">
-                        {`${address.country}, ${address.state}, ${address.city}, ${address.zipCode ?? address.zip}, ${address.street}`}
-                      </p>
+                      <div className="text-sm font-medium space-y-2 mt-2">
+                        <div className="flex gap-2">
+                          <span className="text-gray-500 w-20 flex-shrink-0">Street:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{address.street}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="text-gray-500 w-20 flex-shrink-0">City:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{address.city}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="text-gray-500 w-20 flex-shrink-0">State:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{address.state}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="text-gray-500 w-20 flex-shrink-0">Country:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{address.country}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="text-gray-500 w-20 flex-shrink-0">Zip:</span>
+                          <span className="text-gray-900 dark:text-gray-100">{address.zipCode ?? address.zip}</span>
+                        </div>
+                      </div>
                       {address.isPrimary && (
                         <span className="text-sm text-indigo-600 dark:text-indigo-400 mt-1">
                           Primary Address

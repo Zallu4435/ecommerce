@@ -19,6 +19,8 @@ const ProceedToPaymentPage = lazy(() => import("../pages/payment/ProceedToPaymen
 const TrackOrder = lazy(() => import("../pages/user/userProfile/TrackOrder.jsx"));
 const OrdersListGrouped = lazy(() => import("../pages/user/userProfile/OrdersListGrouped.jsx"));
 const OrderDetailsPage = lazy(() => import("../pages/user/userProfile/OrderDetailsPage.jsx"));
+const PaymentFailure = lazy(() => import("../pages/payment/PaymentFailure.jsx"));
+const RetryPayment = lazy(() => import("../pages/payment/RetryPayment.jsx"));
 
 // Admin Routes (lazy)
 const UserManagement = lazy(() => import('../pages/admin/UserManagement.jsx'))
@@ -62,6 +64,8 @@ export const routes = [
   { path: "/checkout", component: CheckoutPage, isprotected: true },
   { path: "/payment-success", component: PaymentSuccess, isprotected: true },
   { path: "/proceed-to-payment", component: ProceedToPaymentPage, isProtected: true },
+  { path: "/payment-failure", component: PaymentFailure, isProtected: true },
+  { path: "/retry-payment", component: RetryPayment, isProtected: true },
   { path: "/track-order/:id", component: TrackOrder, isProtected: true },
   { path: "/orders", component: OrdersListGrouped, isProtected: true },
   { path: "/order-details/:orderId", component: OrderDetailsPage, isProtected: true },

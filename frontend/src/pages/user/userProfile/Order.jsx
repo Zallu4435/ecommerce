@@ -71,8 +71,6 @@ const OrdersList = () => {
     setPage(1);
   };
 
-  if (error) return <p>Error fetching orders: {error.message}</p>;
-
   const handleCancelClick = (orderId, productId) => {
     setOrderToCancel({ orderId, productId, reason: "" });
     setShowCancelModal(true);
@@ -149,6 +147,45 @@ const OrdersList = () => {
     return `ORD-${id.slice(0, 6).toUpperCase()}`;
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-6xl mt-8 lg:mt-[-10px] mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading your orders...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="max-w-6xl mt-8 lg:mt-[-10px] mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              Error Loading Orders
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {error?.data?.message || error?.message || "Failed to fetch orders"}
+            </p>
+            <button
+              onClick={() => refetch()}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mt-8 lg:mt-[-10px] mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
       <div className="flex justify-between items-center mb-6">
@@ -195,15 +232,14 @@ const OrdersList = () => {
                           {order.Quantity === 1 ? "Item" : "Items"}
                         </p>
                         <p
-                          className={`text-sm font-semibold ${
-                            order.Status === "Delivered"
-                              ? "text-green-500"
-                              : order.Status === "Payment Failed" || order.Status === "Failed"
+                          className={`text-sm font-semibold ${order.Status === "Delivered"
+                            ? "text-green-500"
+                            : order.Status === "Payment Failed"
                               ? "text-red-500"
                               : order.Status === "Cancelled"
-                              ? "text-gray-500"
-                              : "text-yellow-500"
-                          }`}
+                                ? "text-gray-500"
+                                : "text-yellow-500"
+                            }`}
                         >
                           {order.Status}
                         </p>
@@ -215,15 +251,13 @@ const OrdersList = () => {
                       {/* Primary Actions Row (Cancel & Return) */}
                       <div className="flex gap-2 mb-3 lg:mb-0">
                         <button
-                          className={`flex-1 lg:flex-none bg-red-500 text-white px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-red-600 transition ${
-                            order.Status === "Delivered" ||
+                          className={`flex-1 lg:flex-none bg-red-500 text-white px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-red-600 transition ${order.Status === "Delivered" ||
                             order.Status === "Cancelled" ||
                             order.Status === "Returned" ||
-                            order.Status === "Failed" ||
                             order.Status === "Payment Failed"
-                              ? "opacity-40 cursor-not-allowed filter"
-                              : ""
-                          }`}
+                            ? "opacity-40 cursor-not-allowed filter"
+                            : ""
+                            }`}
                           onClick={() =>
                             handleCancelClick(order._id, order.ProductId)
                           }
@@ -231,19 +265,17 @@ const OrdersList = () => {
                             order.Status === "Delivered" ||
                             order.Status === "Cancelled" ||
                             order.Status === "Returned" ||
-                            order.Status === "Failed" ||
                             order.Status === "Payment Failed"
                           }
                         >
                           Cancel Order
                         </button>
                         <button
-                          className={`flex-1 lg:flex-none bg-yellow-500 text-white px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-yellow-600 transition ${
-                            order.Status !== "Delivered" ||
+                          className={`flex-1 lg:flex-none bg-yellow-500 text-white px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-yellow-600 transition ${order.Status !== "Delivered" ||
                             order.Status === "Returned"
-                              ? "opacity-40 cursor-not-allowed filter"
-                              : ""
-                          }`}
+                            ? "opacity-40 cursor-not-allowed filter"
+                            : ""
+                            }`}
                           onClick={() =>
                             handleReturnClick(order._id, order.ProductId)
                           }
@@ -254,6 +286,21 @@ const OrdersList = () => {
                         >
                           Return Order
                         </button>
+
+                        {/* Retry Payment Button */}
+                        {order.Status === "Payment Failed" && (
+                          <button
+                            className="flex-1 lg:flex-none bg-green-500 text-white px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-green-600 transition font-semibold shadow-md"
+                            onClick={() => navigate("/retry-payment", {
+                              state: {
+                                orderId: order._id,
+                                amount: order.TotalAmount || order.Price * order.Quantity
+                              }
+                            })}
+                          >
+                            Retry Payment
+                          </button>
+                        )}
                       </div>
 
                       {/* Secondary Actions Row (View, Track, Download) */}
@@ -320,22 +367,20 @@ const OrdersList = () => {
               <button
                 onClick={handlePreviousPage}
                 disabled={page === 1}
-                className={`px-4 py-2 rounded-lg ${
-                  page === 1
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
-                } transition`}
+                className={`px-4 py-2 rounded-lg ${page === 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+                  } transition`}
               >
                 Previous
               </button>
               <button
                 onClick={handleNextPage}
                 disabled={page === totalPages}
-                className={`px-4 py-2 rounded-lg ${
-                  page === totalPages
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
-                } transition`}
+                className={`px-4 py-2 rounded-lg ${page === totalPages
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+                  } transition`}
               >
                 Next
               </button>

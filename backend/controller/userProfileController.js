@@ -263,7 +263,7 @@ const handleSingleProductOrder = async (productId, quantity) => {
     ProductId: productId,
     Price: price,
     Quantity: quantity,
-    Status: "Order Placed",
+    Status: "Pending",
     itemTotal: price * quantity,
     productName: product.productName,
     productImage: product.image
@@ -347,7 +347,7 @@ const handleCartOrder = async (userId, cartItems) => {
       Quantity: item.quantity,
       color: cartItem.color,
       size: cartItem.size,
-      Status: "Order Placed",
+      Status: "Pending",
       productName: product.productName,
       productImage: product.image,
       itemTotal: price * item.quantity

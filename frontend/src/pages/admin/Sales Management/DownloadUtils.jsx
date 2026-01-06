@@ -1,8 +1,9 @@
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { toast } from "react-toastify";
 
-import { useGetAddressByOrderIdQuery } from "../../../redux/apiSliceFeatures/OrderApiSlice";
+import { useGetAddressByOrderIdQuery, useLazyGetOrderInvoiceDetailsQuery } from "../../../redux/apiSliceFeatures/OrderApiSlice";
 import { FaFilePdf } from "react-icons/fa";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 
@@ -123,14 +124,14 @@ export const downloadSalesReportExcel = (
     ],
     ...(Array.isArray(orders)
       ? orders.map((order) => [
-          order._id || "N/A",
-          order.customer || "N/A",
-          order.quantity || 0,
-          `₹${order.total?.toLocaleString() || 0}`,
-          order.paymentType || "N/A",
-          `₹${order.discountAmount?.toLocaleString() || 0}`,
-          order.status || "N/A",
-        ])
+        order._id || "N/A",
+        order.customer || "N/A",
+        order.quantity || 0,
+        `₹${order.total?.toLocaleString() || 0}`,
+        order.paymentType || "N/A",
+        `₹${order.discountAmount?.toLocaleString() || 0}`,
+        order.status || "N/A",
+      ])
       : []),
   ];
   const ordersSheet = XLSX.utils.aoa_to_sheet(ordersData);
@@ -150,10 +151,10 @@ export const downloadSalesReportExcel = (
     ["Product Name", "Total Sales", "Revenue"],
     ...(Array.isArray(products)
       ? products.map((product) => [
-          product.productName || "N/A",
-          product.totalSold || 0,
-          `₹${product.totalRevenue?.toLocaleString() || 0}`,
-        ])
+        product.productName || "N/A",
+        product.totalSold || 0,
+        `₹${product.totalRevenue?.toLocaleString() || 0}`,
+      ])
       : []),
   ];
   const productsSheet = XLSX.utils.aoa_to_sheet(productsData);
@@ -164,124 +165,322 @@ export const downloadSalesReportExcel = (
   XLSX.writeFile(workbook, `${fileTitle}.xlsx`);
 };
 
-const generateInvoicePDF = (order, address) => {
+export const generateInvoicePDF = (order, address) => {
   if (!order || !address) {
-    console.error("Unable to generate invoice. Address or order details missing.")
-    return
+    console.error("Unable to generate invoice. Address or order details missing.");
+    return;
   }
 
-  const doc = new jsPDF()
+  const doc = new jsPDF();
 
-  // Use a Unicode-compatible font
-  doc.addFont(
-    "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf",
-    "Roboto",
-    "normal",
-  )
-  doc.setFont("Roboto")
+  // --- Color Palette (Professional Dark Blue/Gray) ---
+  const primaryColor = [41, 128, 185]; // A nice professional blue
+  const headingsColor = [44, 62, 80]; // Dark slate
+  const textColor = [50, 50, 50]; // Dark gray for text
 
-  // Helper function to format currency
+  // --- Constants & Config ---
+  const companyName = "VAGO UNIVERSITY";
+  const invoiceDate = new Date().toLocaleDateString("en-IN");
+  const orderDate = new Date(order.createdAt || order.orderDate).toLocaleDateString("en-IN");
+  const invoiceNo = `INV-${(order.orderId || order._id).toString().slice(-6).toUpperCase()}`;
+
+  // Helper: Format Currency (Using 'Rs.' to avoid font encoding issues in PDF)
   const formatCurrency = (amount) => {
-    const formattedAmount = amount.toLocaleString("en-IN", {
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2,
-    })
-    return `\u20B9${formattedAmount}` 
+    return `Rs. ${parseFloat(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  // --- Header Section ---
+  doc.setFontSize(24);
+  doc.setTextColor(...headingsColor);
+  doc.setFont("helvetica", "bold");
+  doc.text("INVOICE", 14, 20);
+
+  // Divider Line
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.line(14, 25, 196, 25);
+
+  // Invoice Details (Right Aligned mostly)
+  doc.setFontSize(10);
+  doc.setTextColor(...textColor);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Invoice No:`, 140, 32);
+  doc.setFont("helvetica", "normal");
+  doc.text(invoiceNo, 196, 32, { align: "right" });
+
+  doc.setFont("helvetica", "bold");
+  doc.text(`Invoice Date:`, 140, 37);
+  doc.setFont("helvetica", "normal");
+  doc.text(invoiceDate, 196, 37, { align: "right" });
+
+  // --- Sold By & Billing Address ---
+  const sectionY = 50;
+
+  // Left Side: Sold By
+  doc.setFontSize(11);
+  doc.setTextColor(...primaryColor); // Blue accent
+  doc.setFont("helvetica", "bold");
+  doc.text("Sold By:", 14, sectionY);
+
+  doc.setTextColor(...textColor); // Reset to black/gray
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text(companyName, 14, sectionY + 6);
+  doc.setFont("helvetica", "normal");
+  doc.text("Bangalore, India", 14, sectionY + 11);
+
+  // Right Side: Billing Address
+  doc.setFontSize(11);
+  doc.setTextColor(...primaryColor);
+  doc.setFont("helvetica", "bold");
+  doc.text("Billing Address:", 110, sectionY);
+
+  doc.setTextColor(...textColor);
+  doc.setFontSize(10);
+
+  const addressFields = [
+    { label: "Name", value: address.fullName || address.name || "Customer" },
+    { label: "Phone", value: address.mobile || address.phone },
+    { label: "Street", value: address.street || address.addressLine1 },
+    { label: "City", value: address.city },
+    { label: "State", value: address.state },
+    { label: "Zip", value: address.zipCode || address.pincode },
+    { label: "Country", value: address.country }
+  ].filter(f => f.value);
+
+  let currentY = sectionY + 6;
+  addressFields.forEach(field => {
+    doc.setFont("helvetica", "bold");
+    doc.text(`${field.label}:`, 110, currentY);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${field.value}`, 135, currentY);
+    currentY += 5;
+  });
+
+  // --- Order Details Section ---
+  const orderDetailsY = Math.max(currentY, sectionY + 25) + 10;
+
+  doc.setDrawColor(240, 240, 240);
+  doc.setFillColor(250, 250, 250);
+  doc.rect(14, orderDetailsY - 6, 182, 14, 'F'); // Light gray background box
+
+  doc.setFontSize(10);
+  doc.setTextColor(...headingsColor);
+  doc.setFont("helvetica", "bold");
+  doc.text("Order ID:", 18, orderDetailsY);
+  doc.setFont("helvetica", "normal");
+  doc.text(order.orderId || order._id, 40, orderDetailsY);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Order Date:", 110, orderDetailsY);
+  doc.setFont("helvetica", "normal");
+  doc.text(orderDate, 135, orderDetailsY);
+
+
+  // --- Invoice Items Table ---
+  let items = [];
+  // Logic to handle different order object structures
+  if (order.productName || order.ProductName) {
+    items.push({
+      name: order.productName || order.ProductName,
+      qty: order.quantity || order.Quantity || 1,
+      price: order.price || order.Price || 0,
+      total: order.itemTotal || order.TotalAmount || 0,
+    });
+  } else if (order.items && Array.isArray(order.items)) {
+    items = order.items.map(i => ({
+      name: i.productName,
+      qty: i.quantity,
+      price: i.Price || i.price,
+      total: i.itemTotal || (i.Price * i.quantity),
+    }));
+  } else {
+    items.push({
+      name: order.ProductName || `Order #${order.orderId}`,
+      qty: order.Quantity || order.itemCount || 1,
+      price: order.Price || (order.totalAmount / (order.itemCount || 1)) || 0,
+      total: order.TotalAmount || order.totalAmount || 0,
+    });
   }
 
-  // Invoice Header
-  doc.setFontSize(18)
-  doc.text("Invoice", 14, 22)
+  const tableBody = items.map((item, index) => [
+    index + 1,
+    item.name,
+    formatCurrency(item.price),
+    item.qty,
+    formatCurrency(item.total)
+  ]);
 
-  // Add Order Details
-  doc.setFontSize(12)
-  doc.text(`Order ID: ${order._id}`, 14, 30)
-  doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 36)
-  doc.text(`Status: ${order.Status}`, 14, 42)
-
-  // Add Customer's Address
-  doc.setFontSize(14)
-  doc.text("Shipping Address", 14, 50)
-  doc.setFontSize(12)
   doc.autoTable({
-    startY: 55,
-    head: [["Field", "Details"]],
-    body: [
-      ["Country", address?.country || "N/A"],
-      ["State", address?.state || "N/A"],
-      ["Street", address?.street || "N/A"],
-      ["City", address?.city || "N/A"],
-      ["Zip Code", address?.zipCode || "N/A"],
-    ],
-    margin: { left: 14, top: 10 }, 
-  })
-
-  // Add Product Details
-  doc.setFontSize(14)
-  doc.text("Order Details", 14, doc.lastAutoTable.finalY + 10)
-  doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 15,
-    theme: "grid",
-    headStyles: { fillColor: [66, 66, 66], fontSize: 12, fontStyle: "bold" },
-    bodyStyles: { fontSize: 11 },
-    columnStyles: {
-      0: { cellWidth: 80 }, 
-      1: { cellWidth: 30, halign: "center" }, 
-      2: { cellWidth: 40, halign: "center" }, 
-      3: { cellWidth: 40, halign: "center" }, 
+    startY: orderDetailsY + 15,
+    head: [['SI No', 'Description', 'Unit Price', 'Qty', 'Total Amount']],
+    body: tableBody,
+    theme: 'plain', // Cleaner look, we add custom borders
+    headStyles: {
+      fillColor: primaryColor,
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'left'
     },
-    head: [["Product Name", "Quantity", "Price", "Total Amount"]],
-    body: [[order.ProductName, order.Quantity, order.Price, order.TotalAmount]],
-    margin: { left: 14, top: 10 }, 
-  })
+    styles: {
+      fontSize: 9,
+      cellPadding: 4,
+      valign: 'middle',
+      lineColor: [220, 220, 220],
+      lineWidth: 0.1
+    },
+    columnStyles: {
+      0: { cellWidth: 15, halign: 'center' },
+      1: { cellWidth: 'auto' }, // Description gets auto width
+      2: { halign: 'right', cellWidth: 35 },
+      3: { halign: 'center', cellWidth: 20 },
+      4: { halign: 'right', cellWidth: 35 }
+    },
+    didDrawCell: (data) => {
+      // Add bottom border to every row for a clean look
+      if (data.section === 'body') {
+        doc.setDrawColor(230, 230, 230);
+        doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
+      }
+    }
+  });
 
-  // Add Total Amount
-  const finalY = doc.lastAutoTable.finalY
-  doc.setFontSize(14)
-  doc.text("Total Amount", 14, finalY + 10)
-  doc.setFontSize(12)
-  doc.text(`Subtotal: ${formatCurrency(order.Price)}`, 14, finalY + 20)
-  doc.text(`Offer Price: ${formatCurrency(order.offerPrice)}`, 14, finalY + 26)
-  doc.text(`Total Amount: ${formatCurrency(order.TotalAmount)}`, 14, finalY + 32)
+  // --- Footer Summary ---
+  const finalY = doc.lastAutoTable.finalY + 10;
+  const subTotal = items.reduce((a, b) => a + b.total, 0);
+  const discount = order.CouponDiscount || order.couponDiscount || 0;
+  const grandTotal = subTotal - discount;
 
-  // Footer
-  doc.setFontSize(10)
-  doc.text("Thank you for your purchase!", 14, finalY + 45)
+  // Right Side: Totals
+  const rightColumnX = 130;
 
-  // Save PDF
-  doc.save(`invoice_${order._id}.pdf`)
-}
+  doc.setFontSize(10);
+  doc.setTextColor(...textColor);
 
-export const InvoiceDownloadIcon = ({ order }) => {
+  // Subtotal
+  doc.text("Subtotal:", rightColumnX, finalY);
+  doc.text(formatCurrency(subTotal), 196, finalY, { align: 'right' });
+
+  // Discount
+  if (discount > 0) {
+    doc.setTextColor(200, 0, 0); // Red for discount
+    doc.text("Discount:", rightColumnX, finalY + 6);
+    doc.text(`-${formatCurrency(discount)}`, 196, finalY + 6, { align: 'right' });
+    doc.setTextColor(...textColor); // Reset
+  }
+
+  // Grand Total Box
+  const totalY = finalY + (discount > 0 ? 12 : 8);
+  doc.setFillColor(245, 245, 245);
+  doc.rect(rightColumnX - 5, totalY - 5, 196 - (rightColumnX - 5), 10, 'F');
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Grand Total:", rightColumnX, totalY + 2);
+  doc.text(formatCurrency(grandTotal), 196, totalY + 2, { align: 'right' });
+
+
+  // Left Side: Words & Signatures
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text("Amount in Words:", 14, finalY + 5);
+  doc.setFont("helvetica", "italic");
+  doc.text(`${convertNumberToWords(Math.round(grandTotal))} Only`, 14, finalY + 10);
+
+  // Signatures
+  const signatureY = finalY + 40;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+
+  doc.text("For Vago University:", 196, signatureY, { align: 'right' });
+  // You could add an image here using doc.addImage() if you had a signature image
+  doc.setFont("helvetica", "bold");
+  doc.text("Authorized Signatory", 196, signatureY + 15, { align: 'right' });
+
+  // Disclaimer Footer
+  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(8);
+  doc.text("This is a computer generated invoice and does not require a physical signature.", 105, 285, { align: 'center' });
+
+  doc.save(`Invoice_${order.orderId || order._id}.pdf`);
+};
+
+// Helper: Number to Words (Simplified)
+const convertNumberToWords = (amount) => {
+  // Basic implementation or placeholder for simplicity
+  // A robust library would be better but keeping it simple/native
+  const words = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).formatToParts(amount)
+    .find(part => part.type === 'currency')?.value || "Rupees";
+  return `Rupees ${amount}`; // Quick placeholder, user can expand if needed.
+};
+
+export const InvoiceDownloadIcon = ({ order, className }) => {
   const {
     data: address,
-    isLoading,
-    isError,
+    isLoading: isAddressLoading,
+    isError: isAddressError,
   } = useGetAddressByOrderIdQuery(order?._id, {
     skip: !order?._id,
-  })
+  });
 
-  const handleDownloadClick = () => {
-    if (isLoading) {
-      return
+  const [triggerGetOrderDetails, { isLoading: isDetailsLoading }] = useLazyGetOrderInvoiceDetailsQuery();
+
+  const handleDownloadClick = async (e) => {
+    e.stopPropagation(); // Prevent parent click handlers
+
+    if (isAddressLoading || isDetailsLoading) {
+      return;
     }
 
-    if (isError) {
-      console.error("Error fetching address data")
-      return
+    if (isAddressError || !address) {
+      console.error("Error fetching address data");
+      toast.error("Could not fetch invoice address.");
+      return;
     }
 
-    if (address) {
-      generateInvoicePDF(order, address)
+    let orderDataForInvoice = order;
+
+    // specific check: if we are in the "Overview" list, 'order' might lack 'items'
+    // or if it's a single item passed from OrderDetails, it has 'productName'.
+    const hasFullDetails = order.items && Array.isArray(order.items) && order.items.length > 0;
+    const isSingleItem = !!(order.productName || order.ProductName);
+
+    if (!hasFullDetails && !isSingleItem) {
+      try {
+        // Fetch full details
+        // The query arg might need to be an object or id depending on definition.
+        // Definition: query: ({ orderId }) => ...
+        const result = await triggerGetOrderDetails({ orderId: order._id || order.orderId }).unwrap();
+
+        // The result structure depends on API. Usually response.order or just response.
+        // Let's assume result properly contains the order info or is the order object.
+        // Based on AdminOrderDetailsPage using fetchOrderDetails from axios: response.data.order
+        // Redux query usually returns the data field directly.
+        // Let's assume 'result.order' or 'result'.
+        // If the endpoint is /orders/order-invoice/:id, it likely returns { success: true, order: {...} } or similar.
+        // We should check safely.
+        orderDataForInvoice = result.order || result;
+
+      } catch (err) {
+        console.error("Failed to fetch order details for invoice", err);
+        toast.error("Failed to generate invoice details.");
+        return;
+      }
     }
-  }
+
+    if (orderDataForInvoice) {
+      generateInvoicePDF(orderDataForInvoice, address);
+    }
+  };
+
+  const isLoading = isAddressLoading || isDetailsLoading;
 
   return (
     <FaFilePdf
       onClick={handleDownloadClick}
-      className={`text-red-600 hover:text-red-800 cursor-pointer text-5xl ${isLoading ? "opacity-50" : ""}`}
-      title={isLoading ? "Loading..." : "Download PDF"}
+      className={className || `text-red-600 hover:text-red-800 cursor-pointer text-5xl ${isLoading ? "opacity-50" : ""}`}
+      title={isLoading ? "Generating..." : "Download Invoice"}
       style={{ cursor: isLoading ? "not-allowed" : "pointer" }}
     />
-  )
-}
+  );
+};

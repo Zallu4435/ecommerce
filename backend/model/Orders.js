@@ -86,7 +86,8 @@ const OrdersSchema = new mongoose.Schema(
             "Cancelled",
             "Return Requested",
             "Returned",
-            "Refunded"
+            "Refunded",
+            "Payment Failed"
           ],
           default: "Pending",
         },

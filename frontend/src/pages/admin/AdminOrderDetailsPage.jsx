@@ -356,19 +356,34 @@ const AdminOrderDetailsPage = () => {
                                 </h2>
                             </div>
 
-                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                                <p className="font-semibold text-gray-800 dark:text-gray-200">
-                                    {order.shippingAddress.name}
-                                </p>
-                                <p>{order.shippingAddress.addressLine1}</p>
-                                {order.shippingAddress.addressLine2 && (
-                                    <p>{order.shippingAddress.addressLine2}</p>
-                                )}
-                                <p>
-                                    {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
-                                    {order.shippingAddress.pincode}
-                                </p>
-                                <p>Phone: {order.shippingAddress.phone}</p>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                                <div className="flex border-b border-gray-100 dark:border-gray-700 pb-1">
+                                    <span className="w-16 flex-shrink-0 text-gray-500">Name:</span>
+                                    <span className="font-semibold text-gray-800 dark:text-gray-200">{order.shippingAddress.name}</span>
+                                </div>
+                                <div className="flex border-b border-gray-100 dark:border-gray-700 pb-1">
+                                    <span className="w-16 flex-shrink-0 text-gray-500">Street:</span>
+                                    <span>
+                                        {order.shippingAddress.street || order.shippingAddress.addressLine1}
+                                        {order.shippingAddress.addressLine2 && `, ${order.shippingAddress.addressLine2}`}
+                                    </span>
+                                </div>
+                                <div className="flex border-b border-gray-100 dark:border-gray-700 pb-1">
+                                    <span className="w-16 flex-shrink-0 text-gray-500">City:</span>
+                                    <span>{order.shippingAddress.city}</span>
+                                </div>
+                                <div className="flex border-b border-gray-100 dark:border-gray-700 pb-1">
+                                    <span className="w-16 flex-shrink-0 text-gray-500">State:</span>
+                                    <span>{order.shippingAddress.state}</span>
+                                </div>
+                                <div className="flex border-b border-gray-100 dark:border-gray-700 pb-1">
+                                    <span className="w-16 flex-shrink-0 text-gray-500">Zip:</span>
+                                    <span>{order.shippingAddress.zipCode || order.shippingAddress.pincode}</span>
+                                </div>
+                                <div className="flex">
+                                    <span className="w-16 flex-shrink-0 text-gray-500">Phone:</span>
+                                    <span>{order.shippingAddress.phone}</span>
+                                </div>
                             </div>
                         </div>
                     )}

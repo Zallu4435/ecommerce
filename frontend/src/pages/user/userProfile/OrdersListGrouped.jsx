@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaBox, FaEye, FaSort, FaCalendar, FaRupeeSign } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { InvoiceDownloadIcon } from "../../admin/Sales Management/DownloadUtils";
 
 const OrdersListGrouped = () => {
     const navigate = useNavigate();
@@ -55,18 +56,18 @@ const OrdersListGrouped = () => {
 
     const getStatusColor = (status) => {
         const statusColors = {
-            Delivered: "text-green-600 bg-green-50",
-            Shipped: "text-blue-600 bg-blue-50",
-            Processing: "text-yellow-600 bg-yellow-50",
-            Confirmed: "text-indigo-600 bg-indigo-50",
-            Pending: "text-gray-600 bg-gray-50",
-            Cancelled: "text-red-600 bg-red-50",
-            "Partially Cancelled": "text-orange-600 bg-orange-50",
-            "Partially Delivered": "text-teal-600 bg-teal-50",
-            Returned: "text-purple-600 bg-purple-50",
-            Failed: "text-red-700 bg-red-100",
+            Delivered: "text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800",
+            Shipped: "text-blue-700 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-100 dark:border-blue-800",
+            Processing: "text-amber-700 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-100 dark:border-amber-800",
+            Confirmed: "text-violet-700 bg-violet-50 dark:bg-violet-900/30 dark:text-violet-400 border border-violet-100 dark:border-violet-800",
+            Pending: "text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
+            Cancelled: "text-red-700 bg-red-50 dark:bg-red-900/30 dark:text-red-400 border border-red-100 dark:border-red-800",
+            "Partially Cancelled": "text-orange-700 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-100 dark:border-orange-800",
+            "Partially Delivered": "text-teal-700 bg-teal-50 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-100 dark:border-teal-800",
+            Returned: "text-purple-700 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-100 dark:border-purple-800",
+            Failed: "text-red-700 bg-red-50 dark:bg-red-900/30 dark:text-red-400 border border-red-100 dark:border-red-800",
         };
-        return statusColors[status] || "text-gray-600 bg-gray-50";
+        return statusColors[status] || "text-gray-600 bg-gray-50 border border-gray-100";
     };
 
     const formatDate = (date) => {
@@ -78,18 +79,20 @@ const OrdersListGrouped = () => {
     };
 
     return (
-        <div className="max-w-7xl mt-8 lg:mt-[-10px] mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 min-h-screen">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100">
-                    Your Orders
-                </h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <div>
+                    <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Your Orders</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Manage and track your recent purchases</p>
+                </div>
+
                 <button
                     onClick={toggleSortOrder}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm"
                 >
-                    <FaSort className="text-gray-600 dark:text-gray-300" />
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <FaSort className="text-gray-500" />
+                    <span className="font-medium text-gray-700 dark:text-gray-200">
                         {sortOrder === "desc" ? "Newest First" : "Oldest First"}
                     </span>
                 </button>
@@ -97,105 +100,111 @@ const OrdersListGrouped = () => {
 
             {/* Loading State */}
             {loading ? (
-                <div className="flex justify-center items-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <div className="flex flex-col items-center justify-center py-32">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
                 </div>
             ) : orders.length === 0 ? (
-                <div className="text-center py-20">
-                    <FaBox className="mx-auto text-6xl text-gray-300 mb-4" />
-                    <p className="text-xl text-gray-600 dark:text-gray-400">
-                        You have no orders yet.
-                    </p>
+                <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-800 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mb-6">
+                        <FaBox className="text-3xl text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No orders found</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">Looks like you haven't placed any orders yet.</p>
+                    <button
+                        onClick={() => navigate('/shop')}
+                        className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-600/20"
+                    >
+                        Start Shopping
+                    </button>
                 </div>
             ) : (
                 <>
                     {/* Orders List */}
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {orders.map((order) => (
                             <div
                                 key={order._id}
-                                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                                 onClick={() => navigate(`/order-details/${order._id}`)}
+                                className="group bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md hover:border-blue-100 dark:hover:border-blue-900 transition-all cursor-pointer"
                             >
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                    {/* Left Section - Order Info */}
-                                    <div className="flex-1">
-                                        <div className="flex items-start gap-4">
-                                            {/* Product Images Preview */}
-                                            <div className="flex -space-x-2">
-                                                {order.productImages.slice(0, 3).map((img, idx) => (
+                                <div className="flex flex-col lg:flex-row gap-6">
+                                    {/* Left Section - Images */}
+                                    <div className="flex-shrink-0">
+                                        <div className="flex items-center -space-x-4 overflow-hidden py-2 pl-2">
+                                            {order.productImages.slice(0, 3).map((img, idx) => (
+                                                <div key={idx} className="relative w-20 h-20 rounded-xl border-4 border-white dark:border-gray-900 shadow-sm overflow-hidden bg-gray-100 dark:bg-gray-800 transition-transform group-hover:scale-105" style={{ zIndex: 10 - idx }}>
                                                     <img
-                                                        key={idx}
                                                         src={img}
                                                         alt="Product"
-                                                        className="w-16 h-16 rounded-lg object-cover border-2 border-white dark:border-gray-800"
+                                                        className="w-full h-full object-cover"
                                                     />
-                                                ))}
-                                                {order.itemCount > 3 && (
-                                                    <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-2 border-white dark:border-gray-800">
-                                                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
-                                                            +{order.itemCount - 3}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Order Details */}
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                                                        {order.orderId}
-                                                    </h3>
-                                                    <span
-                                                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                                                            order.orderStatus
-                                                        )}`}
-                                                    >
-                                                        {order.orderStatus}
+                                                </div>
+                                            ))}
+                                            {order.itemCount > 3 && (
+                                                <div className="relative w-20 h-20 rounded-xl border-4 border-white dark:border-gray-900 shadow-sm bg-gray-50 dark:bg-gray-800 flex items-center justify-center z-0">
+                                                    <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                                                        +{order.itemCount - 3}
                                                     </span>
                                                 </div>
-
-                                                <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                                    <div className="flex items-center gap-1">
-                                                        <FaBox className="text-gray-400" />
-                                                        <span>
-                                                            {order.itemCount}{" "}
-                                                            {order.itemCount === 1 ? "Item" : "Items"}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <FaCalendar className="text-gray-400" />
-                                                        <span>{formatDate(order.orderDate)}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <FaRupeeSign className="text-gray-400" />
-                                                        <span className="font-semibold text-gray-800 dark:text-gray-200">
-                                                            ₹{order.totalAmount.toFixed(2)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {order.expectedDeliveryDate && (
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                                                        Expected Delivery:{" "}
-                                                        {formatDate(order.expectedDeliveryDate)}
-                                                    </p>
-                                                )}
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Right Section - Actions */}
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/order-details/${order._id}`);
-                                            }}
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-                                        >
+                                    {/* Middle Section - Order Info */}
+                                    <div className="flex-1 min-w-0 py-1">
+                                        <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
+                                            <div>
+                                                <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                    Order #{order.orderId}
+                                                </h3>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                                                    <FaCalendar className="text-xs" />
+                                                    {formatDate(order.orderDate)}
+                                                </p>
+                                            </div>
+                                            <span
+                                                className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${getStatusColor(
+                                                    order.orderStatus
+                                                )}`}
+                                            >
+                                                {order.orderStatus}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-gray-600 dark:text-gray-400 pt-3 border-t border-gray-50 dark:border-gray-800">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg text-gray-500">
+                                                    <FaBox className="text-xs" />
+                                                </span>
+                                                <span className="font-medium">{order.itemCount} {order.itemCount === 1 ? 'Item' : 'Items'}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg text-gray-500">
+                                                    <FaRupeeSign className="text-xs" />
+                                                </span>
+                                                <span className="font-bold text-gray-900 dark:text-white">Total: ₹{order.totalAmount.toFixed(2)}</span>
+                                            </div>
+                                            {order.expectedDeliveryDate && (
+                                                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                                                    <span className="bg-green-50 dark:bg-green-900/20 p-1.5 rounded-lg">
+                                                        <FaCalendar className="text-xs" />
+                                                    </span>
+                                                    <span className="font-medium">Delivery: {formatDate(order.expectedDeliveryDate)}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Right Section - Arrow */}
+                                    <div className="flex flex-col sm:flex-row items-center justify-end lg:justify-center gap-3 pl-4 border-l border-gray-100 dark:border-gray-800 lg:border-l-0">
+                                        <div onClick={(e) => e.stopPropagation()}>
+                                            <InvoiceDownloadIcon
+                                                order={order}
+                                                className="w-10 h-10 p-2.5 flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-900/10 transition-all cursor-pointer"
+                                            />
+                                        </div>
+                                        <button className="p-3 rounded-full bg-gray-50 dark:bg-gray-800 group-hover:bg-blue-600 group-hover:text-white transition-all text-gray-400">
                                             <FaEye />
-                                            <span className="hidden sm:inline">View Details</span>
                                         </button>
                                     </div>
                                 </div>
@@ -204,33 +213,33 @@ const OrdersListGrouped = () => {
                     </div>
 
                     {/* Pagination */}
-                    <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Page {page} of {totalPages}
-                        </div>
-                        <div className="flex gap-2">
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 mt-10">
                             <button
                                 onClick={handlePreviousPage}
                                 disabled={page === 1}
-                                className={`px-4 py-2 rounded-lg ${page === 1
-                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                        : "bg-blue-500 text-white hover:bg-blue-600"
-                                    } transition`}
+                                className={`px-5 py-2.5 rounded-xl font-medium transition-all ${page === 1
+                                    ? "bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
+                                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 border border-gray-200 dark:border-gray-700 hover:shadow-sm"
+                                    }`}
                             >
                                 Previous
                             </button>
+                            <span className="font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-4 py-2 rounded-xl border border-gray-100 dark:border-gray-700">
+                                Page {page} of {totalPages}
+                            </span>
                             <button
                                 onClick={handleNextPage}
                                 disabled={page === totalPages}
-                                className={`px-4 py-2 rounded-lg ${page === totalPages
-                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                        : "bg-blue-500 text-white hover:bg-blue-600"
-                                    } transition`}
+                                className={`px-5 py-2.5 rounded-xl font-medium transition-all ${page === totalPages
+                                    ? "bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
+                                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 border border-gray-200 dark:border-gray-700 hover:shadow-sm"
+                                    }`}
                             >
                                 Next
                             </button>
                         </div>
-                    </div>
+                    )}
                 </>
             )}
         </div>

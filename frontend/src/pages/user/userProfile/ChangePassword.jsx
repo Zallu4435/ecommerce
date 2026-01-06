@@ -36,6 +36,7 @@ const ChangePassword = () => {
   const [changePassword, { isLoading, error }] = useChangePasswordMutation();
 
   const onSubmit = async (data) => {
+    setMessage({ type: "", text: "" }); // Clear previous messages
     try {
       await changePassword(data).unwrap();
       toast.success("Password changed successfully!");
@@ -44,10 +45,10 @@ const ChangePassword = () => {
       setValue("newPassword", "");
       setValue("confirmPassword", "");
     } catch (err) {
-      toast.error(err?.data?.message || "Failed to change password");
+      const errorMessage = err?.data?.message || "Failed to change password";
       setMessage({
         type: "error",
-        text: error?.data?.message || "Failed to change password",
+        text: errorMessage,
       });
     }
   };
@@ -65,9 +66,8 @@ const ChangePassword = () => {
       </h2>
       {message.text && (
         <p
-          className={`text-sm font-bold mb-4 ${
-            message.type === "error" ? "text-red-500" : "text-green-500"
-          }`}
+          className={`text-sm font-bold mb-4 ${message.type === "error" ? "text-red-500" : "text-green-500"
+            }`}
         >
           {message.text}
         </p>
@@ -88,9 +88,8 @@ const ChangePassword = () => {
                 name={id}
                 placeholder={placeholder}
                 {...register(id)}
-                className={`w-full px-3 sm:px-4 py-3 sm:py-4 border-2 sm:border-4 border-gray-300 dark:text-white dark:bg-gray-800 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 ${
-                  errors[id] ? "border-red-500" : ""
-                }`}
+                className={`w-full px-3 sm:px-4 py-3 sm:py-4 border-2 sm:border-4 border-gray-300 dark:text-white dark:bg-gray-800 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 ${errors[id] ? "border-red-500" : ""
+                  }`}
               />
               <button
                 type="button"

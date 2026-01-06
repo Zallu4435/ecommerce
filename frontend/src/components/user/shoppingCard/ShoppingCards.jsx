@@ -26,11 +26,16 @@ const ShoppingCard = ({
   totalReviews,
   offerPrice,
   stockQuantity,
+  totalStock,
+  TotalStock,
   category,
-  cartData = [],        // Receive as prop
-  wishlistData = [],    // Receive as prop
-  comparisonData = [],  // Receive as prop
+  cartData = [],
+  wishlistData = [],
+  comparisonData = [],
 }) => {
+  // Determine the actual stock value from standardizing different potential prop names
+  const effectiveStock = stockQuantity ?? totalStock ?? TotalStock ?? 0;
+
   const formattedOfferPrice = parseFloat(offerPrice) || 0;
   const formattedOriginalPrice = parseFloat(originalPrice) || formattedOfferPrice;
   const [showDropdown, setShowDropdown] = useState(false);
@@ -51,16 +56,13 @@ const ShoppingCard = ({
   };
 
   const navigate = useNavigate();
-  // Remove these subscriptions - data now comes from props
-  // const { data: cartData = [] } = useGetCartQuery();
-  // const { data: wishlistData = [] } = useGetWishlistQuery();
-  // const { data: comparisonData = [] } = useGetComparisonListQuery();
 
   const [addToCart] = useAddToCartMutation();
   const [addToWishlist, { isLoading: isWishlistLoading }] = useAddToWishlistMutation();
   const [addToComparison, { isLoading: isComparisonLoading }] = useAddToComparisonMutation();
 
-  const product = { _id, productId: _id, productName, stockQuantity, originalPrice, offerPrice, category };
+  // Use effectiveStock in the product object
+  const product = { _id, productId: _id, productName, stockQuantity: effectiveStock, originalPrice, offerPrice, category };
 
   const handleDropdownToggle = () => setShowDropdown(!showDropdown);
 
@@ -201,18 +203,18 @@ const ShoppingCard = ({
             }
             handleAddToCart(_id, addToCart, setIsAdding, product, cartData);
           }}
-          disabled={isAdding || stockQuantity <= 0}
-          className={`w-full py-2 sm:py-3 flex border-yellow-500 border-2 justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${isAdding || stockQuantity <= 0
+          disabled={isAdding || effectiveStock <= 0}
+          className={`w-full py-2 sm:py-3 flex border-yellow-500 border-2 justify-center items-center gap-2 rounded-full border font-semibold text-base sm:text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition ${isAdding || effectiveStock <= 0
             ? "opacity-50 cursor-not-allowed"
             : "hover:bg-yellow-500 dark:hover:bg-yellow-600 cursor-pointer"
             }`}
         >
-          {stockQuantity <= 0
+          {effectiveStock <= 0
             ? "Out of Stock"
             : isAdding
               ? "Adding..."
               : "Add to Cart"}
-          {stockQuantity > 0 && !isAdding && <FaShoppingCart />}
+          {effectiveStock > 0 && !isAdding && <FaShoppingCart />}
         </button>
       </div>
     </div>

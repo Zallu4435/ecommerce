@@ -168,18 +168,32 @@ const ShippingAddress = ({ onAddressSelect }) => {
           <div className="p-4 bg-gray-100 dark:bg-gray-600 rounded-lg">
             {currentAddress ? (
               <>
-                <p className="text-sm dark:text-gray-200 text-gray-700">
-                  {currentAddress.username}
-                </p>
-                <p className="text-sm dark:text-gray-200 text-gray-700">
-                  {currentAddress.street}
-                </p>
-                <p className="text-sm dark:text-gray-200 text-gray-700">
-                  {currentAddress.city}, {currentAddress.state} - {currentAddress.zipCode}
-                </p>
-                <p className="text-sm dark:text-gray-200 text-gray-700">
-                  {currentAddress.phone}
-                </p>
+                <div className="space-y-2 mt-2">
+                  <div className="flex gap-2">
+                    <span className="text-gray-500 w-16 text-sm">Name:</span>
+                    <span className="text-sm dark:text-gray-200 text-gray-700 font-medium">{currentAddress.username}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-gray-500 w-16 text-sm">Phone:</span>
+                    <span className="text-sm dark:text-gray-200 text-gray-700 font-medium">{currentAddress.phone}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-gray-500 w-16 text-sm">Street:</span>
+                    <span className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.street}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-gray-500 w-16 text-sm">City:</span>
+                    <span className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.city}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-gray-500 w-16 text-sm">State:</span>
+                    <span className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.state}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-gray-500 w-16 text-sm">Zip:</span>
+                    <span className="text-sm dark:text-gray-200 text-gray-700">{currentAddress.zipCode}</span>
+                  </div>
+                </div>
               </>
             ) : (
               <p className="text-sm dark:text-gray-200 text-gray-700">No address selected</p>
@@ -222,26 +236,41 @@ const ShippingAddress = ({ onAddressSelect }) => {
               {addresses.map((address, index) => (
                 <li
                   key={index}
-                  className={`cursor-pointer rounded-md p-3 transition duration-200 border ${
-                    index === selectedAddressIndex 
-                      ? "bg-blue-500 dark:bg-blue-600 border-blue-600 dark:border-blue-700 text-white" 
-                      : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
+                  className={`cursor-pointer rounded-md p-3 transition duration-200 border ${index === selectedAddressIndex
+                    ? "bg-blue-500 dark:bg-blue-600 border-blue-600 dark:border-blue-700 text-white"
+                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    }`}
                 >
                   <button
                     type="button"
                     onClick={() => handleSelectAddress(index)}
                     className="text-left w-full"
                   >
-                    <div className="font-semibold">{address.username || address.name || 'No Name'}</div>
-                    <div className="text-sm">
-                      {address.house && `${address.house}, `}
-                      {address.street || address.address || 'No Street'}
+                    <div className="font-semibold mb-1">{address.username || address.name || 'No Name'}</div>
+                    <div className="text-sm space-y-1">
+                      <div className="flex gap-2">
+                        <span className="opacity-70 w-12">Street:</span>
+                        <span>{address.house ? `${address.house}, ` : ''}{address.street || address.address || 'No Street'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="opacity-70 w-12">City:</span>
+                        <span>{address.city || 'No City'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="opacity-70 w-12">State:</span>
+                        <span>{address.state || 'No State'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="opacity-70 w-12">Zip:</span>
+                        <span>{address.zipCode || address.zip || 'No Zip'}</span>
+                      </div>
+                      {address.phone && (
+                        <div className="flex gap-2">
+                          <span className="opacity-70 w-12">Phone:</span>
+                          <span>{address.phone}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-sm">
-                      {address.city || 'No City'}, {address.state || 'No State'} - {address.zipCode || address.zip || 'No Zip'}
-                    </div>
-                    {address.phone && <div className="text-sm">Phone: {address.phone}</div>}
                   </button>
                 </li>
               ))}

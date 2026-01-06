@@ -48,8 +48,8 @@ export const orderApiSlice = crudApiSlice.injectEndpoints({
       }),
     }),
 
-    lazyGetOrderDetails: builder.query({
-      query: ({ orderId }) => `/orders/order-invoice/${orderId}`,
+    getOrderInvoiceDetails: builder.query({
+      query: ({ orderId }) => `/orders/order-details/${orderId}`,
       invalidatesTags: ["Order"],
     }),
   }),
@@ -64,5 +64,5 @@ export const {
   useUpdateOrderStatusMutation,
   useGetAddressByOrderIdQuery,
   useReturnOrderMutation,
-  useLazyGetOrderDetailsQuery,
+  useLazyGetOrderInvoiceDetailsQuery,
 } = orderApiSlice;

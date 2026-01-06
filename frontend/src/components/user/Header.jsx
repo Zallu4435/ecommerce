@@ -177,6 +177,7 @@ const Header = () => {
   useEffect(() => {
     if (showSearch && searchRef.current) {
       const updatePosition = () => {
+        if (!searchRef.current) return; // Safety check
         const rect = searchRef.current.getBoundingClientRect();
         setDropdownPosition({
           top: rect.bottom + window.scrollY + 8,
