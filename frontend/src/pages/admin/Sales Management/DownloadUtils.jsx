@@ -5,92 +5,229 @@ import { toast } from "react-toastify";
 
 import { useGetAddressByOrderIdQuery, useLazyGetOrderInvoiceDetailsQuery } from "../../../redux/apiSliceFeatures/OrderApiSlice";
 import { FaFilePdf } from "react-icons/fa";
-import LoadingSpinner from "../../../components/LoadingSpinner";
 
 export const downloadSalesReportPDF = (
   dateRange,
   salesOverview,
   recentOrders,
-  topProducts
+  topProducts,
+  topCategories,
+  topBrands
 ) => {
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
 
-  doc.setFontSize(18);
-  doc.text("Sales Report", 14, 22);
+  // --- Theme & Colors ---
+  const primaryColor = [41, 128, 185]; // Blue
+  const secondaryColor = [44, 62, 80]; // Dark Slate
+  const grayColor = [120, 120, 120];
+  const lightGray = [245, 245, 245];
 
+  // --- Header Section ---
+  doc.setFillColor(...primaryColor);
+  doc.rect(0, 0, pageWidth, 40, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(22);
+  doc.setFont("helvetica", "bold");
+  doc.text("SALES REPORT", 14, 25);
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  const timestamp = new Date().toLocaleString("en-IN", {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+  doc.text(`Generated on: ${timestamp}`, pageWidth - 14, 25, { align: "right" });
+
+  // --- Report Meta ---
+  doc.setTextColor(...secondaryColor);
   doc.setFontSize(12);
-  doc.text(`Date Range: ${dateRange}`, 14, 30);
+  doc.setFont("helvetica", "bold");
+  doc.text("VAGO UNIVERSITY", 14, 55);
 
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...grayColor);
+  doc.text("Bangalore, India", 14, 60);
+  doc.text("support@vagouniversity.com", 14, 65);
+
+  // Date Range
+  let rangeText = "";
+  if (recentOrders?.data?.dateRange?.start && recentOrders?.data?.dateRange?.end) {
+    const start = new Date(recentOrders.data.dateRange.start).toLocaleDateString("en-IN");
+    const end = new Date(recentOrders.data.dateRange.end).toLocaleDateString("en-IN");
+    rangeText = `${start} - ${end}`;
+  } else {
+    rangeText = typeof dateRange === 'object' ? `${dateRange.start} - ${dateRange.end}` : dateRange;
+  }
+
+  doc.setFontSize(11);
+  doc.setTextColor(...primaryColor);
+  doc.text("REPORT PERIOD:", pageWidth - 14, 55, { align: "right" });
+  doc.setTextColor(0, 0, 0);
+  doc.text(rangeText, pageWidth - 14, 61, { align: "right" });
+
+  // --- 1. Executive Summary ---
+  let currentY = 80;
   doc.setFontSize(14);
-  doc.text("Sales Overview", 14, 40);
+  doc.setTextColor(...secondaryColor);
+  doc.setFont("helvetica", "bold");
+  doc.text("1. Executive Summary", 14, currentY);
+
+  currentY += 10;
   const overviewData = [
-    ["Total Revenue", `₹${salesOverview?.totalRevenue?.toLocaleString() || 0}`],
-    ["Total Orders", salesOverview?.totalOrders?.toLocaleString() || 0],
-    [
-      "Average Order Value",
-      `₹${salesOverview?.averageOrderValue?.toLocaleString() || 0}`,
-    ],
-    [
-      "Total Discount",
-      `${salesOverview?.couponDiscount?.toLocaleString() || 0}`,
-    ],
+    ["Total Revenue", `Rs. ${parseFloat(salesOverview?.totalRevenue || 0).toLocaleString('en-IN')}`],
+    ["Total Orders", salesOverview?.totalOrders?.toLocaleString() || "0"],
+    ["Total Discount Given", `Rs. ${parseFloat(salesOverview?.couponDiscount || 0).toLocaleString('en-IN')}`]
   ];
+
   doc.autoTable({
-    startY: 45,
+    startY: currentY,
     head: [["Metric", "Value"]],
     body: overviewData,
+    theme: 'striped',
+    headStyles: { fillColor: primaryColor, halign: 'left' },
+    styles: { fontSize: 11, cellPadding: 6 },
+    columnStyles: {
+      0: { cellWidth: 100, fontStyle: 'bold', halign: 'left' },
+      1: { cellWidth: 'auto', halign: 'left' }
+    },
+    margin: { left: 14, right: 14 } // Fixed: Use full width to prevent text wrapping
   });
 
-  doc.setFontSize(14);
-  doc.text("Recent Orders", 14, doc.lastAutoTable.finalY + 10);
-  const orderData =
-    recentOrders?.data?.orders?.map((order) => [
-      order._id || "N/A",
-      order.customer || "N/A",
-      order.quantity || 0,
-      `₹${order.total?.toLocaleString() || 0}`,
-      order.paymentType || "N/A",
-      `₹${order.discountAmount?.toLocaleString() || 0}`,
-      order.status || "N/A",
-    ]) || [];
-  doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 15,
-    head: [
-      [
-        "Order ID",
-        "Customer",
-        "Quantity",
-        "Total",
-        "Payment Type",
-        "Discount Amount",
-        "Status",
-      ],
-    ],
-    body: orderData,
-  });
+  currentY = doc.lastAutoTable.finalY + 15;
+
+  // --- 2. Top Selling Products (moved up) ---
+  if (currentY + 60 > pageHeight) { doc.addPage(); currentY = 20; }
 
   doc.setFontSize(14);
-  doc.text("Top Selling Products", 14, doc.lastAutoTable.finalY + 10);
-  const productData =
-    topProducts?.map((product) => [
-      product._id || "N/A",
-      product.totalSold || 0,
-      `₹${product.totalRevenue?.toLocaleString() || 0}`,
-    ]) || [];
+  doc.setTextColor(...secondaryColor);
+  doc.text("2. Product Performance", 14, currentY);
+
+  const productData = (topProducts || []).map(p => [
+    p._id || p.productName || "N/A",
+    p.totalSold || 0,
+    `Rs. ${parseFloat(p.totalRevenue || 0).toLocaleString('en-IN')}`
+  ]);
+
   doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 15,
-    head: [["Product Name", "Total Sales", "Revenue"]],
+    startY: currentY + 5,
+    head: [["Product Name", "Units Sold", "Revenue"]],
     body: productData,
+    theme: 'grid',
+    headStyles: { fillColor: primaryColor, halign: 'left' },
+    columnStyles: {
+      0: { halign: 'left' },
+      1: { halign: 'left' },
+      2: { halign: 'left' }
+    }
   });
 
-  doc.save("sales_report.pdf");
+  currentY = doc.lastAutoTable.finalY + 15;
+
+  // --- 3. Top Selling Categories (moved up) ---
+  if (currentY + 60 > pageHeight) { doc.addPage(); currentY = 20; }
+
+  if (topCategories && topCategories.length > 0) {
+    doc.setFontSize(14);
+    doc.setTextColor(...secondaryColor);
+    doc.text("3. Category Performance", 14, currentY);
+
+    const catData = topCategories.map(c => [
+      c.categoryName || "N/A",
+      c.totalItemsSold || 0,
+      `Rs. ${parseFloat(c.totalRevenue || 0).toLocaleString('en-IN')}`
+    ]);
+
+    doc.autoTable({
+      startY: currentY + 5,
+      head: [["Category", "Items Sold", "Revenue"]],
+      body: catData,
+      theme: 'grid',
+      headStyles: { fillColor: primaryColor, halign: 'left' },
+      columnStyles: {
+        0: { halign: 'left' },
+        1: { halign: 'left' },
+        2: { halign: 'left' }
+      }
+    });
+    currentY = doc.lastAutoTable.finalY + 15;
+  }
+
+  // --- 4. Top Selling Brands (moved up) ---
+  if (currentY + 60 > pageHeight) { doc.addPage(); currentY = 20; }
+
+  if (topBrands && topBrands.length > 0) {
+    doc.setFontSize(14);
+    doc.setTextColor(...secondaryColor);
+    doc.text("4. Brand Performance", 14, currentY);
+
+    const brandData = topBrands.map(b => [
+      b.brandName || "N/A",
+      b.totalItemsSold || 0,
+      `Rs. ${parseFloat(b.totalRevenue || 0).toLocaleString('en-IN')}`
+    ]);
+
+    doc.autoTable({
+      startY: currentY + 5,
+      head: [["Brand", "Items Sold", "Revenue"]],
+      body: brandData,
+      theme: 'grid',
+      headStyles: { fillColor: primaryColor, halign: 'left' },
+      columnStyles: {
+        0: { halign: 'left' },
+        1: { halign: 'left' },
+        2: { halign: 'left' }
+      }
+    });
+    currentY = doc.lastAutoTable.finalY + 15;
+  }
+
+  // --- 5. Order History (moved last) ---
+  if (currentY + 60 > pageHeight) { doc.addPage(); currentY = 20; }
+
+  doc.setFontSize(14);
+  doc.setTextColor(...secondaryColor);
+  doc.text("5. Order History", 14, currentY);
+
+  const orderColumns = ["Order ID", "Date", "Customer", "Items", "Total (Rs.)", "Status"];
+  const orderRows = (recentOrders?.data?.orders || []).map(order => [
+    (order._id || "").toString().slice(-6).toUpperCase(),
+    new Date(order.createdAt).toLocaleDateString("en-IN"),
+    order.customer || "N/A",
+    order.quantity || 0,
+    parseFloat(order.total || 0).toLocaleString('en-IN'),
+    order.status || "Pending"
+  ]);
+
+  doc.autoTable({
+    startY: currentY + 5,
+    head: [orderColumns],
+    body: orderRows,
+    theme: 'striped',
+    headStyles: { fillColor: secondaryColor, halign: 'left' },
+    styles: { fontSize: 9 },
+    columnStyles: {
+      0: { halign: 'left' },
+      1: { halign: 'left' },
+      2: { halign: 'left' },
+      3: { halign: 'left' },
+      4: { halign: 'left' },
+      5: { halign: 'left' }
+    }
+  });
+
+  doc.save(`Sales_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
 };
 
 export const downloadSalesReportExcel = (
   dateRange,
   salesOverview,
   recentOrders,
-  topProducts
+  topProducts,
+  topCategories,
+  topBrands
 ) => {
   const workbook = XLSX.utils.book_new();
 
@@ -99,12 +236,8 @@ export const downloadSalesReportExcel = (
     ["Total Revenue", `₹${salesOverview?.totalRevenue?.toLocaleString() || 0}`],
     ["Total Orders", salesOverview?.totalOrders?.toLocaleString() || 0],
     [
-      "Average Order Value",
-      `₹${salesOverview?.averageOrderValue?.toLocaleString() || 0}`,
-    ],
-    [
       "Total Discount",
-      `${salesOverview?.couponDiscount?.toLocaleString() || 0}`,
+      `₹${salesOverview?.couponDiscount?.toLocaleString() || 0}`,
     ],
   ];
   const overviewSheet = XLSX.utils.aoa_to_sheet(overviewData);
@@ -151,7 +284,7 @@ export const downloadSalesReportExcel = (
     ["Product Name", "Total Sales", "Revenue"],
     ...(Array.isArray(products)
       ? products.map((product) => [
-        product.productName || "N/A",
+        product.productName || product._id || "N/A",
         product.totalSold || 0,
         `₹${product.totalRevenue?.toLocaleString() || 0}`,
       ])
@@ -161,7 +294,37 @@ export const downloadSalesReportExcel = (
   productsSheet["!cols"] = [{ wch: 25 }, { wch: 15 }, { wch: 20 }];
   XLSX.utils.book_append_sheet(workbook, productsSheet, "Top Products");
 
-  const fileTitle = `Sales Report - ${dateRange.type} (${dateRange.start} to ${dateRange.end})`;
+  const categories = topCategories || [];
+  const categoriesData = [
+    ["Category Name", "Total Items Sold", "Revenue"],
+    ...(Array.isArray(categories)
+      ? categories.map((cat) => [
+        cat.categoryName || "N/A",
+        cat.totalItemsSold || 0,
+        `₹${cat.totalRevenue?.toLocaleString() || 0}`,
+      ])
+      : []),
+  ];
+  const categoriesSheet = XLSX.utils.aoa_to_sheet(categoriesData);
+  categoriesSheet["!cols"] = [{ wch: 25 }, { wch: 15 }, { wch: 20 }];
+  XLSX.utils.book_append_sheet(workbook, categoriesSheet, "Top Categories");
+
+  const brands = topBrands || [];
+  const brandsData = [
+    ["Brand Name", "Total Items Sold", "Revenue"],
+    ...(Array.isArray(brands)
+      ? brands.map((brand) => [
+        brand.brandName || "N/A",
+        brand.totalItemsSold || 0,
+        `₹${brand.totalRevenue?.toLocaleString() || 0}`,
+      ])
+      : []),
+  ];
+  const brandsSheet = XLSX.utils.aoa_to_sheet(brandsData);
+  brandsSheet["!cols"] = [{ wch: 25 }, { wch: 15 }, { wch: 20 }];
+  XLSX.utils.book_append_sheet(workbook, brandsSheet, "Top Brands");
+
+  const fileTitle = `Sales Report - ${dateRange.type || dateRange}`;
   XLSX.writeFile(workbook, `${fileTitle}.xlsx`);
 };
 
@@ -339,11 +502,11 @@ export const generateInvoicePDF = (order, address) => {
       overflow: 'linebreak'
     },
     columnStyles: {
-      0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 'auto' },
-      2: { cellWidth: 30, halign: 'right' },
-      3: { cellWidth: 15, halign: 'center' },
-      4: { cellWidth: 30, halign: 'right' }
+      0: { cellWidth: 10, halign: 'left' },
+      1: { cellWidth: 'auto', halign: 'left' },
+      2: { cellWidth: 30, halign: 'left' },
+      3: { cellWidth: 15, halign: 'left' },
+      4: { cellWidth: 30, halign: 'left' }
     },
     footStyles: {
       fillColor: lightGray,

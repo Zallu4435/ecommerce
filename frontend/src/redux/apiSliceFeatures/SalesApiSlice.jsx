@@ -15,21 +15,37 @@ export const salesApiSlice = createApi({
       providesTags: ["Sales"],
     }),
     getSalesOverview: builder.query({
-      query: () => "sales/getSalesOverview",
+      query: (params) => ({
+        url: "sales/getSalesOverview",
+        method: "GET",
+        params: params,
+      }),
       providesTags: ["Sales"],
     }),
 
     getTopSellingProducts: builder.query({
-      query: () => "sales/getTopSellingProducts",
+      query: (params) => ({
+        url: "sales/getTopSellingProducts",
+        method: "GET",
+        params: params,
+      }),
       providesTags: ["Sales"],
     }),
 
     getTopSellingCategories: builder.query({
-      query: () => "sales/getTopSellingCategories",
+      query: (params) => ({
+        url: "sales/getTopSellingCategories",
+        method: "GET",
+        params: params,
+      }),
     }),
 
     getTopSellingBrands: builder.query({
-      query: () => "sales/getTopSellingBrands",
+      query: (params) => ({
+        url: "sales/getTopSellingBrands",
+        method: "GET",
+        params: params,
+      }),
     }),
 
     getSaleById: builder.query({
@@ -50,10 +66,12 @@ export const salesApiSlice = createApi({
 
 export const {
   useGetSalesDataQuery,
+  useLazyGetSalesDataQuery,
   useGetSalesOverviewQuery,
   useGetSaleByIdQuery,
   useUpdateSaleStatusMutation,
   useGetTopSellingProductsQuery,
+  useLazyGetTopSellingProductsQuery,
   useGetTopSellingBrandsQuery,
   useGetTopSellingCategoriesQuery
 } = salesApiSlice;

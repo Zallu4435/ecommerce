@@ -314,8 +314,14 @@ exports.createOrder = async (req, res, next) => {
   session.startTransaction();
 
   try {
-    const { items, addressId, paymentMethod, couponCode } = req.body;
+    let { items, addressId, paymentMethod, couponCode } = req.body;
     const userId = req.user;
+
+    // Sanitize payment method
+    paymentMethod = paymentMethod ? paymentMethod.trim() : "";
+    if (paymentMethod.toLowerCase() === "cod") {
+      paymentMethod = "COD";
+    }
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "No items in order" });
@@ -428,7 +434,13 @@ exports.createOrder = async (req, res, next) => {
 
     // 4. Handle Wallet Payment
     let paymentStatus = "Pending";
-    if (paymentMethod === "Wallet") {
+
+    // Check payment method case-insensitively AND ensure correct Title Case for storage if valid
+    const isWallet = paymentMethod.toLowerCase() === "wallet";
+    if (isWallet) {
+      // Normalize to "Wallet" for consistency in DB if Enum requires it
+      paymentMethod = "Wallet";
+
       const userWallet = await Wallet.findOne({ userId }).session(session);
 
       if (!userWallet) {
@@ -463,7 +475,18 @@ exports.createOrder = async (req, res, next) => {
     }
 
     // 5. Create Order
-    const orderStatus = paymentStatus === "Completed" ? "Confirmed" : "Pending";
+    let orderStatus = "Pending";
+
+    if (paymentStatus === "Completed") {
+      orderStatus = "Confirmed";
+    }
+
+    if (orderStatus === "Confirmed") {
+      orderItems.forEach(item => {
+        item.Status = "Confirmed";
+        item.confirmedAt = Date.now();
+      });
+    }
 
     const newOrder = await Order.create([{
       UserId: userId,
@@ -499,7 +522,7 @@ exports.createOrder = async (req, res, next) => {
         userId: userId,
         amount: finalTotal,
         currency: "INR",
-        status: paymentStatus === "Completed" ? "captured" : "created",
+        status: paymentStatus === "Completed" ? "Successful" : "Pending",
         method: paymentMethod,
         email: userForMail ? userForMail.email : "user@example.com"
       }], { session });
@@ -510,7 +533,7 @@ exports.createOrder = async (req, res, next) => {
         userId: userId,
         amount: finalTotal,
         currency: "INR",
-        status: "pending",
+        status: "Pending",
         method: "COD",
         email: userForMail ? userForMail.email : "user@example.com"
       }], { session });

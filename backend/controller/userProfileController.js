@@ -574,6 +574,19 @@ exports.processPayment = async (req, res) => {
       // Only deduct stock if payment is successful or pending (not failed)
       shouldDeductStock = paymentRecord.status !== "Failed";
 
+      // CRITICAL FIX: Update Order Status if payment was successful (Wallet) OR if it is COD
+      // Razorpay is handled separately in verifyRazorpayPayment
+      if (paymentRecord.status === "Successful" || normalizedPaymentMethod === "COD") {
+        savedOrder.paymentStatus = paymentRecord.status === "Successful" ? "Completed" : "Pending";
+        savedOrder.orderStatus = "Confirmed";
+        savedOrder.items.forEach(item => {
+          item.Status = "Confirmed";
+          item.confirmedAt = Date.now();
+        });
+        await savedOrder.save();
+        console.log(`✅ [ORDER UPDATE] Order updated to Confirmed (Payment: ${savedOrder.paymentStatus})`);
+      }
+
     } catch (paymentError) {
       console.log('❌ [CATCH] Payment error caught:', paymentError.message);
 
@@ -951,6 +964,7 @@ exports.retryPayment = async (req, res) => {
       order.items = order.items.map(item => ({
         ...item.toObject?.() || item,
         Status: "Confirmed",
+        confirmedAt: Date.now() // Add timestamp
       }));
 
       order.paymentStatus = 'Completed';
@@ -992,6 +1006,13 @@ exports.retryPayment = async (req, res) => {
         key: process.env.RAZORPAY_KEY_ID
       });
     } else if (paymentMethod === "cod") {
+      // COD Validation: Limit Check
+      if (order.TotalAmount > 1000) {
+        return res.status(400).json({
+          message: "Cash on Delivery is not available for orders above ₹1000. Please choose a different payment method."
+        });
+      }
+
       // Update to COD
       existingPayment.status = "Pending";
       existingPayment.method = "COD"; // Uppercase consistency
@@ -1016,9 +1037,11 @@ exports.retryPayment = async (req, res) => {
       order.items = order.items.map(item => ({
         ...item.toObject?.() || item,
         Status: "Confirmed",
+        confirmedAt: Date.now() // Add timestamp
       }));
 
       order.orderStatus = 'Confirmed'; // Explicitly set to Confirmed for COD
+      order.paymentStatus = 'Pending'; // COD starts as Pending payment
       await order.save();
       console.log('✅ [RETRY] Order items updated to Confirmed (COD)');
 
