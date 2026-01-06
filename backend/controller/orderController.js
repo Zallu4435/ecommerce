@@ -954,7 +954,7 @@ exports.getOrdersGrouped = async (req, res) => {
         select: "productName image offerPrice originalPrice",
       })
       .populate("AddressId")
-      .sort({ createdAt: sortDirection })
+      .sort({ updatedAt: sortDirection })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean();

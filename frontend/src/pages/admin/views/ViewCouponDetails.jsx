@@ -220,6 +220,31 @@ const ViewCouponDetails = () => {
                   )}
                 </div>
 
+                {/* Applicable Categories */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-gray-700 dark:text-gray-300">Applicable Categories</span>
+                    {coupon.applicableCategories && coupon.applicableCategories.length > 0 && (
+                      <span className="text-xs bg-white dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300">
+                        Total: {coupon.applicableCategories.length}
+                      </span>
+                    )}
+                  </div>
+                  {coupon.applicableCategories && coupon.applicableCategories.length > 0 ? (
+                    <div className="max-h-[200px] overflow-y-auto pr-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 p-2">
+                      <ul className="list-disc ml-4 space-y-1">
+                        {coupon.applicableCategories.map((cat, idx) => (
+                          <li key={idx} className="text-blue-600 break-words text-sm">
+                            {cat}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 dark:text-gray-400 text-sm italic">No applicable Categories (All).</p>
+                  )}
+                </div>
+
                 {/* Applied Users (Used By) */}
                 <div>
                   <div className="flex justify-between items-center mb-2">

@@ -513,11 +513,14 @@ exports.processPayment = async (req, res) => {
     // Calculate actual subtotal from items (trusting DB prices only)
     const subtotal = items.reduce((acc, item) => acc + (item.itemTotal || 0), 0);
     console.log(`💰 [PAYMENT] Calculated Subtotal from items: ₹${subtotal.toFixed(2)}`);
+    console.log(`🔍 [DEBUG] Extracted Coupon Code: "${couponCode}" for user ${userId}`);
 
     const { coupon, discountAmount } = await validateAndApplyCoupon(couponCode, userId, items);
     const couponDiscount = discountAmount;
     if (coupon) {
       console.log(`🎟️ [PAYMENT] Applied Coupon "${coupon.couponCode}": Discount ₹${couponDiscount.toFixed(2)}`);
+    } else {
+      console.log(`⚠️ [PAYMENT] No coupon applied (Code: ${couponCode})`);
     }
 
     const addressReference = await handleAddress(address, userId);

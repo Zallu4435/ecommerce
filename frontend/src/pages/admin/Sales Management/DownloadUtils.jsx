@@ -252,7 +252,7 @@ export const generateInvoicePDF = (order, address) => {
     { label: "Order ID:", value: `#${order.orderId || order._id}` },
     { label: "Order Date:", value: orderDate },
     { label: "Invoice Date:", value: invoiceDate },
-    { label: "Status:", value: (order.orderStatus || order.status || "Confirmed").toUpperCase() },
+    { label: "Status:", value: (order.Status || order.orderStatus || order.status || "Confirmed").toUpperCase() },
     { label: "Payment Method:", value: (order.paymentType || order.paymentMethod || "Online").toUpperCase() },
   ];
 
@@ -276,10 +276,11 @@ export const generateInvoicePDF = (order, address) => {
   if (order.items && Array.isArray(order.items) && order.items.length > 0) {
     items = order.items.map(i => ({
       name: i.productName,
-      qty: i.quantity,
-      price: i.Price || i.price || (i.itemTotal / i.quantity),
-      total: i.itemTotal || (i.Price * i.quantity),
-      status: i.status || order.orderStatus // if individual item status exists
+      qty: i.Quantity || i.quantity,
+      price: i.Price || i.price || (i.itemTotal / (i.Quantity || i.quantity || 1)),
+      total: i.itemTotal || ((i.Price || i.price) * (i.Quantity || i.quantity)),
+      status: i.Status || i.status || order.orderStatus, // if individual item status exists
+      reason: i.cancellationReason || i.returnReason || order.cancellationReason || order.returnReason
     }));
   } else if (order.productName || order.ProductName) {
     // Single item context
@@ -288,6 +289,8 @@ export const generateInvoicePDF = (order, address) => {
       qty: order.quantity || order.Quantity || 1,
       price: order.price || order.Price || 0,
       total: order.itemTotal || order.TotalAmount || 0,
+      status: order.Status || order.status || order.orderStatus,
+      reason: order.cancellationReason || order.returnReason
     });
   } else {
     // Fallback for list view objects lacking details
@@ -299,13 +302,23 @@ export const generateInvoicePDF = (order, address) => {
     });
   }
 
-  const tableBody = items.map((item, index) => [
-    index + 1,
-    item.name,
-    formatCurrency(item.price),
-    item.qty,
-    formatCurrency(item.total)
-  ]);
+  const tableBody = items.map((item, index) => {
+    let description = item.name;
+    if (item.status === "Cancelled" || item.status === "Returned" || item.status === "Return Requested") {
+      description += ` (${item.status})`;
+      if (item.reason) {
+        description += `\nReason: ${item.reason}`;
+      }
+    }
+
+    return [
+      index + 1,
+      description,
+      formatCurrency(item.price),
+      item.qty,
+      formatCurrency(item.total)
+    ];
+  });
 
   doc.autoTable({
     startY: Math.max(addrY, metaY) + 10,

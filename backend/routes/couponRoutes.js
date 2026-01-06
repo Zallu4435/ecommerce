@@ -29,7 +29,7 @@ router.put("/update/:id", catchAsyncErrors(updateCoupon));
 router.patch("/patch/:id", catchAsyncErrors(updateApplicables));
 router.delete("/delete/:id", catchAsyncErrors(deleteCoupon));
 
-router.post("/validate", catchAsyncErrors(validateCoupon));
+router.post("/validate", isAuthenticated, catchAsyncErrors(validateCoupon));
 
 router.get("/getCouponStats", catchAsyncErrors(getCouponStatistics));
 

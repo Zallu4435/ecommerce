@@ -345,7 +345,20 @@ const OrderDetailsPage = () => {
                                                     Track Order
                                                 </button>
                                                 <InvoiceDownloadIcon
-                                                    order={{ ...order, ...item, Status: item.status, TotalAmount: item.itemTotal, Price: item.price, ProductName: item.productName }}
+                                                    order={{
+                                                        ...order,
+                                                        items: [item],
+                                                        totalAmount: item.itemTotal,
+                                                        subtotal: item.itemTotal,
+                                                        couponDiscount: 0,
+                                                        status: item.status,
+                                                        orderStatus: item.status,
+                                                        TotalAmount: item.itemTotal,
+                                                        Price: item.price,
+                                                        ProductName: item.productName,
+                                                        cancellationReason: item.cancellationReason,
+                                                        returnReason: item.returnReason
+                                                    }}
                                                     className="w-8 h-8 p-2 flex items-center justify-center bg-white dark:bg-gray-800 text-gray-500 hover:text-red-600 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-sm transition-all cursor-pointer"
                                                 />
                                                 {item.canCancel && (
@@ -394,6 +407,18 @@ const OrderDetailsPage = () => {
                                 <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-end">
                                     <span className="text-sm font-bold text-gray-900 dark:text-white">Total Amount</span>
                                     <span className="text-xl font-black text-blue-600 dark:text-blue-400">₹{order.totalAmount.toFixed(2)}</span>
+                                </div>
+                                <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800 flex justify-center">
+                                    <div className="flex items-center gap-2 group cursor-pointer">
+                                        <InvoiceDownloadIcon
+                                            order={order}
+                                            className="w-10 h-10 p-2.5 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm"
+                                        />
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">Full Invoice</span>
+                                            <span className="text-[10px] text-gray-500">Download PDF</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

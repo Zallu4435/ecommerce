@@ -67,6 +67,10 @@ exports.getCoupon = async (req, res, next) => {
           minAmount: 1,
           maxAmount: 1,
           expiry: 1,
+          usageCount: 1,
+          usageLimit: 1,
+          perUserLimit: 1,
+          applicableCategories: 1,
           applicableUsers: {
             $map: {
               input: "$applicableUserDetails",
@@ -542,7 +546,8 @@ exports.getCouponStatistics = async (req, res, next) => {
 
 exports.validateCoupon = async (req, res, next) => {
   try {
-    const { couponCode, userId, purchaseAmount, productIds } = req.body;
+    const { couponCode, purchaseAmount, productIds } = req.body;
+    const userId = req.user?._id || req.user || req.body.userId;
 
     if (!couponCode) {
       return next(new ErrorHandler("Coupon code is required", 400));
@@ -569,6 +574,11 @@ exports.validateCoupon = async (req, res, next) => {
     if (userId) {
       // Check if user has already used the coupon (per user limit)
       const userUsageCount = coupon.appliedUsers.filter(id => id.toString() === userId.toString()).length;
+
+      console.log(`🔍 [COUPON VALIDATE] User: ${userId}`);
+      console.log(`🔍 [COUPON VALIDATE] Coupon Applied Users:`, coupon.appliedUsers);
+      console.log(`🔍 [COUPON VALIDATE] User Usage Count: ${userUsageCount}, Limit: ${coupon.perUserLimit}`);
+
       if (userUsageCount >= coupon.perUserLimit) {
         return next(new ErrorHandler(`You have already used this coupon ${coupon.perUserLimit} time(s)`, 400));
       }
@@ -580,6 +590,8 @@ exports.validateCoupon = async (req, res, next) => {
           return next(new ErrorHandler("This coupon is not applicable for your account", 403));
         }
       }
+    } else {
+      console.log(`⚠️ [COUPON VALIDATE] No User ID found. Skipping per-user checks.`);
     }
 
     // Check minimum purchase amount if provided
