@@ -50,7 +50,7 @@ const OrderDetails = ({ onOrderChange, coupon }) => {
               <span className="font-medium">{product.productName}</span>
               {product.color && product.size && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {product.color} | {product.size}
+                  {[product.color, product.size, product.gender === "Male" ? "Boy" : product.gender === "Female" ? "Girl" : product.gender].filter(Boolean).join(" | ")}
                 </p>
               )}
             </div>

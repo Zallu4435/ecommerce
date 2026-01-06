@@ -20,6 +20,7 @@ const ShopPage = () => {
   // State
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
+  const [selectedGenders, setSelectedGenders] = useState([]); // Added gender state
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [currentPage, setCurrentPage] = useState(1);
   const [cardsPerPage] = useState(9); // Fixed at 9 per request
@@ -33,6 +34,7 @@ const ShopPage = () => {
     price: true,
     size: true,
     color: true,
+    gender: true, // Added gender
   });
 
   const searchParams = new URLSearchParams(location.search);
@@ -47,12 +49,14 @@ const ShopPage = () => {
   useEffect(() => {
     const sizes = searchParams.get("sizes");
     const colors = searchParams.get("colors");
+    const genders = searchParams.get("genders"); // Get genders from URL
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
     const sort = searchParams.get("sort");
 
     if (sizes) setSelectedSizes(sizes.split(","));
     if (colors) setSelectedColors(colors.split(","));
+    if (genders) setSelectedGenders(genders.split(",")); // Set selected genders
     if (minPrice || maxPrice) {
       setPriceRange([
         minPrice ? parseInt(minPrice) : 0,
@@ -77,6 +81,7 @@ const ShopPage = () => {
     {
       sizes: selectedSizes,
       colors: selectedColors,
+      gender: selectedGenders.join(","), // Pass genders to API
       minPrice: priceRange[0],
       maxPrice: priceRange[1],
       sortBy: sortOption,
@@ -97,7 +102,7 @@ const ShopPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedSizes, selectedColors, priceRange, sortOption, category, searchQuery]);
+  }, [selectedSizes, selectedColors, selectedGenders, priceRange, sortOption, category, searchQuery]);
 
   // Sync filters to URL (only after initial load)
   useEffect(() => {
@@ -130,6 +135,12 @@ const ShopPage = () => {
       params.delete("colors");
     }
 
+    if (selectedGenders.length > 0) { // Sync genders to URL
+      params.set("genders", selectedGenders.join(","));
+    } else {
+      params.delete("genders");
+    }
+
     if (priceRange[0] !== 0) params.set("minPrice", priceRange[0].toString());
     else params.delete("minPrice");
 
@@ -141,7 +152,7 @@ const ShopPage = () => {
 
     // Update URL
     navigate({ search: params.toString() }, { replace: true });
-  }, [selectedSizes, selectedColors, priceRange, sortOption]);
+  }, [selectedSizes, selectedColors, selectedGenders, priceRange, sortOption]);
 
   const toggleSelection = (list, setList, value) => {
     setList((prev) =>
@@ -172,6 +183,7 @@ const ShopPage = () => {
   const handleClearAll = () => {
     setSelectedSizes([]);
     setSelectedColors([]);
+    setSelectedGenders([]); // Clear genders
     setPriceRange([0, 10000]);
     setSortOption("popularity");
     setSearchQuery(""); // Also clear search
@@ -241,6 +253,27 @@ const ShopPage = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Gender Filter for Child Category only or generally? User prompt says "filter", logic applies everywhere if needed, but mostly useful for Child */}
+              {(category === "Child" || !category || category === "all") && (
+                <div className="mb-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 uppercase tracking-wide">Gender</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {["Male", "Female", "Unisex"].map((g) => (
+                      <button
+                        key={g}
+                        onClick={() => toggleSelection(selectedGenders, setSelectedGenders, g)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${selectedGenders.includes(g)
+                          ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-md"
+                          : "bg-white text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 hover:border-gray-400"
+                          }`}
+                      >
+                        {g === "Male" ? "Boy/Men" : g === "Female" ? "Girl/Women" : "Unisex"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Price */}
               <div className="mb-6 pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -338,6 +371,29 @@ const ShopPage = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Gender Mobile */}
+                {(category === "Child" || !category || category === "all") && (
+                  <div>
+                    <h3 className="font-bold mb-3 dark:text-white">Gender</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {["Male", "Female", "Unisex"].map((g) => (
+                        <button
+                          key={g}
+                          onClick={() => toggleSelection(selectedGenders, setSelectedGenders, g)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${selectedGenders.includes(g)
+                            ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-md"
+                            : "bg-white text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 hover:border-gray-400"
+                            }`}
+                        >
+                          {g === "Male" ? "Boy/Men" : g === "Female" ? "Girl/Women" : "Unisex"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+
                 {/* Price Mobile */}
                 <div>
                   <h3 className="font-bold mb-3 dark:text-white">Max Price: ₹{priceRange[1].toLocaleString()}</h3>

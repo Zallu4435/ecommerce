@@ -69,17 +69,19 @@ const ProductVariantSchema = new mongoose.Schema(
             width: Number,
             height: Number,
         },
+        gender: {
+            type: String,
+            enum: ["Male", "Female", "Unisex"], // m and w mapping
+            required: false,
+        },
     },
     {
         timestamps: true,
     }
 );
 
-// Compound index to prevent duplicate color+size combinations for same product
-ProductVariantSchema.index({ productId: 1, color: 1, size: 1 }, { unique: true });
-
-// Index for SKU lookups
-ProductVariantSchema.index({ sku: 1 });
+// Compound index to prevent duplicate color+size+gender combinations for same product
+ProductVariantSchema.index({ productId: 1, color: 1, size: 1, gender: 1 }, { unique: true });
 
 // Index for stock queries
 ProductVariantSchema.index({ stockQuantity: 1 });

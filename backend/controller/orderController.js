@@ -331,14 +331,21 @@ exports.createOrder = async (req, res, next) => {
 
       // Handle Variants if they exist
       if (product.hasVariants && item.color && item.size) {
-        const variant = await ProductVariant.findOne({
+
+        let variantQuery = {
           productId: product._id,
           color: item.color.toLowerCase(), // Ensure case matching
           size: item.size.toUpperCase()
-        }).session(session);
+        };
+
+        if (item.gender) {
+          variantQuery.gender = item.gender.charAt(0).toUpperCase() + item.gender.slice(1).toLowerCase();
+        }
+
+        const variant = await ProductVariant.findOne(variantQuery).session(session);
 
         if (!variant) {
-          throw new Error(`Variant ${item.color}/${item.size} not found for ${product.productName}`);
+          throw new Error(`Variant ${item.color}/${item.size}${item.gender ? `/${item.gender}` : ''} not found for ${product.productName}`);
         }
 
         if (variant.stockQuantity < item.quantity) {
@@ -383,6 +390,7 @@ exports.createOrder = async (req, res, next) => {
         itemTotal: itemTotal,
         color: item.color,
         size: item.size,
+        gender: item.gender,
         Status: "Pending"
       });
     }
@@ -572,11 +580,17 @@ exports.updateOrderStatus = async (req, res) => {
 
           // Restore Variant Stock
           if (item.color && item.size) {
-            const variant = await ProductVariant.findOne({
+            let variantQuery = {
               productId: product._id,
               color: item.color.toLowerCase(),
               size: item.size.toUpperCase()
-            });
+            };
+
+            if (item.gender) {
+              variantQuery.gender = item.gender.charAt(0).toUpperCase() + item.gender.slice(1).toLowerCase();
+            }
+
+            const variant = await ProductVariant.findOne(variantQuery);
 
             if (variant) {
               variant.stockQuantity += item.Quantity;
@@ -766,11 +780,17 @@ exports.cancelOrder = async (req, res) => {
     // Restore Variant Stock
     const item = order.items[itemIndex];
     if (item.color && item.size) {
-      const variant = await ProductVariant.findOne({
+      let variantQuery = {
         productId: product._id,
         color: item.color.toLowerCase(),
         size: item.size.toUpperCase()
-      });
+      };
+
+      if (item.gender) {
+        variantQuery.gender = item.gender.charAt(0).toUpperCase() + item.gender.slice(1).toLowerCase();
+      }
+
+      const variant = await ProductVariant.findOne(variantQuery);
 
       if (variant) {
         variant.stockQuantity += item.Quantity;

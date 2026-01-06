@@ -295,6 +295,7 @@ const AdminProductCreateForm = () => {
                   onChange={field.onChange}
                   basePrice={basePrice}
                   baseOfferPrice={baseOfferPrice}
+                  category={watch("category")}
                 />
               )}
             />

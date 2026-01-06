@@ -241,9 +241,13 @@ const OrderDetailsPage = () => {
                                             </h3>
 
                                             <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                                {item.color && item.size && (
+                                                {(item.color || item.size || item.gender) && (
                                                     <span className="font-medium text-gray-700 dark:text-gray-300">
-                                                        {item.color} | {item.size}
+                                                        {[
+                                                            item.color,
+                                                            item.size,
+                                                            item.gender === "Male" ? "Boy" : item.gender === "Female" ? "Girl" : item.gender
+                                                        ].filter(Boolean).join(" | ")}
                                                     </span>
                                                 )}
                                                 <span>Quantity: {item.quantity}</span>

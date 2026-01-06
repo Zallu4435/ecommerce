@@ -13,7 +13,7 @@ import {
 } from "../../components/user/StyledComponents/StyledComponents";
 import { toast } from "react-toastify";
 import { useUpdateEntityMutation } from "../../redux/apiSliceFeatures/crudApiSlice";
-import { uploadImageToCloudinary } from "../../server";
+import { uploadImageToCloudinary, server } from "../../server";
 import { useGetProductByIdQuery } from "../../redux/apiSliceFeatures/productApiSlice";
 import ImageInput from "../../components/ImageInput";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -38,9 +38,18 @@ const AdminProductUpdateForm = () => {
     formState: { errors },
     watch,
     reset,
+    getValues,
   } = useForm({
     resolver: zodResolver(productValidationSchema),
     defaultValues: {
+      productName: "",
+      brand: "",
+      category: "",
+      description: "",
+      basePrice: "",
+      baseOfferPrice: "",
+      returnPolicy: "",
+      image: "",
       variants: [],
     },
   });
@@ -121,7 +130,7 @@ const AdminProductUpdateForm = () => {
 
         for (const variant of variantsToDelete) {
           try {
-            await axios.delete(`${import.meta.env.VITE_SERVER}/api/variants/delete/${variant._id}`);
+            await axios.delete(`${server}/variants/delete/${variant._id}`);
           } catch (err) {
             console.error(`Error deleting variant ${variant._id}:`, err);
           }
@@ -133,27 +142,82 @@ const AdminProductUpdateForm = () => {
 
         // 4. Perform Updates
         for (const variant of variantsToUpdate) {
+          const original = existingVariants.find(v => v._id === variant._id);
+
+          // Check if changed
+          let isChanged = true;
+          if (original) {
+            isChanged =
+              original.color !== variant.color ||
+              original.size !== variant.size ||
+              Number(original.stockQuantity) !== Number(variant.stockQuantity) ||
+              Number(original.price) !== Number(variant.price) ||
+              Number(original.offerPrice) !== Number(variant.offerPrice) ||
+              original.isActive !== variant.isActive ||
+              original.image !== variant.image ||
+              original.gender !== variant.gender;
+          }
+
+          if (!isChanged) continue;
+
           try {
-            await axios.put(`${import.meta.env.VITE_SERVER}/api/variants/update/${variant._id}`, variant);
+            const variantToUpdate = { ...variant };
+
+            if (variantToUpdate.gender) {
+              // Ensure Title Case
+              variantToUpdate.gender = variantToUpdate.gender.charAt(0).toUpperCase() + variantToUpdate.gender.slice(1).toLowerCase();
+            }
+            await axios.put(`${server}/variants/update/${variant._id}`, variantToUpdate);
           } catch (err) {
             console.error(`Error updating variant ${variant._id}:`, err);
             toast.error(`Failed to update variant: ${variant.sku || variant.color}`);
           }
         }
 
-        // 5. Perform Bulk Create for new ones
         if (variantsToCreate.length > 0) {
           try {
-            await axios.post(`${import.meta.env.VITE_SERVER}/api/variants/bulk-create`, {
+            const createResponse = await axios.post(`${server}/variants/bulk-create`, {
               productId: id,
               variants: variantsToCreate,
             });
+
+            if (createResponse.data.summary && createResponse.data.summary.failed > 0) {
+              const failedCount = createResponse.data.summary.failed;
+              const errors = createResponse.data.errors || [];
+              // Construct a readable error message
+              const errorMsg = errors.map(e => {
+                const variantColor = e.data?.color || 'Unknown';
+                const variantSize = e.data?.size || 'Unknown';
+                const reasons = e.errors ? e.errors.join(", ") : "Unknown error";
+                return `${variantColor}-${variantSize}: ${reasons}`;
+              }).join("\n");
+
+              toast.warning(`${failedCount} variant(s) failed to create:\n${errorMsg}`, { autoClose: 10000 });
+            }
           } catch (err) {
             console.error("Error creating new variants:", err);
-            toast.error("Some new variants failed to create");
+            toast.error(err.response?.data?.message || "Some new variants failed to create");
           }
         }
       }
+
+      // Force invalidation of product data to reflect variant changes
+      // Since axios updates bypassed RTK Query invalidation
+      // We can rely on the fact that updateEntity above invalidated "Entity" tag, 
+      // but to be absolutely sure we get fresh data next time, we can assume standard behavior holds.
+      // Alternatively, we could dispatch an action if we had dispatch here, but we don't.
+      // However, productApiSlice sets keepUnusedDataFor: 0, so simply navigating back and forth should work.
+      // If user says it's not working, maybe they didn't wait?
+      // Let's rely on keepUnusedDataFor: 0 which I just saw in productApiSlice.
+
+      // Wait, I saw keepUnusedDataFor: 0 in the file view of productApiSlice.
+      // So caching shouldn't be the issue if the component unmounts.
+
+      // Maybe the issue is strictly with how "original" vs "variant" is compared or constructed?
+      // gender mismatch between "Male" (db) and "boy" (form)?
+
+      // Let's add a small check to ensure normalized gender is sent.
+
 
       toast.success("Product updated successfully!");
       navigate(-1);
@@ -382,6 +446,7 @@ const AdminProductUpdateForm = () => {
                   onChange={field.onChange}
                   basePrice={basePrice}
                   baseOfferPrice={baseOfferPrice}
+                  category={watch("category") || getValues("category") || data?.product?.category}
                 />
               )}
             />

@@ -6,7 +6,7 @@ const reviewSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 500, 
+      maxlength: 500,
     },
     rating: {
       type: Number,
@@ -16,13 +16,17 @@ const reviewSchema = new mongoose.Schema(
     },
     productId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Products', 
+      ref: 'Products',
       required: true,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', 
+      ref: 'User',
       required: true,
+    },
+    verifiedPurchase: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -30,9 +34,9 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
-reviewSchema.index({ productId: 1 });  
-reviewSchema.index({ userId: 1 });     
-reviewSchema.index({ createdAt: -1 }); 
+reviewSchema.index({ productId: 1 });
+reviewSchema.index({ userId: 1 });
+reviewSchema.index({ createdAt: -1 });
 
 reviewSchema.index({ userId: 1, productId: 1 }, { unique: true });
 

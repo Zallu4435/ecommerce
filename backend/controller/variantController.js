@@ -83,7 +83,7 @@ exports.getVariantBySKU = async (req, res, next) => {
 // Create single variant
 exports.createVariant = async (req, res, next) => {
     try {
-        const { productId, color, size, stockQuantity, price, offerPrice, image, imagePublicId } = req.body;
+        const { productId, color, size, stockQuantity, price, offerPrice, image, imagePublicId, gender } = req.body;
 
         // Validate product exists
         const product = await Product.findById(productId);
@@ -102,7 +102,7 @@ exports.createVariant = async (req, res, next) => {
         }
 
         // Check for duplicate
-        const isDuplicate = await checkDuplicateVariant(productId, color, size);
+        const isDuplicate = await checkDuplicateVariant(productId, color, size, null, gender); // Pass gender
         if (isDuplicate) {
             return res.status(400).json({
                 success: false,
@@ -122,8 +122,10 @@ exports.createVariant = async (req, res, next) => {
             stockQuantity: stockQuantity || 0,
             price,
             offerPrice,
+            offerPrice,
             image,
             imagePublicId,
+            gender: gender ? gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase() : undefined,
         });
 
         // Update product cache
@@ -180,19 +182,20 @@ exports.bulkCreateVariants = async (req, res, next) => {
 exports.updateVariant = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { color, size, stockQuantity, price, offerPrice, image, imagePublicId, isActive } = req.body;
+        const { color, size, stockQuantity, price, offerPrice, image, imagePublicId, isActive, gender } = req.body;
 
         const variant = await ProductVariant.findById(id);
         if (!variant) {
             return next(new ErrorHandler("Variant not found", 404));
         }
 
-        // If color or size is being changed, check for duplicates
-        if ((color && color !== variant.color) || (size && size !== variant.size)) {
+        // Check for duplicates if identifying fields change
+        if ((color && color !== variant.color) || (size && size !== variant.size) || (gender !== undefined && gender !== variant.gender)) {
             const newColor = color || variant.color;
             const newSize = size || variant.size;
+            const checkGender = gender !== undefined ? gender : variant.gender;
 
-            const isDuplicate = await checkDuplicateVariant(variant.productId, newColor, newSize, id);
+            const isDuplicate = await checkDuplicateVariant(variant.productId, newColor, newSize, id, checkGender);
             if (isDuplicate) {
                 return res.status(400).json({
                     success: false,
@@ -200,6 +203,7 @@ exports.updateVariant = async (req, res, next) => {
                 });
             }
         }
+
 
         // Validate if provided
         if (color || size || stockQuantity !== undefined || price !== undefined || offerPrice !== undefined) {
@@ -238,6 +242,9 @@ exports.updateVariant = async (req, res, next) => {
         if (image !== undefined) variant.image = image;
         if (imagePublicId !== undefined) variant.imagePublicId = imagePublicId;
         if (isActive !== undefined) variant.isActive = isActive;
+        if (gender !== undefined) {
+            variant.gender = gender ? gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase() : gender;
+        }
 
         await variant.save();
 

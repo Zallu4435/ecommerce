@@ -14,12 +14,15 @@ export const productValidationSchema = z.object({
 
   // Variants array validation
   variants: z.array(z.object({
+    _id: z.string().optional(), // Preserve ID for updates
     color: z.string().min(1, { message: "Color is required" }),
     size: z.string().min(1, { message: "Size is required" }),
     stockQuantity: z.number().int().min(0, { message: "Stock must be 0 or greater" }),
     price: z.number().positive().optional(),
     offerPrice: z.number().positive().optional(),
     image: z.any().optional(), // Can be string (URL) or File object
+    gender: z.string().optional(), // Added gender field
+    isActive: z.boolean().optional(),
   })).min(1, { message: "At least one variant is required" }),
 }).refine((data) => {
   // Check if baseOfferPrice is less than or equal to basePrice

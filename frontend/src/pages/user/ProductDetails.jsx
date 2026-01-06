@@ -173,6 +173,7 @@ const ProductDetails = () => {
                 variants={variants}
                 availableColors={availableColors}
                 availableSizes={availableSizes}
+                availableGenders={productDetails.product?.availableGenders}
                 totalStock={totalStock ?? 0}
               />
               <AddToWishlist productId={_id} />
@@ -292,6 +293,15 @@ const ProductDetails = () => {
                     <span className="font-semibold text-gray-700 dark:text-gray-300">Available Colors</span>
                     <span className="text-gray-900 dark:text-white font-medium">
                       {availableColors?.length > 0 ? availableColors.join(", ") : "N/A"}
+                    </span>
+                  </div>
+                  {/* Added Gender Spec */}
+                  <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                    <span className="font-semibold text-gray-700 dark:text-gray-300">Gender</span>
+                    <span className="text-gray-900 dark:text-white font-medium">
+                      {productDetails.product?.availableGenders?.length > 0
+                        ? productDetails.product.availableGenders.map(g => g === "Male" ? "Boy" : g === "Female" ? "Girl" : g).join(", ")
+                        : "N/A"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">

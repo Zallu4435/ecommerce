@@ -57,7 +57,7 @@ const VariantDetailsDisplay = ({ variants, totalStock, availableColors, availabl
                                 </div>
 
                                 {/* Details Grid */}
-                                <div className="flex-1 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                <div className="flex-1 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                                     {/* Color & Size */}
                                     <div>
                                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Color</p>
@@ -78,6 +78,16 @@ const VariantDetailsDisplay = ({ variants, totalStock, availableColors, availabl
                                             {variant.size}
                                         </span>
                                     </div>
+
+                                    {/* Gender (Optional) */}
+                                    {variant.gender && (
+                                        <div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Gender</p>
+                                            <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-bold">
+                                                {variant.gender === "Male" ? "Boy" : variant.gender === "Female" ? "Girl" : variant.gender}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     {/* Stock */}
                                     <div>

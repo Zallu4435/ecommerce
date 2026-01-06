@@ -84,6 +84,7 @@ const ImageCropper = ({ image, onCropComplete, onCancel }) => {
                         <p className="text-sm text-orange-100 dark:text-red-100">Drag to reposition • Scroll to zoom</p>
                     </div>
                     <button
+                        type="button"
                         onClick={onCancel}
                         className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                     >
@@ -159,6 +160,7 @@ const ImageCropper = ({ image, onCropComplete, onCancel }) => {
                 {/* Footer */}
                 <div className="bg-gray-50 dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
                     <button
+                        type="button"
                         onClick={() => {
                             setZoom(1);
                             setRotation(0);
@@ -170,12 +172,14 @@ const ImageCropper = ({ image, onCropComplete, onCancel }) => {
                     </button>
                     <div className="flex gap-3">
                         <button
+                            type="button"
                             onClick={onCancel}
                             className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors font-medium"
                         >
                             Cancel
                         </button>
                         <button
+                            type="button"
                             onClick={handleCropComplete}
                             className="flex items-center gap-2 px-6 py-2 bg-orange-500 hover:bg-orange-600 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
                         >

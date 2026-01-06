@@ -78,6 +78,12 @@ const ViewProductDetails = () => {
         ? product.availableColors.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", ")
         : "N/A"
     },
+    {
+      label: "Available Genders",
+      value: (product.availableGenders && product.availableGenders.length > 0)
+        ? product.availableGenders.map(g => g === "Male" ? "Boy" : g === "Female" ? "Girl" : g).join(", ")
+        : "N/A"
+    },
   ];
 
   return (

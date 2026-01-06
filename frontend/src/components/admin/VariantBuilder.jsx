@@ -21,11 +21,35 @@ const COLORS = [
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
-const VariantBuilder = ({ variants = [], onChange, basePrice = 0, baseOfferPrice = 0 }) => {
+const VariantImagePreview = ({ src, className }) => {
+    const [preview, setPreview] = useState("");
+
+    useEffect(() => {
+        if (!src) {
+            setPreview("");
+            return;
+        }
+
+        if (typeof src === 'string') {
+            setPreview(src);
+        } else {
+            const objectUrl = URL.createObjectURL(src);
+            setPreview(objectUrl);
+            return () => URL.revokeObjectURL(objectUrl);
+        }
+    }, [src]);
+
+    if (!preview) return null;
+    return <img src={preview} alt="Variant" className={className} />;
+};
+
+const VariantBuilder = ({ variants = [], onChange, basePrice = 0, baseOfferPrice = 0, category }) => {
     const [variantList, setVariantList] = useState(variants);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [variantToDelete, setVariantToDelete] = useState(null);
+
+    const isChildCategory = ["child", "children", "kid", "baby", "boy", "girl", "infant", "toddler"].some(k => category?.toLowerCase().includes(k));
 
     useEffect(() => {
         setVariantList(variants);
@@ -52,6 +76,7 @@ const VariantBuilder = ({ variants = [], onChange, basePrice = 0, baseOfferPrice
             offerPrice: baseOfferPrice || 0,
             image: "",
             isActive: true,
+            gender: isChildCategory ? "" : undefined, // Initialize gender for child category
             _tempId: Date.now(),
         };
         const updated = [...variantList, newVariant];
@@ -76,7 +101,13 @@ const VariantBuilder = ({ variants = [], onChange, basePrice = 0, baseOfferPrice
 
     const updateVariant = (index, field, value) => {
         const updated = [...variantList];
+
+        // Handle gender specifically if needed
         updated[index] = { ...updated[index], [field]: value };
+
+        // If becoming active child variant and gender missing, maybe default? 
+        // No, let user select.
+
         setVariantList(updated);
         onChange(updated);
     };
@@ -85,13 +116,30 @@ const VariantBuilder = ({ variants = [], onChange, basePrice = 0, baseOfferPrice
         const current = variantList[index];
         if (!current.color || !current.size) return false;
 
+        // For child category, we might want to check gender too, but standard uniqueness is usually Color+Size
+        // If you sell "Blue M Boy" and "Blue M Girl", they are different SKUs.
+        // But usually "Blue M" is physically the same item unless it's a completely different cut.
+        // Assuming Color+Size is still the unique constraint for stock keeping unit in this system unless 'gender' makes it a physically different product.
+        // If "Boy T-Shirt" and "Girl T-Shirt" are different products, they would be different Product entries?
+        // Or same Product "Kids T-Shirt" with variants "Blue M Boy" and "Blue M Girl".
+
+        // If gender is involved, we should include it in duplicate check?
+        // modifying duplicate check to include gender if present
+
         const duplicate = variantList.some((v, i) => {
             if (i === index) return false;
-            return v.color === current.color && v.size === current.size;
+            const sameBasic = v.color === current.color && v.size === current.size;
+            if (isChildCategory) {
+                return sameBasic && v.gender === current.gender;
+            }
+            return sameBasic;
         });
 
         if (duplicate) {
-            toast.error(`Duplicate variant: ${current.color} + ${current.size}`);
+            toast.error(isChildCategory
+                ? `Duplicate variant: ${current.color} + ${current.size} + ${current.gender}`
+                : `Duplicate variant: ${current.color} + ${current.size}`
+            );
             return true;
         }
         return false;
@@ -254,8 +302,8 @@ const VariantBuilder = ({ variants = [], onChange, basePrice = 0, baseOfferPrice
                                                             </label>
                                                         </div>
                                                     </div>
-                                                    {/* Row 1: Color, Size, Stock */}
-                                                    <div className="grid grid-cols-3 gap-3">
+                                                    {/* Row 1: Color, Size, Gender (if child), Stock */}
+                                                    <div className={`grid gap-3 ${isChildCategory ? "grid-cols-4" : "grid-cols-3"}`}>
                                                         {/* Color */}
                                                         <div>
                                                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -276,6 +324,27 @@ const VariantBuilder = ({ variants = [], onChange, basePrice = 0, baseOfferPrice
                                                                 ))}
                                                             </select>
                                                         </div>
+
+                                                        {/* Gender Selection (Child Only) */}
+                                                        {isChildCategory && (
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                    Gender *
+                                                                </label>
+                                                                <select
+                                                                    value={variant.gender || ""}
+                                                                    onChange={(e) => updateVariant(index, "gender", e.target.value)}
+                                                                    onBlur={() => checkDuplicate(index)}
+                                                                    className="w-full px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                                    required
+                                                                >
+                                                                    <option value="">Select</option>
+                                                                    <option value="Male">Boy</option>
+                                                                    <option value="Female">Girl</option>
+                                                                    <option value="Unisex">Unisex</option>
+                                                                </select>
+                                                            </div>
+                                                        )}
 
                                                         {/* Size */}
                                                         <div>
@@ -353,9 +422,8 @@ const VariantBuilder = ({ variants = [], onChange, basePrice = 0, baseOfferPrice
                                                             </label>
                                                             {variant.image ? (
                                                                 <div className="relative inline-block">
-                                                                    <img
-                                                                        src={typeof variant.image === 'string' ? variant.image : URL.createObjectURL(variant.image)}
-                                                                        alt="Variant"
+                                                                    <VariantImagePreview
+                                                                        src={variant.image}
                                                                         className="w-16 h-16 object-cover rounded border border-gray-300 dark:border-gray-600"
                                                                     />
                                                                     <button

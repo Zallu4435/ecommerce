@@ -10,9 +10,18 @@ const ImageInput = ({ initialValue = '', onChange, buttonText, className }) => {
 
   // Sync state with prop change (essential for async data loading)
   React.useEffect(() => {
+    let objectUrl;
     if (initialValue) {
-      setImageUrl(initialValue);
+      if (typeof initialValue === 'string') {
+        setImageUrl(initialValue);
+      } else if (initialValue instanceof File || initialValue instanceof Blob) {
+        objectUrl = URL.createObjectURL(initialValue);
+        setImageUrl(objectUrl);
+      }
     }
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [initialValue]);
 
   const handleFileChange = (event) => {

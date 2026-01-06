@@ -71,6 +71,11 @@ const ProductsSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    availableGenders: [
+      {
+        type: String,
+      },
+    ],
     // Metadata
     hasVariants: {
       type: Boolean,

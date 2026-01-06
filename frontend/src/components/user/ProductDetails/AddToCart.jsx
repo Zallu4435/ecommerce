@@ -14,6 +14,7 @@ const AddToCart = ({
   productId,
   availableColors,
   availableSizes,
+  availableGenders, // Added prop
   basePrice,
   productImage,
   baseOfferPrice,
@@ -24,6 +25,7 @@ const AddToCart = ({
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
+  const [selectedGender, setSelectedGender] = useState(""); // Added state
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [availableSizesForColor, setAvailableSizesForColor] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,18 +36,29 @@ const AddToCart = ({
 
   const isAuthenticated = useSelector((state) => state?.user?.isAuthenticated);
 
-  // Initialize with first available color
+  // Initialize with first available color and gender
   useEffect(() => {
     if (availableColors && availableColors.length > 0 && !selectedColor) {
       setSelectedColor(availableColors[0]);
     }
-  }, [availableColors, selectedColor]);
+    if (availableGenders && availableGenders.length > 0 && !selectedGender) {
+      // Auto select if only 1, or just let user pick? 
+      // Let's auto-select first one to be helpful, or maybe not if we want explicit?
+      // Existing logic auto-selects color. So let's auto-select gender.
+      setSelectedGender(availableGenders[0]);
+    }
+  }, [availableColors, availableGenders, selectedColor, selectedGender]);
 
-  // Update available sizes when color changes
+  // Update available sizes when color or gender changes
   useEffect(() => {
     if (selectedColor && variants.length > 0) {
       const sizesForColor = variants
-        .filter(v => v.color?.toLowerCase() === selectedColor?.toLowerCase() && v.stockQuantity > 0 && v.isActive !== false)
+        .filter(v =>
+          v.color?.toLowerCase() === selectedColor?.toLowerCase() &&
+          v.stockQuantity > 0 &&
+          v.isActive !== false &&
+          (!availableGenders || !availableGenders.length || v.gender === selectedGender)
+        )
         .map(v => v.size);
       setAvailableSizesForColor([...new Set(sizesForColor)]);
 
@@ -54,7 +67,7 @@ const AddToCart = ({
         setSelectedSize(sizesForColor[0]);
       }
     }
-  }, [selectedColor, variants, selectedSize]);
+  }, [selectedColor, variants, selectedSize, selectedGender, availableGenders]);
 
   // Find the selected variant
   useEffect(() => {
@@ -62,7 +75,8 @@ const AddToCart = ({
       const variant = variants.find(
         v => v.color?.toLowerCase() === selectedColor?.toLowerCase() &&
           v.size?.toLowerCase() === selectedSize?.toLowerCase() &&
-          v.isActive !== false
+          v.isActive !== false &&
+          (!availableGenders || !availableGenders.length || v.gender === selectedGender)
       );
       setSelectedVariant(variant || null);
 
@@ -73,7 +87,7 @@ const AddToCart = ({
     } else {
       setSelectedVariant(null);
     }
-  }, [selectedColor, selectedSize, variants, quantity]);
+  }, [selectedColor, selectedSize, selectedGender, variants, quantity, availableGenders]);
 
   // Get effective price and stock from selected variant or base values
   const effectivePrice = selectedVariant?.price || basePrice || 0;
@@ -160,6 +174,7 @@ const AddToCart = ({
         variantSKU: selectedVariant.sku,
         size: selectedSize,
         color: selectedColor,
+        gender: selectedGender,
       }).unwrap();
 
       const successMsg = response?.message || "Item added to cart!";
@@ -189,6 +204,7 @@ const AddToCart = ({
       variantSKU: selectedVariant.sku,
       color: selectedColor,
       size: selectedSize,
+      gender: selectedGender,
     };
 
     const total = totalPrice;
@@ -232,6 +248,29 @@ const AddToCart = ({
 
       {/* Selection Controls */}
       <div className="space-y-5">
+        {/* Gender Selection */}
+        {availableGenders && availableGenders.length > 0 && (
+          <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-600">
+            <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-3">
+              Select Gender <span className="text-red-500">*</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {availableGenders.map((gender) => (
+                <button
+                  key={gender}
+                  onClick={() => setSelectedGender(gender)}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${selectedGender === gender
+                    ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-md relative"
+                    : "bg-white text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 hover:border-gray-400"
+                    }`}
+                >
+                  {gender === "Male" ? "Boy" : gender === "Female" ? "Girl" : gender}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Color Selection */}
         <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-200 dark:border-gray-600">
           <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-3">

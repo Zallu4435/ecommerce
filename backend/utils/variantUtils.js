@@ -51,11 +51,21 @@ const updateProductVariantCache = async (productId) => {
             ),
         ];
 
+        // Get unique genders (only from in-stock variants)
+        const availableGenders = [
+            ...new Set(
+                variants
+                    .filter((v) => v.stockQuantity > 0 && v.gender)
+                    .map((v) => v.gender)
+            ),
+        ];
+
         // Update product
         await Product.findByIdAndUpdate(productId, {
             totalStock,
             availableColors,
             availableSizes,
+            availableGenders,
             hasVariants: variants.length > 0,
             variantCount: variants.length,
         });
@@ -115,18 +125,29 @@ const validateVariant = (variantData) => {
 /**
  * Check if variant combination already exists for a product
  */
-const checkDuplicateVariant = async (productId, color, size, excludeVariantId = null) => {
+const checkDuplicateVariant = async (productId, color, size, excludeVariantId = null, gender = null) => {
     const query = {
         productId,
         color: color.toLowerCase().trim(),
         size: size.toUpperCase().trim(),
     };
 
+    if (gender) {
+        // Normalize gender to Title Case (e.g. "Male", "Female") for consistent check
+        const normalizedGender = gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+        query.gender = normalizedGender;
+    }
+
     if (excludeVariantId) {
         query._id = { $ne: excludeVariantId };
     }
 
     const existing = await ProductVariant.findOne(query);
+    if (existing) {
+        console.log(`[DUPLICATE CHECK] Found duplicate for Query:`, JSON.stringify(query), `Existing ID: ${existing._id}`);
+    } else {
+        console.log(`[DUPLICATE CHECK] No duplicate found for Query:`, JSON.stringify(query));
+    }
     return existing !== null;
 };
 
@@ -175,7 +196,9 @@ const bulkCreateVariants = async (productId, variantsData, productName) => {
         const isDuplicate = await checkDuplicateVariant(
             productId,
             variantData.color,
-            variantData.size
+            variantData.size,
+            null,
+            variantData.gender
         );
 
         if (isDuplicate) {
@@ -192,7 +215,7 @@ const bulkCreateVariants = async (productId, variantsData, productName) => {
 
         // Create variant
         try {
-            const variant = await ProductVariant.create({
+            const variantObj = {
                 productId,
                 sku,
                 color: variantData.color.toLowerCase().trim(),
@@ -203,10 +226,17 @@ const bulkCreateVariants = async (productId, variantsData, productName) => {
                 image: variantData.image,
                 imagePublicId: variantData.imagePublicId,
                 isActive: variantData.isActive !== undefined ? variantData.isActive : true,
-            });
+                gender: variantData.gender ? variantData.gender.charAt(0).toUpperCase() + variantData.gender.slice(1).toLowerCase() : undefined,
+            };
 
+            console.log(`[BULK CREATE] Creating variant: ${sku}`, JSON.stringify(variantObj));
+
+            const variant = await ProductVariant.create(variantObj);
+
+            console.log(`[BULK CREATE] Successfully created variant ID: ${variant._id}`);
             createdVariants.push(variant);
         } catch (error) {
+            console.error(`[BULK CREATE] Error creating variant ${sku}:`, error);
             errors.push({
                 index: i,
                 data: variantData,

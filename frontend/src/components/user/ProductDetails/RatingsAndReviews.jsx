@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Star, ThumbsUp, MessageCircle, Filter, ChevronDown } from "lucide-react";
+import { Star, Filter, ChevronDown, ShieldCheck, MessageCircle } from "lucide-react";
 import { useGetReviewsQuery } from "../../../redux/apiSliceFeatures/ReviewApiSlice";
 import LoadingSpinner from "../../LoadingSpinner";
+import { useSelector } from "react-redux";
 
 const RatingsAndReviews = ({ productId, averageRating, totalReviews: totalReviewCount }) => {
+  const currentUserId = useSelector((state) => state.user.user?._id);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterRating, setFilterRating] = useState(null);
-  const [sortBy, setSortBy] = useState("recent"); // recent, helpful, highest, lowest
+  const [sortBy, setSortBy] = useState("recent"); // recent, highest, lowest
 
   const {
     data: reviewsData = {},
@@ -103,7 +105,6 @@ const RatingsAndReviews = ({ productId, averageRating, totalReviews: totalReview
               className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="recent">Most Recent</option>
-              <option value="helpful">Most Helpful</option>
               <option value="highest">Highest Rating</option>
               <option value="lowest">Lowest Rating</option>
             </select>
@@ -153,10 +154,19 @@ const RatingsAndReviews = ({ productId, averageRating, totalReviews: totalReview
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {review.username}
                         </p>
+                        {review.verifiedPurchase && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <ShieldCheck className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                            <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                              Verified Purchase
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-2 mt-1">
                           {renderStars(review.rating)}
                           <span className="text-xs text-gray-500 dark:text-gray-400">
                             {new Date(review.createdAt).toLocaleDateString()}
+                            {review.updatedAt !== review.createdAt && " (edited)"}
                           </span>
                         </div>
                       </div>
@@ -168,17 +178,7 @@ const RatingsAndReviews = ({ productId, averageRating, totalReviews: totalReview
                     {review.review}
                   </p>
 
-                  {/* Review Actions */}
-                  <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                      <ThumbsUp className="w-4 h-4" />
-                      <span>Helpful ({review.helpfulCount || 0})</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                      <MessageCircle className="w-4 h-4" />
-                      <span>Reply</span>
-                    </button>
-                  </div>
+
                 </div>
               ))
             ) : (

@@ -58,6 +58,7 @@ const OrdersSchema = new mongoose.Schema(
         productImage: String,
         color: String,
         size: String,
+        gender: String,
         Price: {
           type: Number,
           required: true,

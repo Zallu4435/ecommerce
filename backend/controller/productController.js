@@ -282,6 +282,12 @@ exports.getFilteredProducts = async (req, res) => {
       query.availableColors = { $in: colors.split(",").map(c => new RegExp(c, 'i')) };
     }
 
+    // Gender Filter
+    const { gender } = req.query;
+    if (gender && gender !== "") {
+      query.availableGenders = { $in: gender.split(",").map(g => new RegExp("^" + g + "$", "i")) };
+    }
+
     if (minPrice || maxPrice) {
       query.basePrice = {};
       if (minPrice) query.basePrice.$gte = Number(minPrice);
