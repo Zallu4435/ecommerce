@@ -21,7 +21,7 @@ exports.sendToken = (user, statusCode, res) => {
   res
     .status(statusCode)
     .cookie("refreshToken", refreshToken, options)
-    .header("Authorization", `Barearer ${accessToken}`)
+    .header("Authorization", `Bearer ${accessToken}`)
     .json({
       success: true,
       user,
