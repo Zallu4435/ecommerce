@@ -50,6 +50,22 @@ exports.createCategory = async (req, res) => {
       return res.status(400).json({ message: "Category offer must be between 0 and 100" });
     }
 
+    const hasOffer = (categoryOffer && Number(categoryOffer) > 0) ||
+      (offerName && offerName.trim() !== "") ||
+      isOfferActive;
+
+    if (hasOffer) {
+      if (!startDate) {
+        return res.status(400).json({ message: "Start date is required for offer" });
+      }
+      if (!endDate) {
+        return res.status(400).json({ message: "End date is required for offer" });
+      }
+      if (new Date(endDate) <= new Date(startDate)) {
+        return res.status(400).json({ message: "End date must be after start date" });
+      }
+    }
+
     const existingCategory = await Category.findOne({
       categoryName: { $regex: `^${categoryName}$`, $options: "i" },
     });
@@ -114,6 +130,23 @@ exports.updateCategory = async (req, res, next) => {
       const offer = Number(req.body.categoryOffer);
       if (isNaN(offer) || offer < 0 || offer > 100) {
         return next(new ErrorHandler("Category offer must be between 0 and 100", 400));
+      }
+
+      const hasOffer = (offer && offer > 0) ||
+        (req.body.offerName && req.body.offerName.trim() !== "") ||
+        req.body.isOfferActive;
+
+      if (hasOffer) {
+        const { startDate, endDate } = req.body;
+        if (!startDate) {
+          return next(new ErrorHandler("Start date is required for offer", 400));
+        }
+        if (!endDate) {
+          return next(new ErrorHandler("End date is required for offer", 400));
+        }
+        if (new Date(endDate) <= new Date(startDate)) {
+          return next(new ErrorHandler("End date must be after start date", 400));
+        }
       }
     }
 

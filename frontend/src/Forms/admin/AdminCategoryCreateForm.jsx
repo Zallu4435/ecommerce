@@ -119,6 +119,11 @@ const AdminCategoryCreateForm = () => {
                   {...register("startDate")}
                   className="dark:text-white dark:bg-gray-800"
                 />
+                {errors.startDate && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.startDate.message}
+                  </p>
+                )}
               </InputContainer>
 
               <InputContainer>
@@ -128,6 +133,11 @@ const AdminCategoryCreateForm = () => {
                   {...register("endDate")}
                   className="dark:text-white dark:bg-gray-800"
                 />
+                {errors.endDate && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.endDate.message}
+                  </p>
+                )}
               </InputContainer>
             </div>
 
