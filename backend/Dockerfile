@@ -13,7 +13,7 @@ COPY . .
 # 3) Distroless runtime image (Node 20)
 FROM gcr.io/distroless/nodejs20-debian12:nonroot
 WORKDIR /app
-ENV NODE_ENV=production
+ENV NODE_ENV=production 
 COPY --from=runner /app ./
 EXPOSE 5000
 CMD ["server.js"]
