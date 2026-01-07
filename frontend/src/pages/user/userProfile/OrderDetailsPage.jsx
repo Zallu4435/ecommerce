@@ -12,6 +12,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { server } from "../../../server";
 import { InvoiceDownloadIcon } from "../../admin/Sales Management/DownloadUtils";
 import CancelConfirmationModal from "../../../modal/user/ConfirmOrderCancelModal";
 import ReturnConfirmationModal from "../../../modal/user/OrderReturnModal";
@@ -35,7 +36,7 @@ const OrderDetailsPage = () => {
         try {
             setLoading(true);
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/orders/order-details/${orderId}`,
+                `${server}/orders/order-details/${orderId}`,
                 { withCredentials: true }
             );
 
@@ -67,7 +68,7 @@ const OrderDetailsPage = () => {
     const confirmCancelItem = async () => {
         try {
             await axios.patch(
-                `${import.meta.env.VITE_API_URL}/api/orders/${orderId}/cancel/${selectedItem.productId}`,
+                `${server}/orders/${orderId}/cancel/${selectedItem.productId}`,
                 { reason: cancelReason },
                 { withCredentials: true }
             );
@@ -85,7 +86,7 @@ const OrderDetailsPage = () => {
     const confirmReturnItem = async () => {
         try {
             await axios.patch(
-                `${import.meta.env.VITE_API_URL}/api/orders/${orderId}/return/${selectedItem.productId}`,
+                `${server}/orders/${orderId}/return/${selectedItem.productId}`,
                 { reason: cancelReason },
                 { withCredentials: true }
             );
@@ -103,7 +104,7 @@ const OrderDetailsPage = () => {
     const confirmCancelEntireOrder = async () => {
         try {
             await axios.patch(
-                `${import.meta.env.VITE_API_URL}/api/orders/${orderId}/cancel-order`,
+                `${server}/orders/${orderId}/cancel-order`,
                 { reason: cancelReason },
                 { withCredentials: true }
             );

@@ -4,6 +4,7 @@ import { FaBox, FaEye, FaSort, FaCalendar, FaRupeeSign } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { InvoiceDownloadIcon } from "../../admin/Sales Management/DownloadUtils";
+import { server } from "../../../server";
 
 const OrdersListGrouped = () => {
     const navigate = useNavigate();
@@ -24,7 +25,7 @@ const OrdersListGrouped = () => {
         try {
             setLoading(true);
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/orders/orders-grouped`,
+                `${server}/orders/orders-grouped`,
                 {
                     params: { page, limit, sort: sortOrder },
                     withCredentials: true,

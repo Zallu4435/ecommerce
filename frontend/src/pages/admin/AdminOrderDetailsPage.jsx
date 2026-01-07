@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { server } from "../../../server";
 
 import StatusDropdown, { STATUS_CONFIG } from "../../components/admin/StatusDropdown";
 import CancelReasonModal from "../../modal/admin/CancelReasonModal";
@@ -37,7 +38,7 @@ const AdminOrderDetailsPage = () => {
         try {
             setLoading(true);
             const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/orders/admin/order-details/${orderId}`,
+                `${server}/orders/admin/order-details/${orderId}`,
                 { withCredentials: true }
             );
 
@@ -83,7 +84,7 @@ const AdminOrderDetailsPage = () => {
         try {
             setUpdatingStatus(itemId);
             await axios.patch(
-                `${import.meta.env.VITE_API_URL}/api/orders/update-bulk`,
+                `${server}/orders/update-bulk`,
                 {
                     orderId: order._id,
                     status: newStatus,

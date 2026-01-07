@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { FaChevronDown, FaSync } from "react-icons/fa";
+import { server } from "../../server";
 
 export const STATUS_CONFIG = {
     Pending: { color: "bg-gray-100 text-gray-700", next: ["Confirmed", "Cancelled"] },
@@ -54,7 +55,7 @@ const StatusDropdown = ({ currentStatus, orderId, itemIds, onUpdate, onStatusCha
         try {
             setLocalLoading(true);
             const response = await axios.patch(
-                `${import.meta.env.VITE_API_URL}/api/orders/update-bulk`,
+                `${server}/orders/update-bulk`,
                 { orderId, status: newStatus, itemsIds: itemIds },
                 { withCredentials: true }
             );
