@@ -3,7 +3,7 @@ import "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 
-import { useGetAddressByOrderIdQuery, useLazyGetOrderInvoiceDetailsQuery } from "../../../redux/apiSliceFeatures/OrderApiSlice";
+import { useLazyGetAddressByOrderIdQuery, useLazyGetOrderInvoiceDetailsQuery } from "../../../redux/apiSliceFeatures/OrderApiSlice";
 import { FaFilePdf } from "react-icons/fa";
 
 export const downloadSalesReportPDF = (
@@ -590,14 +590,7 @@ const convertNumberToWords = (amount) => {
 };
 
 export const InvoiceDownloadIcon = ({ order, className }) => {
-  const {
-    data: address,
-    isLoading: isAddressLoading,
-    isError: isAddressError,
-  } = useGetAddressByOrderIdQuery(order?._id, {
-    skip: !order?._id,
-  });
-
+  const [triggerGetAddress, { isLoading: isAddressLoading, isError: isAddressError }] = useLazyGetAddressByOrderIdQuery();
   const [triggerGetOrderDetails, { isLoading: isDetailsLoading }] = useLazyGetOrderInvoiceDetailsQuery();
 
   const handleDownloadClick = async (e) => {
@@ -607,13 +600,22 @@ export const InvoiceDownloadIcon = ({ order, className }) => {
       return;
     }
 
-    if (isAddressError || !address) {
-      console.error("Error fetching address data");
+    let orderDataForInvoice = order;
+    let addressData = null;
+
+    try {
+      // Always fetch address when clicking download
+      addressData = await triggerGetAddress(order?._id).unwrap();
+    } catch (error) {
+      console.error("Error fetching address data", error);
       toast.error("Could not fetch invoice address.");
       return;
     }
 
-    let orderDataForInvoice = order;
+    if (!addressData) {
+      toast.error("Address details not found.");
+      return;
+    }
 
     // specific check: if we are in the "Overview" list, 'order' might lack 'items'
     // or if it's a single item passed from OrderDetails, it has 'productName'.
@@ -643,8 +645,8 @@ export const InvoiceDownloadIcon = ({ order, className }) => {
       }
     }
 
-    if (orderDataForInvoice) {
-      generateInvoicePDF(orderDataForInvoice, address);
+    if (orderDataForInvoice && addressData) {
+      generateInvoicePDF(orderDataForInvoice, addressData);
     }
   };
 

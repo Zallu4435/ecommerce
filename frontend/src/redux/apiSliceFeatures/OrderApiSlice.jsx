@@ -69,6 +69,7 @@ export const {
   useCancelIndividualOrderMutation,
   useUpdateOrderStatusMutation,
   useGetAddressByOrderIdQuery,
+  useLazyGetAddressByOrderIdQuery,
   useReturnOrderMutation,
   useLazyGetOrderInvoiceDetailsQuery,
   useGetAllOrdersForAdminQuery,
