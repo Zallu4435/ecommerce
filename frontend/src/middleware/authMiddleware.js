@@ -5,6 +5,11 @@ import {
   clearAdminCredentials,
   setAdminCredentials,
 } from "../redux/slice/adminSlice";
+import { toast } from "react-toastify";
+
+// Flag to prevent multiple toast notifications for blocked users
+let hasShownBlockedToast = false;
+let hasRedirectedToLogin = false;
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${server}`,
@@ -20,8 +25,41 @@ const baseQuery = fetchBaseQuery({
 
 export const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
+
+  // Handle blocked users (403)
+  if (result?.error?.status === 403 && result?.error?.data?.isBlocked) {
+    api.dispatch(clearCredentials());
+
+    // Show toast only once
+    if (!hasShownBlockedToast) {
+      hasShownBlockedToast = true;
+      toast.error(result.error.data.message || "Your account has been blocked. Please contact support.", {
+        position: "top-center",
+        autoClose: 5000,
+      });
+
+      // Reset flag after 6 seconds (after toast closes)
+      setTimeout(() => {
+        hasShownBlockedToast = false;
+      }, 6000);
+    }
+
+    // Always redirect to login page (outside toast check) - but only once
+    if (!hasRedirectedToLogin) {
+      hasRedirectedToLogin = true;
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      }, 1500);
+    }
+
+    return result;
+  }
+
+  // Handle unauthorized (401)
   if (result?.error?.status === 401) {
-    const refreshResult = await baseQuery("/refresh-token", api, extraOptions);
+    const refreshResult = await baseQuery("/users/refresh-token", api, extraOptions);
     if (refreshResult?.data) {
       const user = api.getState().user.user;
       api.dispatch(setCredentials({ ...refreshResult.data, user }));

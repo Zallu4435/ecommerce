@@ -96,7 +96,11 @@ exports.getUserDetails = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const user = await User.findById(id);
+    // Select only relevant user fields, exclude sensitive data
+    const user = await User.findById(id).select(
+      'username email phone avatar createdAt status isBlocked role referralCode referredBy isReferralRewardClaimed gender nickname'
+    );
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -139,105 +143,180 @@ exports.adminDashboard = async (req, res) => {
     const { type, year, month, week } = req.query;
     let startDate, endDate;
 
-    const numericYear = parseInt(year);
-    const numericMonth = parseInt(month);
-    const numericWeek = parseInt(week);
+    const numericYear = parseInt(year) || new Date().getFullYear();
+    const numericMonth = parseInt(month) || new Date().getMonth() + 1;
+    const numericWeek = parseInt(week) || 1;
 
-    const getWeekDates = (year, month, weekNum) => {
-      const firstDayOfMonth = new Date(year, month - 1, 1);
+    // Helper function to get actual weeks in a month
+    const getWeeksInMonth = (year, month) => {
+      // Use UTC to calculate days in month correctly
+      const lastDay = new Date(Date.UTC(year, month, 0));
+      const daysInMonth = lastDay.getUTCDate();
 
-      const startDate = new Date(firstDayOfMonth);
-      startDate.setDate(1 + (weekNum - 1) * 7);
+      const weeks = [];
+      let currentWeekStart = 1;
+      let weekNumber = 1;
 
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-
-      const lastDayOfMonth = new Date(year, month, 0);
-      if (endDate > lastDayOfMonth) {
-        endDate.setTime(lastDayOfMonth.getTime());
+      while (currentWeekStart <= daysInMonth) {
+        const weekEnd = Math.min(currentWeekStart + 6, daysInMonth);
+        weeks.push({
+          weekNumber,
+          startDate: new Date(Date.UTC(year, month - 1, currentWeekStart, 0, 0, 0, 0)),
+          endDate: new Date(Date.UTC(year, month - 1, weekEnd, 23, 59, 59, 999)),
+          startDay: currentWeekStart,
+          endDay: weekEnd
+        });
+        currentWeekStart = weekEnd + 1;
+        weekNumber++;
       }
 
-      endDate.setHours(23, 59, 59, 999);
-
-      return { startDate, endDate };
+      return weeks;
     };
 
+    // Set date ranges based on metric type
+    // IMPORTANT: Use UTC dates to match MongoDB's date storage format
     if (type === "yearly") {
-      startDate = new Date(numericYear, 0, 1);
-      endDate = new Date(numericYear, 11, 31, 23, 59, 59, 999);
+      startDate = new Date(Date.UTC(numericYear, 0, 1, 0, 0, 0, 0));
+      endDate = new Date(Date.UTC(numericYear, 11, 31, 23, 59, 59, 999));
     } else if (type === "monthly") {
-      startDate = new Date(numericYear, numericMonth - 1, 1);
-      endDate = new Date(numericYear, numericMonth, 0, 23, 59, 59, 999);
+      startDate = new Date(Date.UTC(numericYear, numericMonth - 1, 1, 0, 0, 0, 0));
+      // Get last day of month
+      const lastDay = new Date(Date.UTC(numericYear, numericMonth, 0)).getUTCDate();
+      endDate = new Date(Date.UTC(numericYear, numericMonth - 1, lastDay, 23, 59, 59, 999));
     } else if (type === "weekly") {
-      const weekDates = getWeekDates(numericYear, numericMonth, numericWeek);
-      startDate = weekDates.startDate;
-      endDate = weekDates.endDate;
+      const weeks = getWeeksInMonth(numericYear, numericMonth);
+      const selectedWeek = weeks[numericWeek - 1] || weeks[0];
+
+      if (selectedWeek) {
+        // Use pre-calculated UTC dates from helper
+        startDate = selectedWeek.startDate;
+        endDate = selectedWeek.endDate;
+      } else {
+        // Fallback if week not found
+        startDate = new Date(Date.UTC(numericYear, numericMonth - 1, 1, 0, 0, 0, 0));
+        endDate = new Date(Date.UTC(numericYear, numericMonth - 1, 7, 23, 59, 59, 999));
+      }
+    } else {
+      // Default to current month
+      const now = new Date();
+      const currentYear = now.getUTCFullYear();
+      const currentMonth = now.getUTCMonth();
+      startDate = new Date(Date.UTC(currentYear, currentMonth, 1, 0, 0, 0, 0));
+      const lastDay = new Date(Date.UTC(currentYear, currentMonth + 1, 0)).getUTCDate();
+      endDate = new Date(Date.UTC(currentYear, currentMonth, lastDay, 23, 59, 59, 999));
     }
 
-    const orders = await Orders.aggregate([
+    // Aggregate orders data with proper grouping
+    // Note: We include ALL orders to show complete historical data
+    const ordersAggregation = await Orders.aggregate([
       {
         $match: {
-          createdAt: { $gte: startDate, $lte: endDate },
+          createdAt: { $gte: startDate, $lte: endDate }
         },
       },
       {
         $unwind: "$items",
       },
       {
+        // Only exclude items that are cancelled or failed from revenue calculation
+        // But still count them in order totals
+        $addFields: {
+          "items.revenueAmount": {
+            $cond: {
+              if: {
+                $in: ["$items.Status", ["Cancelled", "Payment Failed", "Returned"]]
+              },
+              then: 0,
+              else: "$items.itemTotal"
+            }
+          }
+        }
+      },
+      {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, // Default is UTC, which matches our UTC dates
+            orderId: "$_id"
           },
-          dailyRevenue: { $sum: "$items.Price" },
-          orderCount: { $sum: 1 },
+          dailyRevenue: { $sum: "$items.revenueAmount" },
+          itemCount: { $sum: 1 }
         },
+      },
+      {
+        $group: {
+          _id: "$_id.date",
+          revenue: { $sum: "$dailyRevenue" },
+          orders: { $sum: 1 },
+          items: { $sum: "$itemCount" }
+        }
       },
       {
         $sort: { _id: 1 },
       },
     ]);
 
+    // Generate all dates in range for complete data
     const getDatesInRange = (start, end) => {
       const dates = [];
       const current = new Date(start);
+      // Ensure we start at midnight UTC
+      current.setUTCHours(0, 0, 0, 0);
 
       while (current <= end) {
-        dates.push(new Date(current).toISOString().split("T")[0]);
-        current.setDate(current.getDate() + 1);
+        dates.push(current.toISOString().split("T")[0]);
+        // Increment day using UTC methods
+        current.setUTCDate(current.getUTCDate() + 1);
       }
 
       return dates;
     };
 
     const allDates = getDatesInRange(startDate, endDate);
+
+    // Map aggregated data to all dates (fill missing dates with 0)
     const dailyData = allDates.map((date) => {
-      const dayData = orders.find((order) => order._id === date);
+      const dayData = ordersAggregation.find((order) => order._id === date);
       return {
         date,
-        revenue: dayData ? dayData.dailyRevenue : 0,
-        orders: dayData ? dayData.orderCount : 0,
+        revenue: dayData ? dayData.revenue : 0,
+        orders: dayData ? dayData.orders : 0,
+        items: dayData ? dayData.items : 0
       };
     });
 
-    const totalRevenue = orders.reduce((sum, day) => sum + day.dailyRevenue, 0);
-    const totalOrders = orders.reduce((sum, day) => sum + day.orderCount, 0);
-    const totalUsers = await User.countDocuments();
+    // Calculate totals
+    const totalRevenue = dailyData.reduce((sum, day) => sum + day.revenue, 0);
+    const totalOrders = dailyData.reduce((sum, day) => sum + day.orders, 0);
+    const totalItems = dailyData.reduce((sum, day) => sum + day.items, 0);
+
+    // Get overall statistics
+    const totalUsers = await User.countDocuments({ role: { $ne: "admin" } });
     const totalProducts = await Product.countDocuments();
 
     res.json({
-      totalRevenue,
+      success: true,
+      totalRevenue: Math.round(totalRevenue * 100) / 100,
       totalOrders,
+      totalItems,
       totalUsers,
       totalProducts,
       dailyData,
       dateRange: {
-        startDate,
-        endDate,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        type,
+        year: numericYear,
+        month: numericMonth,
+        week: numericWeek
       },
     });
   } catch (error) {
-    console.error("Controller Error:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    console.error("Dashboard Controller Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message
+    });
   }
 };
 

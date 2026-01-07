@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const User = require("../model/User");
 
-exports.isAuthenticated = (req, res, next) => {
+exports.isAuthenticated = async (req, res, next) => {
   const accessToken = req.headers["authorization"]?.split(" ")[1];
   const refreshToken = req.cookies["refreshToken"];
 
@@ -10,7 +11,41 @@ exports.isAuthenticated = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(accessToken, process.env.JWT_SECRET_KEY);
-    req.user = decoded.id || decoded.user;
+    const userId = decoded.id || decoded.user;
+
+    // Check if user is blocked or inactive
+    const user = await User.findById(userId).select('isBlocked status');
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found",
+        requireLogin: true
+      });
+    }
+
+    if (user.isBlocked) {
+      // Clear refresh token cookie to force logout
+      res.cookie("refreshToken", null, {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+      });
+
+      return res.status(403).json({
+        message: "Your account has been blocked. Please contact support.",
+        isBlocked: true,
+        requireLogin: true
+      });
+    }
+
+    if (user.status !== 'active') {
+      return res.status(403).json({
+        message: "Your account is not active. Please activate your account.",
+        requireLogin: true
+      });
+    }
+
+    req.user = userId;
     return next();
   } catch (error) {
     if (!refreshToken) {
@@ -23,15 +58,48 @@ exports.isAuthenticated = (req, res, next) => {
         process.env.JWT_REFRESH_SECRET_KEY
       );
 
+      const userId = decodedRefresh.id || decodedRefresh.user;
+
+      // Check if user is blocked or inactive
+      const user = await User.findById(userId).select('isBlocked status');
+      if (!user) {
+        return res.status(401).json({
+          message: "User not found",
+          requireLogin: true
+        });
+      }
+
+      if (user.isBlocked) {
+        // Clear refresh token cookie to force logout
+        res.cookie("refreshToken", null, {
+          expires: new Date(Date.now()),
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        });
+
+        return res.status(403).json({
+          message: "Your account has been blocked. Please contact support.",
+          isBlocked: true,
+          requireLogin: true
+        });
+      }
+
+      if (user.status !== 'active') {
+        return res.status(403).json({
+          message: "Your account is not active. Please activate your account.",
+          requireLogin: true
+        });
+      }
+
       const newAccessToken = jwt.sign(
-        { id: decodedRefresh.id || decodedRefresh.user },
+        { id: userId },
         process.env.JWT_SECRET_KEY,
         { expiresIn: "1h" }
       );
 
       res.set("Authorization", `Bearer ${newAccessToken}`);
-
-      req.user = decodedRefresh.id || decodedRefresh.user;
+      req.user = userId;
 
       return next();
     } catch (error) {

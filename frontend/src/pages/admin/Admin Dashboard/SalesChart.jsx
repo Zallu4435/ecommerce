@@ -10,116 +10,83 @@ import {
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-const SalesChart = ({ metricType, stats }) => {
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
+const SalesChart = ({ metricType, stats, selectedYear, selectedMonth, selectedWeek }) => {
   const processChartData = () => {
-    if (!stats?.dailyData) return { labels: [], values: [] };
+    if (!stats?.dailyData || stats.dailyData.length === 0) {
+      return { labels: [], values: [] };
+    }
+
+    const dailyData = stats.dailyData;
 
     if (metricType === "weekly") {
-      const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-      const today = new Date();
-      const startOfWeek = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate() - today.getDay()
-      );
-      const endOfWeek = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate() + (6 - today.getDay())
-      );
-
-      const weekData = [...stats.dailyData].filter((day) => {
-        const dayDate = new Date(day.date);
-        return dayDate >= startOfWeek && dayDate <= endOfWeek;
-      });
-
-      const dailyData = weekDays.map((day, index) => {
-        const dayData = weekData.find((item) => {
-          const itemDate = new Date(item.date);
-          return itemDate.getDay() === index;
-        });
-        return dayData ? dayData.revenue || 0 : 0;
-      });
-
-      return {
-        labels: weekDays,
-        values: dailyData,
-      };
-    } else if (metricType === "monthly") {
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
-
-      const daysInMonth = stats.dailyData
-        .filter((day) => {
-          const date = new Date(day.date);
-          return (
-            date.getMonth() === currentMonth &&
-            date.getFullYear() === currentYear
-          );
-        })
-        .reduce((acc, day) => {
-          const date = new Date(day.date);
-          const dayOfMonth = date.getDate();
-          acc[dayOfMonth] = (acc[dayOfMonth] || 0) + (day.revenue || 0);
-          return acc;
-        }, {});
-
-      const days = Object.keys(daysInMonth).sort(
-        (a, b) => Number(a) - Number(b)
-      );
-
-      return {
-        labels: days.map((day) => `Day ${day}`),
-        values: days.map((day) => daysInMonth[day]),
-      };
-    } else {
-      const monthlyData = stats.dailyData.reduce((acc, day) => {
+      // For weekly view, show each day of the week
+      const labels = dailyData.map((day) => {
         const date = new Date(day.date);
-        const month = date.getMonth();
-        acc[month] = (acc[month] || 0) + (day.revenue || 0);
-        return acc;
-      }, {});
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayNum = date.getDate();
+        return `${dayName} ${dayNum}`;
+      });
+
+      const values = dailyData.map((day) => day.revenue || 0);
+
+      return { labels, values };
+    } else if (metricType === "monthly") {
+      // For monthly view, show each day of the month
+      const labels = dailyData.map((day) => {
+        const date = new Date(day.date);
+        return `Day ${date.getDate()}`;
+      });
+
+      const values = dailyData.map((day) => day.revenue || 0);
+
+      return { labels, values };
+    } else {
+      // For yearly view, aggregate by month
+      const monthlyData = {};
+      const months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      ];
+
+      // Initialize all months with 0
+      months.forEach((month, index) => {
+        monthlyData[index] = 0;
+      });
+
+      // Aggregate revenue by month
+      dailyData.forEach((day) => {
+        const date = new Date(day.date);
+        const monthIndex = date.getMonth();
+        monthlyData[monthIndex] += day.revenue || 0;
+      });
 
       return {
         labels: months,
-        values: months.map((_, index) => monthlyData[index] || 0),
+        values: months.map((_, index) => monthlyData[index]),
       };
     }
   };
+
   const { labels, values } = processChartData();
+
+  // Calculate max value for better Y-axis scaling
+  const maxValue = Math.max(...values, 0);
+  const suggestedMax = maxValue > 0 ? Math.ceil(maxValue * 1.1) : 10000;
 
   const chartData = {
     labels,
     datasets: [
       {
-        label: `${
-          metricType.charAt(0).toUpperCase() + metricType.slice(1)
-        } Sales (₹)`,
+        label: `${metricType.charAt(0).toUpperCase() + metricType.slice(1)} Sales (₹)`,
         data: values,
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-        borderColor: "#B0B0B0",
+        backgroundColor: "rgba(251, 146, 60, 0.8)", // Orange color
+        borderColor: "rgba(249, 115, 22, 1)",
         borderWidth: 2,
-        borderRadius: 10,
-        barThickness: 20,
-        hoverBackgroundColor: "rgba(75, 192, 192, 0.8)",
-        hoverBorderColor: "#36A2EB",
+        borderRadius: 8,
+        barThickness: metricType === "yearly" ? 30 : metricType === "monthly" ? 15 : 40,
+        hoverBackgroundColor: "rgba(249, 115, 22, 0.9)",
+        hoverBorderColor: "rgba(234, 88, 12, 1)",
+        hoverBorderWidth: 3,
       },
     ],
   };
@@ -131,19 +98,26 @@ const SalesChart = ({ metricType, stats }) => {
       legend: {
         position: "top",
         labels: {
-          color: "#B0B0B0",
-          font: { size: 14 },
+          color: "#374151",
+          font: {
+            size: 14,
+            weight: "600"
+          },
+          padding: 15,
         },
       },
       tooltip: {
         enabled: true,
-        backgroundColor: "#B0B0B0",
-        borderColor: "#B0B0B0",
-        borderWidth: 1,
-        cornerRadius: 5,
+        backgroundColor: "rgba(31, 41, 55, 0.95)",
+        titleColor: "#fff",
+        bodyColor: "#fff",
+        borderColor: "rgba(249, 115, 22, 1)",
+        borderWidth: 2,
+        cornerRadius: 8,
         titleFont: { size: 14, weight: "bold" },
-        bodyFont: { size: 12 },
-        padding: 10,
+        bodyFont: { size: 13 },
+        padding: 12,
+        displayColors: false,
         callbacks: {
           label: function (context) {
             let label = context.dataset.label || "";
@@ -151,58 +125,136 @@ const SalesChart = ({ metricType, stats }) => {
               label += ": ";
             }
             if (context.parsed.y !== null) {
-              label += `₹${context.parsed.y.toLocaleString()}`;
+              label += `₹${context.parsed.y.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
             }
             return label;
           },
+          title: function (context) {
+            const label = context[0].label;
+            if (metricType === "weekly" || metricType === "monthly") {
+              const dataIndex = context[0].dataIndex;
+              const dayData = stats.dailyData[dataIndex];
+              if (dayData) {
+                const date = new Date(dayData.date);
+                return date.toLocaleDateString('en-IN', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                });
+              }
+            }
+            return label;
+          }
         },
       },
     },
     scales: {
       x: {
         ticks: {
-          color: "#B0B0B0",
+          color: "#6B7280",
           display: true,
-          autoSkip: false,
-          maxRotation: 45,
-          minRotation: 45,
-          font: { size: 12, weight: "bold" },
+          autoSkip: metricType === "monthly" ? true : false,
+          maxRotation: metricType === "monthly" ? 90 : 45,
+          minRotation: metricType === "monthly" ? 45 : 0,
+          font: {
+            size: metricType === "monthly" ? 10 : 12,
+            weight: "500"
+          },
         },
-        grid: { display: false },
+        grid: {
+          display: false,
+          drawBorder: false
+        },
       },
       y: {
-        suggestedMax: 10000,
+        suggestedMax: suggestedMax,
         ticks: {
-          color: "#B0B0B0",
-          callback: (value) => `₹${value.toLocaleString()}`,
-          font: { size: 12, weight: "bold" },
+          color: "#6B7280",
+          callback: (value) => {
+            if (value >= 1000000) {
+              return `₹${(value / 1000000).toFixed(1)}M`;
+            } else if (value >= 1000) {
+              return `₹${(value / 1000).toFixed(1)}K`;
+            }
+            return `₹${value}`;
+          },
+          font: {
+            size: 12,
+            weight: "500"
+          },
         },
-        grid: { color: "#B0B0B0" },
+        grid: {
+          color: "rgba(229, 231, 235, 0.5)",
+          drawBorder: false
+        },
         beginAtZero: true,
       },
     },
     layout: {
       padding: {
-        left: 20,
-        right: 20,
-        top: 30,
-        bottom: 20,
+        left: 10,
+        right: 10,
+        top: 10,
+        bottom: 10,
       },
     },
     animation: {
       duration: 1000,
-      easing: "easeOutQuad",
+      easing: "easeInOutQuart",
     },
   };
 
+  // Generate chart title with date range info
+  const getChartTitle = () => {
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    if (metricType === "yearly") {
+      return `Sales Overview - ${selectedYear}`;
+    } else if (metricType === "monthly") {
+      return `Sales Overview - ${monthNames[selectedMonth - 1]} ${selectedYear}`;
+    } else {
+      return `Sales Overview - Week ${selectedWeek}, ${monthNames[selectedMonth - 1]} ${selectedYear}`;
+    }
+  };
+
   return (
-    <div className="bg-yellow-50 dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <h3 className="text-2xl font-bold mb-4 text-center text-gray-700 dark:text-white">
-        {`${metricType.charAt(0).toUpperCase() + metricType.slice(1)} Sales`}
-      </h3>
-      <div style={{ height: "400px" }}>
-        <Bar data={chartData} options={chartOptions} />
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+      <div className="mb-6">
+        <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
+          {getChartTitle()}
+        </h3>
+        {stats?.dateRange && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            {new Date(stats.dateRange.startDate).toLocaleDateString('en-IN', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })} - {new Date(stats.dateRange.endDate).toLocaleDateString('en-IN', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </p>
+        )}
       </div>
+
+      {values.length > 0 ? (
+        <div style={{ height: "450px" }}>
+          <Bar data={chartData} options={chartOptions} />
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+          <div className="text-center">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <p className="mt-2 text-lg font-medium">No sales data available for this period</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { clearAdminCredentials } from "../slice/adminSlice";
 export const adminApiSlice = createApi({
   reducerPath: "adminApi",
   baseQuery: adminBaseQueryWithReauth,
-  tagTypes: ["User", "Order", "Entity", "Avatar"],
+  tagTypes: ["User", "Order", "Entity", "Avatar", "Metrics"],
   endpoints: (builder) => ({
     blockUser: builder.mutation({
       query: (userId) => ({
@@ -50,8 +50,21 @@ export const adminApiSlice = createApi({
     }),
 
     getMetrics: builder.query({
-      query: ({ type, year, month, week }) =>
-        `/metrics?type=${type}&year=${year}&month=${month}&week=${week}`,
+      query: ({ type, year, month, week }) => {
+        const params = new URLSearchParams({ type, year: year.toString() });
+
+        // Only add month/week if provided
+        if (month) params.append('month', month.toString());
+        if (week) params.append('week', week.toString());
+
+        return `/metrics?${params.toString()}`;
+      },
+      providesTags: (result, error, arg) => [
+        { type: 'Metrics', id: `${arg.type}-${arg.year}-${arg.month || ''}-${arg.week || ''}` },
+        'Metrics'
+      ],
+      // Keep cached data for 5 minutes
+      keepUnusedDataFor: 300,
     }),
 
     searchUsers: builder.query({

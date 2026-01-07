@@ -7,6 +7,7 @@ const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const Wallet = require("../model/Wallet");
 const Transaction = require("../model/WalletTransaction");
+const cloudinary = require("cloudinary").v2;
 
 // ... (existing imports)
 
@@ -334,6 +335,25 @@ exports.updateAvatar = async (req, res, next) => {
 
     const { avatar } = req.body;
     if (avatar) {
+      // Delete old avatar from Cloudinary if it exists
+      if (user.avatar) {
+        try {
+          // Extract public_id from Cloudinary URL
+          const urlParts = user.avatar.split('/');
+          const publicIdWithExtension = urlParts[urlParts.length - 1];
+          const publicId = publicIdWithExtension.split('.')[0];
+          const folder = urlParts[urlParts.length - 2];
+          const fullPublicId = `${folder}/${publicId}`;
+
+          // Delete from Cloudinary
+          await cloudinary.uploader.destroy(fullPublicId);
+          console.log(`✓ Deleted old avatar from Cloudinary: ${fullPublicId}`);
+        } catch (deleteError) {
+          console.error('Error deleting old avatar from Cloudinary:', deleteError);
+          // Continue even if deletion fails
+        }
+      }
+
       user.avatar = avatar;
       await user.save();
     }
