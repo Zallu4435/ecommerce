@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { server } from "../../../server";
+import { server } from "../../server";
 
 import StatusDropdown, { STATUS_CONFIG } from "../../components/admin/StatusDropdown";
 import CancelReasonModal from "../../modal/admin/CancelReasonModal";
