@@ -85,6 +85,7 @@ exports.removeFromWishlist = async (req, res) => {
 
 exports.getWishlist = async (req, res) => {
   try {
+    const { calculateBestPrice } = require("../utils/orderHelper");
     const userId = new mongoose.Types.ObjectId(req.user);
 
     const wishlistItems = await Wishlist.aggregate([
@@ -106,21 +107,67 @@ exports.getWishlist = async (req, res) => {
         $unwind: "$productDetails",
       },
       {
+        $lookup: {
+          from: "reviews",
+          localField: "productDetails._id",
+          foreignField: "productId",
+          as: "productReviews",
+        },
+      },
+      {
+        $addFields: {
+          averageRating: { $avg: "$productReviews.rating" },
+          reviewCount: { $size: "$productReviews" },
+        },
+      },
+      {
         $project: {
           _id: 0,
           productId: { $toString: "$productDetails._id" },
           wishlistItemId: { $toString: "$items._id" },
           productName: "$productDetails.productName",
           productImage: "$productDetails.image",
-          originalPrice: "$productDetails.originalPrice",
-          ratings: "$productDetails.ratings",
-          stockQuantity: "$productDetails.stockQuantity",
+          // Map basePrice to originalPrice for frontend consistency, but we'll also use it for calculation
+          basePrice: "$productDetails.basePrice",
+          baseOfferPrice: "$productDetails.baseOfferPrice",
+          averageRating: { $ifNull: ["$averageRating", 0] },
+          reviewCount: { $ifNull: ["$reviewCount", 0] },
+          stockQuantity: "$productDetails.totalStock",
           category: "$productDetails.category",
+          // Include variant information for proper detection
+          availableColors: "$productDetails.availableColors",
+          availableSizes: "$productDetails.availableSizes",
+          availableGenders: "$productDetails.availableGenders",
+          hasVariants: "$productDetails.hasVariants",
         },
       },
     ]);
 
-    return res.status(200).json(wishlistItems);
+    // Post-process to calculate best prices including offers
+    const processedItems = await Promise.all(wishlistItems.map(async (item) => {
+      // Reconstruct product-like object for helper
+      const productMock = {
+        basePrice: item.basePrice,
+        baseOfferPrice: item.baseOfferPrice,
+        category: item.category
+      };
+
+      const priceInfo = await calculateBestPrice(productMock);
+
+      return {
+        ...item,
+        originalPrice: item.basePrice, // Frontend expects originalPrice
+        offerPrice: priceInfo.price,   // The calculated best price
+        offerInfo: priceInfo.offerInfo,
+        averageRating: item.averageRating,
+        reviewCount: item.reviewCount,
+        wishlistItemId: item.wishlistItemId
+      };
+    }));
+
+
+
+    return res.status(200).json(processedItems);
   } catch (error) {
     console.error("Error fetching wishlist items:", error);
     return res.status(500).json({ message: "Error fetching wishlist items" });

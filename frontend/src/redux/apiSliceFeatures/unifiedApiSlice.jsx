@@ -18,7 +18,7 @@ export const unifiedApiSlice = createApi({
                 body: productDetails,
             }),
             // Only invalidate Cart - backend handles wishlist/comparison removal
-            invalidatesTags: ["Cart"],
+            invalidatesTags: ["Cart", "Wishlist", "Comparison"],
         }),
 
         getCart: builder.query({

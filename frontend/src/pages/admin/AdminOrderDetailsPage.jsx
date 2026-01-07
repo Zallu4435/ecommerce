@@ -214,9 +214,20 @@ const AdminOrderDetailsPage = () => {
                                                 <span className="font-semibold text-gray-800 dark:text-gray-200">
                                                     ₹{item.price.toFixed(2)} each
                                                 </span>
-                                                <span className="font-bold text-gray-900 dark:text-gray-100">
-                                                    Total: ₹{item.itemTotal.toFixed(2)}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-gray-900 dark:text-gray-100">
+                                                        Total: ₹{item.itemTotal.toFixed(2)}
+                                                    </span>
+                                                    {/* Offer Badge */}
+                                                    {item.offerInfo && item.offerInfo.type !== 'none' && (
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${item.offerInfo.type === 'category'
+                                                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                                                            : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                                            }`}>
+                                                            {item.offerInfo.type === 'category' ? '🏷️' : '🎁'} {item.offerInfo.percentage}% OFF
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {/* Status Dropdown */}

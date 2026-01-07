@@ -6,7 +6,6 @@ const ProductGrid = ({
   compareItem,
   handleAddToCart,
   handleRemoveProduct,
-  isAdding,
   cartData = [], // Receive cartData as prop
 }) => {
   const navigate = useNavigate();
@@ -58,7 +57,7 @@ const ProductGrid = ({
 
         <div className="flex justify-between items-center mb-4">
           <span className="text-lg font-bold text-gray-600 dark:text-gray-200">
-            ₹ {product.originalPrice.toFixed(2)}
+            ₹ {(product.originalPrice || 0).toFixed(2)}
           </span>
           <div className="flex items-center mt-2">
             <div className="flex items-center mr-2">
@@ -98,7 +97,7 @@ const ProductGrid = ({
           </button>
           <button
             onClick={() => handleAddToCart(product.productId)}
-            disabled={isAdding || isOutOfStock || isInCart}
+            disabled={isOutOfStock || isInCart}
             className={`w-full py-2 rounded-md font-semibold transition-all duration-200 ${isOutOfStock
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : isInCart
@@ -106,13 +105,11 @@ const ProductGrid = ({
                 : 'bg-blue-400 text-white hover:bg-blue-500 transform hover:scale-105'
               }`}
           >
-            {isAdding
-              ? "Adding..."
-              : isOutOfStock
-                ? "Out of Stock"
-                : isInCart
-                  ? "In Cart"
-                  : "Add to Cart"
+            {isOutOfStock
+              ? "Out of Stock"
+              : isInCart
+                ? "In Cart"
+                : "Add to Cart"
             }
           </button>
         </div>

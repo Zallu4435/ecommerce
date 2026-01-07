@@ -14,6 +14,8 @@ const TableRowForCartlist = ({ item, onRemove }) => {
   const {
     productId,
     originalPrice,
+    offerPrice,
+    offerInfo,
     productName,
     cartItemId,
     productImage,
@@ -21,6 +23,9 @@ const TableRowForCartlist = ({ item, onRemove }) => {
     averageRating,
     stockQuantity
   } = item;
+
+  const finalPrice = offerPrice || originalPrice;
+  const hasDiscount = originalPrice > finalPrice;
 
   const handleQuantityUpdate = async (newQuantity) => {
     try {
@@ -60,7 +65,7 @@ const TableRowForCartlist = ({ item, onRemove }) => {
     }
   };
 
-  const calculateSubtotal = () => (originalPrice * quantity).toFixed(2);
+  const calculateSubtotal = () => (finalPrice * quantity).toFixed(2);
 
   const handleImageClick = () => navigate(`/product/${productId}`);
 
@@ -157,9 +162,28 @@ const TableRowForCartlist = ({ item, onRemove }) => {
             <StockStatus />
           </div>
 
+          {/* Offer Badge */}
+          {hasDiscount && offerInfo && offerInfo.type !== 'none' && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-300">Offer:</span>
+              <span className={`text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1 ${offerInfo.type === 'category'
+                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                }`}>
+                <span>{offerInfo.type === 'category' ? '🏷️' : '🎁'}</span>
+                <span>{offerInfo.percentage}% OFF</span>
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-between items-center">
             <span className="text-gray-600 dark:text-gray-300">Price:</span>
-            <span className="text-gray-900 dark:text-gray-100">₹ {originalPrice}</span>
+            <div className="flex flex-col items-end">
+              {hasDiscount && (
+                <span className="text-xs text-gray-400 line-through">₹ {originalPrice}</span>
+              )}
+              <span className="text-gray-900 dark:text-gray-100 font-bold">₹ {finalPrice}</span>
+            </div>
           </div>
 
           <div className="flex justify-between items-center">
@@ -205,6 +229,16 @@ const TableRowForCartlist = ({ item, onRemove }) => {
               </p>
             )}
             <RatingStars />
+            {/* Offer Badge for Desktop */}
+            {hasDiscount && offerInfo && offerInfo.type !== 'none' && (
+              <span className={`text-xs px-2 py-0.5 mt-1 rounded-full font-bold inline-flex items-center gap-1 ${offerInfo.type === 'category'
+                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                }`}>
+                <span>{offerInfo.type === 'category' ? '🏷️' : '🎁'}</span>
+                <span>{offerInfo.percentage}% OFF</span>
+              </span>
+            )}
           </div>
         </td>
         <td className="px-6 py-4 border-b text-center">
@@ -214,9 +248,14 @@ const TableRowForCartlist = ({ item, onRemove }) => {
           <QuantityControls />
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
-          ₹ {originalPrice}
+          <div className="flex flex-col items-center">
+            {hasDiscount && (
+              <span className="text-xs text-gray-400 line-through">₹ {originalPrice}</span>
+            )}
+            <span className="font-bold">₹ {finalPrice}</span>
+          </div>
         </td>
-        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
+        <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100 font-bold">
           ₹ {calculateSubtotal()}
         </td>
       </tr>

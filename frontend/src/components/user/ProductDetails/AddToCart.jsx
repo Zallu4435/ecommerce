@@ -21,6 +21,7 @@ const AddToCart = ({
   productName,
   totalStock,
   variants = [],
+  offerInfo, // Receive prop
 }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
@@ -205,6 +206,7 @@ const AddToCart = ({
       color: selectedColor,
       size: selectedSize,
       gender: selectedGender,
+      offerInfo, // Pass offerInfo
     };
 
     const total = totalPrice;

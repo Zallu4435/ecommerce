@@ -3,6 +3,7 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const Review = require("../model/Review");
 const cloudinary = require("cloudinary").v2;
 const Category = require("../model/Categories");
+const { calculateBestPrice } = require("../utils/orderHelper");
 
 // Configure Cloudinary from environment variables if present
 if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
@@ -130,6 +131,9 @@ exports.getProductDetails = async (req, res, next) => {
         ? reviews.reduce((acc, review) => acc + review.rating, 0) / totalReviews
         : 0;
 
+    // Use calculateBestPrice to get consistent offer info
+    const priceResult = await calculateBestPrice(product, null);
+
     res.status(200).json({
       success: true,
       product: {
@@ -138,6 +142,9 @@ exports.getProductDetails = async (req, res, next) => {
         totalReviews,
         reviews,
         variants, // Include variants
+        offerInfo: priceResult.offerInfo, // Use standardized offer info
+        offerPrice: priceResult.price,
+        originalPrice: product.basePrice,
       },
     });
   } catch (error) {
@@ -172,7 +179,7 @@ exports.getRelatedProducts = async (req, res) => {
       return acc;
     }, {});
 
-    const productsWithRatings = products.map((product) => {
+    const productsWithRatings = await Promise.all(products.map(async (product) => {
       const productReviews = reviewsByProductId[product._id] || [];
       const totalReviews = productReviews.length;
       const averageRating = totalReviews
@@ -180,14 +187,17 @@ exports.getRelatedProducts = async (req, res) => {
         totalReviews
         : 0;
 
+      const priceResult = await calculateBestPrice(product, null);
+
       return {
         ...product.toObject(),
         originalPrice: product.basePrice,
-        offerPrice: product.baseOfferPrice,
+        offerPrice: priceResult.price,
+        offerInfo: priceResult.offerInfo,
         averageRating,
         totalReviews,
       };
-    });
+    }));
 
     res.status(200).json(productsWithRatings);
   } catch (error) {
@@ -324,6 +334,7 @@ exports.getFilteredProducts = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
+
     const productsWithReviews = await Promise.all(
       products.map(async (product) => {
         const reviews = await Review.find({ productId: product._id });
@@ -335,10 +346,13 @@ exports.getFilteredProducts = async (req, res) => {
             totalReviews
             : 0;
 
+        const priceResult = await calculateBestPrice(product, null);
+
         return {
           ...product.toObject(),
           originalPrice: product.basePrice,
-          offerPrice: product.baseOfferPrice,
+          offerPrice: priceResult.price,
+          offerInfo: priceResult.offerInfo,
           averageRating: Number(averageRating.toFixed(1)),
           totalReviews,
         };
@@ -636,11 +650,15 @@ exports.getPopularProducts = async (req, res) => {
             totalReviews
             : 0;
 
+        // Calculate best price with offer info
+        const priceResult = await calculateBestPrice(product, null);
+
         // Ensure we handle price fields safely
         return {
           ...product.toObject(),
           originalPrice: product.basePrice,
-          offerPrice: product.baseOfferPrice,
+          offerPrice: priceResult.price,
+          offerInfo: priceResult.offerInfo,
           averageRating: Number(averageRating.toFixed(1)),
           totalReviews,
         };

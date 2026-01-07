@@ -59,6 +59,16 @@ const OrdersSchema = new mongoose.Schema(
         color: String,
         size: String,
         gender: String,
+
+        // Offer Information snapshot at time of order
+        offerInfo: {
+          type: { type: String, enum: ['category', 'product', 'none'], default: 'none' },
+          name: String,
+          percentage: Number,
+          originalPrice: Number,
+          discount: Number
+        },
+
         Price: {
           type: Number,
           required: true,

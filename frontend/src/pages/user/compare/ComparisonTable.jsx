@@ -34,7 +34,7 @@ const ComparisonTable = ({ compareItem }) => {
                   className="py-3 px-4 text-center font-bold text-gray-600 dark:text-gray-200"
                 >
                   {feature === "Price" ? (
-                    `₹ ${product.originalPrice.toFixed(2)}`
+                    `₹ ${(product.originalPrice || 0).toFixed(2)}`
                   ) : feature === "Rating" ? (
                     <div className="flex items-center justify-center">
                       {[...Array(5)].map((_, index) => {

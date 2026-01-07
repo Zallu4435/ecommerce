@@ -1,19 +1,16 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   useGetComparisonListQuery,
   useRemoveFromComparisonMutation,
-  useAddToCartMutation,
   useGetCartQuery,
 } from "../../../redux/apiSliceFeatures/unifiedApiSlice";
 import { toast } from "react-toastify";
 import ComparisonCard from "./ComparisonCard";
 import ComparisonTable from "./ComparisonTable";
 import LoadingSpinner from "../../../components/LoadingSpinner";
-import { validateAddToCart, handleApiError } from "../../../utils/edgeCaseValidators";
 
 const Compare = () => {
-  const [isAdding, setIsAdding] = useState(false);
+  const navigate = useNavigate();
 
   const {
     data: compareItem = [],
@@ -21,7 +18,6 @@ const Compare = () => {
     isError,
   } = useGetComparisonListQuery();
   const { data: cartData = [] } = useGetCartQuery();
-  const [addToCart] = useAddToCartMutation();
   const [removeFromComparison] = useRemoveFromComparisonMutation();
 
   if (isLoading) {
@@ -32,46 +28,11 @@ const Compare = () => {
     return <div>Error fetching comparison list</div>;
   }
 
-  const handleAddToCart = async (productId) => {
-    // Find product in comparison list to get stock info
-    const product = compareItem.find(item => item.productId === productId);
-
-    if (!product) {
-      toast.error("Product not found");
-      return;
-    }
-
-    // Use centralized validation
-    const validation = validateAddToCart({
-      product,
-      cartData,
-      stockQuantity: product.stockQuantity,
-    });
-
-    if (!validation.valid) {
-      return; // Validation already showed appropriate toast message
-    }
-
-    const productDetails = {
-      productId: productId,
-      quantity: 1,
-    };
-
-    try {
-      setIsAdding(true);
-      await addToCart(productDetails);
-
-      // Remove from comparison after successfully adding to cart
-      // Backend already removed it, this just updates the UI immediately
-      await removeFromComparison(productId);
-
-      toast.success(`Item moved to cart successfully! ${validation.warning || ""}`);
-    } catch (error) {
-      // Use centralized error handler
-      handleApiError(error, "add item to cart");
-    } finally {
-      setIsAdding(false);
-    }
+  const handleAddToCart = (productId) => {
+    toast.info("Redirecting to product page to select variants...");
+    setTimeout(() => {
+      navigate(`/product/${productId}`);
+    }, 3000);
   };
 
   const handleRemoveProduct = async (productId) => {
@@ -143,7 +104,6 @@ const Compare = () => {
             compareItem={compareItem}
             handleAddToCart={handleAddToCart}
             handleRemoveProduct={handleRemoveProduct}
-            isAdding={isAdding}
             cartData={cartData}
           />
           <ComparisonTable compareItem={compareItem} />

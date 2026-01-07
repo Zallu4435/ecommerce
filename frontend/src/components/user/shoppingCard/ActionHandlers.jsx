@@ -10,6 +10,24 @@ export const handleAddToCart = async (
   product,
   cartData
 ) => {
+  // Check if product has variants (needs user selection)
+  const hasVariants =
+    product?.hasVariants ||
+    (product?.availableColors && product.availableColors.length > 0) ||
+    (product?.availableSizes && product.availableSizes.length > 0) ||
+    (product?.availableGenders && product.availableGenders.length > 0);
+
+  // If product has variants, redirect to product page for selection
+  if (hasVariants) {
+    toast.info("Please select your preferred variant (color, size, etc.) on the product page");
+    // Give user time to read the toast message before redirect
+    setTimeout(() => {
+      window.location.href = `/product/${_id}`;
+    }, 1500);
+    return;
+  }
+
+  // For non-variant products, proceed with direct add to cart
   // Use centralized validation
   const validation = validateAddToCart({
     product: product || { productId: _id },

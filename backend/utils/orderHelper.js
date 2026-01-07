@@ -418,6 +418,7 @@ const Category = require("../model/Categories");
 /**
  * Calculate the best available price for an item
  * Logic: MIN(Base/Variant Price, Product/Variant Offer, Category Offer)
+ * Returns: { price, offerInfo: { type, name, percentage, originalPrice, discount } }
  */
 const calculateBestPrice = async (product, variant) => {
     // 1. Determine Base Price
@@ -428,16 +429,26 @@ const calculateBestPrice = async (product, variant) => {
 
     // 2. Determine Product/Variant Offer Price
     let productOfferPrice = null;
+    let productOfferPercentage = 0;
     if (variant && variant.offerPrice > 0) {
         productOfferPrice = variant.offerPrice;
+        productOfferPercentage = Math.round(((basePrice - variant.offerPrice) / basePrice) * 100);
     } else if (product.baseOfferPrice > 0) {
         productOfferPrice = product.baseOfferPrice;
+        productOfferPercentage = Math.round(((basePrice - product.baseOfferPrice) / basePrice) * 100);
     }
 
     // 3. Determine Category Offer Price
     let categoryOfferPrice = null;
+    let categoryOfferPercentage = 0;
+    let categoryOfferName = null;
+    let categoryData = null;
+
     if (product.category) {
-        const category = await Category.findOne({ categoryName: product.category });
+        // Case-insensitive lookup for category
+        const category = await Category.findOne({
+            categoryName: { $regex: new RegExp(`^${product.category}$`, "i") }
+        });
         if (category && category.isOfferActive && category.categoryOffer > 0) {
             // Check for date validity if dates are present
             const now = new Date();
@@ -447,27 +458,59 @@ const calculateBestPrice = async (product, variant) => {
             if (validStart && validEnd) {
                 const discountAmount = (basePrice * category.categoryOffer) / 100;
                 categoryOfferPrice = basePrice - discountAmount;
+                categoryOfferPercentage = category.categoryOffer;
+                categoryOfferName = category.offerName || `${category.categoryName} Offer`;
+                categoryData = {
+                    name: categoryOfferName,
+                    percentage: categoryOfferPercentage,
+                    endDate: category.endDate
+                };
             }
         }
     }
 
     // 4. Find Lowest Price
     let finalPrice = basePrice;
-    let appliedOffer = "None"; // For debugging/logging
+    let appliedOffer = "None";
+    let offerInfo = null;
 
     // Compare with Product Offer
     if (productOfferPrice !== null && productOfferPrice < finalPrice) {
         finalPrice = productOfferPrice;
         appliedOffer = "Product/Variant Offer";
+        offerInfo = {
+            type: "product",
+            name: "Product Offer",
+            percentage: productOfferPercentage,
+            originalPrice: basePrice,
+            discount: basePrice - productOfferPrice
+        };
     }
 
     // Compare with Category Offer
     if (categoryOfferPrice !== null && categoryOfferPrice < finalPrice) {
         finalPrice = categoryOfferPrice;
         appliedOffer = "Category Offer";
+        offerInfo = {
+            type: "category",
+            name: categoryOfferName,
+            percentage: categoryOfferPercentage,
+            originalPrice: basePrice,
+            discount: basePrice - categoryOfferPrice,
+            endDate: categoryData?.endDate
+        };
     }
 
-    return parseFloat(finalPrice.toFixed(2));
+    return {
+        price: parseFloat(finalPrice.toFixed(2)),
+        offerInfo: offerInfo || {
+            type: "none",
+            name: "No Offer",
+            percentage: 0,
+            originalPrice: basePrice,
+            discount: 0
+        }
+    };
 };
 
 /**
@@ -503,11 +546,13 @@ const handleSingleProductOrder = async (productId, quantity = 1, variantDetails 
         }
     }
 
-    const price = await calculateBestPrice(product, variant);
+    const priceResult = await calculateBestPrice(product, variant);
+    const price = priceResult.price;
 
     return {
         ProductId: productId,
         Price: price,
+        offerInfo: priceResult.offerInfo,
         Quantity: quantity,
         Status: "Pending",
         itemTotal: price * quantity,
@@ -572,11 +617,13 @@ const handleCartOrder = async (userId, cartItems) => {
             }
         }
 
-        const price = await calculateBestPrice(product, variant);
+        const priceResult = await calculateBestPrice(product, variant);
+        const price = priceResult.price;
 
         items.push({
             ProductId: product._id,
             Price: price,
+            offerInfo: priceResult.offerInfo,
             Quantity: quantity,
             color: color,
             size: size,
@@ -802,6 +849,7 @@ const formatOrderItem = (item) => {
         refundStatus: item.RefundStatus,
         refundAmount: item.refundAmount,
         refundedAt: item.refundedAt,
+        offerInfo: item.offerInfo, // Include offer info in response
         canCancel: !["Delivered", "Cancelled", "Returned", "Shipped", "Out for Delivery"].includes(item.Status),
         canReturn: item.Status === "Delivered"
     };
@@ -855,7 +903,7 @@ const formatOrderSummary = (order) => {
 /**
  * Map an input item to a standardized OrderItem record
  */
-const mapToOrderItemRecord = (product, quantity, price, variantDetails = {}) => {
+const mapToOrderItemRecord = (product, quantity, price, variantDetails = {}, offerInfo = null) => {
     const { color, size, gender } = variantDetails;
     return {
         ProductId: product._id,
@@ -868,6 +916,7 @@ const mapToOrderItemRecord = (product, quantity, price, variantDetails = {}) => 
         color,
         size,
         gender,
+        offerInfo: offerInfo || { type: 'none', percentage: 0 },
         Status: "Pending"
     };
 };
@@ -891,5 +940,6 @@ module.exports = {
     formatOrderSummary,
     mapToOrderItemRecord,
     restoreCouponUsage,
-    consumeCouponUsage
+    consumeCouponUsage,
+    calculateBestPrice  // Added for offer price calculation
 };

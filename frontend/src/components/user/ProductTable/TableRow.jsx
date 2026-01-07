@@ -1,11 +1,8 @@
-import { useState } from "react";
 import {
-  useAddToCartMutation,
   useGetCartQuery,
 } from "../../../redux/apiSliceFeatures/unifiedApiSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { validateAddToCart, handleApiError } from "../../../utils/edgeCaseValidators";
 
 const TableRow = ({ item, onRemove }) => {
   const {
@@ -17,44 +14,16 @@ const TableRow = ({ item, onRemove }) => {
     productId,
   } = item;
 
-  const [addToCart] = useAddToCartMutation();
-  const [isAdding, setIsAdding] = useState(false);
   const navigate = useNavigate();
 
   // Get current cart data for validation
   const { data: cartData = [] } = useGetCartQuery();
 
-  const handleAddToCart = async () => {
-    // Use centralized validation
-    const validation = validateAddToCart({
-      product: item,
-      cartData,
-      stockQuantity,
-    });
-
-    if (!validation.valid) {
-      return; // Validation already showed appropriate toast message
-    }
-
-    const productDetails = {
-      productId: productId,
-      quantity: 1,
-    };
-
-    try {
-      setIsAdding(true);
-      await addToCart(productDetails);
-
-      // Remove from wishlist after successful cart addition
-      onRemove(productId);
-
-      toast.success(`Item moved to cart successfully! ${validation.warning || ""}`);
-    } catch (error) {
-      // Use centralized error handler
-      handleApiError(error, "add item to cart");
-    } finally {
-      setIsAdding(false);
-    }
+  const handleAddToCart = () => {
+    toast.info("Redirecting to product page to select variants...");
+    setTimeout(() => {
+      navigate(`/product/${productId}`);
+    }, 3000);
   };
 
   const handleImageClick = () => navigate(`/product/${productId}`);
@@ -83,12 +52,12 @@ const TableRow = ({ item, onRemove }) => {
               {productName}
             </p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              ⭐ 4.5 (200)
+              ⭐ {item.averageRating?.toFixed(1) || 0} ({item.reviewCount || 0})
             </p>
           </div>
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
-          ₹ {originalPrice.toFixed(2)}
+          ₹ {(originalPrice || 0).toFixed(2)}
         </td>
         <td className="px-6 py-4 border-b text-center text-gray-900 dark:text-gray-100">
           {stockQuantity ? (
@@ -105,7 +74,7 @@ const TableRow = ({ item, onRemove }) => {
         <td className="px-6 py-4 border-b text-center">
           <button
             onClick={handleAddToCart}
-            disabled={isAdding || !stockQuantity || stockQuantity === 0 || cartData?.some(item => item.productId === productId)}
+            disabled={!stockQuantity || stockQuantity === 0 || cartData?.some(item => item.productId === productId)}
             className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${!stockQuantity || stockQuantity === 0
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : cartData?.some(item => item.productId === productId)
@@ -113,13 +82,11 @@ const TableRow = ({ item, onRemove }) => {
                 : 'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600 transform hover:scale-105'
               }`}
           >
-            {isAdding
-              ? "Adding..."
-              : !stockQuantity || stockQuantity === 0
-                ? "Out of Stock"
-                : cartData?.some(item => item.productId === productId)
-                  ? "In Cart"
-                  : "Add to Cart"
+            {!stockQuantity || stockQuantity === 0
+              ? "Out of Stock"
+              : cartData?.some(item => item.productId === productId)
+                ? "In Cart"
+                : "Add to Cart"
             }
           </button>
         </td>
@@ -135,7 +102,7 @@ const TableRow = ({ item, onRemove }) => {
             ❌ Remove
           </button>
           <span className="text-gray-900 dark:text-gray-100">
-            ₹ {originalPrice.toFixed(2)}
+            ₹ {(originalPrice || 0).toFixed(2)}
           </span>
         </div>
         <div className="flex items-center gap-4 mb-4">
@@ -149,7 +116,7 @@ const TableRow = ({ item, onRemove }) => {
               {productName}
             </p>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              ⭐ 4.5 (200 reviews)
+              ⭐ {item.averageRating?.toFixed(1) || 0} ({item.reviewCount || 0} reviews)
             </p>
           </div>
         </div>
@@ -162,7 +129,7 @@ const TableRow = ({ item, onRemove }) => {
         <div className="flex justify-center">
           <button
             onClick={handleAddToCart}
-            disabled={isAdding || !stockQuantity || stockQuantity === 0 || cartData?.some(item => item.productId === productId)}
+            disabled={!stockQuantity || stockQuantity === 0 || cartData?.some(item => item.productId === productId)}
             className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 ${!stockQuantity || stockQuantity === 0
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : cartData?.some(item => item.productId === productId)
@@ -170,13 +137,11 @@ const TableRow = ({ item, onRemove }) => {
                 : 'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600'
               }`}
           >
-            {isAdding
-              ? "Adding..."
-              : !stockQuantity || stockQuantity === 0
-                ? "Out of Stock"
-                : cartData?.some(item => item.productId === productId)
-                  ? "In Cart"
-                  : "Add to Cart"
+            {!stockQuantity || stockQuantity === 0
+              ? "Out of Stock"
+              : cartData?.some(item => item.productId === productId)
+                ? "In Cart"
+                : "Add to Cart"
             }
           </button>
         </div>

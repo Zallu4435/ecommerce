@@ -109,6 +109,7 @@ exports.removeFromComparison = async (req, res) => {
 
 exports.getComparisonList = async (req, res) => {
   try {
+    const { calculateBestPrice } = require("../utils/orderHelper");
     const userId = new mongoose.Types.ObjectId(req.user);
 
     const comparisonItems = await Comparison.aggregate([
@@ -150,18 +151,44 @@ exports.getComparisonList = async (req, res) => {
           comparisonItemId: { $toString: "$items._id" },
           productName: "$productDetails.productName",
           productImage: "$productDetails.image",
-          originalPrice: "$productDetails.originalPrice",
-          offerPrice: "$productDetails.offerPrice",
-          stockQuantity: "$productDetails.stockQuantity",
+          // Use base fields
+          basePrice: "$productDetails.basePrice",
+          baseOfferPrice: "$productDetails.baseOfferPrice",
+          stockQuantity: "$productDetails.totalStock",
           averageRating: { $ifNull: ["$averageRating", 0] },
           reviewCount: { $ifNull: ["$reviewCount", 0] },
           description: "$productDetails.description",
           category: "$productDetails.category",
+          // Include variant information for proper detection
+          availableColors: "$productDetails.availableColors",
+          availableSizes: "$productDetails.availableSizes",
+          availableGenders: "$productDetails.availableGenders",
+          hasVariants: "$productDetails.hasVariants",
         },
       },
     ]);
 
-    return res.status(200).json(comparisonItems);
+    // Post-process
+    const processedItems = await Promise.all(comparisonItems.map(async (item) => {
+      const productMock = {
+        basePrice: item.basePrice,
+        baseOfferPrice: item.baseOfferPrice,
+        category: item.category
+      };
+
+      const priceInfo = await calculateBestPrice(productMock);
+
+      return {
+        ...item,
+        originalPrice: item.basePrice,
+        offerPrice: priceInfo.price,
+        offerInfo: priceInfo.offerInfo
+      };
+    }));
+
+
+
+    return res.status(200).json(processedItems);
   } catch (error) {
     console.error("Error fetching comparison items:", error);
     return res.status(500).json({ message: "Error fetching comparison items" });

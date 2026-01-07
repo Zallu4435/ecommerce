@@ -252,146 +252,179 @@ const OrderDetailsPage = () => {
                             {order.items.map((item) => (
                                 <div
                                     key={item.itemId}
-                                    className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700"
+                                    className="group bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                                 >
-                                    <div className="flex flex-col sm:flex-row gap-5">
+                                    <div className="flex flex-col sm:flex-row gap-6">
                                         {/* Product Image */}
-                                        <div className="relative flex-shrink-0 w-full sm:w-24 aspect-square">
+                                        <div className="relative shrink-0 w-full sm:w-32 aspect-[3/4] sm:aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
                                             <img
                                                 src={item.productImage}
                                                 alt={item.productName}
-                                                className="w-full h-full object-cover rounded-lg shadow-sm"
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
-                                            <div className="absolute -top-2 -right-2 bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                            <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10">
                                                 x{item.quantity}
                                             </div>
                                         </div>
 
-                                        {/* Item Info */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start gap-4">
-                                                <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
-                                                    {item.productName}
-                                                </h3>
-                                                <p className="text-base font-bold text-gray-900 dark:text-white">
-                                                    ₹{item.itemTotal.toFixed(2)}
-                                                </p>
-                                            </div>
-
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3">
-                                                {[
-                                                    `₹${item.price.toFixed(2)} each`,
-                                                    item.color,
-                                                    item.size,
-                                                    item.gender === "Male" ? "Boy" : item.gender === "Female" ? "Girl" : item.gender
-                                                ].filter(Boolean).join(" • ")}
-                                            </p>
-
-                                            {/* Offer Badge - inferred if price < originalPrice */}
-                                            {item.originalPrice > item.price && (
-                                                <div className="inline-block px-2 py-0.5 mb-2 mr-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded text-[10px] font-bold text-rose-600 dark:text-rose-400">
-                                                    Offer Applied
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex justify-between items-start gap-4 mb-2">
+                                                    <div>
+                                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight mb-2">
+                                                            {item.productName}
+                                                        </h3>
+                                                        <div className="flex flex-wrap gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                                                            {item.color && (
+                                                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
+                                                                    {item.color}
+                                                                </span>
+                                                            )}
+                                                            {item.size && (
+                                                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
+                                                                    {item.size}
+                                                                </span>
+                                                            )}
+                                                            {item.gender && (
+                                                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
+                                                                    {item.gender === "Male" ? "Boy" : item.gender === "Female" ? "Girl" : item.gender}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-lg font-bold text-gray-900 dark:text-white">
+                                                            ₹{item.itemTotal.toFixed(2)}
+                                                        </p>
+                                                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                            ₹{item.price.toFixed(2)} / unit
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            )}
 
-                                            <div className="flex flex-wrap items-center gap-2 mb-3">
-                                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(item.status)}`}>
-                                                    {item.status}
-                                                </span>
-                                                {item.trackingNumber && (
-                                                    <span className="text-[10px] text-gray-500 bg-white dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700 font-mono">
-                                                        #{item.trackingNumber}
+                                                {/* Badges Row */}
+                                                <div className="flex flex-wrap items-center gap-3 mt-3">
+                                                    {/* Offer Badge */}
+                                                    {(item.offerInfo?.type !== 'none' || item.originalPrice > item.price) && (
+                                                        <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold border ${item.offerInfo?.type === 'category'
+                                                            ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-100 dark:border-purple-800 text-purple-700 dark:text-purple-300'
+                                                            : 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800 text-green-700 dark:text-green-300'
+                                                            }`}>
+                                                            <span>{item.offerInfo?.type === 'category' ? '🏷️' : '🎁'}</span>
+                                                            <span>
+                                                                {item.offerInfo?.percentage
+                                                                    ? `${item.offerInfo.percentage}% OFF`
+                                                                    : `${Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF`
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Status Badge */}
+                                                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(item.status)}`}>
+                                                        {item.status}
                                                     </span>
-                                                )}
+
+                                                    {item.trackingNumber && (
+                                                        <span className="text-[10px] text-gray-500 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 font-mono flex items-center gap-1">
+                                                            <FaMapMarkerAlt className="text-gray-400 text-[10px]" />
+                                                            #{item.trackingNumber}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            {/* Status Message */}
-                                            <div className="text-xs space-y-1.5 pt-3 border-t border-gray-100 dark:border-gray-800">
-                                                {item.cancelledAt ? (
-                                                    <div className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg flex gap-2">
-                                                        <FaTimes className="mt-0.5 flex-shrink-0" />
-                                                        <div>
-                                                            <p className="font-semibold">Cancelled on {formatDate(item.cancelledAt)}</p>
-                                                            <p className="text-[10px] uppercase font-bold opacity-75 mb-0.5">
-                                                                by {item.cancelledBy || "User"}
-                                                            </p>
-                                                            {item.cancellationReason && <p className="opacity-80 italic">"{item.cancellationReason}"</p>}
+                                            {/* Footer Actions Section */}
+                                            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mt-5 pt-4 border-t border-dashed border-gray-200 dark:border-gray-700">
+                                                {/* Status Message Line */}
+                                                <div className="text-sm">
+                                                    {item.cancelledAt ? (
+                                                        <div className="text-red-700 dark:text-red-400 flex items-start gap-2">
+                                                            <FaTimes className="mt-1 flex-shrink-0" />
+                                                            <div>
+                                                                <p className="font-semibold">Cancelled on {formatDate(item.cancelledAt)}</p>
+                                                                {item.cancellationReason && <p className="text-xs opacity-80 mt-0.5">Reason: "{item.cancellationReason}"</p>}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ) : item.returnedAt ? (
-                                                    <div className="text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 p-2 rounded-lg flex gap-2">
-                                                        <FaBox className="mt-0.5 flex-shrink-0" />
-                                                        <div>
-                                                            <p className="font-semibold">Returned on {formatDate(item.returnedAt)}</p>
-                                                            <p className="text-[10px] uppercase font-bold opacity-75 mb-0.5">
-                                                                by {item.returnedBy || "User"}
-                                                            </p>
-                                                            {item.returnReason && <p className="opacity-80 italic">"{item.returnReason}"</p>}
+                                                    ) : item.returnedAt ? (
+                                                        <div className="text-orange-700 dark:text-orange-400 flex items-start gap-2">
+                                                            <FaBox className="mt-1 flex-shrink-0" />
+                                                            <div>
+                                                                <p className="font-semibold">Returned on {formatDate(item.returnedAt)}</p>
+                                                                {item.returnReason && <p className="text-xs opacity-80 mt-0.5">Reason: "{item.returnReason}"</p>}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ) : item.deliveredAt ? (
-                                                    <p className="text-green-600 dark:text-green-500 font-medium flex items-center gap-1.5">
-                                                        <FaCheckCircle /> Delivered on {formatDate(item.deliveredAt)}
-                                                    </p>
-                                                ) : item.shippedAt ? (
-                                                    <p className="text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1.5">
-                                                        <FaBox /> Shipped on {formatDate(item.shippedAt)}
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                                        <FaCalendar /> Placed on {formatDate(item.confirmedAt || order.orderDate)}
-                                                    </p>
-                                                )}
+                                                    ) : item.deliveredAt ? (
+                                                        <div className="text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                                                            <FaCheckCircle className="flex-shrink-0" />
+                                                            <span className="font-semibold">Delivered on {formatDate(item.deliveredAt)}</span>
+                                                        </div>
+                                                    ) : item.shippedAt ? (
+                                                        <div className="text-blue-700 dark:text-blue-400 flex items-center gap-2">
+                                                            <FaBox className="flex-shrink-0" />
+                                                            <span className="font-semibold">Shipped on {formatDate(item.shippedAt)}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                                            <FaCalendar className="flex-shrink-0" />
+                                                            <span>Placed on {formatDate(item.confirmedAt || order.orderDate)}</span>
+                                                        </div>
+                                                    )}
 
-                                                {item.refundAmount > 0 && (
-                                                    <div className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold mt-1">
-                                                        <FaRupeeSign className="text-[10px]" />
-                                                        <span>₹{item.refundAmount.toFixed(2)} Refunded ({item.refundStatus})</span>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                    {item.refundAmount > 0 && (
+                                                        <div className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-md">
+                                                            <FaRupeeSign className="text-[10px]" />
+                                                            <span>₹{item.refundAmount.toFixed(2)} Refunded <span className="opacity-75">({item.refundStatus})</span></span>
+                                                        </div>
+                                                    )}
+                                                </div>
 
-                                            {/* Item Actions */}
-                                            <div className="flex gap-2 mt-4">
-                                                <button
-                                                    onClick={() => handleTrackOrder(item)}
-                                                    className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-                                                >
-                                                    Track Order
-                                                </button>
-                                                <InvoiceDownloadIcon
-                                                    order={{
-                                                        ...order,
-                                                        items: [item],
-                                                        totalAmount: item.itemTotal,
-                                                        subtotal: item.itemTotal,
-                                                        couponDiscount: 0,
-                                                        status: item.status,
-                                                        orderStatus: item.status,
-                                                        TotalAmount: item.itemTotal,
-                                                        Price: item.price,
-                                                        ProductName: item.productName,
-                                                        cancellationReason: item.cancellationReason,
-                                                        returnReason: item.returnReason
-                                                    }}
-                                                    className="w-8 h-8 p-2 flex items-center justify-center bg-white dark:bg-gray-800 text-gray-500 hover:text-red-600 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-sm transition-all cursor-pointer"
-                                                />
-                                                {item.canCancel && (
+                                                {/* Actions Buttons */}
+                                                <div className="flex items-center gap-3 self-end lg:self-auto">
+                                                    <InvoiceDownloadIcon
+                                                        order={{
+                                                            ...order,
+                                                            items: [item],
+                                                            totalAmount: item.itemTotal,
+                                                            subtotal: item.itemTotal,
+                                                            couponDiscount: 0,
+                                                            status: item.status,
+                                                            orderStatus: item.status,
+                                                            TotalAmount: item.itemTotal,
+                                                            Price: item.price,
+                                                            ProductName: item.productName,
+                                                            cancellationReason: item.cancellationReason,
+                                                            returnReason: item.returnReason
+                                                        }}
+                                                        className="w-9 h-9 p-2.5 flex items-center justify-center bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-gray-200 dark:border-gray-600 rounded-xl hover:shadow-sm transition-all cursor-pointer"
+                                                    />
+
                                                     <button
-                                                        onClick={() => handleCancelItem(item)}
-                                                        className="px-4 py-1.5 bg-white dark:bg-gray-800 text-red-600 border border-red-100 dark:border-red-900/30 text-xs font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                        onClick={() => handleTrackOrder(item)}
+                                                        className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-200 dark:shadow-none transition-all flex items-center gap-2"
                                                     >
-                                                        Cancel
+                                                        <span>Track Order</span>
                                                     </button>
-                                                )}
-                                                {item.canReturn && (
-                                                    <button
-                                                        onClick={() => handleReturnItem(item)}
-                                                        className="px-4 py-1.5 bg-white dark:bg-gray-800 text-amber-600 border border-amber-100 dark:border-amber-900/30 text-xs font-bold rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
-                                                    >
-                                                        Return
-                                                    </button>
-                                                )}
+
+                                                    {item.canCancel && (
+                                                        <button
+                                                            onClick={() => handleCancelItem(item)}
+                                                            className="px-5 py-2 bg-white dark:bg-gray-800 text-red-600 border border-red-200 dark:border-red-900/50 text-xs font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 transition-all"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    )}
+
+                                                    {item.canReturn && (
+                                                        <button
+                                                            onClick={() => handleReturnItem(item)}
+                                                            className="px-5 py-2 bg-white dark:bg-gray-800 text-amber-600 border border-amber-200 dark:border-amber-900/50 text-xs font-bold rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:border-amber-300 transition-all"
+                                                        >
+                                                            Return
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

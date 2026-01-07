@@ -467,6 +467,12 @@ export const generateInvoicePDF = (order, address) => {
 
   const tableBody = items.map((item, index) => {
     let description = item.name;
+
+    // Add Offer/Discount Info to Description
+    if (order.items && order.items[index]?.offerInfo?.type !== 'none' && order.items[index]?.offerInfo?.percentage) {
+      description += ` (${order.items[index].offerInfo.percentage}% OFF)`;
+    }
+
     if (item.status === "Cancelled" || item.status === "Returned" || item.status === "Return Requested") {
       description += ` (${item.status})`;
       if (item.reason) {

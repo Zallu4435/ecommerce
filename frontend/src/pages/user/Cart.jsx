@@ -24,6 +24,17 @@ const Cart = () => {
   const calculateSubtotal = () =>
     cartItems
       ? cartItems?.reduce(
+        (acc, item) => {
+          const finalPrice = item.offerPrice || item.originalPrice;
+          return acc + finalPrice * item.quantity;
+        },
+        0
+      )
+      : 0;
+
+  const calculateOriginalTotal = () =>
+    cartItems
+      ? cartItems?.reduce(
         (acc, item) => acc + item.originalPrice * item.quantity,
         0
       )
@@ -39,6 +50,8 @@ const Cart = () => {
     ).toFixed(2);
 
   const subtotal = calculateSubtotal();
+  const originalTotal = calculateOriginalTotal();
+  const totalSavings = originalTotal - subtotal;
 
   useEffect(() => {
     if (
@@ -126,6 +139,12 @@ const Cart = () => {
               <span className="font-medium">Subtotal</span>
               <span className="font-medium">₹ {subtotal.toFixed(2)}</span>
             </div>
+            {totalSavings > 0 && (
+              <div className="mb-4 flex justify-between text-green-600 dark:text-green-400">
+                <span className="font-medium">💰 You're Saving</span>
+                <span className="font-bold">₹ {totalSavings.toFixed(2)}</span>
+              </div>
+            )}
             <div className="mb-4 flex justify-between text-gray-700 dark:text-gray-300">
               <span className="font-medium">Tax (8%)</span>
               <span className="font-medium">₹ {calculateTax(subtotal)}</span>
@@ -143,8 +162,8 @@ const Cart = () => {
               onClick={handleCheckout}
               disabled={isOutOfStock}
               className={`w-full py-3 ${isOutOfStock
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 transition-all transform hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600"
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700 transition-all transform hover:scale-105 dark:bg-blue-700 dark:hover:bg-blue-600"
                 } rounded-md mt-5`}
             >
               Proceed to Checkout

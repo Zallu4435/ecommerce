@@ -40,26 +40,36 @@ const ViewProductDetails = () => {
     {
       label: "Price",
       value: (
-        <div className="flex flex-wrap items-center gap-2">
-          {product.baseOfferPrice && product.baseOfferPrice < product.basePrice ? (
-            <>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {product.offerInfo && product.offerInfo.type !== 'none' ? (
+              <>
+                <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                  ₹{product.offerPrice.toLocaleString()}
+                </span>
+                <span className="text-xl text-gray-500 line-through">
+                  ₹{product.originalPrice.toLocaleString()}
+                </span>
+
+                {/* Offer Badge */}
+                <span className={`text-base px-3 py-1 rounded-full font-bold flex items-center gap-1 ${product.offerInfo.type === 'category'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                  : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                  }`}>
+                  {product.offerInfo.type === 'category' ? '🏷️' : '🎁'} {product.offerInfo.percentage}% OFF
+                </span>
+              </>
+            ) : (
               <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                ₹{product.baseOfferPrice.toLocaleString()}
-              </span>
-              <span className="text-xl text-gray-500 line-through">
                 ₹{product.basePrice.toLocaleString()}
               </span>
-              <span className="text-xl font-bold text-green-600 dark:text-green-500">
-                {Math.round(((product.basePrice - product.baseOfferPrice) / product.basePrice) * 100)}% off
-              </span>
-              <div className="w-full text-sm text-green-700 dark:text-green-400 font-medium">
-                Discount Amount: ₹{(product.basePrice - product.baseOfferPrice).toLocaleString()}
-              </div>
-            </>
-          ) : (
-            <span className="text-3xl font-bold text-gray-900 dark:text-white">
-              ₹{product.basePrice.toLocaleString()}
-            </span>
+            )}
+          </div>
+          {product.offerInfo && product.offerInfo.type !== 'none' && (
+            <div className="w-full text-sm text-gray-600 dark:text-gray-400 font-medium">
+              Active Offer: <span className="font-bold">{product.offerInfo.name}</span>
+              {product.offerInfo.endDate && ` (Ends: ${new Date(product.offerInfo.endDate).toLocaleDateString()})`}
+            </div>
           )}
         </div>
       ),

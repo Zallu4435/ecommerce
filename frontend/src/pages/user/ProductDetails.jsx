@@ -128,6 +128,45 @@ const ProductDetails = () => {
                   {productName}
                 </h1>
 
+                {/* Category Offer Badge */}
+                {/* Offer Badge (Category or Product) */}
+                {productDetails.product?.offerInfo?.type === 'category' && (
+                  <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🏷️</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-purple-900 dark:text-purple-100">
+                          {productDetails.product.offerInfo.name}
+                        </p>
+                        <p className="text-xs text-purple-700 dark:text-purple-300">
+                          <span className="font-bold">{productDetails.product.offerInfo.percentage}% OFF</span>
+                          {productDetails.product.offerInfo.endDate && (
+                            <span className="ml-2">
+                              • Ends {new Date(productDetails.product.offerInfo.endDate).toLocaleDateString()}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {productDetails.product?.offerInfo?.type === 'product' && (
+                  <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🎁</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-green-900 dark:text-green-100">
+                          {productDetails.product.offerInfo.name}
+                        </p>
+                        <p className="text-xs text-green-700 dark:text-green-300">
+                          <span className="font-bold">{productDetails.product.offerInfo.percentage}% OFF</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 mb-4">
                   {renderStars(averageRating || 0)}
                   <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -175,6 +214,7 @@ const ProductDetails = () => {
                 availableSizes={availableSizes}
                 availableGenders={productDetails.product?.availableGenders}
                 totalStock={totalStock ?? 0}
+                offerInfo={productDetails.product?.offerInfo} // Pass offerInfo
               />
               <AddToWishlist productId={_id} />
             </div>

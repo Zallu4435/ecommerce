@@ -67,8 +67,20 @@ const OrderDetails = ({ onOrderChange, coupon }) => {
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {[product.color, product.size, product.gender === "Male" ? "Boy" : product.gender === "Female" ? "Girl" : product.gender].filter(Boolean).join(" • ")}
                 </p>
-                <div className="mt-2 text-sm font-black text-blue-600 dark:text-blue-400">
-                  ₹ {Number(product.offerPrice || product.originalPrice)?.toFixed(2)}
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm font-black text-blue-600 dark:text-blue-400">
+                    ₹ {Number(product.offerPrice || product.originalPrice)?.toFixed(2)}
+                  </span>
+
+                  {/* Offer Badge */}
+                  {product.offerInfo && product.offerInfo.type !== 'none' && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${product.offerInfo.type === 'category'
+                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                        : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                      }`}>
+                      {product.offerInfo.type === 'category' ? '🏷️' : '🎁'} {product.offerInfo.percentage}% OFF
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

@@ -32,6 +32,13 @@ const ShoppingCard = ({
   cartData = [],
   wishlistData = [],
   comparisonData = [],
+  // Variant information
+  availableColors,
+  availableSizes,
+  availableGenders,
+  hasVariants,
+  // Offer information
+  offerInfo,
 }) => {
   // Determine the actual stock value from standardizing different potential prop names
   const effectiveStock = stockQuantity ?? totalStock ?? TotalStock ?? 0;
@@ -61,12 +68,34 @@ const ShoppingCard = ({
   const [addToWishlist, { isLoading: isWishlistLoading }] = useAddToWishlistMutation();
   const [addToComparison, { isLoading: isComparisonLoading }] = useAddToComparisonMutation();
 
-  // Use effectiveStock in the product object
-  const product = { _id, productId: _id, productName, stockQuantity: effectiveStock, originalPrice, offerPrice, category };
+  // Use effectiveStock in the product object and include variant info
+  const product = {
+    _id,
+    productId: _id,
+    productName,
+    stockQuantity: effectiveStock,
+    originalPrice,
+    offerPrice,
+    category,
+    // Include variant information for proper detection
+    availableColors,
+    availableSizes,
+    availableGenders,
+    hasVariants,
+  };
 
   const handleDropdownToggle = () => setShowDropdown(!showDropdown);
 
   const handleImageClick = () => navigate(`/product/${_id}`);
+
+  // Determine if there's an active offer and its type
+  const hasOffer = offerPrice && offerPrice < originalPrice;
+  const discountPercentage = offerPercentage(originalPrice, offerPrice);
+
+  // Determine offer type from offerInfo
+  const offerType = offerInfo?.type || 'none';
+  const isCategoryOffer = offerType === 'category';
+  const isProductOffer = offerType === 'product';
 
   return (
     <div className="border rounded-lg text-lg shadow-[0_0_20px_10px_rgba(255,255,255,0.5)] dark:shadow-[0_0_20px_10px_rgba(0,0,0,0.1)] overflow-hidden w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-200 transition-transform hover:-translate-y-1 hover:shadow-xl duration-300">
@@ -82,10 +111,8 @@ const ShoppingCard = ({
 
         <div className="absolute top-2 left-0 right-0 bottom-0 flex justify-between p-2 mt-2">
           <div className="flex flex-col space-y-2 sm:space-y-4">
-            <div className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
-              {offerPercentage(originalPrice, offerPrice)}%
-            </div>
-            {offerPercentage(originalPrice, offerPrice) >= 50 && (
+            {/* Show HOT badge for big discounts */}
+            {discountPercentage >= 50 && (
               <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] sm:text-xs font-bold uppercase rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shadow-md">
                 ⚡HOT
               </div>
@@ -194,6 +221,27 @@ const ShoppingCard = ({
             &#8377;{formattedOfferPrice.toFixed(2)}
           </span>
         </div>
+
+        {/* Improved Offer Badge with Clear Labeling */}
+        {hasOffer && (
+          <div className="mt-2">
+            {isCategoryOffer && (
+              <span className="text-xs px-3 py-1.5 rounded-full font-bold inline-flex items-center gap-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                🏷️ Category Offer: {discountPercentage}% OFF
+              </span>
+            )}
+            {isProductOffer && (
+              <span className="text-xs px-3 py-1.5 rounded-full font-bold inline-flex items-center gap-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                🎁 Product Offer: {discountPercentage}% OFF
+              </span>
+            )}
+            {!isCategoryOffer && !isProductOffer && (
+              <span className="text-xs px-3 py-1.5 rounded-full font-bold inline-block bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                {discountPercentage}% OFF
+              </span>
+            )}
+          </div>
+        )}
 
         <button
           onClick={() => {

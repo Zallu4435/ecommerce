@@ -77,6 +77,23 @@ const RelatedProducts = ({ category }) => {
       return;
     }
 
+    // Check if product has variants
+    const hasVariants =
+      product?.hasVariants ||
+      (product?.availableColors && product.availableColors.length > 0) ||
+      (product?.availableSizes && product.availableSizes.length > 0) ||
+      (product?.availableGenders && product.availableGenders.length > 0);
+
+    // If product has variants, redirect to product page for selection
+    if (hasVariants) {
+      toast.info("Please select your preferred variant (color, size, etc.) on the product page");
+      setTimeout(() => {
+        navigate(`/product/${product._id}`);
+      }, 1500);
+      return;
+    }
+
+    // For non-variant products, proceed with add to cart
     const productDetails = {
       productId: product._id,
       quantity: 1,
@@ -242,11 +259,22 @@ const RelatedProducts = ({ category }) => {
                   </div>
 
                   {/* Discount Badge */}
+                  {/* Discount Badge */}
                   {product.basePrice > product.offerPrice && (
-                    <div className="absolute top-3 left-3">
-                      <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                        -{Math.round(((product.basePrice - product.offerPrice) / product.basePrice) * 100)}%
-                      </span>
+                    <div className="absolute top-3 left-3 flex flex-col gap-1">
+                      {product.offerInfo?.type === 'category' ? (
+                        <span className="px-2 py-1 bg-purple-600 text-white text-xs font-bold rounded-full shadow-md flex items-center gap-1">
+                          🏷️ {product.offerInfo.percentage}%
+                        </span>
+                      ) : product.offerInfo?.type === 'product' ? (
+                        <span className="px-2 py-1 bg-green-600 text-white text-xs font-bold rounded-full shadow-md flex items-center gap-1">
+                          🎁 {product.offerInfo.percentage}%
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-md">
+                          -{Math.round(((product.basePrice - product.offerPrice) / product.basePrice) * 100)}%
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>

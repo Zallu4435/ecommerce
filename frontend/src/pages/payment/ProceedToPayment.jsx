@@ -292,7 +292,7 @@ const ProceedToPaymentPage = () => {
                   {item.productName}
                 </span>
                 <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {item.quantity} x ₹{(item.offerPrice || item.originalPrice)?.toFixed(2)}
+                  {item.quantity} x ₹{Number(item.offerPrice || item.originalPrice || 0).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -302,7 +302,7 @@ const ProceedToPaymentPage = () => {
                 Total (Inc. Tax & Shipping)
               </span>
               <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                ₹ {order?.total ? order?.total : order?.total?.toFixed(2)}
+                ₹ {order?.total ? Number(order?.total).toFixed(2) : "0.00"}
               </span>
             </div>
 

@@ -356,7 +356,7 @@ exports.createOrder = async (req, res, next) => {
         throw new Error(`Product ${product.productName} is currently unavailable`);
       }
 
-      let price = product.baseOfferPrice > 0 ? product.baseOfferPrice : product.basePrice;
+      let variant = null;
       let variantId = null;
 
       // Handle Variants if they exist
@@ -372,7 +372,7 @@ exports.createOrder = async (req, res, next) => {
           variantQuery.gender = item.gender.charAt(0).toUpperCase() + item.gender.slice(1).toLowerCase();
         }
 
-        const variant = await ProductVariant.findOne(variantQuery).session(session);
+        variant = await ProductVariant.findOne(variantQuery).session(session);
 
         if (!variant) {
           throw new Error(`Variant ${item.color}/${item.size}${item.gender ? `/${item.gender}` : ''} not found for ${product.productName}`);
@@ -388,12 +388,6 @@ exports.createOrder = async (req, res, next) => {
 
         variantId = variant._id;
 
-        // Override price if variant has specific pricing
-        if (variant.offerPrice > 0 || variant.price > 0) {
-          if (variant.offerPrice > 0) price = variant.offerPrice;
-          else if (variant.price > 0) price = variant.price;
-        }
-
       } else {
         if (product.totalStock < item.quantity) {
           throw new Error(`Insufficient stock for ${product.productName}`);
@@ -404,13 +398,17 @@ exports.createOrder = async (req, res, next) => {
       product.totalStock -= item.quantity;
       await product.save({ session });
 
+      // Calculate best price using helper (includes category offers)
+      const priceResult = await calculateBestPrice(product, variant);
+      const price = priceResult.price;
+
       subtotal += price * item.quantity;
 
       orderItems.push(mapToOrderItemRecord(product, item.quantity, price, {
         color: item.color,
         size: item.size,
         gender: item.gender
-      }));
+      }, priceResult.offerInfo));
     }
 
     // 2. Calculate Costs

@@ -3,7 +3,7 @@ const Product = require("../model/Products");
 const Wishlist = require("../model/Wishlist");
 const Comparison = require("../model/Comparison");
 const mongoose = require("mongoose");
-const { checkStockAvailability } = require("../utils/orderHelper");
+const { checkStockAvailability, calculateBestPrice } = require("../utils/orderHelper");
 
 exports.addToCart = async (req, res) => {
   const { productId, quantity, size, color, gender } = req.body;
@@ -114,7 +114,7 @@ exports.addToCart = async (req, res) => {
     try {
       await Wishlist.findOneAndUpdate(
         { userId },
-        { $pull: { items: { productId: productId } } },
+        { $pull: { items: { productId: new mongoose.Types.ObjectId(productId) } } },
         { new: true }
       );
     } catch (wishlistError) {
@@ -125,7 +125,7 @@ exports.addToCart = async (req, res) => {
     try {
       await Comparison.findOneAndUpdate(
         { userId },
-        { $pull: { items: { productId: productId } } },
+        { $pull: { items: { productId: new mongoose.Types.ObjectId(productId) } } },
         { new: true }
       );
     } catch (comparisonError) {
@@ -199,12 +199,51 @@ exports.getCartItems = async (req, res) => {
           averageRating: 1,
           size: "$items.size",
           color: "$items.color",
-          gender: "$items.gender"
+          gender: "$items.gender",
+          productDetails: "$productDetails"
         },
       },
     ]);
 
-    return res.status(200).json(cartItems);
+    // Enhance with offer information
+    const { calculateBestPrice } = require("../utils/orderHelper");
+    const ProductVariant = require("../model/ProductVariants");
+
+    const enhancedCartItems = await Promise.all(
+      cartItems.map(async (item) => {
+        let variant = null;
+
+        // Find variant if color and size are specified
+        if (item.color && item.size) {
+          let variantQuery = {
+            productId: item.productId,
+            color: item.color.toLowerCase(),
+            size: item.size.toUpperCase()
+          };
+
+          if (item.gender) {
+            variantQuery.gender = item.gender;
+          }
+
+          variant = await ProductVariant.findOne(variantQuery);
+        }
+
+        // Calculate best price with offer info
+        const priceResult = await calculateBestPrice(item.productDetails, variant);
+
+        // Remove productDetails from final output
+        const { productDetails, ...itemWithoutDetails } = item;
+
+        return {
+          ...itemWithoutDetails,
+          originalPrice: priceResult.offerInfo.originalPrice,
+          offerPrice: priceResult.price,
+          offerInfo: priceResult.offerInfo
+        };
+      })
+    );
+
+    return res.status(200).json(enhancedCartItems);
   } catch (error) {
     console.error("Error fetching cart items:", error);
     return res.status(500).json({ message: "Error fetching cart items" });
