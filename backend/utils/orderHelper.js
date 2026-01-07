@@ -6,6 +6,7 @@ const Transaction = require("../model/WalletTransaction");
 const Payment = require("../model/Payment");
 const Cart = require("../model/Cart");
 const crypto = require("crypto");
+const mongoose = require("mongoose");
 
 /**
  * Decrease stock quantity after successful payment
@@ -634,8 +635,25 @@ const removeOrderedItemsFromCart = async (userId, orderItems) => {
  * Handle Referral Reward on first delivered order
  */
 const handleReferralReward = async (userId) => {
+    console.log(`🎁 [REFERRAL REWARD] Checking referral reward for user: ${userId}`);
     const user = await User.findById(userId);
-    if (!user || !user.referredBy || user.isReferrerRewardClaimed) return;
+
+    if (!user) {
+        console.log(`❌ [REFERRAL REWARD] User ${userId} not found.`);
+        return;
+    }
+
+    if (!user.referredBy) {
+        console.log(`ℹ️ [REFERRAL REWARD] User ${user.username} was not referred by anyone.`);
+        return;
+    }
+
+    if (user.isReferrerRewardClaimed) {
+        console.log(`ℹ️ [REFERRAL REWARD] Reward already claimed for referrer of ${user.username}.`);
+        return;
+    }
+
+    console.log(`🔍 [REFERRAL REWARD] User verified. Referred By: "${user.referredBy}". Checking delivered orders...`);
 
     // Check if this is indeed the first delivered order
     const Order = require("../model/Orders");
@@ -644,13 +662,33 @@ const handleReferralReward = async (userId) => {
         orderStatus: "Delivered"
     });
 
-    if (deliveredOrders === 1) {
-        const referrer = await User.findOne({ referralCode: user.referredBy });
+    console.log(`📦 [REFERRAL REWARD] Delivered orders count for ${user.username}: ${deliveredOrders}`);
+
+    if (deliveredOrders > 0) {
+        let referrer;
+        let lookupType = "Unknown";
+
+        // Check if referredBy is an ObjectId (legacy data or bug fix) or a Code
+        if (mongoose.Types.ObjectId.isValid(user.referredBy)) {
+            referrer = await User.findById(user.referredBy);
+            lookupType = "ID";
+        }
+
+        // If not found by ID, try finding by referral code
+        if (!referrer) {
+            referrer = await User.findOne({ referralCode: user.referredBy });
+            lookupType = "Code";
+        }
+
         if (referrer) {
+            console.log(`✅ [REFERRAL REWARD] Referrer found via ${lookupType}: ${referrer.username} (${referrer._id})`);
+
             const referrerWallet = await Wallet.findOne({ userId: referrer._id });
             if (referrerWallet && referrerWallet.status === "Active") {
                 const bonusAmount = 100;
+
                 if (referrerWallet.balance + bonusAmount <= 100000) {
+                    const oldBalance = referrerWallet.balance;
                     referrerWallet.balance += bonusAmount;
                     await referrerWallet.save();
 
@@ -666,10 +704,20 @@ const handleReferralReward = async (userId) => {
 
                     user.isReferrerRewardClaimed = true;
                     await user.save();
+
+                    console.log(`🎉 [REFERRAL REWARD] SUCCESS! Credited ₹${bonusAmount} to ${referrer.username}. Balance: ${oldBalance} -> ${referrerWallet.balance}`);
                     return true;
+                } else {
+                    console.log(`⚠️ [REFERRAL REWARD] Wallet limit reached for referrer ${referrer.username}. Cannot credit bonus.`);
                 }
+            } else {
+                console.log(`⚠️ [REFERRAL REWARD] Referrer wallet not found or inactive.`);
             }
+        } else {
+            console.log(`❌ [REFERRAL REWARD] Referrer details "${user.referredBy}" valid but user not found in DB.`);
         }
+    } else {
+        console.log(`⏳ [REFERRAL REWARD] No delivered orders yet. Waiting for first delivery.`);
     }
     return false;
 };

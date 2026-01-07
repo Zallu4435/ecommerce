@@ -31,6 +31,7 @@ function UserProfile() {
     { label: "Email", value: data.user?.email || "N/A" },
     { label: "Phone Number", value: data.user?.phone || "N/A" },
     { label: "Gender", value: data.user?.gender || "N/A" },
+    ...(data.user?.referredBy ? [{ label: "Referred By", value: data.user.referredBy }] : []),
   ];
 
   return (

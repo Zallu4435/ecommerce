@@ -59,6 +59,8 @@ exports.activateAccount = async (req, res, next) => {
 exports.signupUser = async (req, res, next) => {
   const { username, email, password, phone, referralCode } = req.body;
 
+  let newUser;
+
   try {
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -66,16 +68,21 @@ exports.signupUser = async (req, res, next) => {
     }
 
     let referredByUserId = null;
-    let referrerWallet = null;
 
     if (referralCode) {
       console.log('👥 [REFERRAL] User signing up with referral code:', referralCode);
       const referrer = await User.findOne({ referralCode });
       if (referrer) {
         referredByUserId = referrer._id;
+        console.log(`✅ [REFERRAL] Valid referrer found: ${referrer.username} (${referrer._id})`);
         // You might want to validate self-referral (not possible for new user usually, but good to note)
+      } else {
+        console.log(`❌ [REFERRAL] Referral code "${referralCode}" provided but no user found.`);
       }
     }
+
+    // Capture the referral code properly if a referrer was found
+    const finalReferredByCode = referredByUserId && referralCode ? referralCode : null;
 
     // Ensure unique referral code for new user with max attempts
     let newReferralCode = generateReferralCode();
@@ -93,14 +100,14 @@ exports.signupUser = async (req, res, next) => {
       return next(new ErrorHandler("Unable to generate unique referral code. Please try again.", 500));
     }
 
-    const newUser = new User({
+    newUser = new User({
       username,
       email,
       password,
       phone,
       status: "pending",
       referralCode: newReferralCode,
-      referredBy: referredByUserId
+      referredBy: finalReferredByCode
     });
 
     await newUser.save();
@@ -155,8 +162,16 @@ exports.signupUser = async (req, res, next) => {
       message: `Please check your email: ${newUser.email} to activate your account.`,
     });
   } catch (err) {
-    if (typeof newUser !== 'undefined' && newUser && newUser._id) {
-      await User.deleteOne({ _id: newUser._id });
+    if (newUser && newUser._id) {
+      // Cleanup: Delete user and their wallet if one was created
+      try {
+        await User.deleteOne({ _id: newUser._id });
+        await Wallet.deleteOne({ userId: newUser._id });
+        // Also cleanup any transaction if it was created
+        await Transaction.deleteMany({ userId: newUser._id });
+      } catch (cleanupErr) {
+        console.error("Error cleaning up user after failed signup:", cleanupErr);
+      }
     }
     return next(new ErrorHandler(err.message, 500));
   }
@@ -551,7 +566,7 @@ exports.getAllUsers = async (req, res) => {
 exports.getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user).select(
-      "username nickname phone email gender address avatar status referralCode"
+      "username nickname phone email gender address avatar status referralCode referredBy"
     );
     if (!user) {
       return next(new ErrorHandler("User doesn't exist!", 400));
