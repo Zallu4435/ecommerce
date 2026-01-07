@@ -119,6 +119,11 @@ exports.getProductDetails = async (req, res, next) => {
       "username avatar"
     );
 
+    console.log(`DEBUG: getProductDetails - ProductID: ${product._id}, Reviews Found: ${reviews.length}`);
+    if (reviews.length > 0) {
+      console.log("Sample Review ProductID:", reviews[0].productId);
+    }
+
     const totalReviews = reviews.length;
     const averageRating =
       totalReviews > 0

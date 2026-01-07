@@ -4,7 +4,7 @@ import { baseQueryWithReauth } from "../../middleware/authMiddleware";
 export const crudApiSlice = createApi({
   reducerPath: "crudApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Entity", "Coupon", "User"],
+  tagTypes: ["Entity", "Coupon", "User", "Review"],
   endpoints: (builder) => ({
     addEntity: builder.mutation({
       query: ({ entity, data }) => ({
@@ -56,6 +56,9 @@ export const crudApiSlice = createApi({
             { type: "Coupon", id: "LIST" },
             { type: "Coupon", id: "active-coupons" },
           ];
+        }
+        if (entity === "reviews") {
+          return [...baseInvalidations, "Review"];
         }
         return baseInvalidations;
       },

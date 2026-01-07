@@ -19,6 +19,7 @@ const AdminTable = ({
     orders: "Orders",
     products: "Products",
     allOrders: "Orders",
+    reviews: "Reviews",
   };
 
   const dataList = data?.[type] ? data?.[type] : data;

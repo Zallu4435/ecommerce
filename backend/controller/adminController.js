@@ -7,6 +7,7 @@ const Orders = require("../model/Orders");
 const Product = require("../model/Products");
 const Category = require("../model/Categories");
 const Coupon = require("../model/Coupon");
+const Review = require("../model/Review");
 const mongoose = require("mongoose");
 
 exports.loginAdmin = async (req, res, next) => {
@@ -737,5 +738,89 @@ exports.searchAllOrders = async (req, res) => {
   } catch (error) {
     console.error("Error in searchAllOrders:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getAllReviews = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    let query = {};
+    if (search) {
+      const searchTerm = search.trim();
+      // Improved search: find matching users and products 
+      const [users, products] = await Promise.all([
+        User.find({
+          $or: [
+            { username: { $regex: searchTerm, $options: "i" } },
+            { email: { $regex: searchTerm, $options: "i" } },
+          ],
+        }).select("_id"),
+        Product.find({
+          productName: { $regex: searchTerm, $options: "i" },
+        }).select("_id"),
+      ]);
+
+      const userIds = users.map((u) => u._id);
+      const productIds = products.map((p) => p._id);
+
+      query = {
+        $or: [
+          { review: { $regex: searchTerm, $options: "i" } },
+          { userId: { $in: userIds } },
+          { productId: { $in: productIds } },
+        ],
+      };
+
+      // 1. Search by Rating if search is a number
+      const numericSearch = Number(searchTerm);
+      if (!isNaN(numericSearch) && numericSearch >= 1 && numericSearch <= 5) {
+        query.$or.push({ rating: numericSearch });
+      }
+
+      // 2. Search by Review ID if valid ObjectId
+      if (mongoose.Types.ObjectId.isValid(searchTerm)) {
+        query.$or.push({ _id: searchTerm });
+      }
+    }
+
+    const reviews = await Review.find(query)
+      .populate("productId", "productName image")
+      .populate("userId", "username email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber);
+
+    const totalReviews = await Review.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      reviews,
+      totalReviews,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalReviews / limitNumber),
+    });
+  } catch (error) {
+    console.error("Error fetching admin reviews:", error);
+    res.status(500).json({ message: "Error fetching reviews", error: error.message });
+  }
+};
+
+exports.deleteReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findByIdAndDelete(id);
+
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Review deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting review:", error);
+    res.status(500).json({ message: "Error deleting review", error: error.message });
   }
 };

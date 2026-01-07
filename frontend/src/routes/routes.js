@@ -46,7 +46,7 @@ const ViewCouponDetails = lazy(() => import('../pages/admin/views/ViewCouponDeta
 const HelpComponent = lazy(() => import('../pages/admin/HelpComponent.jsx'))
 const CurrencyConverter = lazy(() => import('../pages/admin/Admin Settings/CurrencyConverter.jsx'))
 const TermsAndConditions = lazy(() => import('../pages/admin/Admin Settings/Terms&Condition.jsx'))
-
+const ReviewManagement = lazy(() => import('../pages/admin/ReviewManagement.jsx'))
 
 export const routes = [
   { path: "/", component: Home, isProtected: false },
@@ -97,6 +97,7 @@ export const adminRoutes = [
   { path: "/productManagement/create/products/image-varient", component: ProductImageVarientAddModal },
   { path: "/orderManagement/view/orders/:id", component: ViewOrderDetails },
   { path: "/couponManagement/view/coupons/:id", component: ViewCouponDetails },
+  { path: "/reviewManagement", component: ReviewManagement },
   { path: "*", component: NotFound },
 ];
 

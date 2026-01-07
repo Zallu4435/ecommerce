@@ -10,7 +10,7 @@ import { productApiSlice } from "../apiSliceFeatures/productApiSlice";
 import { unifiedApiSlice } from "../apiSliceFeatures/unifiedApiSlice";
 import { salesApiSlice } from "../apiSliceFeatures/SalesApiSlice";
 import { walletApiSlice } from "../apiSliceFeatures/WalletApiSlice";
-import { reviewApi } from "../apiSliceFeatures/ReviewApiSlice";
+
 import { orderApiSlice } from "../apiSliceFeatures/OrderApiSlice";
 
 const rootReducer = combineReducers({
@@ -24,7 +24,7 @@ const rootReducer = combineReducers({
   unifiedApi: unifiedApiSlice.reducer,
   salesApi: salesApiSlice.reducer,
   walletApi: walletApiSlice.reducer,
-  reviewApi: reviewApi.reducer,
+  // reviewApi: reviewApi.reducer, // Removed as it is now part of crudApiSlice
   orderApiSlice: orderApiSlice.reducer,
   root: defaultReducer,
 });
@@ -38,7 +38,7 @@ export const apiMiddleware = [
   unifiedApiSlice.middleware,
   salesApiSlice.middleware,
   walletApiSlice.middleware,
-  reviewApi.middleware,
+  // reviewApi.middleware, // Removed
   orderApiSlice.middleware
 ];
 

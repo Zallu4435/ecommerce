@@ -338,6 +338,53 @@ const TableRow = ({ item, type, refetch }) => {
             </td>
           </>
         )}
+
+
+        {type === "reviews" && (
+          <>
+            <td className="px-6 py-4 border border-gray-600">
+              <div className="flex items-center gap-3">
+                <img
+                  src={item.productId?.image}
+                  alt="Prod"
+                  className="w-10 h-10 object-cover rounded"
+                />
+                <span className="text-sm font-medium max-w-[150px] truncate" title={item.productId?.productName}>
+                  {item.productId?.productName}
+                </span>
+              </div>
+            </td>
+            <td className="px-6 py-4 border border-gray-600">
+              <div className="flex flex-col">
+                <span className="font-semibold text-sm">{item.userId?.username || "Unknown"}</span>
+                <span className="text-xs text-gray-400">{item.userId?.email}</span>
+              </div>
+            </td>
+            <td className="px-6 py-4 border border-gray-600">
+              <span className={`font-bold ${item.rating >= 4 ? "text-green-500" : item.rating >= 3 ? "text-yellow-500" : "text-red-500"}`}>
+                {item.rating} / 5
+              </span>
+            </td>
+            <td className="px-6 py-4 border border-gray-600 max-w-[250px]">
+              <p className="truncate text-sm text-gray-300" title={item.review}>
+                {item.review}
+              </p>
+            </td>
+            <td className="px-6 py-4 border border-gray-600 text-sm">
+              {new Date(item.createdAt).toLocaleDateString()}
+            </td>
+            <td className="px-6 flex py-4 gap-6">
+              <Button
+                $borderColor="#B34D4D"
+                $textColor="#B34D4D"
+                $hoverColor="white"
+                onClick={() => openModal(item)}
+              >
+                Delete
+              </Button>
+            </td>
+          </>
+        )}
       </tr>
 
       <ConfirmDeleteModal
@@ -404,6 +451,18 @@ export const config = {
       "Date",
       "Actions",
     ],
+
     rowRenderer: (item, refetch) => <TableRow item={item} type="allOrders" refetch={refetch} />,
+  },
+  reviews: {
+    headers: [
+      "Product",
+      "User",
+      "Rating",
+      "Review",
+      "Date",
+      "Actions",
+    ],
+    rowRenderer: (item, refetch) => <TableRow item={item} type="reviews" refetch={refetch} />,
   },
 };

@@ -1,10 +1,6 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "../../middleware/authMiddleware";
+import { crudApiSlice } from "./crudApiSlice";
 
-export const reviewApi = createApi({
-  reducerPath: "reviewApi",
-  baseQuery: baseQueryWithReauth,
-  tagTypes: ['Review'],
+export const reviewApiSlice = crudApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     addReview: builder.mutation({
       query: ({ review, rating, productId }) => ({
@@ -12,7 +8,10 @@ export const reviewApi = createApi({
         method: "POST",
         body: { review, rating, productId },
       }),
-      invalidatesTags: ['Review'],
+      invalidatesTags: (result, error, { productId }) => [
+        { type: 'Review', id: 'LIST' },
+        { type: 'Entity', id: productId }
+      ],
     }),
 
     updateReview: builder.mutation({
@@ -21,7 +20,7 @@ export const reviewApi = createApi({
         method: "PUT",
         body: { review, rating },
       }),
-      invalidatesTags: ['Review'],
+      invalidatesTags: ['Review', 'Entity'], // Invalidate generically if we don't have productId
     }),
 
     deleteReview: builder.mutation({
@@ -29,7 +28,7 @@ export const reviewApi = createApi({
         url: `/reviews/delete-review/${reviewId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ['Review'],
+      invalidatesTags: ['Review', 'Entity'],
     }),
 
     getReviews: builder.query({
@@ -39,7 +38,13 @@ export const reviewApi = createApi({
         if (sortBy) url += `&sortBy=${sortBy}`;
         return url;
       },
-      providesTags: ['Review'],
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.reviews.map(({ _id }) => ({ type: 'Review', id: _id })),
+            { type: 'Review', id: 'LIST' },
+          ]
+          : [{ type: 'Review', id: 'LIST' }],
     }),
 
     hasReviewed: builder.query({
@@ -49,6 +54,7 @@ export const reviewApi = createApi({
 
     canReview: builder.query({
       query: (productId) => `reviews/can-review?productId=${productId}`,
+      providesTags: ['Review'], // Add tag so it can be invalidated if needed
     }),
   }),
 });
@@ -59,5 +65,7 @@ export const {
   useDeleteReviewMutation,
   useGetReviewsQuery,
   useHasReviewedQuery,
-  useCanReviewQuery,
-} = reviewApi;
+  useCanReviewQuery
+} = reviewApiSlice;
+
+

@@ -5,7 +5,7 @@ import { clearAdminCredentials } from "../slice/adminSlice";
 export const adminApiSlice = createApi({
   reducerPath: "adminApi",
   baseQuery: adminBaseQueryWithReauth,
-  tagTypes: ["User", "Order", "Entity", "Avatar", "Metrics"],
+  tagTypes: ["User", "Order", "Entity", "Avatar", "Metrics", "Review"],
   endpoints: (builder) => ({
     blockUser: builder.mutation({
       query: (userId) => ({
@@ -112,6 +112,20 @@ export const adminApiSlice = createApi({
     }),
 
 
+
+
+    getAdminReviews: builder.query({
+      query: ({ page = 1, limit = 10, search }) => {
+        const params = new URLSearchParams();
+        if (page) params.append("page", page);
+        if (limit) params.append("limit", limit);
+        if (search) params.append("search", search);
+        return `/reviews/all?${params.toString()}`;
+      },
+      providesTags: ["Review"],
+    }),
+
+
   }),
 });
 
@@ -129,4 +143,7 @@ export const {
   useSearchAdminCouponsQuery,
   useSearchUsersIndividualOrdersQuery,
   useGetUsersIndividualOrdersQuery,
+
+  useGetAdminReviewsQuery,
+
 } = adminApiSlice; 

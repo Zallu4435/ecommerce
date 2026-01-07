@@ -27,6 +27,9 @@ export const useButtonHandlers = (refetch) => {
       if (type === "category") {
         refetchCategory();
       }
+      if (type === "reviews" && refetch) {
+        await refetch();
+      }
       toast.success("Deleted successfully!");
     } catch (error) {
       console.error("Delete failed:", error);

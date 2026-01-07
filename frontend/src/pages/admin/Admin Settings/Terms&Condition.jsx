@@ -54,15 +54,33 @@ const termsAndConditionsData = [
 
 const TermsAndConditions = () => {
   return (
-    <div className="container mx-auto mt-10 p-6 dark:bg-gray-900 bg-orange-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-center mb-8 dark:text-white text-gray-600">Terms and Conditions</h1>
-      <div className="text-lg space-y-6 dark:text-gray-300 text-gray-700">
-        {termsAndConditionsData.map((section, index) => (
-          <section key={index} className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-2xl font-semibold mb-2 dark:text-white text-gray-600">{section.title}</h2>
-            <div>{section.content}</div>
-          </section>
-        ))}
+    <div className="flex dark:bg-black h-screen fixed top-10 left-[420px] right-0">
+      <div className="p-6 w-full px-14 dark:bg-gray-900 dark:text-white bg-orange-50 overflow-y-auto scrollbar-hidden pb-20">
+        {/* Page Header */}
+        <div className="flex justify-between mt-5 items-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-400">
+            Terms & Conditions
+          </h1>
+        </div>
+
+        <div className="max-w-4xl space-y-8">
+          {termsAndConditionsData.map((section, index) => (
+            <div
+              key={index}
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+            >
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-sm">
+                  {index + 1}
+                </span>
+                {section.title}
+              </h2>
+              <div className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+                {section.content}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

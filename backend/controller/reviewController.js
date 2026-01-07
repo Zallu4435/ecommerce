@@ -1,5 +1,6 @@
 const Review = require("../model/Review");
 const Order = require("../model/Orders");
+const mongoose = require("mongoose");
 
 exports.getReviews = async (req, res) => {
   try {
@@ -71,11 +72,31 @@ exports.addReview = async (req, res) => {
     }
 
     // Check if user has purchased and received this product
+    console.log("Checking eligibility for User:", userId, "Product:", productId);
+
+    let productObjectId;
+    try {
+      productObjectId = new mongoose.Types.ObjectId(productId);
+    } catch (e) {
+      return res.status(400).json({ message: "Invalid Product ID" });
+    }
+
+    // DEBUG: Check if user has ANY orders first to verify schema field names
+    const anyOrder = await Order.findOne({ $or: [{ UserId: userId }, { userId: userId }] });
+    console.log("DEBUG: Any order found for user? ", anyOrder ? "Yes" : "No");
+    if (anyOrder) console.log("DEBUG: Order keys:", Object.keys(anyOrder.toObject()));
+
     const deliveredOrder = await Order.findOne({
-      userId: userId,
-      'items.productId': productId,
-      'items.status': 'Delivered'
+      $or: [{ UserId: userId }, { userId: userId }], // Try both casing just in case
+      items: {
+        $elemMatch: {
+          ProductId: productObjectId,
+          Status: 'Delivered'
+        }
+      }
     });
+
+    console.log("Delivered Order Found:", deliveredOrder ? "Yes" : "No");
 
     if (!deliveredOrder) {
       return res.status(403).json({
@@ -181,11 +202,43 @@ exports.canUserReview = async (req, res) => {
 
   try {
     // Check if user has purchased and received this product
-    const deliveredOrder = await Order.findOne({
-      userId: userId,
-      'items.productId': productId,
-      'items.status': 'Delivered'
+    console.log("Checking canUserReview for User:", userId, "Type:", typeof userId);
+    console.log("Checking Product:", productId, "Type:", typeof productId);
+
+    let productObjectId;
+    try {
+      productObjectId = new mongoose.Types.ObjectId(productId);
+    } catch (e) {
+      console.error("Invalid ProductID format for casting:", productId);
+      return res.status(400).json({ message: "Invalid Product ID" });
+    }
+
+    // DEBUG: First check if this product exists in ANY of user's orders (ignoring status)
+    const productInAnyOrder = await Order.findOne({
+      $or: [{ UserId: userId }, { userId: userId }],
+      items: {
+        $elemMatch: {
+          ProductId: productObjectId
+        }
+      }
     });
+    console.log("DEBUG: Product found in ANY order (ignoring status)?", productInAnyOrder ? "Yes" : "No");
+    if (productInAnyOrder) {
+      const item = productInAnyOrder.items.find(i => i.ProductId.toString() === productId);
+      console.log("DEBUG: Item status for this product is:", item ? item.Status : "Not found in items array?!");
+    }
+
+    const deliveredOrder = await Order.findOne({
+      $or: [{ UserId: userId }, { userId: userId }],
+      items: {
+        $elemMatch: {
+          ProductId: productObjectId,
+          Status: 'Delivered'
+        }
+      }
+    });
+
+    console.log("canUserReview - Delivered Order found:", deliveredOrder ? "Yes" : "No");
 
     if (!deliveredOrder) {
       return res.status(200).json({
